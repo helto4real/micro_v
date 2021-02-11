@@ -8,6 +8,10 @@ pub:
 	
 }
 
+pub fn (t Token) str() string {
+	return 'tok: [${t.pos.pos}, (${t.pos.ln}, ${t.pos.col})] $t.kind \'${t.lit}\''
+}
+
 pub struct Pos {
 pub:
 	pos int // position in textfile
@@ -17,6 +21,7 @@ pub:
 
 // Kind of token
 pub enum Kind {
+	unknown
 	error
 	name
 	number
@@ -57,6 +62,7 @@ pub fn build_keys() map[string]Kind {
 
 fn build_token_str() []string {
 	mut s := []string{len: token.nr_tokens}
+	s[Kind.unknown] = 'token_unknown'
 	s[Kind.error] = 'token_error'
 	s[Kind.eof] = 'eof'
 	s[Kind.name] = 'name'
