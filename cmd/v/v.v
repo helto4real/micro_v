@@ -1,21 +1,58 @@
 import lib.comp.token
+import lib.comp.parser
 import os
+import term
 
 fn main() {
+	args := os.args[1..]
+	if args.len > 0 {
+		if '-tokeninzer' in args {
+			tokenizer()
+			exit(0)
+		}
+	}
+	print_expressions()
+}
+
+fn print_expressions() {
+	term.clear()
 	for {
+		print(term.ok_message('expr:')) 
 		print('> ')
 		line := os.get_line()
 		if line == '' {
 			break
 		}
+		mut p := parser.new_parser_from_text(line)
+		syntax_tree := p.parse()
+		parser.pretty_print(syntax_tree.root, '', true)
+
+		if syntax_tree.errors.len > 0 {
+			for err in syntax_tree.errors {
+				println(term.fail_message(err.text))
+			}
+		} else {
+			mut ev := parser.new_evaluator(syntax_tree.root)
+			res := ev.evaluate()
+			println(term.yellow('$res')) 
+		}
+	}
+}
+
+fn tokenizer() {
+	for {
+		print('tokens> ')
+		line := os.get_line()
+		if line == '' {
+			break
+		}
 		mut tnz := token.new_tokenizer_from_string(line)
-		mut token := tnz.next_token()
-		for {
+		mut tokens := tnz.scan_all()
+		for _, token in tokens {
 			println(token)
 			if token.kind == .eof {
 				break
 			}
-			token = tnz.next_token()
 		}
 	}
 }

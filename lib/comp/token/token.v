@@ -1,48 +1,49 @@
 module token
+import util
 
 pub struct Token {
 pub:
 	kind Kind   // the token number/enum; for quick comparisons
 	lit  string // literal representation of the token
-	pos  Pos	// position in the file
-	
+	pos  util.Pos    // position in the file
 }
 
 pub fn (t Token) str() string {
-	return 'tok: [${t.pos.pos}, (${t.pos.ln}, ${t.pos.col})] $t.kind \'${t.lit}\''
-}
-
-pub struct Pos {
-pub:
-	pos int // position in textfile
-	ln  int	// line number
-	col int // column of line
+	return "tok: [$t.pos.pos, ($t.pos.ln, $t.pos.col)] $t.kind '$t.lit'"
 }
 
 // Kind of token
 pub enum Kind {
 	unknown
-	error
-	name
-	number
-	string
-	lcbr
-	rcbr
-	lpar
-	rpar
-	colon
-	dot
-	assign
-	decl_assign
-	div
-	amp
-	eof
-	keyword_beg
-	key_fn
-	key_module
-	key_struct
-	keyword_end
-	_end_
+	error // error
+	name // Any identifier name
+	number //[1-9]+
+	string // a string literal
+	lcbr // '{'
+	rcbr // '}'
+	lpar // '('
+	rpar // ')'
+	colon // ':'
+	semcol // ';'
+	dot // '.'
+	comma // ','
+	assign // '='
+	decl_assign // ':='
+	plus // '+'
+	minus // '-'
+	mul // '*'
+	div // '/'
+	amp // '&'
+	eq // '=='
+	ne // '!='
+	not // '!'
+	eof // end of file
+	keyword_beg // start of keywords
+	key_fn	// 'fn'
+	key_module // 'module'
+	key_struct // 'struct'
+	keyword_end // end of keywords
+	_end_ // end of enum
 }
 
 pub const (
@@ -70,7 +71,11 @@ fn build_token_str() []string {
 	s[Kind.number] = 'number'
 	s[Kind.assign] = '='
 	s[Kind.decl_assign] = ':='
-	s[Kind.assign] = '='
+	s[Kind.eq] = '=='
+	s[Kind.ne] = '!='
+	s[Kind.plus] = '+'
+	s[Kind.div] = '-'
+	s[Kind.mul] = '*'
 	s[Kind.div] = '/'
 	s[Kind.amp] = '&'
 	s[Kind.lcbr] = '{'
@@ -78,7 +83,10 @@ fn build_token_str() []string {
 	s[Kind.lpar] = '('
 	s[Kind.rpar] = ')'
 	s[Kind.dot] = '.'
+	s[Kind.comma] = ','
 	s[Kind.colon] = ':'
+	s[Kind.semcol] = ';'
+	s[Kind.not] = '!'
 	s[Kind.key_fn] = 'fn'
 	s[Kind.key_module] = 'module'
 	s[Kind.key_struct] = 'struct'
