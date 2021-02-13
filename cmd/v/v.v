@@ -29,6 +29,11 @@ fn print_expressions() {
 			println(term.bright_blue(if show_tree {'  enabling tree'}else{'  disabling tree'}))
 			continue
 		}
+		if line == '#tree' {
+			show_tree = !show_tree
+			println(term.bright_blue(if show_tree {'  enabling tree'}else{'  disabling tree'}))
+			continue
+		}
 		syntax_tree := parser.parse_syntax_tree(line)
 		
 		if show_tree {
@@ -42,7 +47,7 @@ fn print_expressions() {
 		} else {
 			mut ev := parser.new_evaluator(syntax_tree.root)
 			res := ev.evaluate()
-			println(term.yellow('$res'))
+			println(term.yellow('    $res'))
 		}
 	}
 }

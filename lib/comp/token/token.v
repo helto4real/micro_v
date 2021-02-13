@@ -1,11 +1,12 @@
 module token
-import util
+
+import lib.comp.util
 
 pub struct Token {
 pub:
-	kind Kind   // the token number/enum; for quick comparisons
-	lit  string // literal representation of the token
-	pos  util.Pos    // position in the file
+	kind Kind     // the token number/enum; for quick comparisons
+	lit  string   // literal representation of the token
+	pos  util.Pos // position in the file
 }
 
 pub fn (t Token) str() string {
@@ -38,8 +39,9 @@ pub enum Kind {
 	ne // '!='
 	not // '!'
 	eof // end of file
+	// Keywords
 	keyword_beg // start of keywords
-	key_fn	// 'fn'
+	key_fn // 'fn'
 	key_module // 'module'
 	key_struct // 'struct'
 	keyword_end // end of keywords

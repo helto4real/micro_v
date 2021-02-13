@@ -2,37 +2,25 @@ module ast
 
 import lib.comp.token
 
-pub struct NumberExp {
+pub struct LiteralExpr {
 	tok  token.Token
-mut:
-	iter_pos int
 pub: 
 	kind  SyntaxKind = .number_expr
 	val   int
 }
 
-pub fn new_number_expression(tok token.Token, val int) NumberExp {
+pub fn new_literal_expression(tok token.Token, val int) LiteralExpr {
 	if tok.kind != .number {
 		panic('Expected a number token')
 	}
-	return NumberExp{
+	return LiteralExpr{
 		tok: tok
 		val: val
 	}
 }
 
-// iterator support for tree walking
-pub fn (mut ne NumberExp) next() ?AstNode {
-	if ne.iter_pos == 0 {
-		ne.iter_pos++
-		return ne.tok
-	}
-	ne.iter_pos = 0
-	return none
-}
-
-pub fn (mut ne NumberExp) child_nodes() []AstNode {
+pub fn (mut le LiteralExpr) child_nodes() []AstNode {
 	mut nodes := []AstNode{cap:1}
-	nodes << ne.tok
+	nodes << le.tok
 	return nodes
 }

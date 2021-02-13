@@ -15,6 +15,11 @@ pub mut:
 	errors []util.Message // errors when parsing
 }
 
+pub fn parse_syntax_tree(text string) SyntaxTree {
+	mut parser := new_parser_from_text(text)
+	return parser.parse()
+}
+
 // new_parser_from_text, instance a parser from a text input
 fn new_parser_from_text(text string) &Parser {
 	mut tnz := token.new_tokenizer_from_string(text)
@@ -27,9 +32,10 @@ fn new_parser_from_text(text string) &Parser {
 	return parser
 }
 
-pub fn parse_syntax_tree(text string) SyntaxTree {
-	mut parser := new_parser_from_text(text)
-	return parser.parse()
+pub fn (mut p Parser) parse() SyntaxTree {
+	expr := p.parse_expression()
+	eof := p.match_token(.eof)
+	return new_syntax_tree(p.errors, expr, eof)
 }
 
 // peek, returns a token at offset from current postion
@@ -73,7 +79,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 
 	print(term.gray(ident))
 	print(term.gray(marker))
-	new_ident := ident + if is_last { '    ' } else { '│   ' }
+	new_ident := ident + if is_last { '   ' } else { '│  ' }
 	match node {
 		ast.Expression {
 			match mut node {
@@ -86,7 +92,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
-				ast.NumberExp {
+				ast.LiteralExpr {
 					println(term.gray('$node.kind'))
 					mut child_nodes := node.child_nodes()
 					for i, child in child_nodes {
@@ -113,17 +119,11 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 	}
 }
 
-pub fn (mut p Parser) parse() SyntaxTree {
-	expr := p.parse_term()
-	eof := p.match_token(.eof)
-	return new_syntax_tree(p.errors, expr, eof)
-}
-
 fn (mut p Parser) parse_expr() ast.Expression {
-	return p.parse_term()
+	return p.parse_expression()
 }
 
-pub fn (mut p Parser) parse_term() ast.Expression {
+pub fn (mut p Parser) parse_expression() ast.Expression {
 	mut left := p.parse_factor()
 
 	for {
@@ -168,5 +168,5 @@ pub fn (mut p Parser) parse_primary_expression() ast.Expression {
 		p.error('Failed to convert number to value <$number_token.lit>')
 		0
 	}
-	return ast.new_number_expression(number_token, val)
+	return ast.new_literal_expression(number_token, val)
 }

@@ -18,7 +18,7 @@ pub fn (mut e Evaluator) evaluate() int {
 
 fn (mut e Evaluator) eval_expr(root ast.Expression) int {
 	match root {
-		ast.NumberExp {
+		ast.LiteralExpr {
 			return root.val
 		}
 		ast.BinaryExpr {

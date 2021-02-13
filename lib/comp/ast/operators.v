@@ -7,8 +7,6 @@ pub const (
 )
 
 pub struct BinaryExpr {
-mut:
-	iter_pos int
 pub:
 	left  Expression
 	op    token.Token
@@ -27,22 +25,6 @@ pub fn new_binary_expression(left Expression, op token.Token, right Expression) 
 		op: op
 		right: right
 	}
-}
-
-// iterator support for tree walking
-pub fn (mut be BinaryExpr) next() ?AstNode {
-	if be.iter_pos == 0 {
-		be.iter_pos++
-		return be.left
-	} else if be.iter_pos == 1 {
-		be.iter_pos++
-		return be.op
-	} else if be.iter_pos == 2 {
-		be.iter_pos++
-		return be.right
-	}
-	be.iter_pos = 0
-	return none
 }
 
 pub fn (mut be BinaryExpr) child_nodes() []AstNode {
