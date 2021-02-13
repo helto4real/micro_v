@@ -16,7 +16,7 @@ pub mut:
 }
 
 // new_parser_from_text, instance a parser from a text input
-pub fn new_parser_from_text(text string) &Parser {
+fn new_parser_from_text(text string) &Parser {
 	mut tnz := token.new_tokenizer_from_string(text)
 
 	mut parser := &Parser{
@@ -25,6 +25,11 @@ pub fn new_parser_from_text(text string) &Parser {
 	}
 	parser.errors << tnz.errors
 	return parser
+}
+
+pub fn parse_syntax_tree(text string) SyntaxTree {
+	mut parser := new_parser_from_text(text)
+	return parser.parse()
 }
 
 // peek, returns a token at offset from current postion
@@ -64,9 +69,6 @@ fn (mut p Parser) match_token(kind token.Kind) token.Token {
 }
 
 pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
-	// print('$node')
-	// ├── └── 
-	// │
 	marker := if is_last { '└──' } else { '├──' }
 
 	print(term.gray(ident))
@@ -116,9 +118,11 @@ pub fn (mut p Parser) parse() SyntaxTree {
 	eof := p.match_token(.eof)
 	return new_syntax_tree(p.errors, expr, eof)
 }
+
 fn (mut p Parser) parse_expr() ast.Expression {
 	return p.parse_term()
 }
+
 pub fn (mut p Parser) parse_term() ast.Expression {
 	mut left := p.parse_factor()
 

@@ -16,16 +16,24 @@ fn main() {
 
 fn print_expressions() {
 	term.clear()
+	mut show_tree := false
 	for {
-		print(term.ok_message('expr:')) 
+		print(term.ok_message('expr:'))
 		print('> ')
 		line := os.get_line()
 		if line == '' {
 			break
 		}
-		mut p := parser.new_parser_from_text(line)
-		syntax_tree := p.parse()
-		parser.pretty_print(syntax_tree.root, '', true)
+		if line == '#tree' {
+			show_tree = !show_tree
+			println(term.bright_blue(if show_tree {'  enabling tree'}else{'  disabling tree'}))
+			continue
+		}
+		syntax_tree := parser.parse_syntax_tree(line)
+		
+		if show_tree {
+			parser.pretty_print(syntax_tree.root, '', true)
+		}
 
 		if syntax_tree.errors.len > 0 {
 			for err in syntax_tree.errors {
@@ -34,7 +42,7 @@ fn print_expressions() {
 		} else {
 			mut ev := parser.new_evaluator(syntax_tree.root)
 			res := ev.evaluate()
-			println(term.yellow('$res')) 
+			println(term.yellow('$res'))
 		}
 	}
 }

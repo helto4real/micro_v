@@ -2,9 +2,9 @@ module ast
 import lib.comp.token
 
 fn test_iterator_binary_operator_expression() {
-	left := new_number_expression( token.Token{kind: .number lit: '100'} )
+	left := new_number_expression( token.Token{kind: .number lit: '100'}, 100 )
 	op_token := token.Token{kind: .plus}
-	right := new_number_expression( token.Token{kind: .number lit: '200'} )
+	right := new_number_expression( token.Token{kind: .number lit: '200'}, 200 )
 	binexpr := new_binary_expression(left, op_token, right)
 
 	mut x := []AstNode{}
@@ -46,7 +46,7 @@ fn test_iterator_binary_operator_expression() {
 }
 
 fn test_iterator_number_expression() {
-	nr_expr := new_number_expression( token.Token{kind: .number lit: '100'} )
+	nr_expr := new_number_expression( token.Token{kind: .number lit: '100'}, 100 )
 	mut x := []AstNode{}
 	for expr in nr_expr {
 		x << expr
