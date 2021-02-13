@@ -33,12 +33,13 @@ fn new_parser_from_text(text string) &Parser {
 }
 
 pub fn (mut p Parser) parse() SyntaxTree {
-	expr := p.parse_term()
+	expr := p.parse_expr()
 	eof := p.match_token(.eof)
 	return new_syntax_tree(p.errors, expr, eof)
 }
 
 // peek, returns a token at offset from current postion
+[inline]
 fn (mut p Parser) peek_token(offset int) token.Token {
 	index := p.pos + offset
 	// return last token if index out of range
@@ -49,11 +50,13 @@ fn (mut p Parser) peek_token(offset int) token.Token {
 }
 
 // current returns current token on position
+[inline]
 fn (mut p Parser) current_token() token.Token {
 	return p.peek_token(0)
 }
 
 // next returns current token and step to next token
+[inline]
 fn (mut p Parser) next_token() token.Token {
 	current_tok := p.current_token()
 	p.pos++
@@ -119,43 +122,43 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 	}
 }
 
+[inline]
 fn (mut p Parser) parse_expr() ast.Expression {
-	return p.parse_term()
+	return p.parse_expression_precedence(0)
 }
 
-pub fn (mut p Parser) parse_term() ast.Expression {
-	mut left := p.parse_factor()
-
-	for {
-		tok := p.current_token()
-		if tok.kind in [token.Kind.plus, token.Kind.minus] {
-			op_token := p.next_token()
-			right := p.parse_factor()
-			left = ast.new_binary_expression(left, op_token, right)
-		} else {
-			break
-		}
-	}
-	return left
-}
-
-pub fn (mut p Parser) parse_factor() ast.Expression {
+fn (mut p Parser) parse_expression_precedence(parent_precedence int) ast.Expression {
 	mut left := p.parse_primary_expression()
 
 	for {
 		tok := p.current_token()
-		if tok.kind in [token.Kind.mul, token.Kind.div] {
-			op_token := p.next_token()
-			right := p.parse_primary_expression()
-			left = ast.new_binary_expression(left, op_token, right)
-		} else {
+		precedence := binary_operator_precedence(tok.kind)
+		if precedence == 0 || precedence <= parent_precedence {
 			break
 		}
+		op_token := p.next_token()
+		right := p.parse_expression_precedence(precedence)
+		left = ast.new_binary_expression(left, op_token, right)
 	}
 	return left
 }
 
-pub fn (mut p Parser) parse_primary_expression() ast.Expression {
+fn binary_operator_precedence(kind token.Kind) int {
+	// the precedence of binary operators in order
+	return match kind {
+		.div, .mul {
+			2
+		}
+		.plus, .minus {
+			1
+		}
+		else {
+			0
+		}
+	}
+}
+
+fn (mut p Parser) parse_primary_expression() ast.Expression {
 	tok := p.current_token()
 	if tok.kind == .lpar {
 		left := p.next_token()
