@@ -5,7 +5,7 @@ import lib.comp.token
 pub struct LiteralExpr {
 	tok  token.Token
 pub: 
-	kind  SyntaxKind = .number_expr
+	kind  SyntaxKind = .literal_expr
 	val   int
 }
 

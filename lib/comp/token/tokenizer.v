@@ -1,5 +1,7 @@
 module token
-import util
+
+import lib.comp.util
+
 const (
 	single_quote = `\'`
 	double_quote = `"`
@@ -68,7 +70,7 @@ pub fn (mut t Tokenizer) next_token() Token {
 			return t.token(kind, name, name.len)
 		}
 	} else if t.ch.is_digit() {
-		number := t.number()
+		number := t.number_literal()
 		return t.token(.number, number, number.len)
 	}
 	match t.ch {
@@ -97,7 +99,7 @@ pub fn (mut t Tokenizer) next_token() Token {
 			return t.token(.div, '/', 1)
 		}
 		token.single_quote, token.double_quote {
-			ident_string := t.string_tok()
+			ident_string := t.string_literal()
 			return t.token(.string, ident_string, ident_string.len)
 		}
 		`:` {
@@ -139,6 +141,7 @@ pub fn (mut t Tokenizer) next_token() Token {
 }
 
 // token instance new token of a kind
+[inline]
 fn (mut t Tokenizer) token(kind Kind, lit string, len int) Token {
 	tok := Token{
 		kind: kind
@@ -155,6 +158,7 @@ fn (mut t Tokenizer) token(kind Kind, lit string, len int) Token {
 }
 
 // next, get next char
+[inline]
 fn (mut t Tokenizer) next() {
 	if t.is_eof {
 		return
@@ -170,6 +174,7 @@ fn (mut t Tokenizer) next() {
 }
 
 // skip, skips n chars
+[inline]
 fn (mut t Tokenizer) skip(n int) {
 	if t.pos + n < t.text.len {
 		t.pos += n
@@ -187,6 +192,7 @@ fn (mut t Tokenizer) skip(n int) {
 }
 
 // peek, peeks the character at pos + n or '\0' if eof
+[inline]
 fn (mut t Tokenizer) peek(n int) byte {
 	if t.pos + n < t.text.len {
 		return t.text[t.pos + n]
@@ -212,12 +218,14 @@ fn (mut t Tokenizer) skip_whitespace() {
 }
 
 // inc_line_nr, increments line number
+[inline]
 fn (mut t Tokenizer) inc_line_nr() {
 	t.ln++
 	t.col = 0
 }
 
 // is_name_char returns true if character is in a name
+[inline]
 pub fn is_name_char(c byte) bool {
 	return (c >= `a` && c <= `z`) || (c >= `A` && c <= `Z`) || c == `_`
 }
@@ -234,7 +242,8 @@ fn (mut t Tokenizer) name_tok() string {
 	return t.text[start..(start + len)]
 }
 
-fn (mut t Tokenizer) string_tok() string {
+// string_literal returns a string literal
+fn (mut t Tokenizer) string_literal() string {
 	start_pos := t.pos + 1
 	mut len := 1
 	mut peek := t.peek(len)
@@ -258,7 +267,7 @@ fn (mut t Tokenizer) string_tok() string {
 }
 
 // name, gets the number token
-fn (mut t Tokenizer) number() string {
+fn (mut t Tokenizer) number_literal() string {
 	start := t.pos
 	mut len := 1
 	mut peek := t.peek(len)
@@ -270,6 +279,7 @@ fn (mut t Tokenizer) number() string {
 }
 
 // is_nl returns true if character is new line
+[inline]
 pub fn is_nl(c byte) bool {
 	return c == `\r` || c == `\n`
 }

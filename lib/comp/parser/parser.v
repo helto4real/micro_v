@@ -33,7 +33,7 @@ fn new_parser_from_text(text string) &Parser {
 }
 
 pub fn (mut p Parser) parse() SyntaxTree {
-	expr := p.parse_expression()
+	expr := p.parse_term()
 	eof := p.match_token(.eof)
 	return new_syntax_tree(p.errors, expr, eof)
 }
@@ -120,10 +120,10 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 }
 
 fn (mut p Parser) parse_expr() ast.Expression {
-	return p.parse_expression()
+	return p.parse_term()
 }
 
-pub fn (mut p Parser) parse_expression() ast.Expression {
+pub fn (mut p Parser) parse_term() ast.Expression {
 	mut left := p.parse_factor()
 
 	for {
