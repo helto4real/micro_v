@@ -63,6 +63,7 @@ fn (mut p Parser) next_token() token.Token {
 	return current_tok
 }
 
+// match_token returns current token if match and move next
 fn (mut p Parser) match_token(kind token.Kind) token.Token {
 	current_token := p.current_token()
 
@@ -91,7 +92,14 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 					mut child_nodes := node.child_nodes()
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
-						// println('LASTNODE: $i ($child_nodes.len) : $last_node')
+						pretty_print(child, new_ident, last_node)
+					}
+				}
+				ast.UnaryExpr {
+					println(term.gray('$node.kind'))
+					mut child_nodes := node.child_nodes()
+					for i, child in child_nodes {
+						last_node := if i < child_nodes.len - 1 { false } else { true }
 						pretty_print(child, new_ident, last_node)
 					}
 				}
@@ -100,7 +108,6 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 					mut child_nodes := node.child_nodes()
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
-						// println('LASTNODE: $i ($child_nodes.len) : $last_node')
 						pretty_print(child, new_ident, last_node)
 					}
 				}
@@ -109,9 +116,11 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 					mut child_nodes := node.child_nodes()
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
-						// println('LASTNODE: $i ($child_nodes.len) : $last_node')
 						pretty_print(child, new_ident, last_node)
 					}
+				}
+				ast.EmptyExpr {
+					panic('None expression should never exist!')
 				}
 			}
 		}
@@ -124,38 +133,34 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 
 [inline]
 fn (mut p Parser) parse_expr() ast.Expression {
-	return p.parse_expression_precedence(0)
+	return p.parse_binary_expr(0)
 }
 
-fn (mut p Parser) parse_expression_precedence(parent_precedence int) ast.Expression {
-	mut left := p.parse_primary_expression()
+fn (mut p Parser) parse_binary_expr(parent_precedence int) ast.Expression {
+	mut left := ast.Expression(ast.EmptyExpr{})
+	mut tok := p.current_token()
+	
+	unary_op_prec := unary_operator_precedence(tok.kind)
 
+	if unary_op_prec != 0 && unary_op_prec >= parent_precedence {
+		op_token := p.next_token()
+		operand := p.parse_binary_expr(unary_op_prec)
+		left = ast.new_unary_expression(op_token, operand)
+	} else {
+		left = p.parse_primary_expression()
+	}
+	
 	for {
-		tok := p.current_token()
+		tok = p.current_token()
 		precedence := binary_operator_precedence(tok.kind)
 		if precedence == 0 || precedence <= parent_precedence {
 			break
 		}
 		op_token := p.next_token()
-		right := p.parse_expression_precedence(precedence)
+		right := p.parse_binary_expr(precedence)
 		left = ast.new_binary_expression(left, op_token, right)
 	}
 	return left
-}
-
-fn binary_operator_precedence(kind token.Kind) int {
-	// the precedence of binary operators in order
-	return match kind {
-		.div, .mul {
-			2
-		}
-		.plus, .minus {
-			1
-		}
-		else {
-			0
-		}
-	}
 }
 
 fn (mut p Parser) parse_primary_expression() ast.Expression {

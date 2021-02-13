@@ -29,9 +29,8 @@ fn print_expressions() {
 			println(term.bright_blue(if show_tree {'  enabling tree'}else{'  disabling tree'}))
 			continue
 		}
-		if line == '#tree' {
-			show_tree = !show_tree
-			println(term.bright_blue(if show_tree {'  enabling tree'}else{'  disabling tree'}))
+		if line == '#cls' {
+			term.clear()
 			continue
 		}
 		syntax_tree := parser.parse_syntax_tree(line)
@@ -46,7 +45,10 @@ fn print_expressions() {
 			}
 		} else {
 			mut ev := parser.new_evaluator(syntax_tree.root)
-			res := ev.evaluate()
+			res := ev.evaluate() or {
+				println(term.fail_message('Error in eval: $err'))
+				0
+			}
 			println(term.yellow('    $res'))
 		}
 	}

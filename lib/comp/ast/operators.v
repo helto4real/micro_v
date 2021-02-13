@@ -4,6 +4,7 @@ import lib.comp.token
 
 pub const (
 	binary_expression_tokens = [token.Kind(token.Kind.plus), .minus, .mul, .div]
+	unary_expression_tokens = [token.Kind(token.Kind.plus), .minus]
 )
 
 pub struct BinaryExpr {
@@ -32,6 +33,32 @@ pub fn (mut be BinaryExpr) child_nodes() []AstNode {
 	nodes << be.left
 	nodes << be.op
 	nodes << be.right
+	return nodes
+}
+
+pub struct UnaryExpr {
+pub:
+	op    token.Token
+	operand Expression
+	kind  SyntaxKind = .unary_expr
+}
+
+// new_binary_expression instance an binary expression 
+// with a left side, right side and operator
+pub fn new_unary_expression(op token.Token, operand Expression) UnaryExpr {
+	if !(op.kind in ast.unary_expression_tokens) {
+		panic('Expected a unary expresson token, got ($op.kind)')
+	}
+	return UnaryExpr{
+		op: op
+		operand: operand
+	}
+}
+
+pub fn (mut be UnaryExpr) child_nodes() []AstNode {
+	mut nodes := []AstNode{cap: 3}
+	nodes << be.op
+	nodes << be.operand
 	return nodes
 }
 

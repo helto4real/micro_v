@@ -6,6 +6,7 @@ module ast
 enum SyntaxKind {
 	literal_expr
 	binary_expr
+	unary_expr
 	para_expr
 	operator_node
 }
