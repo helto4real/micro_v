@@ -17,8 +17,6 @@ fn main() {
 }
 
 fn print_expressions() {
-	// mut binder := binding.new_binder() 
-	// binder.bind_expr(ast.new_literal_expression(token.Token{kind: .number lit: '100'}, 100))
 	term.clear()
 	mut show_tree := false
 	for {
@@ -43,8 +41,8 @@ fn print_expressions() {
 			parser.pretty_print(syntax_tree.root, '', true)
 		}
 
-		if syntax_tree.errors.len > 0 {
-			for err in syntax_tree.errors {
+		if syntax_tree.log.all.len > 0 {
+			for err in syntax_tree.log.all {
 				println(term.fail_message(err.text))
 			}
 		} else {

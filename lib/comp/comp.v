@@ -21,9 +21,9 @@ pub fn new_compilation(syntax_tree parser.SyntaxTree) &Compilation {
 pub fn (mut c Compilation) evaluate() EvaluationResult {
 	mut binder := binding.new_binder()
 	bounded_expr := binder.bind_expr(c.syntax.root)
-	mut result := []util.Message{}
-	result << c.syntax.errors
-	result << binder.errors
+	mut result := []util.Diagnostic{}
+	result << c.syntax.log.all
+	result << binder.log.all
 	if result.len > 0 {
 		return new_evaluation_result(result, 0)
 	}
@@ -37,11 +37,11 @@ pub fn (mut c Compilation) evaluate() EvaluationResult {
 
 pub struct EvaluationResult {
 pub:
-	result []util.Message
+	result []util.Diagnostic
 	val    types.LitVal
 }
 
-pub fn new_evaluation_result(result []util.Message, val types.LitVal) EvaluationResult {
+pub fn new_evaluation_result(result []util.Diagnostic, val types.LitVal) EvaluationResult {
 	return EvaluationResult{
 		result: result
 		val: val

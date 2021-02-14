@@ -6,7 +6,7 @@ pub struct Token {
 pub:
 	kind Kind     // the token number/enum; for quick comparisons
 	lit  string   // literal representation of the token
-	pos  util.Pos // position in the file
+	pos  util.Pos 	  // position in the file
 }
 
 pub fn (t Token) str() string {

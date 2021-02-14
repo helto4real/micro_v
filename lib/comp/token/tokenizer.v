@@ -16,7 +16,7 @@ mut:
 	ch     byte = `\0` // current char
 	is_eof bool
 pub mut:
-	errors []util.Message // errors when tokenizing
+	log util.Diagnostics // errors when tokenizing
 }
 
 // instance a tokenizer from string
@@ -144,12 +144,12 @@ pub fn (mut t Tokenizer) next_token() Token {
 			return t.token(.comma, ',', 1)
 		}
 		else {
-			t.error('unexpected token: $t.ch.ascii_str()')
+			t.log.error_unexpected('token', t.ch.ascii_str(), t.pos())
 			return t.token(.error, '$t.ch.ascii_str()', 1)
 		}
 	}
 
-	t.error('unexpected token: $t.ch.ascii_str()')
+	t.log.error_unexpected('token', t.ch.ascii_str(), t.pos())
 	return t.token(.error, '$t.ch.ascii_str()', 1)
 }
 
@@ -198,7 +198,8 @@ fn (mut t Tokenizer) skip(n int) {
 		t.is_eof = true
 		t.ch = `\0`
 		if t.pos + n > t.text.len + 1 {
-			t.error('skipping character pos out of scope: $t.pos, $n ($t.text.len)')
+			t.log.error('skipping character pos out of scope: $t.pos, $n ($t.text.len)',
+				util.new_pos(t.pos, t.ln, t.col))
 		}
 		t.pos = t.text.len
 	}
@@ -255,6 +256,10 @@ fn (mut t Tokenizer) name_tok() string {
 	return t.text[start..(start + len)]
 }
 
+fn (mut t Tokenizer) pos() util.Pos {
+	return util.new_pos(t.pos, t.ln, t.col)
+}
+
 // string_literal returns a string literal
 fn (mut t Tokenizer) string_literal() string {
 	start_pos := t.pos + 1
@@ -263,7 +268,7 @@ fn (mut t Tokenizer) string_literal() string {
 	q_char := t.ch
 	for {
 		if peek == `\0` {
-			t.error('unfinished string literal')
+			t.log.error('unfinished string literal', t.pos())
 			break
 		}
 		if peek == q_char {

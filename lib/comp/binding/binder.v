@@ -5,7 +5,7 @@ import lib.comp.util
 
 pub struct Binder {
 pub mut:
-	errors []util.Message // errors when parsing
+	log util.Diagnostics // errors when parsing
 }
 
 pub fn bind_syntaxt_tree(expr ast.Expression) BoundExpr {

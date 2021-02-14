@@ -180,8 +180,7 @@ fn new_bound_literal_expr(val types.LitVal) BoundExpr {
 fn (mut b Binder) bind_unary_expr(syntax ast.UnaryExpr) BoundExpr {
 	bound_operand := b.bind_expr(syntax.operand)
 	bound_op := bind_unary_operator(syntax.op.kind, bound_operand.typ()) or {
-		b.error('Unary operator $syntax.op.lit is not defined for type ${bound_operand.typ_str()}.',
-			syntax.op.pos)
+		b.log.error('Unary operator $syntax.op.lit is not defined for type ${bound_operand.typ_str()}.', syntax.op.pos)
 		return bound_operand
 	}
 	return new_bound_unary_expr(bound_op, bound_operand)
@@ -191,8 +190,7 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 	bound_left := b.bind_expr(syntax.left)
 	bound_right := b.bind_expr(syntax.right)
 	bound_op := bind_binary_operator(syntax.op.kind, bound_left.typ(), bound_right.typ()) or {
-		b.error('Binary operator $syntax.op.lit is not defined for types $bound_left.typ_str() and ${bound_right.typ_str()}.',
-			syntax.op.pos)
+		b.log.error('Binary operator $syntax.op.lit is not defined for types $bound_left.typ_str() and ${bound_right.typ_str()}.', syntax.op.pos)
 		return bound_left
 	}
 	return new_bound_binary_expr(bound_left, bound_op, bound_right)

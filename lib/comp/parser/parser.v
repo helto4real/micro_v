@@ -12,7 +12,7 @@ mut:
 	pos    int
 	tokens []token.Token
 pub mut:
-	errors []util.Message // errors when parsing
+	log util.Diagnostics // errors when parsing
 }
 
 pub fn parse_syntax_tree(text string) SyntaxTree {
@@ -27,15 +27,15 @@ fn new_parser_from_text(text string) &Parser {
 	mut parser := &Parser{
 		text: text
 		tokens: tnz.scan_all()
+		log: tnz.log
 	}
-	parser.errors << tnz.errors
 	return parser
 }
 
 pub fn (mut p Parser) parse() SyntaxTree {
 	expr := p.parse_expr()
 	eof := p.match_token(.eof)
-	return new_syntax_tree(p.errors, expr, eof)
+	return new_syntax_tree(p.log, expr, eof)
 }
 
 // peek, returns a token at offset from current postion
@@ -70,7 +70,7 @@ fn (mut p Parser) match_token(kind token.Kind) token.Token {
 	if current_token.kind == kind {
 		return p.next_token()
 	}
-	p.error('unexpected token <$current_token.kind>,  expected <$kind>')
+	p.log.error_expected("token", current_token.kind.str(), kind.str(), current_token.pos)
 	return token.Token{
 		kind: kind
 		pos: current_token.pos
@@ -180,7 +180,7 @@ fn (mut p Parser) parse_primary_expression() ast.Expression {
 		else {
 			number_token := p.match_token(.number)
 			val := strconv.atoi(number_token.lit) or {
-				p.error('Failed to convert number to value <$number_token.lit>')
+				// p.error('Failed to convert number to value <$number_token.lit>')
 				0
 			}
 			return ast.new_literal_expression(number_token, val)
