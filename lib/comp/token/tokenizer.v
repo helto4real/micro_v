@@ -182,12 +182,12 @@ fn (mut t Tokenizer) skip(n int) {
 		t.ch = t.text[t.pos]
 	} else {
 		t.col += n
-		t.pos = t.text.len
 		t.is_eof = true
 		t.ch = `\0`
 		if t.pos + n > t.text.len + 1 {
 			t.error('skipping character pos out of scope: $t.pos, $n ($t.text.len)')
 		}
+		t.pos = t.text.len
 	}
 }
 

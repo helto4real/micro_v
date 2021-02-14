@@ -9,4 +9,5 @@ enum SyntaxKind {
 	unary_expr
 	para_expr
 	operator_node
+	empty
 }

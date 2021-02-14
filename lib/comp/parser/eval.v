@@ -1,54 +1,53 @@
 module parser
 
-import lib.comp.ast
+import lib.comp.binding
 
 pub struct Evaluator {
-	root ast.Expression
+	root binding.BoundExpr
 }
 
-pub fn new_evaluator(root ast.Expression) Evaluator {
+pub fn new_evaluator(root binding.BoundExpr) Evaluator {
 	return Evaluator {
 		root: root
 	}
 }
 
-pub fn (mut e Evaluator) evaluate() ?int {
+pub fn (mut e Evaluator) evaluate() ?binding.LitVal {
 	return e.eval_expr(e.root)
 }
 
-fn (mut e Evaluator) eval_expr(root ast.Expression) ?int {
+fn (mut e Evaluator) eval_expr(root binding.BoundExpr) ?binding.LitVal {
 	match root {
-		ast.LiteralExpr {
+		binding.BoundLiteralExpr {
 			return root.val
 		}
-		ast.UnaryExpr {
+		binding.BoundUnaryExpression {
 			operand := e.eval_expr(root.operand) ?
-			match root.op.kind {
-				.plus {
-					return operand
-				} 
-				.minus {
-					return -operand
-				} 
-				else {panic('unexpected unary token $root.kind')}
+			operand_int := operand as int
+			match root.op_kind {
+				.identity {	return operand_int } 
+				.negation {	return -operand_int	} 
+				else {panic('unexpected unary token $root.op_kind')}
 			} 
 		}
-		ast.BinaryExpr {
-			left := e.eval_expr(root.left) ?
-			right := e.eval_expr(root.right) ?
-			match root.op.kind {
-				.plus {return left + right}
-				.minus {return left - right}
-				.mul {return left * right}
-				.div {return left / right}
-				else {panic('operator <$root.op.kind> not expected')}
+		binding.BoundBinaryExpr {
+			left := e.eval_expr(root.left) ? 
+			right := e.eval_expr(root.right) ? 
+			left_int := left as int
+			right_int := right as int
+			match root.op_kind {
+				.addition {return left_int + right_int}
+				.subraction {return left_int - right_int}
+				.multiplication {return left_int * right_int}
+				.divition {return left_int / right_int}
+				else {panic('operator <$root.op_kind> not expected')}
 			}
 		}
-		ast.ParaExpr {
-			return e.eval_expr(root.expr) 
-		}
-		ast.EmptyExpr {
-			return error('NoneExpr should never occur, parser bug.')
-		}
+		// ast.ParaExpr {
+		// 	return e.eval_expr(root.expr) 
+		// }
+		// ast.EmptyExpr {
+		// 	return error('NoneExpr should never occur, parser bug.')
+		// }
 	}
 }

@@ -1,5 +1,7 @@
 import lib.comp.token
 import lib.comp.parser
+import lib.comp.binding
+// import lib.comp.ast
 import os
 import term
 
@@ -15,6 +17,8 @@ fn main() {
 }
 
 fn print_expressions() {
+	// mut binder := binding.new_binder() 
+	// binder.bind_expr(ast.new_literal_expression(token.Token{kind: .number lit: '100'}, 100))
 	term.clear()
 	mut show_tree := false
 	for {
@@ -44,7 +48,8 @@ fn print_expressions() {
 				println(term.fail_message(err.text))
 			}
 		} else {
-			mut ev := parser.new_evaluator(syntax_tree.root)
+			bounded_syntax := binding.bind_syntaxt_tree(syntax_tree.root)
+			mut ev := parser.new_evaluator(bounded_syntax)
 			res := ev.evaluate() or {
 				println(term.fail_message('Error in eval: $err'))
 				0
