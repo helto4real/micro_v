@@ -20,7 +20,7 @@ fn (be BoundExpr) typ_str() string {
 			return types.built_in_types[int(be.typ)]
 		}
 		BoundUnaryExpression, BoundBinaryExpr {
-			return be.typ.str()
+			return types.built_in_types[int(be.typ)]
 		}
 	}
 }

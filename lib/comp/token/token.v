@@ -10,7 +10,8 @@ pub:
 }
 
 pub fn (t Token) str() string {
-	return "tok: [$t.pos.pos, ($t.pos.ln, $t.pos.col)] $t.kind '$t.lit'"
+	return "tok: [$t.pos.pos, ($t.pos.len) $t.kind '$t.lit'"
+	// return "tok: [$t.pos.pos, ($t.pos.ln, $t.pos.col)] $t.kind '$t.lit'"
 }
 
 // Kind of token
