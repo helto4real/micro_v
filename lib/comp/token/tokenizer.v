@@ -58,6 +58,7 @@ pub fn (mut t Tokenizer) next_token() Token {
 	if t.is_eof {
 		return t.token(.eof, 'eof', 1)
 	}
+
 	nextc := t.peek(1)
 
 	// Check for identifiers and keyword identifiers
@@ -127,6 +128,19 @@ pub fn (mut t Tokenizer) next_token() Token {
 			}
 			return t.token(.not, '!', 1)
 		}
+		`&` {
+			if nextc == `&` {
+				return t.token(.amp_amp, '&&', 2)
+			}
+			return t.token(.amp, '&', 1)
+		}
+		`|` {
+			if nextc == `|` {
+				return t.token(.pipe_pipe, '||', 2)
+			}
+			return t.token(.pipe, '|', 1)
+		}
+
 		`,` {
 			return t.token(.comma, ',', 1)
 		}

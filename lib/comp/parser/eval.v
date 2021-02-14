@@ -24,23 +24,24 @@ fn (mut e Evaluator) eval_expr(root binding.BoundExpr) ?types.LitVal {
 		}
 		binding.BoundUnaryExpression {
 			operand := e.eval_expr(root.operand) ?
-			operand_int := operand as int
 			match root.op_kind {
-				.identity {	return operand_int } 
-				.negation {	return -operand_int	} 
+				.identity { return operand as int } 
+				.negation {	return -(operand as int) } 
+				.logic_negation { return !(operand as bool) } 
 				else {panic('unexpected unary token $root.op_kind')}
 			} 
 		}
 		binding.BoundBinaryExpr {
 			left := e.eval_expr(root.left) ? 
 			right := e.eval_expr(root.right) ? 
-			left_int := left as int
-			right_int := right as int
+			// compiler bug does not work with normal cast
 			match root.op_kind {
-				.addition {return left_int + right_int}
-				.subraction {return left_int - right_int}
-				.multiplication {return left_int * right_int}
-				.divition {return left_int / right_int}
+				.addition {return (left as int) + (right as int)}
+				.subraction {return (left as int) - (right as int)}
+				.multiplication {return (left as int) * (right as int)}
+				.divition {return (left as int) / (right as int)}
+				.logic_and {return (left as bool) && (right as bool)}
+				.logic_or {return (left as bool) || (right as bool)}
 				else {panic('operator <$root.op_kind> not expected')}
 			}
 		}

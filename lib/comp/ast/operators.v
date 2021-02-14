@@ -3,8 +3,8 @@ module ast
 import lib.comp.token
 
 pub const (
-	binary_expression_tokens = [token.Kind(token.Kind.plus), .minus, .mul, .div]
-	unary_expression_tokens = [token.Kind(token.Kind.plus), .minus]
+	binary_expression_tokens = [token.Kind(token.Kind.plus), .minus, .mul, .div, .amp_amp, .pipe_pipe]
+	unary_expression_tokens = [token.Kind(token.Kind.plus), .minus, .not]
 )
 
 pub struct BinaryExpr {

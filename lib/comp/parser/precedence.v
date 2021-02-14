@@ -1,19 +1,16 @@
 module parser
+
 import lib.comp.token
 
 // binary_operator_precedence returns the precedence of operator
 fn binary_operator_precedence(kind token.Kind) int {
 	// the precedence of binary operators in order
 	return match kind {
-		.div, .mul {
-			2
-		}
-		.plus, .minus {
-			1
-		}
-		else {
-			0
-		}
+		.div, .mul { 4 }
+		.plus, .minus { 3 }
+		.amp_amp { 2 }
+		.pipe_pipe { 1 }
+		else { 0 }
 	}
 }
 
@@ -21,11 +18,7 @@ fn binary_operator_precedence(kind token.Kind) int {
 fn unary_operator_precedence(kind token.Kind) int {
 	// the precedence of binary operators in order
 	return match kind {
-		.plus, .minus {
-			3
-		}
-		else {
-			0
-		}
+		.plus, .minus, .not{5}
+		else {0}
 	}
 }

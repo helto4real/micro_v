@@ -7,6 +7,7 @@ import lib.comp.token
 enum BoundUnaryOperatorKind {
 	identity
 	negation
+	logic_negation
 	not_supported
 }
 
@@ -15,6 +16,8 @@ enum BoundBinaryOperatorKind {
 	subraction
 	multiplication
 	divition
+	logic_and
+	logic_or
 	not_supported
 }
 
@@ -91,43 +94,59 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 }
 
 fn (mut b Binder) bind_unary_op_kind(kind token.Kind, typ types.Type) BoundUnaryOperatorKind {
-	if typ != 2 {
-		// TODO: fix the type system later
-		return .not_supported
+	if typ == int(types.TypeKind.int_lit) {
+		match kind {
+			.plus {
+				return .identity
+			}
+			.minus {
+				return .negation
+			}
+			else{/*just falls through to not supported*/}
+		}
+	} 
+	
+	if typ == int(types.TypeKind.bool_lit) {
+		match kind {
+			.not {
+				return .logic_negation
+			}
+			else{/*just falls through to not supported*/}
+		}		
 	}
-	match kind {
-		.plus {
-			return .identity
-		}
-		.minus {
-			return .negation
-		}
-		else {
-			panic('unexpected unary operation kund $kind')
-		}
-	}
+	return .not_supported
 }
 
 fn (mut b Binder) bind_binary_op_kind(kind token.Kind, left_typ types.Type, right_typ types.Type) BoundBinaryOperatorKind {
-	if left_typ != 2 || right_typ != 2 {
-		// TODO: fix the type system later
-		return .not_supported
-	}
-	match kind {
-		.plus {
-			return .addition
-		}
-		.minus {
-			return .subraction
-		}
-		.mul {
-			return .multiplication
-		}
-		.div {
-			return .divition
-		}
-		else {
-			panic('unexpected binary operation kind $kind')
+	int_type := int(types.TypeKind.int_lit)
+	if left_typ == int_type && right_typ == int_type {
+		match kind {
+			.plus {
+				return .addition
+			}
+			.minus {
+				return .subraction
+			}
+			.mul {
+				return .multiplication
+			}
+			.div {
+				return .divition
+			}
+			else{/*just falls through to not supported*/}
 		}
 	}
+	bool_type := int(types.TypeKind.bool_lit)
+	if left_typ == bool_type && right_typ == bool_type {
+		match kind {
+			.amp_amp {
+				return .logic_and
+			}
+			.pipe_pipe {
+				return .logic_or
+			}
+			else{/*just falls through to not supported*/}
+		}
+	}
+	return .not_supported
 }

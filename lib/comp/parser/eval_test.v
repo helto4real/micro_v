@@ -1,24 +1,61 @@
 module parser
+import lib.comp.binding
 
 fn test_eval_basic_expressions() {
-	assert eval('2+2') == 4
-	assert eval('10+2-4') == 8
+	assert eval_int('2+2') == 4
+	assert eval_int('10+2-4') == 8
 	// test precedence
-	assert eval('10+8*2') == 26
-	assert eval('10+8*2/4') == 14
-	// test parantheses
-	assert eval('(10+8)*2/4') == 9
-	assert eval('(10+8)*((2+2)*(2+3))') == 360
+	assert eval_int('10+8*2') == 26
+	assert eval_int('10+8*2/4') == 14
+	// test parantheses TODO: Add them when supported
+	// assert eval_int('(10+8)*2/4') == 9
+	// assert eval_int('(10+8)*((2+2)*(2+3))') == 360
 
 	// test unary expressions
-	assert eval('-1') == -1
+	assert eval_int('-1') == -1
 
+	// test boolean expressions
+	assert eval_bool('true') == true
+	assert eval_bool('false') == false
+	assert eval_bool('true && true') == true
+	assert eval_bool('true && false') == false
+	assert eval_bool('false && false') == false
+	assert eval_bool('false && false') == false
+	assert eval_bool('true') == true
+	assert eval_bool('true || false') == true
+	assert eval_bool('true || true') == true
+	assert eval_bool('false || true') == true
+	assert eval_bool('false || false') == false
 }
 
-fn eval(expr string) int {
+fn eval_int(expr string) int {
 	syntax_tree := parser.parse_syntax_tree(expr)
 	assert syntax_tree.errors.len == 0
-	mut ev := parser.new_evaluator(syntax_tree.root)
+
+	mut binder := binding.new_binder()
+	bounded_syntax := binder.bind_expr(syntax_tree.root)
+	assert binder.errors.len == 0
+
+	mut ev := parser.new_evaluator(bounded_syntax)
 	res := ev.evaluate() or {panic(err)}
-	return res
+	if res is int {
+		return res
+	}
+	panic('unexpected return type: $res')
+}
+
+fn eval_bool(expr string) bool {
+	syntax_tree := parser.parse_syntax_tree(expr)
+	assert syntax_tree.errors.len == 0
+
+	mut binder := binding.new_binder()
+	bounded_syntax := binder.bind_expr(syntax_tree.root)
+	assert binder.errors.len == 0
+
+	mut ev := parser.new_evaluator(bounded_syntax)
+	res := ev.evaluate() or {panic(err)}
+	if res is bool {
+		return res
+	}
+	panic('unexpected return type: $res')
 }

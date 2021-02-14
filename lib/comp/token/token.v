@@ -35,9 +35,12 @@ pub enum Kind {
 	mul // '*'
 	div // '/'
 	amp // '&'
+	pipe // '|'
 	eq // '=='
 	ne // '!='
 	not // '!'
+	pipe_pipe // '||'
+	amp_amp // '&&'
 	eof // end of file
 	// Keywords
 	keyword_beg // start of keywords
@@ -82,6 +85,7 @@ fn build_token_str() []string {
 	s[Kind.mul] = '*'
 	s[Kind.div] = '/'
 	s[Kind.amp] = '&'
+	s[Kind.pipe] = '|'
 	s[Kind.lcbr] = '{'
 	s[Kind.rcbr] = '}'
 	s[Kind.lpar] = '('
@@ -90,6 +94,8 @@ fn build_token_str() []string {
 	s[Kind.comma] = ','
 	s[Kind.colon] = ':'
 	s[Kind.semcol] = ';'
+	s[Kind.pipe_pipe] = '||'
+	s[Kind.amp_amp] = '&&'
 	s[Kind.not] = '!'
 	s[Kind.key_true] = 'true'
 	s[Kind.key_false] = 'false'
