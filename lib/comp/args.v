@@ -1,4 +1,4 @@
-module args
+module comp
 
 pub struct Args {
 }

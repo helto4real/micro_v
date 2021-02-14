@@ -1,4 +1,4 @@
-module parser
+module comp
 
 import lib.comp.binding
 import lib.comp.types

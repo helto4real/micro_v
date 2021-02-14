@@ -136,7 +136,7 @@ pub:
 
 fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr {
 	return BoundUnaryExpression{
-		kind: .literal_expression
+		kind: .unary_expression
 		typ: op.res_typ
 		op: op
 		operand: operand

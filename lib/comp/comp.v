@@ -1,11 +1,49 @@
-module v
-import parser
-import token
+// comp module implements the compiler and evaluator 
+module comp
 
-pub struct Compiler {
+import term
+import lib.comp.parser
+import lib.comp.binding
+import lib.comp.types
+import lib.comp.util
 
+pub struct Compilation {
+pub mut:
+	syntax parser.SyntaxTree
 }
 
-pub fn new_compiler(args Arg) &Compiler {
-	return &Compiler {}
+pub fn new_compilation(syntax_tree parser.SyntaxTree) &Compilation {
+	return &Compilation{
+		syntax: syntax_tree
+	}
+}
+
+pub fn (mut c Compilation) evaluate() EvaluationResult {
+	mut binder := binding.new_binder()
+	bounded_expr := binder.bind_expr(c.syntax.root)
+	mut result := []util.Message{}
+	result << c.syntax.errors
+	result << binder.errors
+	if result.len > 0 {
+		return new_evaluation_result(result, 0)
+	}
+	mut evaluator := new_evaluator(bounded_expr)
+	val := evaluator.evaluate() or {
+		println(term.fail_message('Error in eval: $err'))
+		0
+	}
+	return new_evaluation_result(result, val)
+}
+
+pub struct EvaluationResult {
+pub:
+	result []util.Message
+	val    types.LitVal
+}
+
+pub fn new_evaluation_result(result []util.Message, val types.LitVal) EvaluationResult {
+	return EvaluationResult{
+		result: result
+		val: val
+	}
 }

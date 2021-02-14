@@ -7,9 +7,9 @@ fn test_eval_basic_expressions() {
 	// test precedence
 	assert eval_int('10+8*2') == 26
 	assert eval_int('10+8*2/4') == 14
-	// test parantheses TODO: Add them when supported
-	// assert eval_int('(10+8)*2/4') == 9
-	// assert eval_int('(10+8)*((2+2)*(2+3))') == 360
+	// test parantheses 
+	assert eval_int('(10+8)*2/4') == 9
+	assert eval_int('(10+8)*((2+2)*(2+3))') == 360
 
 	// test unary expressions
 	assert eval_int('-1') == -1
