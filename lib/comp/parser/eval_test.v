@@ -1,5 +1,7 @@
-module parser
+// module parser
 import lib.comp.binding
+import lib.comp.parser
+import lib.comp
 
 fn test_eval_basic_expressions() {
 	assert eval_int('2+2') == 4
@@ -44,13 +46,13 @@ fn test_eval_basic_expressions() {
 
 fn eval_int(expr string) int {
 	syntax_tree := parser.parse_syntax_tree(expr)
-	assert syntax_tree.errors.len == 0
+	assert syntax_tree.log.all.len == 0
 
 	mut binder := binding.new_binder()
 	bounded_syntax := binder.bind_expr(syntax_tree.root)
-	assert binder.errors.len == 0
+	assert binder.log.all.len == 0
 
-	mut ev := parser.new_evaluator(bounded_syntax)
+	mut ev := comp.new_evaluator(bounded_syntax)
 	res := ev.evaluate() or {panic(err)}
 	if res is int {
 		return res
@@ -60,13 +62,13 @@ fn eval_int(expr string) int {
 
 fn eval_bool(expr string) bool {
 	syntax_tree := parser.parse_syntax_tree(expr)
-	assert syntax_tree.errors.len == 0
+	assert syntax_tree.log.all.len == 0
 
 	mut binder := binding.new_binder()
 	bounded_syntax := binder.bind_expr(syntax_tree.root)
-	assert binder.errors.len == 0
+	assert binder.log.all.len == 0
 
-	mut ev := parser.new_evaluator(bounded_syntax)
+	mut ev := comp.new_evaluator(bounded_syntax)
 	res := ev.evaluate() or {panic(err)}
 	if res is bool {
 		return res

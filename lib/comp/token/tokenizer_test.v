@@ -74,14 +74,12 @@ fn test_name_and_number() {
 	assert tokens[0].kind == .name
 	assert tokens[0].lit == 'hello'
 	assert tokens[0].pos.pos == 0
-	assert tokens[0].pos.ln == 1
-	assert tokens[0].pos.col == 1
+	assert tokens[0].pos.len == 5
 
 	assert tokens[1].kind == .number
 	assert tokens[1].lit == '12345'
 	assert tokens[1].pos.pos == 6
-	assert tokens[1].pos.ln == 1
-	assert tokens[1].pos.col == 7
+	assert tokens[1].pos.len == 5
 }
 
 // name and number compo tests
@@ -91,14 +89,12 @@ fn test_name_and_number_correct_lnr_ln() {
 	assert tokens[0].kind == .name
 	assert tokens[0].lit == 'hello'
 	assert tokens[0].pos.pos == 0
-	assert tokens[0].pos.ln == 1
-	assert tokens[0].pos.col == 1
+	assert tokens[0].pos.len == 5
 
 	assert tokens[1].kind == .number
 	assert tokens[1].lit == '12345'
 	assert tokens[1].pos.pos == 6
-	assert tokens[1].pos.ln == 2
-	assert tokens[1].pos.col == 1
+	assert tokens[1].pos.len == 5
 }
 
 fn test_name_and_number_correct_lnr_cr_ln() {
@@ -107,14 +103,12 @@ fn test_name_and_number_correct_lnr_cr_ln() {
 	assert tokens[0].kind == .name
 	assert tokens[0].lit == 'hello'
 	assert tokens[0].pos.pos == 0
-	assert tokens[0].pos.ln == 1
-	assert tokens[0].pos.col == 1
+	assert tokens[0].pos.len == 5
 
 	assert tokens[1].kind == .number
 	assert tokens[1].lit == '12345'
 	assert tokens[1].pos.pos == 7
-	assert tokens[1].pos.ln == 2
-	assert tokens[1].pos.col == 1
+	assert tokens[1].pos.len == 5
 }
 
 // test that multi line returns correct col and line number
@@ -123,17 +117,17 @@ fn test_name_and_number_correct_multiple_lines() {
 
 	mut tokens := tkz.scan_all()
 	assert tokens[0].kind == .name
-	assert tokens[0].pos.ln == 1
-	assert tokens[0].pos.col == 1
+	assert tokens[0].pos.pos == 0
+	assert tokens[0].pos.len == 5
 
-	assert tokens[1].pos.ln == 2
-	assert tokens[1].pos.col == 1
+	assert tokens[1].pos.pos == 6
+	assert tokens[1].pos.len == 5
 
-	assert tokens[2].pos.ln == 3
-	assert tokens[2].pos.col == 1
+	assert tokens[2].pos.pos == 12
+	assert tokens[2].pos.len == 5
 
-	assert tokens[3].pos.ln == 4
-	assert tokens[3].pos.col == 1
+	assert tokens[3].pos.pos == 18
+	assert tokens[3].pos.len == 4
 }
 
 // name and number compo tests
@@ -185,8 +179,8 @@ fn test_string_literal_error_missing_end_quote() {
 	mut tok := tkz.next_token()
 	assert tok.kind == .string
 	assert tok.lit == ''
-	assert tkz.errors.len == 1
-	assert tkz.errors[0].pos.pos == 0
+	assert tkz.log.all.len == 1
+	assert tkz.log.all[0].pos.pos == 0
 }
 
 fn test_para() {
