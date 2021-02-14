@@ -44,6 +44,8 @@ pub enum Kind {
 	key_fn // 'fn'
 	key_module // 'module'
 	key_struct // 'struct'
+	key_true // 'true'
+	key_false // 'false'
 	keyword_end // end of keywords
 	_end_ // end of enum
 }
@@ -89,6 +91,8 @@ fn build_token_str() []string {
 	s[Kind.colon] = ':'
 	s[Kind.semcol] = ';'
 	s[Kind.not] = '!'
+	s[Kind.key_true] = 'true'
+	s[Kind.key_false] = 'false'
 	s[Kind.key_fn] = 'fn'
 	s[Kind.key_module] = 'module'
 	s[Kind.key_struct] = 'struct'

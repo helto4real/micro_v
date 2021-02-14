@@ -1,6 +1,7 @@
 module parser
 
 import lib.comp.binding
+import lib.comp.types
 
 pub struct Evaluator {
 	root binding.BoundExpr
@@ -12,11 +13,11 @@ pub fn new_evaluator(root binding.BoundExpr) Evaluator {
 	}
 }
 
-pub fn (mut e Evaluator) evaluate() ?binding.LitVal {
+pub fn (mut e Evaluator) evaluate() ?types.LitVal {
 	return e.eval_expr(e.root)
 }
 
-fn (mut e Evaluator) eval_expr(root binding.BoundExpr) ?binding.LitVal {
+fn (mut e Evaluator) eval_expr(root binding.BoundExpr) ?types.LitVal {
 	match root {
 		binding.BoundLiteralExpr {
 			return root.val

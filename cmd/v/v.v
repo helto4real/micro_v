@@ -48,13 +48,20 @@ fn print_expressions() {
 				println(term.fail_message(err.text))
 			}
 		} else {
-			bounded_syntax := binding.bind_syntaxt_tree(syntax_tree.root)
-			mut ev := parser.new_evaluator(bounded_syntax)
-			res := ev.evaluate() or {
-				println(term.fail_message('Error in eval: $err'))
-				0
+			mut binder := binding.new_binder()
+			bounded_syntax := binder.bind_expr(syntax_tree.root)
+			if binder.errors.len > 0 {
+				for err in binder.errors {
+					println(term.fail_message(err.text))
+				}
+			} else {
+				mut ev := parser.new_evaluator(bounded_syntax)
+				res := ev.evaluate() or {
+					println(term.fail_message('Error in eval: $err'))
+					0
+				}
+				println(term.yellow('    $res'))
 			}
-			println(term.yellow('    $res'))
 		}
 	}
 }

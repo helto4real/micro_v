@@ -139,7 +139,7 @@ fn (mut p Parser) parse_expr() ast.Expression {
 fn (mut p Parser) parse_binary_expr(parent_precedence int) ast.Expression {
 	mut left := ast.Expression(ast.EmptyExpr{})
 	mut tok := p.current_token()
-	
+
 	unary_op_prec := unary_operator_precedence(tok.kind)
 
 	if unary_op_prec != 0 && unary_op_prec >= parent_precedence {
@@ -149,7 +149,7 @@ fn (mut p Parser) parse_binary_expr(parent_precedence int) ast.Expression {
 	} else {
 		left = p.parse_primary_expression()
 	}
-	
+
 	for {
 		tok = p.current_token()
 		precedence := binary_operator_precedence(tok.kind)
@@ -165,16 +165,25 @@ fn (mut p Parser) parse_binary_expr(parent_precedence int) ast.Expression {
 
 fn (mut p Parser) parse_primary_expression() ast.Expression {
 	tok := p.current_token()
-	if tok.kind == .lpar {
-		left := p.next_token()
-		expr := p.parse_expr()
-		right := p.match_token(.rpar)
-		return ast.new_paranthesis_expression(left, expr, right)
+	match tok.kind {
+		.lpar {
+			left := p.next_token()
+			expr := p.parse_expr()
+			right := p.match_token(.rpar)
+			return ast.new_paranthesis_expression(left, expr, right)
+		}
+		.key_true, .key_false {
+			key_tok := p.next_token()
+			val := tok.kind == .key_true
+			return ast.new_literal_expression(key_tok, val)
+		}
+		else {
+			number_token := p.match_token(.number)
+			val := strconv.atoi(number_token.lit) or {
+				p.error('Failed to convert number to value <$number_token.lit>')
+				0
+			}
+			return ast.new_literal_expression(number_token, val)
+		}
 	}
-	number_token := p.match_token(.number)
-	val := strconv.atoi(number_token.lit) or {
-		p.error('Failed to convert number to value <$number_token.lit>')
-		0
-	}
-	return ast.new_literal_expression(number_token, val)
 }

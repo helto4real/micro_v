@@ -1,6 +1,7 @@
 module binding
 
 import lib.comp.ast
+import lib.comp.types
 import lib.comp.token
 
 enum BoundUnaryOperatorKind {
@@ -20,7 +21,7 @@ enum BoundBinaryOperatorKind {
 struct BoundUnaryExpression {
 pub:
 	kind    BoundNodeKind
-	typ     Type
+	typ     types.Type
 	op_kind BoundUnaryOperatorKind
 	operand BoundExpr
 }
@@ -37,7 +38,7 @@ fn new_bound_unary_expr(op_kind BoundUnaryOperatorKind, operand BoundExpr) Bound
 struct BoundBinaryExpr {
 pub:
 	kind    BoundNodeKind
-	typ     Type
+	typ     types.Type
 	op_kind BoundBinaryOperatorKind
 	left    BoundExpr
 	right   BoundExpr
@@ -56,11 +57,11 @@ fn new_bound_binary_expr(left BoundExpr, op_kind BoundBinaryOperatorKind, right 
 struct BoundLiteralExpr {
 pub:
 	kind BoundNodeKind
-	typ  Type
-	val  LitVal
+	typ  types.Type
+	val  types.LitVal
 }
 
-fn new_bound_literal_expr(val LitVal) BoundExpr {
+fn new_bound_literal_expr(val types.LitVal) BoundExpr {
 	return BoundLiteralExpr{
 		typ: val.typ()
 		kind: .literal_expression
@@ -72,7 +73,8 @@ fn (mut b Binder) bind_unary_expr(syntax ast.UnaryExpr) BoundExpr {
 	bound_operand := b.bind_expr(syntax.operand)
 	bound_op_kind := b.bind_unary_op_kind(syntax.op.kind, bound_operand.typ())
 	if bound_op_kind == .not_supported {
-		b.error('Unary operator ${syntax.op.lit} is not defined for type ${bound_operand.typ()}.', syntax.op.pos)
+		b.error('Unary operator ${syntax.op.lit} is not defined for type ${bound_operand.typ_str()}.', syntax.op.pos)
+		return bound_operand
 	}
 	return new_bound_unary_expr(bound_op_kind, bound_operand)
 }
@@ -82,12 +84,13 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 	bound_right := b.bind_expr(syntax.right)
 	bound_op_kind := b.bind_binary_op_kind(syntax.op.kind, bound_left.typ(), bound_right.typ())
 	if bound_op_kind == .not_supported {
-		b.error('Binary operator ${syntax.op.lit} is not defined for types ${bound_left.typ()} and ${bound_right.typ()}.', syntax.op.pos)
+		b.error('Binary operator ${syntax.op.lit} is not defined for types ${bound_left.typ_str()} and ${bound_right.typ_str()}.', syntax.op.pos)
+		return bound_left
 	}
 	return new_bound_binary_expr(bound_left, bound_op_kind, bound_right)
 }
 
-fn (mut b Binder) bind_unary_op_kind(kind token.Kind, typ Type) BoundUnaryOperatorKind {
+fn (mut b Binder) bind_unary_op_kind(kind token.Kind, typ types.Type) BoundUnaryOperatorKind {
 	if typ != 2 {
 		// TODO: fix the type system later
 		return .not_supported
@@ -105,7 +108,7 @@ fn (mut b Binder) bind_unary_op_kind(kind token.Kind, typ Type) BoundUnaryOperat
 	}
 }
 
-fn (mut b Binder) bind_binary_op_kind(kind token.Kind, left_typ Type, right_typ Type) BoundBinaryOperatorKind {
+fn (mut b Binder) bind_binary_op_kind(kind token.Kind, left_typ types.Type, right_typ types.Type) BoundBinaryOperatorKind {
 	if left_typ != 2 || right_typ != 2 {
 		// TODO: fix the type system later
 		return .not_supported

@@ -1,13 +1,26 @@
 module binding
 
+import lib.comp.types
+
 type BoundExpr = BoundBinaryExpr | BoundLiteralExpr | BoundUnaryExpression
 
 type BoundNode = BoundExpr
 
-fn (be BoundExpr) typ() Type {
+fn (be BoundExpr) typ() types.Type {
 	match be {
 		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr {
 			return be.typ
+		}
+	}
+}
+
+fn (be BoundExpr) typ_str() string {
+	match be {
+		BoundLiteralExpr {
+			return types.built_in_types[int(be.typ)]
+		}
+		BoundUnaryExpression, BoundBinaryExpr {
+			return be.typ.str()
 		}
 	}
 }
@@ -16,32 +29,6 @@ fn (be BoundExpr) kind() BoundNodeKind {
 	match be {
 		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr {
 			return be.kind
-		}
-	}
-}
-
-type Type = int
-
-type LitVal = int | string
-
-fn (l LitVal) typ() Type {
-	return match l {
-		string {
-			1
-		}
-		int {
-			2
-		}
-	}
-}
-
-fn (l LitVal) str() string {
-	return match l {
-		string {
-			l.str()
-		}
-		int {
-			l.str()
 		}
 	}
 }
