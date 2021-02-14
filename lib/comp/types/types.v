@@ -4,6 +4,23 @@ pub type Type = int
 
 pub type LitVal = bool | int | string
 
+pub fn (l LitVal) eq(r LitVal) bool {
+	if l.type_name() != r.type_name() {
+		panic('no equals is defined between types ${l.type_name()} and ${r.type_name()}')
+	}
+	return match l {
+		string {
+			l== (r as string)
+		}
+		int {
+			l== (r as int)
+		}
+		bool {
+			l== (r as bool)
+		}
+	}
+
+}
 pub fn (l LitVal) typ() Type {
 	return match l {
 		string {

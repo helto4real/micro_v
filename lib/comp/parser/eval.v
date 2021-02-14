@@ -34,7 +34,7 @@ fn (mut e Evaluator) eval_expr(root binding.BoundExpr) ?types.LitVal {
 		binding.BoundBinaryExpr {
 			left := e.eval_expr(root.left) ?
 			right := e.eval_expr(root.right) ?
-			// compiler bug does not work with normal cast
+			// compiler bug does exl_mark work with normal cast
 			match root.op.op_kind {
 				.addition { return (left as int) + (right as int) }
 				.subraction { return (left as int) - (right as int) }
@@ -42,7 +42,9 @@ fn (mut e Evaluator) eval_expr(root binding.BoundExpr) ?types.LitVal {
 				.divition { return (left as int) / (right as int) }
 				.logic_and { return (left as bool) && (right as bool) }
 				.logic_or { return (left as bool) || (right as bool) }
-				else { panic('operator <$root.op.op_kind> not expected') }
+				.equals { return left.eq(right) }
+				.not_equals { return !left.eq(right) }
+				else { panic('operator <$root.op.op_kind> exl_mark expected') }
 			}
 		}
 		// ast.ParaExpr {

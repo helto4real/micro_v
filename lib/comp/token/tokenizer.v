@@ -52,7 +52,7 @@ pub fn (mut t Tokenizer) scan_all() []Token {
 
 // scans next token from text
 pub fn (mut t Tokenizer) next_token() Token {
-	// whitepace has no meaning and will not be parsed
+	// whitepace has no meaning and will exl_mark be parsed
 	t.skip_whitespace()
 
 	if t.is_eof {
@@ -112,9 +112,9 @@ pub fn (mut t Tokenizer) next_token() Token {
 		}
 		`=` {
 			if nextc == `=` {
-				return t.token(.eq, '==', 2)
+				return t.token(.eq_eq, '==', 2)
 			}
-			return t.token(.assign, '=', 1)
+			return t.token(.eq, '=', 1)
 		}
 		`;` {
 			return t.token(.semcol, ';', 1)
@@ -124,9 +124,9 @@ pub fn (mut t Tokenizer) next_token() Token {
 		}
 		`!` {
 			if nextc == `=` {
-				return t.token(.ne, '!=', 2)
+				return t.token(.exl_mark_eq, '!=', 2)
 			}
-			return t.token(.not, '!', 1)
+			return t.token(.exl_mark, '!', 1)
 		}
 		`&` {
 			if nextc == `&` {

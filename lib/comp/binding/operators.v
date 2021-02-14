@@ -33,7 +33,7 @@ pub fn new_bound_unary_op_with_ret(kind token.Kind, op_kind BoundUnaryOperatorKi
 fn build_bound_unary_operators() []BoundUnaryOperator {
 	mut operators := []BoundUnaryOperator{}
 
-	operators << new_bound_unary_op(.not, .logic_negation, int(types.TypeKind.bool_lit))
+	operators << new_bound_unary_op(.exl_mark, .logic_negation, int(types.TypeKind.bool_lit))
 	operators << new_bound_unary_op(.plus, .identity, int(types.TypeKind.int_lit))
 	operators << new_bound_unary_op(.minus, .negation, int(types.TypeKind.int_lit))
 
@@ -60,7 +60,7 @@ pub:
 	res_typ   types.Type
 }
 
-pub fn new_bound_binary_op_with_ret(kind token.Kind, op_kind BoundBinaryOperatorKind, left_typ types.Type, right_typ types.Type, res_typ types.Type) BoundBinaryOperator {
+pub fn new_bound_binary_op_full(kind token.Kind, op_kind BoundBinaryOperatorKind, left_typ types.Type, right_typ types.Type, res_typ types.Type) BoundBinaryOperator {
 	return BoundBinaryOperator{
 		kind: kind
 		op_kind: op_kind
@@ -71,7 +71,11 @@ pub fn new_bound_binary_op_with_ret(kind token.Kind, op_kind BoundBinaryOperator
 }
 
 pub fn new_bound_binary_op(kind token.Kind, op_kind BoundBinaryOperatorKind, typ types.Type) BoundBinaryOperator {
-	return new_bound_binary_op_with_ret(kind, op_kind, typ, typ, typ)
+	return new_bound_binary_op_full(kind, op_kind, typ, typ, typ)
+}
+
+pub fn new_bound_binary_op_with_res(kind token.Kind, op_kind BoundBinaryOperatorKind, op_typ types.Type, res_typ types.Type) BoundBinaryOperator {
+	return new_bound_binary_op_full(kind, op_kind, op_typ, op_typ, res_typ)
 }
 
 fn build_bound_binary_operators() []BoundBinaryOperator {
@@ -82,8 +86,14 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 	operators << new_bound_binary_op(.mul, .multiplication, int(types.TypeKind.int_lit))
 	operators << new_bound_binary_op(.div, .divition, int(types.TypeKind.int_lit))
 
+	// accept int but returns bool
+	operators << new_bound_binary_op_with_res(.eq_eq, .equals, int(types.TypeKind.int_lit), int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op_with_res(.exl_mark_eq, .not_equals, int(types.TypeKind.int_lit), int(types.TypeKind.bool_lit))
+
 	operators << new_bound_binary_op(.amp_amp, .logic_and, int(types.TypeKind.bool_lit))
 	operators << new_bound_binary_op(.pipe_pipe, .logic_or, int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op(.eq_eq, .equals, int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op(.exl_mark_eq, .not_equals, int(types.TypeKind.bool_lit))
 
 	return operators
 }
@@ -109,6 +119,8 @@ pub enum BoundBinaryOperatorKind {
 	subraction
 	multiplication
 	divition
+	equals
+	not_equals
 	logic_and
 	logic_or
 	not_supported

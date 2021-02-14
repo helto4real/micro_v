@@ -259,11 +259,11 @@ fn test_assign_declassign() {
 	// some hard combinations to parse with or whithout whitespace
 	mut tkz := new_tokenizer_from_string('= := =:= : :=::=')
 	mut tokens := tkz.scan_all()
-	assert tokens[0].kind == .assign
+	assert tokens[0].kind == .eq
 	assert tokens[0].lit == '='
 	assert tokens[1].kind == .decl_assign
 	assert tokens[1].lit == ':='
-	assert tokens[2].kind == .assign
+	assert tokens[2].kind == .eq
 	assert tokens[2].lit == '='
 	assert tokens[3].kind == .decl_assign
 	assert tokens[3].lit == ':='
@@ -281,18 +281,18 @@ fn test_eq_ne() {
 	// some hard combinations to parse with or whithout whitespace
 	mut tkz := new_tokenizer_from_string('== = != =!= !!=')
 	mut tokens := tkz.scan_all()
-	assert tokens[0].kind == .eq
+	assert tokens[0].kind == .eq_eq
 	assert tokens[0].lit == '=='
-	assert tokens[1].kind == .assign
+	assert tokens[1].kind == .eq
 	assert tokens[1].lit == '='
-	assert tokens[2].kind == .ne
+	assert tokens[2].kind == .exl_mark_eq
 	assert tokens[2].lit == '!='
-	assert tokens[3].kind == .assign
+	assert tokens[3].kind == .eq
 	assert tokens[3].lit == '='
-	assert tokens[4].kind == .ne
+	assert tokens[4].kind == .exl_mark_eq
 	assert tokens[4].lit == '!='
-	assert tokens[5].kind == .not
+	assert tokens[5].kind == .exl_mark
 	assert tokens[5].lit == '!'
-	assert tokens[6].kind == .ne
+	assert tokens[6].kind == .exl_mark_eq
 	assert tokens[6].lit == '!='
 }
