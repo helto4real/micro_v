@@ -2,7 +2,7 @@ module types
 
 pub type Type = int
 
-pub type LitVal = int | string | bool
+pub type LitVal = bool | int | string
 
 pub fn (l LitVal) typ() Type {
 	return match l {
@@ -17,16 +17,17 @@ pub fn (l LitVal) typ() Type {
 		}
 	}
 }
+
 pub fn (l LitVal) typ_str() string {
 	return match l {
 		string {
-			built_in_types[int(TypeKind.string_lit)]
+			types.built_in_types[int(TypeKind.string_lit)]
 		}
 		int {
-			built_in_types[int(TypeKind.int_lit)]
+			types.built_in_types[int(TypeKind.int_lit)]
 		}
 		bool {
-			built_in_types[int(TypeKind.bool_lit)]
+			types.built_in_types[int(TypeKind.bool_lit)]
 		}
 	}
 }
@@ -46,13 +47,13 @@ pub fn (l LitVal) str() string {
 }
 
 enum TypeKind {
-	unknown		= 0
-	string_lit	= 1
-	int_lit		= 2
-	bool_lit	= 3
+	unknown = 0
+	string_lit = 1
+	int_lit = 2
+	bool_lit = 3
 }
 
-pub const(
+pub const (
 	built_in_types = add_built_in_types()
 )
 

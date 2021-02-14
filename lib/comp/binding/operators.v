@@ -5,7 +5,7 @@ import lib.comp.types
 import lib.comp.token
 
 const (
-	bound_unary_operators = build_bound_unary_operators()
+	bound_unary_operators  = build_bound_unary_operators()
 	bound_binary_operators = build_bound_binary_operators()
 )
 
@@ -36,12 +36,12 @@ fn build_bound_unary_operators() []BoundUnaryOperator {
 	operators << new_bound_unary_op(.not, .logic_negation, int(types.TypeKind.bool_lit))
 	operators << new_bound_unary_op(.plus, .identity, int(types.TypeKind.int_lit))
 	operators << new_bound_unary_op(.minus, .negation, int(types.TypeKind.int_lit))
-	
+
 	return operators
 }
 
 pub fn bind_unary_operator(kind token.Kind, op_typ types.Type) ?BoundUnaryOperator {
-	for op in bound_unary_operators {
+	for op in binding.bound_unary_operators {
 		if op.kind == kind && op.op_typ == op_typ {
 			return op
 		}
@@ -49,18 +49,17 @@ pub fn bind_unary_operator(kind token.Kind, op_typ types.Type) ?BoundUnaryOperat
 	return none
 }
 
-
 //-----------------------------------------------
 
 pub struct BoundBinaryOperator {
 pub:
-	op_kind BoundBinaryOperatorKind
-	kind    token.Kind
+	op_kind   BoundBinaryOperatorKind
+	kind      token.Kind
 	left_typ  types.Type
-	right_typ  types.Type
-	res_typ types.Type
+	right_typ types.Type
+	res_typ   types.Type
 }
- 
+
 pub fn new_bound_binary_op_with_ret(kind token.Kind, op_kind BoundBinaryOperatorKind, left_typ types.Type, right_typ types.Type, res_typ types.Type) BoundBinaryOperator {
 	return BoundBinaryOperator{
 		kind: kind
@@ -75,7 +74,6 @@ pub fn new_bound_binary_op(kind token.Kind, op_kind BoundBinaryOperatorKind, typ
 	return new_bound_binary_op_with_ret(kind, op_kind, typ, typ, typ)
 }
 
-
 fn build_bound_binary_operators() []BoundBinaryOperator {
 	mut operators := []BoundBinaryOperator{}
 
@@ -86,12 +84,12 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 
 	operators << new_bound_binary_op(.amp_amp, .logic_and, int(types.TypeKind.bool_lit))
 	operators << new_bound_binary_op(.pipe_pipe, .logic_or, int(types.TypeKind.bool_lit))
-	
+
 	return operators
 }
 
 pub fn bind_binary_operator(kind token.Kind, left_typ types.Type, right_typ types.Type) ?BoundBinaryOperator {
-	for op in bound_binary_operators {
+	for op in binding.bound_binary_operators {
 		if op.kind == kind && op.left_typ == left_typ && op.right_typ == right_typ {
 			return op
 		}
@@ -120,7 +118,7 @@ struct BoundUnaryExpression {
 pub:
 	kind    BoundNodeKind
 	typ     types.Type
-	op		BoundUnaryOperator
+	op      BoundUnaryOperator
 	operand BoundExpr
 }
 
@@ -135,11 +133,11 @@ fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr {
 
 struct BoundBinaryExpr {
 pub:
-	kind    BoundNodeKind
-	typ     types.Type
-	op		BoundBinaryOperator
-	left    BoundExpr
-	right   BoundExpr
+	kind  BoundNodeKind
+	typ   types.Type
+	op    BoundBinaryOperator
+	left  BoundExpr
+	right BoundExpr
 }
 
 fn new_bound_binary_expr(left BoundExpr, op BoundBinaryOperator, right BoundExpr) BoundExpr {
@@ -186,70 +184,4 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 		return bound_left
 	}
 	return new_bound_binary_expr(bound_left, bound_op, bound_right)
-}
-
-fn (mut b Binder) bind_unary_op_kind(kind token.Kind, typ types.Type) BoundUnaryOperatorKind {
-	if typ == int(types.TypeKind.int_lit) {
-		match kind {
-			.plus {
-				return .identity
-			}
-			.minus {
-				return .negation
-			}
-			else {
-				// just falls through to not supported
-			}
-		}
-	}
-
-	if typ == int(types.TypeKind.bool_lit) {
-		match kind {
-			.not {
-				return .logic_negation
-			}
-			else {
-				// just falls through to not supported
-			}
-		}
-	}
-	return .not_supported
-}
-
-fn (mut b Binder) bind_binary_op_kind(kind token.Kind, left_typ types.Type, right_typ types.Type) BoundBinaryOperatorKind {
-	int_type := int(types.TypeKind.int_lit)
-	if left_typ == int_type && right_typ == int_type {
-		match kind {
-			.plus {
-				return .addition
-			}
-			.minus {
-				return .subraction
-			}
-			.mul {
-				return .multiplication
-			}
-			.div {
-				return .divition
-			}
-			else {
-				// just falls through to not supported
-			}
-		}
-	}
-	bool_type := int(types.TypeKind.bool_lit)
-	if left_typ == bool_type && right_typ == bool_type {
-		match kind {
-			.amp_amp {
-				return .logic_and
-			}
-			.pipe_pipe {
-				return .logic_or
-			}
-			else {
-				// just falls through to not supported
-			}
-		}
-	}
-	return .not_supported
 }

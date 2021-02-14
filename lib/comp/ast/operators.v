@@ -4,7 +4,7 @@ import lib.comp.token
 
 pub const (
 	binary_expression_tokens = [token.Kind(token.Kind.plus), .minus, .mul, .div, .amp_amp, .pipe_pipe]
-	unary_expression_tokens = [token.Kind(token.Kind.plus), .minus, .not]
+	unary_expression_tokens  = [token.Kind(token.Kind.plus), .minus, .not]
 )
 
 pub struct BinaryExpr {
@@ -38,9 +38,9 @@ pub fn (mut be BinaryExpr) child_nodes() []AstNode {
 
 pub struct UnaryExpr {
 pub:
-	op    token.Token
+	op      token.Token
 	operand Expression
-	kind  SyntaxKind = .unary_expr
+	kind    SyntaxKind = .unary_expr
 }
 
 // new_binary_expression instance an binary expression 

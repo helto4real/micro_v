@@ -140,7 +140,6 @@ pub fn (mut t Tokenizer) next_token() Token {
 			}
 			return t.token(.pipe, '|', 1)
 		}
-
 		`,` {
 			return t.token(.comma, ',', 1)
 		}

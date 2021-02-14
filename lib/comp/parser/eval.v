@@ -8,7 +8,7 @@ pub struct Evaluator {
 }
 
 pub fn new_evaluator(root binding.BoundExpr) Evaluator {
-	return Evaluator {
+	return Evaluator{
 		root: root
 	}
 }
@@ -25,24 +25,24 @@ fn (mut e Evaluator) eval_expr(root binding.BoundExpr) ?types.LitVal {
 		binding.BoundUnaryExpression {
 			operand := e.eval_expr(root.operand) ?
 			match root.op.op_kind {
-				.identity { return operand as int } 
-				.negation {	return -(operand as int) } 
-				.logic_negation { return !(operand as bool) } 
-				else {panic('unexpected unary token $root.op.op_kind')}
-			} 
+				.identity { return operand as int }
+				.negation { return -(operand as int) }
+				.logic_negation { return !(operand as bool) }
+				else { panic('unexpected unary token $root.op.op_kind') }
+			}
 		}
 		binding.BoundBinaryExpr {
-			left := e.eval_expr(root.left) ? 
-			right := e.eval_expr(root.right) ? 
+			left := e.eval_expr(root.left) ?
+			right := e.eval_expr(root.right) ?
 			// compiler bug does not work with normal cast
 			match root.op.op_kind {
-				.addition {return (left as int) + (right as int)}
-				.subraction {return (left as int) - (right as int)}
-				.multiplication {return (left as int) * (right as int)}
-				.divition {return (left as int) / (right as int)}
-				.logic_and {return (left as bool) && (right as bool)}
-				.logic_or {return (left as bool) || (right as bool)}
-				else {panic('operator <$root.op.op_kind> not expected')}
+				.addition { return (left as int) + (right as int) }
+				.subraction { return (left as int) - (right as int) }
+				.multiplication { return (left as int) * (right as int) }
+				.divition { return (left as int) / (right as int) }
+				.logic_and { return (left as bool) && (right as bool) }
+				.logic_or { return (left as bool) || (right as bool) }
+				else { panic('operator <$root.op.op_kind> not expected') }
 			}
 		}
 		// ast.ParaExpr {
@@ -53,3 +53,4 @@ fn (mut e Evaluator) eval_expr(root binding.BoundExpr) ?types.LitVal {
 		// }
 	}
 }
+
