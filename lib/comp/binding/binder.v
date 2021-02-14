@@ -22,6 +22,7 @@ pub fn (mut b Binder) bind_expr(expr ast.Expression) BoundExpr {
 		ast.LiteralExpr { return b.bind_literal_expr(expr) }
 		ast.UnaryExpr { return b.bind_unary_expr(expr) }
 		ast.BinaryExpr { return b.bind_binary_expr(expr) }
+		ast.ParaExpr { return b.bind_expr(expr.expr) }
 		else { panic('unexpected bound expression $expr') }
 	}
 }

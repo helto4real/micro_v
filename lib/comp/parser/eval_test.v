@@ -26,6 +26,20 @@ fn test_eval_basic_expressions() {
 	assert eval_bool('true || true') == true
 	assert eval_bool('false || true') == true
 	assert eval_bool('false || false') == false
+
+	// test equals and not equals operators
+	assert eval_bool('1 == 1') == true
+	assert eval_bool('1 != 2') == true
+	assert eval_bool('true == true') == true
+	assert eval_bool('false == false') == true
+	assert eval_bool('false != true') == true
+
+	// test combo operators
+	assert eval_bool('1==1 && 5==5') == true
+	assert eval_bool('1!=2 && 3!=5') == true
+	assert eval_bool('1==2 && 3!=5') == false
+	assert eval_bool('1==2 || 3!=5') == true
+	
 }
 
 fn eval_int(expr string) int {

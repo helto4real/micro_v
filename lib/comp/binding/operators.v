@@ -137,7 +137,7 @@ pub:
 fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr {
 	return BoundUnaryExpression{
 		kind: .literal_expression
-		typ: operand.typ()
+		typ: op.res_typ
 		op: op
 		operand: operand
 	}
@@ -155,7 +155,7 @@ pub:
 fn new_bound_binary_expr(left BoundExpr, op BoundBinaryOperator, right BoundExpr) BoundExpr {
 	return BoundBinaryExpr{
 		kind: .binary_expr
-		typ: left.typ()
+		typ: op.res_typ
 		op: op
 		left: left
 		right: right

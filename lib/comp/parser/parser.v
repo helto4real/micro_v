@@ -167,7 +167,7 @@ fn (mut p Parser) parse_primary_expression() ast.Expression {
 	tok := p.current_token()
 	match tok.kind {
 		.lpar {
-			left := p.next_token()
+			left := p.match_token(.lpar)
 			expr := p.parse_expr()
 			right := p.match_token(.rpar)
 			return ast.new_paranthesis_expression(left, expr, right)
