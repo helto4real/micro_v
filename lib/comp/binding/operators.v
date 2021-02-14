@@ -4,14 +4,109 @@ import lib.comp.ast
 import lib.comp.types
 import lib.comp.token
 
-enum BoundUnaryOperatorKind {
+const (
+	bound_unary_operators = build_bound_unary_operators()
+	bound_binary_operators = build_bound_binary_operators()
+)
+
+pub struct BoundUnaryOperator {
+pub:
+	op_kind BoundUnaryOperatorKind
+	kind    token.Kind
+	op_typ  types.Type
+	res_typ types.Type
+}
+
+pub fn new_bound_unary_op(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ types.Type) BoundUnaryOperator {
+	return new_bound_unary_op_with_ret(kind, op_kind, op_typ, types.Type(0))
+}
+
+pub fn new_bound_unary_op_with_ret(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ types.Type, res_typ types.Type) BoundUnaryOperator {
+	return BoundUnaryOperator{
+		kind: kind
+		op_kind: op_kind
+		op_typ: op_typ
+		res_typ: res_typ
+	}
+}
+
+fn build_bound_unary_operators() []BoundUnaryOperator {
+	mut operators := []BoundUnaryOperator{}
+
+	operators << new_bound_unary_op(.not, .logic_negation, int(types.TypeKind.bool_lit))
+	operators << new_bound_unary_op(.plus, .identity, int(types.TypeKind.int_lit))
+	operators << new_bound_unary_op(.minus, .negation, int(types.TypeKind.int_lit))
+	
+	return operators
+}
+
+pub fn bind_unary_operator(kind token.Kind, op_typ types.Type) ?BoundUnaryOperator {
+	for op in bound_unary_operators {
+		if op.kind == kind && op.op_typ == op_typ {
+			return op
+		}
+	}
+	return none
+}
+
+
+//-----------------------------------------------
+
+pub struct BoundBinaryOperator {
+pub:
+	op_kind BoundBinaryOperatorKind
+	kind    token.Kind
+	left_typ  types.Type
+	right_typ  types.Type
+	res_typ types.Type
+}
+ 
+pub fn new_bound_binary_op_with_ret(kind token.Kind, op_kind BoundBinaryOperatorKind, left_typ types.Type, right_typ types.Type, res_typ types.Type) BoundBinaryOperator {
+	return BoundBinaryOperator{
+		kind: kind
+		op_kind: op_kind
+		left_typ: left_typ
+		right_typ: right_typ
+		res_typ: res_typ
+	}
+}
+
+pub fn new_bound_binary_op(kind token.Kind, op_kind BoundBinaryOperatorKind, typ types.Type) BoundBinaryOperator {
+	return new_bound_binary_op_with_ret(kind, op_kind, typ, typ, typ)
+}
+
+
+fn build_bound_binary_operators() []BoundBinaryOperator {
+	mut operators := []BoundBinaryOperator{}
+
+	operators << new_bound_binary_op(.plus, .addition, int(types.TypeKind.int_lit))
+	operators << new_bound_binary_op(.minus, .subraction, int(types.TypeKind.int_lit))
+	operators << new_bound_binary_op(.mul, .multiplication, int(types.TypeKind.int_lit))
+	operators << new_bound_binary_op(.div, .divition, int(types.TypeKind.int_lit))
+
+	operators << new_bound_binary_op(.amp_amp, .logic_and, int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op(.pipe_pipe, .logic_or, int(types.TypeKind.bool_lit))
+	
+	return operators
+}
+
+pub fn bind_binary_operator(kind token.Kind, left_typ types.Type, right_typ types.Type) ?BoundBinaryOperator {
+	for op in bound_binary_operators {
+		if op.kind == kind && op.left_typ == left_typ && op.right_typ == right_typ {
+			return op
+		}
+	}
+	return none
+}
+
+pub enum BoundUnaryOperatorKind {
 	identity
 	negation
 	logic_negation
 	not_supported
 }
 
-enum BoundBinaryOperatorKind {
+pub enum BoundBinaryOperatorKind {
 	addition
 	subraction
 	multiplication
@@ -25,15 +120,15 @@ struct BoundUnaryExpression {
 pub:
 	kind    BoundNodeKind
 	typ     types.Type
-	op_kind BoundUnaryOperatorKind
+	op		BoundUnaryOperator
 	operand BoundExpr
 }
 
-fn new_bound_unary_expr(op_kind BoundUnaryOperatorKind, operand BoundExpr) BoundExpr {
+fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr {
 	return BoundUnaryExpression{
 		kind: .literal_expression
 		typ: operand.typ()
-		op_kind: op_kind
+		op: op
 		operand: operand
 	}
 }
@@ -42,16 +137,16 @@ struct BoundBinaryExpr {
 pub:
 	kind    BoundNodeKind
 	typ     types.Type
-	op_kind BoundBinaryOperatorKind
+	op		BoundBinaryOperator
 	left    BoundExpr
 	right   BoundExpr
 }
 
-fn new_bound_binary_expr(left BoundExpr, op_kind BoundBinaryOperatorKind, right BoundExpr) BoundExpr {
+fn new_bound_binary_expr(left BoundExpr, op BoundBinaryOperator, right BoundExpr) BoundExpr {
 	return BoundBinaryExpr{
 		kind: .binary_expr
 		typ: left.typ()
-		op_kind: op_kind
+		op: op
 		left: left
 		right: right
 	}
@@ -74,23 +169,23 @@ fn new_bound_literal_expr(val types.LitVal) BoundExpr {
 
 fn (mut b Binder) bind_unary_expr(syntax ast.UnaryExpr) BoundExpr {
 	bound_operand := b.bind_expr(syntax.operand)
-	bound_op_kind := b.bind_unary_op_kind(syntax.op.kind, bound_operand.typ())
-	if bound_op_kind == .not_supported {
-		b.error('Unary operator ${syntax.op.lit} is not defined for type ${bound_operand.typ_str()}.', syntax.op.pos)
+	bound_op := bind_unary_operator(syntax.op.kind, bound_operand.typ()) or {
+		b.error('Unary operator $syntax.op.lit is not defined for type ${bound_operand.typ_str()}.',
+			syntax.op.pos)
 		return bound_operand
 	}
-	return new_bound_unary_expr(bound_op_kind, bound_operand)
+	return new_bound_unary_expr(bound_op, bound_operand)
 }
 
 fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 	bound_left := b.bind_expr(syntax.left)
 	bound_right := b.bind_expr(syntax.right)
-	bound_op_kind := b.bind_binary_op_kind(syntax.op.kind, bound_left.typ(), bound_right.typ())
-	if bound_op_kind == .not_supported {
-		b.error('Binary operator ${syntax.op.lit} is not defined for types ${bound_left.typ_str()} and ${bound_right.typ_str()}.', syntax.op.pos)
+	bound_op := bind_binary_operator(syntax.op.kind, bound_left.typ(), bound_right.typ()) or {
+		b.error('Binary operator $syntax.op.lit is not defined for types $bound_left.typ_str() and ${bound_right.typ_str()}.',
+			syntax.op.pos)
 		return bound_left
 	}
-	return new_bound_binary_expr(bound_left, bound_op_kind, bound_right)
+	return new_bound_binary_expr(bound_left, bound_op, bound_right)
 }
 
 fn (mut b Binder) bind_unary_op_kind(kind token.Kind, typ types.Type) BoundUnaryOperatorKind {
@@ -102,17 +197,21 @@ fn (mut b Binder) bind_unary_op_kind(kind token.Kind, typ types.Type) BoundUnary
 			.minus {
 				return .negation
 			}
-			else{/*just falls through to not supported*/}
+			else {
+				// just falls through to not supported
+			}
 		}
-	} 
-	
+	}
+
 	if typ == int(types.TypeKind.bool_lit) {
 		match kind {
 			.not {
 				return .logic_negation
 			}
-			else{/*just falls through to not supported*/}
-		}		
+			else {
+				// just falls through to not supported
+			}
+		}
 	}
 	return .not_supported
 }
@@ -133,7 +232,9 @@ fn (mut b Binder) bind_binary_op_kind(kind token.Kind, left_typ types.Type, righ
 			.div {
 				return .divition
 			}
-			else{/*just falls through to not supported*/}
+			else {
+				// just falls through to not supported
+			}
 		}
 	}
 	bool_type := int(types.TypeKind.bool_lit)
@@ -145,7 +246,9 @@ fn (mut b Binder) bind_binary_op_kind(kind token.Kind, left_typ types.Type, righ
 			.pipe_pipe {
 				return .logic_or
 			}
-			else{/*just falls through to not supported*/}
+			else {
+				// just falls through to not supported
+			}
 		}
 	}
 	return .not_supported

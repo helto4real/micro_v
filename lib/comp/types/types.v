@@ -46,6 +46,7 @@ pub fn (l LitVal) str() string {
 }
 
 enum TypeKind {
+	unknown		= 0
 	string_lit	= 1
 	int_lit		= 2
 	bool_lit	= 3

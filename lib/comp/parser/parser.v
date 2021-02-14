@@ -174,7 +174,7 @@ fn (mut p Parser) parse_primary_expression() ast.Expression {
 		}
 		.key_true, .key_false {
 			key_tok := p.next_token()
-			val := tok.kind == .key_true
+			val := key_tok.kind == .key_true
 			return ast.new_literal_expression(key_tok, val)
 		}
 		else {
