@@ -5,11 +5,14 @@ import lib.comp.types
 
 pub struct Evaluator {
 	root binding.BoundExpr
+mut:
+	table &binding.SymbolTable
 }
 
-pub fn new_evaluator(root binding.BoundExpr) Evaluator {
+pub fn new_evaluator(root binding.BoundExpr, table &binding.SymbolTable) Evaluator {
 	return Evaluator{
 		root: root
+		table: table
 	}
 }
 
@@ -47,12 +50,15 @@ fn (mut e Evaluator) eval_expr(root binding.BoundExpr) ?types.LitVal {
 				else { panic('operator <$root.op.op_kind> exl_mark expected') }
 			}
 		}
-		// ast.ParaExpr {
-		// 	return e.eval_expr(root.expr) 
-		// }
-		// ast.EmptyExpr {
-		// 	return error('NoneExpr should never occur, parser bug.')
-		// }
+		binding.BoundVariableExpr {return e.table.vars[root.name].val}
+		binding.BoundAssignExpr {
+			val := e.eval_expr(root.expr) ?
+			e.table.vars[root.name] = binding.Variable {
+				name: root.name
+				val: val 
+				typ: val.typ()
+			}
+			return val
+		}
 	}
 }
-

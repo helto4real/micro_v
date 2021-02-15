@@ -25,3 +25,21 @@ pub fn (mut le LiteralExpr) child_nodes() []AstNode {
 	nodes << le.tok
 	return nodes
 }
+
+pub struct NameExpr {
+pub:
+	kind  SyntaxKind = .name_expr
+	ident_tok token.Token
+}
+
+pub fn new_name_expr(ident_tok token.Token) NameExpr {
+	return NameExpr {
+		ident_tok: ident_tok
+	}
+}
+
+pub fn (mut ne NameExpr) child_nodes() []AstNode {
+	mut nodes := []AstNode{cap: 1}
+	nodes << ne.ident_tok
+	return nodes
+}

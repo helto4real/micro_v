@@ -8,18 +8,21 @@ import lib.comp.types
 import lib.comp.util
 
 pub struct Compilation {
+mut:
+	table &binding.SymbolTable
 pub mut:
 	syntax parser.SyntaxTree
 }
 
-pub fn new_compilation(syntax_tree parser.SyntaxTree) &Compilation {
+pub fn new_compilation(syntax_tree parser.SyntaxTree, table &binding.SymbolTable) &Compilation {
 	return &Compilation{
 		syntax: syntax_tree
+		table: table
 	}
 }
 
 pub fn (mut c Compilation) evaluate() EvaluationResult {
-	mut binder := binding.new_binder()
+	mut binder := binding.new_binder(c.table)
 	bounded_expr := binder.bind_expr(c.syntax.root)
 	mut result := []util.Diagnostic{}
 	result << c.syntax.log.all
@@ -27,7 +30,7 @@ pub fn (mut c Compilation) evaluate() EvaluationResult {
 	if result.len > 0 {
 		return new_evaluation_result(result, 0)
 	}
-	mut evaluator := new_evaluator(bounded_expr)
+	mut evaluator := new_evaluator(bounded_expr, c.table)
 	val := evaluator.evaluate() or {
 		println(term.fail_message('Error in eval: $err'))
 		0

@@ -195,3 +195,17 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 	}
 	return new_bound_binary_expr(bound_left, bound_op, bound_right)
 }
+
+struct BoundVariableExpr {
+pub:
+	kind BoundNodeKind = .variable_expression
+	typ  types.Type
+	name string
+}
+
+fn new_bound_variable_expr(name string, typ types.Type) BoundExpr {
+	return BoundVariableExpr{
+		typ: typ
+		name: name
+	}
+}

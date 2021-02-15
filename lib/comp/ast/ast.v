@@ -2,11 +2,12 @@ module ast
 import token
 
 // Sumtype expressions
-pub type Expression = LiteralExpr | BinaryExpr | UnaryExpr | ParaExpr | EmptyExpr
+pub type Expression = LiteralExpr | BinaryExpr | UnaryExpr | ParaExpr | NameExpr | EmptyExpr | AssignExpr
 
 pub fn (e Expression) kind() SyntaxKind {
 	match e {
-		LiteralExpr , BinaryExpr , UnaryExpr , ParaExpr , EmptyExpr {
+		LiteralExpr , BinaryExpr , UnaryExpr , ParaExpr , EmptyExpr, NameExpr,
+		AssignExpr {
 			return e.kind
 		}
 	}

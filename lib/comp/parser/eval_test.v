@@ -47,12 +47,12 @@ fn test_eval_basic_expressions() {
 fn eval_int(expr string) int {
 	syntax_tree := parser.parse_syntax_tree(expr)
 	assert syntax_tree.log.all.len == 0
-
-	mut binder := binding.new_binder()
+	mut table := binding.new_symbol_table()
+	mut binder := binding.new_binder(table)
 	bounded_syntax := binder.bind_expr(syntax_tree.root)
 	assert binder.log.all.len == 0
 
-	mut ev := comp.new_evaluator(bounded_syntax)
+	mut ev := comp.new_evaluator(bounded_syntax, table)
 	res := ev.evaluate() or {panic(err)}
 	if res is int {
 		return res
@@ -63,12 +63,12 @@ fn eval_int(expr string) int {
 fn eval_bool(expr string) bool {
 	syntax_tree := parser.parse_syntax_tree(expr)
 	assert syntax_tree.log.all.len == 0
-
-	mut binder := binding.new_binder()
+	mut table := binding.new_symbol_table()
+	mut binder := binding.new_binder(table)
 	bounded_syntax := binder.bind_expr(syntax_tree.root)
 	assert binder.log.all.len == 0
 
-	mut ev := comp.new_evaluator(bounded_syntax)
+	mut ev := comp.new_evaluator(bounded_syntax, table)
 	res := ev.evaluate() or {panic(err)}
 	if res is bool {
 		return res

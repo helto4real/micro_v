@@ -36,3 +36,7 @@ pub fn (mut d Diagnostics) error_expected(typ string, got string, expected strin
 pub fn (mut d Diagnostics) error_unexpected(typ string, got string, pos Pos) {
 	d.error('unexpected $typ: <$got>', pos)
 }
+
+pub fn (mut d Diagnostics) error_undefined_name(name string, pos Pos) {
+	d.error('undefined name: <$name>', pos)
+}

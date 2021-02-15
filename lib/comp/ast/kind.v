@@ -8,6 +8,8 @@ enum SyntaxKind {
 	binary_expr
 	unary_expr
 	para_expr
+	name_expr
+	assign_expr
 	operator_node
 	empty
 }
