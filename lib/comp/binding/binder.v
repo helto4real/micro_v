@@ -27,12 +27,25 @@ pub fn (mut b Binder) bind_expr(expr ast.Expression) BoundExpr {
 
 fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 	name := syntax.ident.lit
+	if name !in b.table.vars{
+		// var does not exists in the the symbol table
+		if syntax.eq_tok.kind == .eq {
+			b.log.error_undefined_name(name, syntax.ident.pos)
+			return new_bound_literal_expr(0)
+		}
+		bound_expr :=  b.bind_expr(syntax.expr)
+		return new_bound_assign_expr(name, bound_expr)
+	}
+	// var already exists so we only allow a=expr 
+	if syntax.eq_tok.kind == .colon_eq {
+		b.log.error_name_already_defined(name, syntax.ident.pos)
+		return new_bound_literal_expr(0)
+	}
 	bound_expr :=  b.bind_expr(syntax.expr)
 	return new_bound_assign_expr(name, bound_expr)
 }
 
 fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {
-	
 	return b.bind_expr(syntax.expr)
 }
 
@@ -51,9 +64,9 @@ fn (mut b Binder) bind_literal_expr(syntax ast.LiteralExpr) BoundExpr {
 }
 
 enum BoundNodeKind {
-	unary_expression
+	unary_expr
 	binary_expr
-	literal_expression
-	variable_expression
+	literal_expr
+	variable_expr
 	assign_expr
 }

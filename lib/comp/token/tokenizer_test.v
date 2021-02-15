@@ -255,19 +255,19 @@ fn test_assign_declassign() {
 	mut tokens := tkz.scan_all()
 	assert tokens[0].kind == .eq
 	assert tokens[0].lit == '='
-	assert tokens[1].kind == .decl_assign
+	assert tokens[1].kind == .colon_eq
 	assert tokens[1].lit == ':='
 	assert tokens[2].kind == .eq
 	assert tokens[2].lit == '='
-	assert tokens[3].kind == .decl_assign
+	assert tokens[3].kind == .colon_eq
 	assert tokens[3].lit == ':='
 	assert tokens[4].kind == .colon
 	assert tokens[4].lit == ':'
-	assert tokens[5].kind == .decl_assign
+	assert tokens[5].kind == .colon_eq
 	assert tokens[5].lit == ':='
 	assert tokens[6].kind == .colon
 	assert tokens[6].lit == ':'
-	assert tokens[7].kind == .decl_assign
+	assert tokens[7].kind == .colon_eq
 	assert tokens[7].lit == ':='
 }
 

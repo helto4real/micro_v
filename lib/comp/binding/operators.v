@@ -136,7 +136,7 @@ pub:
 
 fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr {
 	return BoundUnaryExpression{
-		kind: .unary_expression
+		kind: .unary_expr
 		typ: op.res_typ
 		op: op
 		operand: operand
@@ -172,7 +172,7 @@ pub:
 fn new_bound_literal_expr(val types.LitVal) BoundExpr {
 	return BoundLiteralExpr{
 		typ: val.typ()
-		kind: .literal_expression
+		kind: .literal_expr
 		val: val
 	}
 }
@@ -198,7 +198,7 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 
 struct BoundVariableExpr {
 pub:
-	kind BoundNodeKind = .variable_expression
+	kind BoundNodeKind = .variable_expr
 	typ  types.Type
 	name string
 }

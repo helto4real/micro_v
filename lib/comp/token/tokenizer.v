@@ -105,7 +105,7 @@ pub fn (mut t Tokenizer) next_token() Token {
 		}
 		`:` {
 			if nextc == `=` {
-				return t.token(.decl_assign, ':=', 2)
+				return t.token(.colon_eq, ':=', 2)
 			} else {
 				return t.token(.colon, ':', 1)
 			}
