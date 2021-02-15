@@ -316,19 +316,15 @@ fn test_single_token() {
 	check_parse_token(.amp_amp, '&&')
 }
 
-/*
+fn test_single_keyword() {
+	check_parse_token(.key_fn, 'fn')
+	check_parse_token(.key_module, 'module')
+	check_parse_token(.key_struct, 'struct')
+	check_parse_token(.key_true, 'true')
+	check_parse_token(.key_false, 'false')
+	check_parse_token(.key_mut, 'mut')
+}
 
-
-keyword_beg
-key_fn
-key_module
-key_struct
-key_true
-key_false
-key_mut
-keyword_end
-
-*/
 fn check_parse_token(kind token.Kind, text string) {
 	mut tkz := new_tokenizer_from_string(text)
 	mut tokens := tkz.scan_all()
