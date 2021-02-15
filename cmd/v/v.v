@@ -1,5 +1,6 @@
 import lib.comp.token
 import lib.comp.parser
+import lib.comp.binding
 import lib.comp
 // import lib.comp.ast
 import os
@@ -19,6 +20,7 @@ fn main() {
 fn print_expressions() {
 	term.clear()
 	mut show_tree := false
+	table := binding.new_symbol_table()
 	for {
 		print(term.ok_message('expr:'))
 		print('> ')
@@ -41,29 +43,23 @@ fn print_expressions() {
 			parser.pretty_print(syntax_tree.root, '', true)
 		}
 
-		// if syntax_tree.log.all.len > 0 {
-		// 	for err in syntax_tree.log.all {
-		// 		println(term.fail_message(err.text))
-		// 	}
-		// } else {
-			mut comp := comp.new_compilation(syntax_tree)
-			res := comp.evaluate()
-			if res.result.len > 0 {
-				for err in res.result {
-					prefix := line[0..err.pos.pos]
-					error := line[err.pos.pos..err.pos.pos+err.pos.len]
-					postfix := line[err.pos.pos+1..]
-					println('')
-					println(term.red(err.text))
-					print('    ')
-					print(prefix)
-					print(term.red(error))
-					println(postfix)
-				}
-			} else {
-				println(term.yellow('    $res.val'))
+		mut comp := comp.new_compilation(syntax_tree, table)
+		res := comp.evaluate()
+		if res.result.len > 0 {
+			for err in res.result {
+				prefix := line[0..err.pos.pos]
+				error := line[err.pos.pos..err.pos.pos+err.pos.len]
+				postfix := line[err.pos.pos+err.pos.len..]
+				println('')
+				println(term.red(err.text))
+				print('    ')
+				print(prefix)
+				print(term.red(error))
+				println(postfix)
 			}
-		// }
+		} else {
+			println(term.yellow('    $res.val'))
+		}
 	}
 }
 
