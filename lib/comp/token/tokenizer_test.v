@@ -1,4 +1,5 @@
 module token
+import lib.comp.token
 
 // EOF specific tests
 fn test_last_is_eof() {
@@ -273,10 +274,8 @@ fn test_assign_declassign() {
 
 fn test_eq_ne() {
 	// some hard combinations to parse with or whithout whitespace
-	mut tkz := new_tokenizer_from_string('== = != =!= !!=')
+		mut tkz := new_tokenizer_from_string('== = != =!= !!=')
 	mut tokens := tkz.scan_all()
-	assert tokens[0].kind == .eq_eq
-	assert tokens[0].lit == '=='
 	assert tokens[1].kind == .eq
 	assert tokens[1].lit == '='
 	assert tokens[2].kind == .exl_mark_eq
@@ -289,4 +288,57 @@ fn test_eq_ne() {
 	assert tokens[5].lit == '!'
 	assert tokens[6].kind == .exl_mark_eq
 	assert tokens[6].lit == '!='
+}
+
+fn test_single_token() {
+	check_parse_token(.name, 'hello')
+	check_parse_token(.number, '1234')
+	// check_parse_token(.string, '==')
+	check_parse_token(.lcbr, '{')
+	check_parse_token(.rcbr, '}')
+	check_parse_token(.lpar, '(')
+	check_parse_token(.rpar, ')')
+	check_parse_token(.colon, ':')
+	check_parse_token(.semcol, ';')
+	check_parse_token(.dot, '.')
+	check_parse_token(.comma, ',')
+	check_parse_token(.eq, '=')
+	check_parse_token(.colon_eq, ':=')
+	check_parse_token(.plus, '+')
+	check_parse_token(.minus, '-')
+	check_parse_token(.mul, '*')
+	check_parse_token(.div, '/')
+	check_parse_token(.pipe, '|')
+	check_parse_token(.eq_eq, '==')
+	check_parse_token(.exl_mark_eq, '!=')
+	check_parse_token(.exl_mark, '!')
+	check_parse_token(.pipe_pipe, '||')
+	check_parse_token(.amp_amp, '&&')
+}
+
+/*
+
+
+keyword_beg
+key_fn
+key_module
+key_struct
+key_true
+key_false
+key_mut
+keyword_end
+
+*/
+fn check_parse_token(kind token.Kind, text string) {
+	mut tkz := new_tokenizer_from_string(text)
+	mut tokens := tkz.scan_all()
+	assert tokens[0].kind == kind
+	assert tokens[0].lit == text
+}
+
+fn check_parse_token_index(index int, kind token.Kind, lit string, text string) {
+	mut tkz := new_tokenizer_from_string(text)
+	mut tokens := tkz.scan_all()
+	assert tokens[index].kind == kind
+	assert tokens[index].lit == lit
 }

@@ -38,10 +38,13 @@ pub fn (mut d Diagnostics) error_unexpected(typ string, got string, pos Pos) {
 }
 
 pub fn (mut d Diagnostics) error_var_not_exists(name string, pos Pos) {
-	d.error("variable '${name}' does not exist", pos)
+	d.error("variable <${name}> does not exist", pos)
 }
 
 pub fn (mut d Diagnostics) error_name_already_defined(name string, pos Pos) {
 	d.error('name: <$name> already defined', pos)
 }
 
+pub fn (mut d Diagnostics) error_assign_non_mutable_variable(name string, pos Pos) {
+	d.error('assign non mutable varable: <$name>', pos)
+}

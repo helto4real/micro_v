@@ -4,9 +4,10 @@ import lib.comp.types
 
 pub struct Variable {
 pub:
-	name string
-	typ  types.Type
-	val  types.LitVal
+	name   string
+	typ    types.Type
+	val    types.LitVal
+	is_mut bool
 }
 
 pub struct SymbolTable {
@@ -15,6 +16,5 @@ pub mut:
 }
 
 pub fn new_symbol_table() &SymbolTable {
-	return &SymbolTable{
-	}
+	return &SymbolTable{}
 }

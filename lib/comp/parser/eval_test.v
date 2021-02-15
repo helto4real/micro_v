@@ -53,6 +53,9 @@ fn test_eval_var_expressions() {
 	assert eval_int(t, 'x+x') == 8
 	assert eval_int(t, 'x-x') == 0
 
+	assert eval_int(t, 'mut z:=4') == 4
+	assert eval_int(t, '(z=2)+z') == 4
+	
 	assert eval_bool(t, 'a:=true') == true
 	assert eval_bool(t, 'b:=true') == true
 	assert eval_bool(t, 'c:=false') == false

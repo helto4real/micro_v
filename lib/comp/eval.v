@@ -57,6 +57,7 @@ fn (mut e Evaluator) eval_expr(root binding.BoundExpr) ?types.LitVal {
 				name: root.name
 				val: val 
 				typ: val.typ()
+				is_mut: root.is_mut
 			}
 			return val
 		}

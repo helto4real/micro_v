@@ -1,3 +1,4 @@
+// bidning module binds to the syntax tree and handle checks
 module binding
 
 import lib.comp.ast
@@ -10,7 +11,9 @@ pub mut:
 }
 
 pub fn new_binder(table &SymbolTable) Binder {
-	return Binder{table : table}
+	return Binder{
+		table: table
+	}
 }
 
 pub fn (mut b Binder) bind_expr(expr ast.Expression) BoundExpr {
@@ -27,22 +30,29 @@ pub fn (mut b Binder) bind_expr(expr ast.Expression) BoundExpr {
 
 fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 	name := syntax.ident.lit
-	if name !in b.table.vars{
+	is_decl := syntax.eq_tok.kind == .colon_eq
+	var := b.table.vars[name] or {
 		// var does not exists in the the symbol table
-		if syntax.eq_tok.kind == .eq {
+		if !is_decl {
+			// var have to be declared with := to be able to set a value
 			b.log.error_var_not_exists(name, syntax.ident.pos)
 			return new_bound_literal_expr(0)
 		}
-		bound_expr :=  b.bind_expr(syntax.expr)
-		return new_bound_assign_expr(name, bound_expr)
+		bound_expr := b.bind_expr(syntax.expr)
+		return new_bound_assign_expr(name, syntax.is_mut, bound_expr)
 	}
-	// var already exists so we only allow a=expr 
-	if syntax.eq_tok.kind == .colon_eq {
+	if is_decl {
+		// var exists and it is re-declared
 		b.log.error_name_already_defined(name, syntax.ident.pos)
 		return new_bound_literal_expr(0)
 	}
-	bound_expr :=  b.bind_expr(syntax.expr)
-	return new_bound_assign_expr(name, bound_expr)
+	if !var.is_mut {
+		// trying to assign a nom a mutable var
+		b.log.error_assign_non_mutable_variable(name, syntax.ident.pos)
+		return new_bound_literal_expr(0)
+	}
+	bound_expr := b.bind_expr(syntax.expr)
+	return new_bound_assign_expr(name, syntax.is_mut, bound_expr)
 }
 
 fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {

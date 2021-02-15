@@ -50,6 +50,7 @@ pub enum Kind {
 	key_struct // 'struct'
 	key_true // 'true'
 	key_false // 'false'
+	key_mut // 'mut'
 	keyword_end // end of keywords
 	_end_ // end of enum
 }
@@ -98,6 +99,7 @@ fn build_token_str() []string {
 	s[Kind.pipe_pipe] = '||'
 	s[Kind.amp_amp] = '&&'
 	s[Kind.exl_mark] = '!'
+	s[Kind.key_mut] = 'mut'
 	s[Kind.key_true] = 'true'
 	s[Kind.key_false] = 'false'
 	s[Kind.key_fn] = 'fn'

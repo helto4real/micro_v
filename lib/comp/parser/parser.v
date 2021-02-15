@@ -156,11 +156,19 @@ fn (mut p Parser) parse_expr() ast.Expression {
 // parse_assign_expr parses an assignment expression
 //   can parse nested assignment x=y=10
 fn (mut p Parser) parse_assign_expr() ast.Expression {
-	if p.peek_token(0).kind == .name && (p.peek_token(1).kind == .eq || p.peek_token(1).kind==.colon_eq) {
+	mut is_mut := false
+	if p.peek_token(0).kind == .key_mut {
+		if p.peek_assignment(1) {
+			// it is a mut assignment
+			is_mut = true
+			p.next_token()
+		}
+	}
+	if p.peek_assignment(0) {
 		ident_tok := p.next_token()
 		op_token := p.next_token()
 		right := p.parse_assign_expr()
-		return ast.new_assign_expr(ident_tok, op_token, right)
+		return ast.new_assign_expr(ident_tok, is_mut, op_token, right)
 	}
 	return p.parse_binary_expr()
 }
