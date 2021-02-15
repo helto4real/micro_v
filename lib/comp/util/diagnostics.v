@@ -37,8 +37,8 @@ pub fn (mut d Diagnostics) error_unexpected(typ string, got string, pos Pos) {
 	d.error('unexpected $typ: <$got>', pos)
 }
 
-pub fn (mut d Diagnostics) error_undefined_name(name string, pos Pos) {
-	d.error('undefined name: <$name>', pos)
+pub fn (mut d Diagnostics) error_var_not_exists(name string, pos Pos) {
+	d.error("variable '${name}' does not exist", pos)
 }
 
 pub fn (mut d Diagnostics) error_name_already_defined(name string, pos Pos) {

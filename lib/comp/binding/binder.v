@@ -30,7 +30,7 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 	if name !in b.table.vars{
 		// var does not exists in the the symbol table
 		if syntax.eq_tok.kind == .eq {
-			b.log.error_undefined_name(name, syntax.ident.pos)
+			b.log.error_var_not_exists(name, syntax.ident.pos)
 			return new_bound_literal_expr(0)
 		}
 		bound_expr :=  b.bind_expr(syntax.expr)
@@ -52,7 +52,7 @@ fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {
 fn (mut b Binder) bind_name_expr(syntax ast.NameExpr) BoundExpr {
 	name := syntax.ident_tok.lit
 	value := b.table.vars[name] or {
-		b.log.error_undefined_name(name, syntax.ident_tok.pos)
+		b.log.error_var_not_exists(name, syntax.ident_tok.pos)
 		return new_bound_literal_expr(0)
 	}
 	return new_bound_variable_expr(name, value.val.typ())

@@ -112,7 +112,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 					}
 				}
 				ast.NameExpr {
-					println(term.gray('$node.kind'))
+					println(term.gray('${node.kind}'))
 					mut child_nodes := node.child_nodes()
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
