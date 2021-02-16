@@ -100,8 +100,8 @@ pub fn (mut t Tokenizer) next_token() Token {
 			return t.token(.div, '/', 1)
 		}
 		token.single_quote, token.double_quote {
-			ident_string := t.string_literal()
-			return t.token(.string, ident_string, ident_string.len)
+			ident_string, len := t.string_literal()
+			return t.token(.string, ident_string, len)
 		}
 		`:` {
 			if nextc == `=` {
@@ -262,27 +262,29 @@ fn (mut t Tokenizer) pos(len int) util.Pos {
 }
 
 // string_literal returns a string literal
-fn (mut t Tokenizer) string_literal() string {
+fn (mut t Tokenizer) string_literal() (string, int) {
 	start_pos := t.pos + 1
 	mut len := 1
 	mut peek := t.peek(len)
 	q_char := t.ch
 	for {
+		
 		if peek == `\0` {
 			t.log.error('unfinished string literal', t.pos(len))
-			break
+			return '', len
 		}
 		if peek == q_char {
 			if len > 1 {
-				return t.text[start_pos..start_pos + len - 1]
+				return t.text[start_pos..start_pos + len - 1],  len+1
 			} else {
-				return ''
+				return '', len+1
 			}
 		}
+		print(t.peek(len).ascii_str())
 		len++
 		peek = t.peek(len)
 	}
-	return ''
+	return '', len
 }
 
 // name, gets the number token

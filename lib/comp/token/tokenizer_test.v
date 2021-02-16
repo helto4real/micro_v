@@ -1,6 +1,10 @@
 module token
 import lib.comp.token
 
+const (
+	valid_white_space = [' ', '\r', '\n', '\t']
+)
+
 // EOF specific tests
 fn test_last_is_eof() {
 	mut tkz := new_tokenizer_from_string('')
@@ -293,7 +297,8 @@ fn test_eq_ne() {
 fn test_single_token() {
 	check_parse_token(.name, 'hello')
 	check_parse_token(.number, '1234')
-	// check_parse_token(.string, '==')
+	check_parse_token_lit(.string, 'hello', '"hello"')
+	check_parse_token_lit(.string, 'hello', "'hello'")
 	check_parse_token(.lcbr, '{')
 	check_parse_token(.rcbr, '}')
 	check_parse_token(.lpar, '(')
@@ -325,16 +330,35 @@ fn test_single_keyword() {
 	check_parse_token(.key_mut, 'mut')
 }
 
+fn check_parse_token_lit(kind token.Kind, text string, lit string) {
+	check_parse_token_index(0, kind, text, lit) 
+	check_parse_token_index_whitspace(0, kind, text, lit) 
+}
+
 fn check_parse_token(kind token.Kind, text string) {
-	mut tkz := new_tokenizer_from_string(text)
-	mut tokens := tkz.scan_all()
-	assert tokens[0].kind == kind
-	assert tokens[0].lit == text
+	check_parse_token_index(0, kind, text, text) 
+	check_parse_token_index_whitspace(0, kind, text, text) 
+}
+// Check both with and without whitespace
+fn check_parse_token_index_whitspace(index int, kind token.Kind, lit string, text string) {
+	for ws in valid_white_space {
+		mut tkz := new_tokenizer_from_string('$ws$text$ws')
+		tokens := tkz.scan_all()
+		if tokens[index].kind != kind {
+			eprintln('for $text, got kind $tokens[index].kind, expected $kind ')
+		}
+		assert tokens[index].kind == kind
+		assert tokens[index].lit == lit		
+	}
 }
 
 fn check_parse_token_index(index int, kind token.Kind, lit string, text string) {
+	// without whitespace	
 	mut tkz := new_tokenizer_from_string(text)
-	mut tokens := tkz.scan_all()
+	tokens := tkz.scan_all()
+			if tokens[index].kind != kind {
+			eprintln('for $text, got kind $tokens[index].kind, expected $kind ')
+		}
 	assert tokens[index].kind == kind
 	assert tokens[index].lit == lit
 }

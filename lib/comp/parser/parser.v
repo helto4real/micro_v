@@ -23,11 +23,13 @@ pub fn parse_syntax_tree(text string) SyntaxTree {
 // new_parser_from_text, instance a parser from a text input
 fn new_parser_from_text(text string) &Parser {
 	mut tnz := token.new_tokenizer_from_string(text)
-
+	tokens := tnz.scan_all()
+	mut diagnostics := util.new_diagonistics()
+	diagnostics.merge(tnz.log)
 	mut parser := &Parser{
 		text: text
-		tokens: tnz.scan_all()
-		log: tnz.log
+		tokens: tokens
+		log: diagnostics
 	}
 	return parser
 }

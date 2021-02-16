@@ -8,10 +8,10 @@ pub struct SyntaxTree {
 pub:
 	root      ast.Expression
 	eof_token token.Token
-	log       util.Diagnostics // errors when parsing
+	log       &util.Diagnostics // errors when parsing
 }
 
-fn new_syntax_tree(log util.Diagnostics, root ast.Expression, eof_token token.Token) SyntaxTree {
+fn new_syntax_tree(log &util.Diagnostics, root ast.Expression, eof_token token.Token) SyntaxTree {
 	return SyntaxTree{
 		root: root
 		eof_token: eof_token

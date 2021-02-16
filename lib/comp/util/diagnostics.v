@@ -13,10 +13,22 @@ pub mut:
 	all []Diagnostic
 }
 
+pub fn new_diagonistics() Diagnostics {
+	return Diagnostics {}
+}
+
+pub fn (mut d Diagnostics) merge(from_diag Diagnostics) {
+	for diag in from_diag {
+		d.all  << diag
+	}
+}
+
 // iterator for more easy handling
 pub fn (mut d Diagnostics) next() ?Diagnostic {
 	if d.iter_pos < d.all.len {
-		return d.all[d.iter_pos]
+		ret := d.all[d.iter_pos]
+		d.iter_pos++
+		return ret
 	}
 	d.iter_pos = 0
 	return none
