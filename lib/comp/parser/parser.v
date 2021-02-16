@@ -152,7 +152,6 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 [inline]
 fn (mut p Parser) parse_expr() ast.Expression {
 	return p.parse_assign_expr()
-	// return p.parse_binary_expr(0)
 }
 
 // parse_assign_expr parses an assignment expression

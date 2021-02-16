@@ -6,7 +6,7 @@ import lib.comp.util
 
 pub struct SyntaxTree {
 pub:
-	root      ast.Expression
+	root ast.Expression
 	eof_token token.Token
 	log       &util.Diagnostics // errors when parsing
 }

@@ -12,10 +12,15 @@ pub fn (e Expression) kind() SyntaxKind {
 		}
 	}
 }
+
 // Nodes in syntax tree
 pub type AstNode = Expression | token.Token
 
 pub struct EmptyExpr{
 pub:
 	kind SyntaxKind = .empty
+}
+
+pub fn (mut be EmptyExpr) child_nodes() []AstNode {
+	return  []AstNode{}
 }

@@ -43,4 +43,5 @@ fn test_match_token_not_exixt() {
 	assert tok.kind == .name
 	assert tok.pos.pos == 0
 	assert tok.lit == ''
+
 }
