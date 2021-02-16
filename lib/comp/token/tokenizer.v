@@ -56,99 +56,99 @@ pub fn (mut t Tokenizer) next_token() Token {
 	match t.ch {
 		`(` {
 			t.kind = .lpar
-			t.next()
+			t.incr_pos()
 		}
 		`)` {
 			t.kind = .rpar
-			t.next()
+			t.incr_pos()
 		}
 		`{` {
 			t.kind = .lcbr
-			t.next()
+			t.incr_pos()
 		}
 		`}` {
 			t.kind = .rcbr
-			t.next()
+			t.incr_pos()
 		}
 		`+` {
 			t.kind = .plus
-			t.next()
+			t.incr_pos()
 		}
 		`-` {
 			t.kind = .minus
-			t.next()
+			t.incr_pos()
 		}
 		`*` {
 			t.kind = .mul
-			t.next()
+			t.incr_pos()
 		}
 		`/` {
 			t.kind = .div
-			t.next()
+			t.incr_pos()
 		}
 		token.single_quote, token.double_quote {
 			t.read_string_literal()
 		}
 		`:` {
-			t.next()
+			t.incr_pos()
 			if t.ch == `=` {
 				t.kind = .colon_eq
-				t.next()
+				t.incr_pos()
 			} else {
 				t.kind = .colon
 			}
 		}
 		`=` {
-			t.next()
+			t.incr_pos()
 			if t.ch == `=` {
 				t.kind = .eq_eq
-				t.next()
+				t.incr_pos()
 			} else {
 				t.kind = .eq
 			}
 		}
 		`;` {
 			t.kind = .semcol
-			t.next()
+			t.incr_pos()
 		}
 		`.` {
 			t.kind = .dot
-			t.next()
+			t.incr_pos()
 		}
 		`!` {
-			t.next()
+			t.incr_pos()
 			if t.ch == `=` {
 				t.kind = .exl_mark_eq
-				t.next()
+				t.incr_pos()
 			} else {
 				t.kind = .exl_mark
 			}
 		}
 		`&` {
-			t.next()
+			t.incr_pos()
 			if t.ch == `&` {
 				t.kind = .amp_amp
-				t.next()
+				t.incr_pos()
 			} else {
 				t.kind = .amp
 			}
 		}
 		`|` {
-			t.next()
+			t.incr_pos()
 			if t.ch == `|` {
 				t.kind = .pipe_pipe
-				t.next()
+				t.incr_pos()
 			} else {
 				t.kind = .pipe
 			}
 		}
 		`,` {
 			t.kind = .comma
-			t.next()
+			t.incr_pos()
 		}
 		`\0` {
 			t.kind = .eof
-			t.next()
+			t.incr_pos()
 		}
 		`0`...`9` {
 			t.read_number_literal()
@@ -157,8 +157,8 @@ pub fn (mut t Tokenizer) next_token() Token {
 			t.read_identifier_or_keyword()
 		}
 		else {
-			t.log.error_unexpected('token', t.ch.ascii_str(), t.pos())
-			t.next()
+			t.log.error_unexpected('token', t.ch.ascii_str(), t.token_pos())
+			t.incr_pos()
 			t.kind = .error
 		}
 	}
@@ -193,7 +193,7 @@ fn (mut t Tokenizer) token(kind Kind, pos int, lit string, len int) Token {
 
 // next, get next char
 [inline]
-fn (mut t Tokenizer) next() {
+fn (mut t Tokenizer) incr_pos() {
 	t.pos++
 	t.col++
 	if t.pos >= t.text.len {
@@ -204,9 +204,9 @@ fn (mut t Tokenizer) next() {
 	t.ch = t.text[t.pos]
 }
 
-// peek, peeks the character at pos + n or '\0' if eof
+// peek_pos, peeks the character at pos + n or '\0' if eof
 [inline]
-fn (mut t Tokenizer) peek(n int) byte {
+fn (mut t Tokenizer) peek_pos(n int) byte {
 	if t.pos + n < t.text.len {
 		return t.text[t.pos + n]
 	} else {
@@ -219,14 +219,14 @@ fn (mut t Tokenizer) skip_whitespace() {
 	for t.ch != `\0` && t.ch.is_space() {
 		if t.ch == `\r` {
 			// Count \r\n as one line
-			if t.peek(1) == `\n` {
-				t.next()
+			if t.peek_pos(1) == `\n` {
+				t.incr_pos()
 				t.inc_line_nr()
 			}
-		} else if t.peek(0) == `\n` {
+		} else if t.peek_pos(0) == `\n` {
 			t.inc_line_nr()
 		}
-		t.next()
+		t.incr_pos()
 	}
 }
 
@@ -245,9 +245,9 @@ pub fn is_name_char(c byte) bool {
 
 // name, gets the name token
 fn (mut t Tokenizer) read_identifier_or_keyword() {
-	t.next()
+	t.incr_pos()
 	for t.ch != `\0` && (is_name_char(t.ch) || t.ch.is_digit()) {
-		t.next()
+		t.incr_pos()
 	}
 	name := t.text[t.start..t.pos]
 	kind := keywords[name]
@@ -260,7 +260,7 @@ fn (mut t Tokenizer) read_identifier_or_keyword() {
 
 // pos, returns current position
 [inline]
-fn (mut t Tokenizer) pos() util.Pos {
+fn (mut t Tokenizer) token_pos() util.Pos {
 	return util.new_pos(t.pos, t.len, t.ln, t.col)
 }
 
@@ -268,17 +268,17 @@ fn (mut t Tokenizer) pos() util.Pos {
 fn (mut t Tokenizer) read_string_literal() {
 	t.kind = .string
 	q_char := t.ch
-	t.next()
+	t.incr_pos()
 	for {
 		if t.ch == `\0` {
-			t.log.error('unfinished string literal', t.pos())
+			t.log.error('unfinished string literal', t.token_pos())
 			return
 		}
 		if t.ch == q_char {
-			t.next()
+			t.incr_pos()
 			return
 		}
-		t.next()
+		t.incr_pos()
 	}
 }
 
@@ -286,13 +286,13 @@ fn (mut t Tokenizer) read_string_literal() {
 [inline]
 fn (mut t Tokenizer) read_number_literal() {
 	for t.ch != `\0` && t.ch.is_digit() {
-		t.next()
+		t.incr_pos()
 	}
 	t.kind = .number
 }
 
-// is_nl returns true if character is new line
+// is_newline returns true if character is new line
 [inline]
-pub fn is_nl(c byte) bool {
+pub fn is_newline(c byte) bool {
 	return c == `\r` || c == `\n`
 }
