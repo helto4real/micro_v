@@ -169,23 +169,23 @@ fn test_string_literal_double_quote() {
 	mut tkz := new_tokenizer_from_string('"hello world"')
 	mut tok := tkz.next_token()
 	assert tok.kind == .string
-	assert tok.lit == 'hello world'
+	assert tok.lit == '"hello world"'
 }
 
 fn test_string_literal_single_quote() {
 	mut tkz := new_tokenizer_from_string("'hello world'")
 	mut tok := tkz.next_token()
 	assert tok.kind == .string
-	assert tok.lit == 'hello world'
+	assert tok.lit == "'hello world'"
 }
 
 fn test_string_literal_error_missing_end_quote() {
 	mut tkz := new_tokenizer_from_string("'hello world")
 	mut tok := tkz.next_token()
 	assert tok.kind == .string
-	assert tok.lit == ''
+	assert tok.lit == "'hello world"
 	assert tkz.log.all.len == 1
-	assert tkz.log.all[0].pos.pos == 0
+	assert tkz.log.all[0].pos.pos == 12
 }
 
 fn test_para() {
@@ -297,8 +297,8 @@ fn test_eq_ne() {
 fn test_single_token() {
 	check_parse_token(.name, 'hello')
 	check_parse_token(.number, '1234')
-	check_parse_token_lit(.string, 'hello', '"hello"')
-	check_parse_token_lit(.string, 'hello', "'hello'")
+	check_parse_token(.string, '"hello"')
+	check_parse_token(.string, "'hello'")
 	check_parse_token(.lcbr, '{')
 	check_parse_token(.rcbr, '}')
 	check_parse_token(.lpar, '(')

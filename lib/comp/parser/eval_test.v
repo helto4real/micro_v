@@ -84,7 +84,11 @@ fn eval_int(table &binding.SymbolTable, expr string) int {
 
 fn eval_bool(table &binding.SymbolTable, expr string) bool {
 	syntax_tree := parser.parse_syntax_tree(expr)
-	assert syntax_tree.log.all.len == 0
+	if syntax_tree.log.all.len > 0 {
+		eprintln('expression error: $expr')
+		assert syntax_tree.log.all.len == 0
+	}
+	
 	mut binder := binding.new_binder(table)
 	bounded_syntax := binder.bind_expr(syntax_tree.root)
 	assert binder.log.all.len == 0

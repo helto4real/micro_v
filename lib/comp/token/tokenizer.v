@@ -11,10 +11,13 @@ pub struct Tokenizer {
 	text string // text tokenized
 mut:
 	pos    int  // current position in file
-	ln     int  = 1 // current line being parsed
+	start  int  // start of the token
+	ln     int = 1 // current line being parsed
+	len    int  // current parsed token len
 	col    int  = 1 // current colum being parsed
 	ch     byte = `\0` // current char
 	is_eof bool
+	kind   Kind // current token kind
 pub mut:
 	log util.Diagnostics // errors when tokenizing
 }
@@ -25,16 +28,8 @@ pub fn new_tokenizer_from_string(text string) &Tokenizer {
 	}
 	return &Tokenizer{
 		text: text
-		ch: if text.len > 0 {
-			text[0]
-		} else {
-			`\0`
-		}
-		is_eof: if text.len > 0 {
-			false
-		} else {
-			true
-		}
+		ch: if text.len > 0 { text[0] } else { `\0` }
+		is_eof: if text.len > 0 { false } else { true }
 	}
 }
 
@@ -54,119 +49,144 @@ pub fn (mut t Tokenizer) scan_all() []Token {
 pub fn (mut t Tokenizer) next_token() Token {
 	// whitepace has no meaning and will exl_mark be parsed
 	t.skip_whitespace()
-
-	if t.is_eof {
-		return t.token(.eof, 'eof', 1)
-	}
-
-	nextc := t.peek(1)
+	t.start = t.pos
 
 	// Check for identifiers and keyword identifiers
-	if is_name_char(t.ch) {
-		name := t.name_tok()
-		kind := keywords[name]
-		if kind == .unknown {
-			return t.token(.name, name, name.len)
-		} else {
-			return t.token(kind, name, name.len)
-		}
-	} else if t.ch.is_digit() {
-		number := t.number_literal()
-		return t.token(.number, number, number.len)
-	}
+
 	match t.ch {
 		`(` {
-			return t.token(.lpar, '(', 1)
+			t.kind = .lpar
+			t.next()
 		}
 		`)` {
-			return t.token(.rpar, ')', 1)
+			t.kind = .rpar
+			t.next()
 		}
 		`{` {
-			return t.token(.lcbr, '{', 1)
+			t.kind = .lcbr
+			t.next()
 		}
 		`}` {
-			return t.token(.rcbr, '}', 1)
+			t.kind = .rcbr
+			t.next()
 		}
 		`+` {
-			return t.token(.plus, '+', 1)
+			t.kind = .plus
+			t.next()
 		}
 		`-` {
-			return t.token(.minus, '-', 1)
+			t.kind = .minus
+			t.next()
 		}
 		`*` {
-			return t.token(.mul, '*', 1)
+			t.kind = .mul
+			t.next()
 		}
 		`/` {
-			return t.token(.div, '/', 1)
+			t.kind = .div
+			t.next()
 		}
 		token.single_quote, token.double_quote {
-			ident_string, len := t.string_literal()
-			return t.token(.string, ident_string, len)
+			t.read_string_literal()
 		}
 		`:` {
-			if nextc == `=` {
-				return t.token(.colon_eq, ':=', 2)
+			t.next()
+			if t.ch == `=` {
+				t.kind = .colon_eq
+				t.next()
 			} else {
-				return t.token(.colon, ':', 1)
+				t.kind = .colon
 			}
 		}
 		`=` {
-			if nextc == `=` {
-				return t.token(.eq_eq, '==', 2)
+			t.next()
+			if t.ch == `=` {
+				t.kind = .eq_eq
+				t.next()
+			} else {
+				t.kind = .eq
 			}
-			return t.token(.eq, '=', 1)
 		}
 		`;` {
-			return t.token(.semcol, ';', 1)
+			t.kind = .semcol
+			t.next()
 		}
 		`.` {
-			return t.token(.dot, '.', 1)
+			t.kind = .dot
+			t.next()
 		}
 		`!` {
-			if nextc == `=` {
-				return t.token(.exl_mark_eq, '!=', 2)
+			t.next()
+			if t.ch == `=` {
+				t.kind = .exl_mark_eq
+				t.next()
+			} else {
+				t.kind = .exl_mark
 			}
-			return t.token(.exl_mark, '!', 1)
 		}
 		`&` {
-			if nextc == `&` {
-				return t.token(.amp_amp, '&&', 2)
+			t.next()
+			if t.ch == `&` {
+				t.kind = .amp_amp
+				t.next()
+			} else {
+				t.kind = .amp
 			}
-			return t.token(.amp, '&', 1)
 		}
 		`|` {
-			if nextc == `|` {
-				return t.token(.pipe_pipe, '||', 2)
+			t.next()
+			if t.ch == `|` {
+				t.kind = .pipe_pipe
+				t.next()
+			} else {
+				t.kind = .pipe
 			}
-			return t.token(.pipe, '|', 1)
 		}
 		`,` {
-			return t.token(.comma, ',', 1)
+			t.kind = .comma
+			t.next()
+		}
+		`\0` {
+			t.kind = .eof
+			t.next()
+		}
+		`0`...`9` {
+			t.read_number_literal()
+		}
+		`a`...`z`, `A`...`Z`, `_` {
+			t.read_identifier_or_keyword()
 		}
 		else {
-			t.log.error_unexpected('token', t.ch.ascii_str(), t.pos(1))
-			return t.token(.error, '$t.ch.ascii_str()', 1)
+			t.log.error_unexpected('token', t.ch.ascii_str(), t.pos())
+			t.next()
+			t.kind = .error
 		}
 	}
 
-	t.log.error_unexpected('token', t.ch.ascii_str(), t.pos(1))
-	return t.token(.error, '$t.ch.ascii_str()', 1)
+	len := t.pos - t.start
+	mut text := token_str[t.kind] or {
+		panic('compiler error, tokenkind: $t.kind not found in tokenlist')
+	}
+	if text == '' {
+		// variable token lenght
+		text = t.text[t.start..t.pos]
+	}
+	return t.token(t.kind, t.start, text, len)
 }
 
 // token instance new token of a kind
 [inline]
-fn (mut t Tokenizer) token(kind Kind, lit string, len int) Token {
+fn (mut t Tokenizer) token(kind Kind, pos int, lit string, len int) Token {
 	tok := Token{
 		kind: kind
 		lit: lit
 		pos: util.Pos{
-			pos: t.pos
+			pos: pos
 			len: len
-			// ln: t.ln
-			// col: t.col
+			ln: t.ln
+			col: t.col
 		}
 	}
-	t.skip(len)
 
 	return tok
 }
@@ -174,9 +194,6 @@ fn (mut t Tokenizer) token(kind Kind, lit string, len int) Token {
 // next, get next char
 [inline]
 fn (mut t Tokenizer) next() {
-	if t.is_eof {
-		return
-	}
 	t.pos++
 	t.col++
 	if t.pos >= t.text.len {
@@ -185,25 +202,6 @@ fn (mut t Tokenizer) next() {
 		return
 	}
 	t.ch = t.text[t.pos]
-}
-
-// skip, skips n chars
-[inline]
-fn (mut t Tokenizer) skip(n int) {
-	if t.pos + n < t.text.len {
-		t.pos += n
-		t.col += n
-		t.ch = t.text[t.pos]
-	} else {
-		t.col += n
-		t.is_eof = true
-		t.ch = `\0`
-		if t.pos + n > t.text.len + 1 {
-			t.log.error('skipping character pos out of scope: $t.pos, $n ($t.text.len)',
-				util.new_pos(t.pos, t.text.len-t.pos-1))
-		}
-		t.pos = t.text.len
-	}
 }
 
 // peek, peeks the character at pos + n or '\0' if eof
@@ -218,14 +216,14 @@ fn (mut t Tokenizer) peek(n int) byte {
 
 // skip_whitespace, skips all whitespace characters
 fn (mut t Tokenizer) skip_whitespace() {
-	for !t.is_eof && t.ch.is_space() {
+	for t.ch != `\0` && t.ch.is_space() {
 		if t.ch == `\r` {
 			// Count \r\n as one line
 			if t.peek(1) == `\n` {
 				t.next()
 				t.inc_line_nr()
 			}
-		} else if t.ch == `\n` {
+		} else if t.peek(0) == `\n` {
 			t.inc_line_nr()
 		}
 		t.next()
@@ -246,57 +244,51 @@ pub fn is_name_char(c byte) bool {
 }
 
 // name, gets the name token
-fn (mut t Tokenizer) name_tok() string {
-	start := t.pos
-	mut len := 1
-	mut peek := t.peek(len)
-	for peek != `\0` && (is_name_char(peek) || peek.is_digit()) {
-		len++
-		peek = t.peek(len)
+fn (mut t Tokenizer) read_identifier_or_keyword() {
+	t.next()
+	for t.ch != `\0` && (is_name_char(t.ch) || t.ch.is_digit()) {
+		t.next()
 	}
-	return t.text[start..(start + len)]
+	name := t.text[t.start..t.pos]
+	kind := keywords[name]
+	if kind == .unknown {
+		t.kind = .name
+	} else {
+		t.kind = kind
+	}
 }
 
-fn (mut t Tokenizer) pos(len int) util.Pos {
-	return util.new_pos(t.pos, len)
+// pos, returns current position
+[inline]
+fn (mut t Tokenizer) pos() util.Pos {
+	return util.new_pos(t.pos, t.len, t.ln, t.col)
 }
 
-// string_literal returns a string literal
-fn (mut t Tokenizer) string_literal() (string, int) {
-	start_pos := t.pos + 1
-	mut len := 1
-	mut peek := t.peek(len)
+// read_string_literal returns a string literal
+fn (mut t Tokenizer) read_string_literal() {
+	t.kind = .string
 	q_char := t.ch
+	t.next()
 	for {
-		
-		if peek == `\0` {
-			t.log.error('unfinished string literal', t.pos(len))
-			return '', len
+		if t.ch == `\0` {
+			t.log.error('unfinished string literal', t.pos())
+			return
 		}
-		if peek == q_char {
-			if len > 1 {
-				return t.text[start_pos..start_pos + len - 1],  len+1
-			} else {
-				return '', len+1
-			}
+		if t.ch == q_char {
+			t.next()
+			return
 		}
-		print(t.peek(len).ascii_str())
-		len++
-		peek = t.peek(len)
+		t.next()
 	}
-	return '', len
 }
 
 // name, gets the number token
-fn (mut t Tokenizer) number_literal() string {
-	start := t.pos
-	mut len := 1
-	mut peek := t.peek(len)
-	for peek != `\0` && peek.is_digit() {
-		len++
-		peek = t.peek(len)
+[inline]
+fn (mut t Tokenizer) read_number_literal() {
+	for t.ch != `\0` && t.ch.is_digit() {
+		t.next()
 	}
-	return t.text[start..(start + len)]
+	t.kind = .number
 }
 
 // is_nl returns true if character is new line

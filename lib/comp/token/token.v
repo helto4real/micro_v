@@ -75,9 +75,9 @@ fn build_token_str() []string {
 	s[Kind.unknown] = 'token_unknown'
 	s[Kind.error] = 'token_error'
 	s[Kind.eof] = 'eof'
-	s[Kind.name] = 'name'
-	s[Kind.string] = 'string'
-	s[Kind.number] = 'number'
+	s[Kind.name] = '' // no default value
+	s[Kind.string] = '' // no default value
+	s[Kind.number] = '' // no default value
 	s[Kind.eq] = '='
 	s[Kind.colon_eq] = ':='
 	s[Kind.eq_eq] = '=='
