@@ -20,7 +20,7 @@ pub fn new_assign_expr(ident token.Token, is_mut bool, eq_tok token.Token, expr 
 	}
 }
 
-pub fn (mut ae AssignExpr) child_nodes() []AstNode {
+pub fn (ae &AssignExpr) child_nodes() []AstNode {
 	mut nodes := []AstNode{cap: 3}
 	nodes << ae.ident
 	nodes << ae.eq_tok

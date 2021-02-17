@@ -20,7 +20,7 @@ pub fn new_literal_expr(tok token.Token, val types.LitVal) LiteralExpr {
 	}
 }
 
-pub fn (le LiteralExpr) child_nodes() []AstNode {
+pub fn (le &LiteralExpr) child_nodes() []AstNode {
 	mut nodes := []AstNode{cap:1}
 	nodes << le.tok
 	return nodes
@@ -38,7 +38,7 @@ pub fn new_name_expr(ident_tok token.Token) NameExpr {
 	}
 }
 
-pub fn (ne NameExpr) child_nodes() []AstNode {
+pub fn (ne &NameExpr) child_nodes() []AstNode {
 	mut nodes := []AstNode{cap: 1}
 	nodes << ne.ident_tok
 	return nodes

@@ -29,7 +29,7 @@ pub fn new_binary_expr(left Expression, op token.Token, right Expression) Binary
 	}
 }
 
-pub fn (mut be BinaryExpr) child_nodes() []AstNode {
+pub fn (be &BinaryExpr) child_nodes() []AstNode {
 	mut nodes := []AstNode{cap: 3}
 	nodes << be.left
 	nodes << be.op
@@ -56,7 +56,7 @@ pub fn new_unary_expr(op token.Token, operand Expression) UnaryExpr {
 	}
 }
 
-pub fn (mut be UnaryExpr) child_nodes() []AstNode {
+pub fn (be &UnaryExpr) child_nodes() []AstNode {
 	mut nodes := []AstNode{cap: 3}
 	nodes << be.op
 	nodes << be.operand
@@ -79,7 +79,7 @@ pub fn new_paranthesis_expr(open_para_token token.Token, expr Expression, close_
 	}
 }
 
-pub fn (mut pe ParaExpr) child_nodes() []AstNode {
+pub fn (pe &ParaExpr) child_nodes() []AstNode {
 	mut nodes := []AstNode{cap: 3}
 	nodes << pe.open_para_token
 	nodes << pe.expr

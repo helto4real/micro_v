@@ -17,7 +17,7 @@ pub fn (t Token) str() string {
 // Kind of token
 pub enum Kind {
 	unknown
-	error // error
+	bad_token // bad token
 	name // Any identifier name
 	number //[1-9]+
 	string // a string literal
@@ -73,7 +73,7 @@ pub fn build_keys() map[string]Kind {
 fn build_token_str() []string {
 	mut s := []string{len: token.nr_tokens}
 	s[Kind.unknown] = 'token_unknown'
-	s[Kind.error] = 'token_error'
+	s[Kind.bad_token] = 'bad_token'
 	s[Kind.eof] = 'eof'
 	s[Kind.name] = '' // no default value
 	s[Kind.string] = '' // no default value

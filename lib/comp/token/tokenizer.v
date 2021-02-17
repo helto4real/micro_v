@@ -50,9 +50,9 @@ pub fn (mut t Tokenizer) next_token() Token {
 	// whitepace has no meaning and will exl_mark be parsed
 	t.skip_whitespace()
 	t.start = t.pos
+	t.kind = .bad_token
 
 	// Check for identifiers and keyword identifiers
-
 	match t.ch {
 		`(` {
 			t.kind = .lpar
@@ -159,7 +159,7 @@ pub fn (mut t Tokenizer) next_token() Token {
 		else {
 			t.log.error_unexpected('token', t.ch.ascii_str(), t.token_pos())
 			t.incr_pos()
-			t.kind = .error
+			
 		}
 	}
 
