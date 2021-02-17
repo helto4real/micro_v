@@ -17,7 +17,6 @@ pub fn new_binder(table &SymbolTable) Binder {
 }
 
 pub fn (mut b Binder) bind_expr(expr ast.Expression) BoundExpr {
-	println(expr.children())
 	match expr {
 		ast.LiteralExpr { return b.bind_literal_expr(expr) }
 		ast.UnaryExpr { return b.bind_unary_expr(expr) }

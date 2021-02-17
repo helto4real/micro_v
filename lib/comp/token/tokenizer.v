@@ -159,7 +159,6 @@ pub fn (mut t Tokenizer) next_token() Token {
 		else {
 			t.log.error_unexpected('token', t.ch.ascii_str(), t.token_pos())
 			t.incr_pos()
-			
 		}
 	}
 
@@ -184,7 +183,7 @@ fn (mut t Tokenizer) token(kind Kind, pos int, lit string, len int) Token {
 			pos: pos
 			len: len
 			ln: t.ln
-			col: t.col
+			col: t.col-len
 		}
 	}
 

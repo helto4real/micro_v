@@ -2,12 +2,14 @@ module ast
 
 import lib.comp.token
 import lib.comp.types 
+import lib.comp.util
 
 pub struct LiteralExpr {
 	tok  token.Token
 pub: 
 	kind  SyntaxKind = .literal_expr
 	val   types.LitVal
+	pos   util.Pos
 }
 
 pub fn new_literal_expr(tok token.Token, val types.LitVal) LiteralExpr {
@@ -17,6 +19,7 @@ pub fn new_literal_expr(tok token.Token, val types.LitVal) LiteralExpr {
 	return LiteralExpr{
 		tok: tok
 		val: val
+		pos: tok.pos
 	}
 }
 
@@ -30,11 +33,13 @@ pub struct NameExpr {
 pub:
 	kind  SyntaxKind = .name_expr
 	ident_tok token.Token
+	pos util.Pos
 }
 
 pub fn new_name_expr(ident_tok token.Token) NameExpr {
 	return NameExpr {
 		ident_tok: ident_tok
+		pos: ident_tok.pos
 	}
 }
 

@@ -1,6 +1,7 @@
 module ast
 
 import lib.comp.token
+import lib.comp.util
 
 pub const (
 	binary_expr_tokens = [token.Kind(token.Kind.plus), .minus, .mul, .div, .amp_amp, .pipe_pipe,
@@ -14,6 +15,7 @@ pub:
 	op    token.Token
 	right Expression
 	kind  SyntaxKind = .binary_expr
+	pos   util.Pos
 }
 
 // new_binary_expr instance an binary expression 
@@ -26,6 +28,7 @@ pub fn new_binary_expr(left Expression, op token.Token, right Expression) Binary
 		left: left
 		op: op
 		right: right
+		pos: util.new_pos_from_bounds(left.pos(), right.pos())
 	}
 }
 
@@ -42,6 +45,7 @@ pub:
 	op      token.Token
 	operand Expression
 	kind    SyntaxKind = .unary_expr
+	pos   	util.Pos
 }
 
 // new_binary_expr instance an binary expression 
@@ -53,6 +57,7 @@ pub fn new_unary_expr(op token.Token, operand Expression) UnaryExpr {
 	return UnaryExpr{
 		op: op
 		operand: operand
+		pos: util.new_pos_from_bounds(op.pos, operand.pos())
 	}
 }
 
@@ -69,6 +74,7 @@ pub:
 	open_para_token  token.Token
 	close_para_token token.Token
 	expr             Expression
+	pos   			 util.Pos
 }
 
 pub fn new_paranthesis_expr(open_para_token token.Token, expr Expression, close_para_token token.Token) ParaExpr {
@@ -76,6 +82,7 @@ pub fn new_paranthesis_expr(open_para_token token.Token, expr Expression, close_
 		open_para_token: open_para_token
 		close_para_token: close_para_token
 		expr: expr
+		pos: util.new_pos_from_bounds(open_para_token.pos, close_para_token.pos)
 	}
 }
 
