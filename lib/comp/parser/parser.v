@@ -88,10 +88,11 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 	new_ident := ident + if is_last { '   ' } else { '│  ' }
 	match node {
 		ast.Expression {
-			match mut node {
+			match node {
+				// bug prevents me from colapsing
 				ast.BinaryExpr {
 					println(term.gray('$node.kind'))
-					mut child_nodes := node.child_nodes()
+					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
 						pretty_print(child, new_ident, last_node)
@@ -99,7 +100,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 				}
 				ast.UnaryExpr {
 					println(term.gray('$node.kind'))
-					mut child_nodes := node.child_nodes()
+					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
 						pretty_print(child, new_ident, last_node)
@@ -107,7 +108,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 				}
 				ast.LiteralExpr {
 					println(term.gray('$node.kind'))
-					mut child_nodes := node.child_nodes()
+					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
 						pretty_print(child, new_ident, last_node)
@@ -115,7 +116,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 				}
 				ast.NameExpr {
 					println(term.gray('$node.kind'))
-					mut child_nodes := node.child_nodes()
+					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
 						pretty_print(child, new_ident, last_node)
@@ -123,7 +124,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 				}
 				ast.AssignExpr {
 					println(term.gray('$node.kind'))
-					mut child_nodes := node.child_nodes()
+					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
 						pretty_print(child, new_ident, last_node)
@@ -131,7 +132,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 				}
 				ast.ParaExpr {
 					println(term.gray('$node.kind'))
-					mut child_nodes := node.child_nodes()
+					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
 						pretty_print(child, new_ident, last_node)
