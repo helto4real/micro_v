@@ -3,9 +3,9 @@ module ast
 import lib.comp.token
 
 pub const (
-	binary_expression_tokens = [token.Kind(token.Kind.plus), .minus, .mul, .div, .amp_amp, .pipe_pipe,
+	binary_expr_tokens = [token.Kind(token.Kind.plus), .minus, .mul, .div, .amp_amp, .pipe_pipe,
 								.eq_eq, .exl_mark_eq]
-	unary_expression_tokens  = [token.Kind(token.Kind.plus), .minus, .exl_mark]
+	unary_expr_tokens  = [token.Kind(token.Kind.plus), .minus, .exl_mark]
 )
 
 pub struct BinaryExpr {
@@ -16,10 +16,10 @@ pub:
 	kind  SyntaxKind = .binary_expr
 }
 
-// new_binary_expression instance an binary expression 
+// new_binary_expr instance an binary expression 
 // with a left side, right side and operator
-pub fn new_binary_expression(left Expression, op token.Token, right Expression) BinaryExpr {
-	if !(op.kind in ast.binary_expression_tokens) {
+pub fn new_binary_expr(left Expression, op token.Token, right Expression) BinaryExpr {
+	if !(op.kind in ast.binary_expr_tokens) {
 		panic('Expected a binary expresson token, got ($op.kind)')
 	}
 	return BinaryExpr{
@@ -44,10 +44,10 @@ pub:
 	kind    SyntaxKind = .unary_expr
 }
 
-// new_binary_expression instance an binary expression 
+// new_binary_expr instance an binary expression 
 // with a left side, right side and operator
-pub fn new_unary_expression(op token.Token, operand Expression) UnaryExpr {
-	if !(op.kind in ast.unary_expression_tokens) {
+pub fn new_unary_expr(op token.Token, operand Expression) UnaryExpr {
+	if !(op.kind in ast.unary_expr_tokens) {
 		panic('Expected a unary expresson token, got ($op.kind)')
 	}
 	return UnaryExpr{
@@ -71,7 +71,7 @@ pub:
 	expr             Expression
 }
 
-pub fn new_paranthesis_expression(open_para_token token.Token, expr Expression, close_para_token token.Token) ParaExpr {
+pub fn new_paranthesis_expr(open_para_token token.Token, expr Expression, close_para_token token.Token) ParaExpr {
 	return ParaExpr{
 		open_para_token: open_para_token
 		close_para_token: close_para_token

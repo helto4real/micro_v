@@ -114,7 +114,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 					}
 				}
 				ast.NameExpr {
-					println(term.gray('${node.kind}'))
+					println(term.gray('$node.kind'))
 					mut child_nodes := node.child_nodes()
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
@@ -187,9 +187,9 @@ fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.Expression {
 	if unary_op_prec != 0 && unary_op_prec >= parent_precedence {
 		op_token := p.next_token()
 		operand := p.parse_binary_expr_prec(unary_op_prec)
-		left = ast.new_unary_expression(op_token, operand)
+		left = ast.new_unary_expr(op_token, operand)
 	} else {
-		left = p.parse_primary_expression()
+		left = p.parse_primary_expr()
 	}
 
 	for {
@@ -200,36 +200,53 @@ fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.Expression {
 		}
 		op_token := p.next_token()
 		right := p.parse_binary_expr_prec(precedence)
-		left = ast.new_binary_expression(left, op_token, right)
+		left = ast.new_binary_expr(left, op_token, right)
 	}
 	return left
 }
 
-fn (mut p Parser) parse_primary_expression() ast.Expression {
+fn (mut p Parser) parse_primary_expr() ast.Expression {
 	tok := p.current_token()
 	match tok.kind {
 		.lpar {
-			left := p.match_token(.lpar)
-			expr := p.parse_expr()
-			right := p.match_token(.rpar)
-			return ast.new_paranthesis_expression(left, expr, right)
+			return p.parse_parantesize_expr()
 		}
 		.key_true, .key_false {
-			key_tok := p.next_token()
-			val := key_tok.kind == .key_true
-			return ast.new_literal_expression(key_tok, val)
+			return p.parse_bool_literal()
 		}
-		.name {
-			ident_tok := p.next_token()
-			return ast.new_name_expr(ident_tok)
+		.number {
+			return p.parse_number_literal()
 		}
 		else {
-			number_token := p.match_token(.number)
-			val := strconv.atoi(number_token.lit) or {
-				// p.error('Failed to convert number to value <$number_token.lit>')
-				0
-			}
-			return ast.new_literal_expression(number_token, val)
+			return p.parse_name_expr()
 		}
 	}
+}
+
+fn (mut p Parser) parse_number_literal() ast.Expression {
+	number_token := p.match_token(.number)
+	val := strconv.atoi(number_token.lit) or {
+		// p.error('Failed to convert number to value <$number_token.lit>')
+		0
+	}
+	return ast.new_literal_expr(number_token, val)
+}
+
+fn (mut p Parser) parse_parantesize_expr() ast.Expression {
+	left := p.match_token(.lpar)
+	expr := p.parse_expr()
+	right := p.match_token(.rpar)
+	return ast.new_paranthesis_expr(left, expr, right)
+}
+
+fn (mut p Parser) parse_bool_literal() ast.Expression {
+	is_true := p.current_token().kind == .key_true
+	key_tok := p.match_token(if is_true { token.Kind.key_true } else { token.Kind.key_false })
+	val := key_tok.kind == .key_true
+	return ast.new_literal_expr(key_tok, val)
+}
+
+fn (mut p Parser) parse_name_expr() ast.Expression {
+	ident_tok := p.match_token(.name)
+	return ast.new_name_expr(ident_tok)
 }

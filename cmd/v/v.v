@@ -14,10 +14,10 @@ fn main() {
 			exit(0)
 		}
 	}
-	print_expressions()
+	print_exprs()
 }
 
-fn print_expressions() {
+fn print_exprs() {
 	term.clear()
 	mut show_tree := false
 	table := binding.new_symbol_table()

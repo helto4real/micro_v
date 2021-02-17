@@ -10,7 +10,7 @@ pub:
 	val   types.LitVal
 }
 
-pub fn new_literal_expression(tok token.Token, val types.LitVal) LiteralExpr {
+pub fn new_literal_expr(tok token.Token, val types.LitVal) LiteralExpr {
 	if tok.kind !in [.number, .key_true, .key_false] {
 		panic('Expected a number token')
 	}

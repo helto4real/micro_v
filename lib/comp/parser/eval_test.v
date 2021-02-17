@@ -3,7 +3,7 @@ import lib.comp.binding
 import lib.comp.parser
 import lib.comp
 
-fn test_eval_basic_expressions() {
+fn test_eval_basic_exprs() {
 	mut t := binding.new_symbol_table()
 
 	assert eval_int(t, '2+2') == 4
@@ -45,7 +45,7 @@ fn test_eval_basic_expressions() {
 	assert eval_bool(t, '1==2 || 3!=5') == true
 }
 
-fn test_eval_var_expressions() {
+fn test_eval_var_exprs() {
 	mut t := binding.new_symbol_table()
 
 	assert eval_int(t, 'x:=4') == 4
