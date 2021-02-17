@@ -7,7 +7,7 @@ import lib.comp.util
 pub type Expression = AssignExpr | BinaryExpr | EmptyExpr | LiteralExpr | NameExpr | ParaExpr |
 	UnaryExpr
 
-pub fn (e Expression) kind() SyntaxKind {
+pub fn (e &Expression) kind() SyntaxKind {
 	match e {
 		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, EmptyExpr, NameExpr, AssignExpr {
 			return e.kind
@@ -51,6 +51,6 @@ pub:
 	pos  util.Pos
 }
 
-pub fn (be &EmptyExpr) child_nodes() []AstNode {
+pub fn (ee &EmptyExpr) child_nodes() []AstNode {
 	return []AstNode{}
 }

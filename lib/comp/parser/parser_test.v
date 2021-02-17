@@ -25,7 +25,6 @@ fn test_next_token() {
 	// Todo: why I cannot just do p.next_token().kind == .name??
 	t := p.next_token()
 	assert t.kind == .name
-	// assert p.next_token().kind == .name
 	assert p.current_token().kind == .number
 }
 
