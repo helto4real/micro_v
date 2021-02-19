@@ -23,7 +23,7 @@ pub fn new_compilation(syntax_tree parser.SyntaxTree, table &binding.SymbolTable
 
 pub fn (mut c Compilation) evaluate() EvaluationResult {
 	mut binder := binding.new_binder(c.table)
-	bounded_expr := binder.bind_expr(c.syntax.root)
+	bounded_expr := binder.bind_expr(c.syntax.root.expr)
 	mut result := []util.Diagnostic{}
 	result << c.syntax.log.all
 	result << binder.log.all

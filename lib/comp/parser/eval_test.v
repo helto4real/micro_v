@@ -71,7 +71,7 @@ fn eval_int(table &binding.SymbolTable, expr string) int {
 	assert syntax_tree.log.all.len == 0
 
 	mut binder := binding.new_binder(table)
-	bounded_syntax := binder.bind_expr(syntax_tree.root)
+	bounded_syntax := binder.bind_expr(syntax_tree.root.expr)
 	assert binder.log.all.len == 0
 
 	mut ev := comp.new_evaluator(bounded_syntax, table)
@@ -90,7 +90,7 @@ fn eval_bool(table &binding.SymbolTable, expr string) bool {
 	}
 	
 	mut binder := binding.new_binder(table)
-	bounded_syntax := binder.bind_expr(syntax_tree.root)
+	bounded_syntax := binder.bind_expr(syntax_tree.root.expr)
 	assert binder.log.all.len == 0
 
 	mut ev := comp.new_evaluator(bounded_syntax, table)

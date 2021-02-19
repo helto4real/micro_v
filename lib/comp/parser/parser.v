@@ -15,10 +15,10 @@ pub mut:
 	log util.Diagnostics // errors when parsing
 }
 
-pub fn parse_syntax_tree(text string) SyntaxTree {
-	mut parser := new_parser_from_text(text)
-	return parser.parse()
-}
+// pub fn parse_syntax_tree(text string) SyntaxTree {
+// 	mut parser := new_parser_from_text(text)
+// 	return parser.parse()
+// }
 
 // new_parser_from_text, instance a parser from a text input
 fn new_parser_from_text(text string) &Parser {
@@ -36,10 +36,10 @@ fn new_parser_from_text(text string) &Parser {
 	return parser
 }
 
-pub fn (mut p Parser) parse() SyntaxTree {
+pub fn (mut p Parser) parse_comp_node() ast.CompilationNode {
 	expr := p.parse_expr()
 	eof := p.match_token(.eof)
-	return new_syntax_tree(p.source, p.log, expr, eof)
+	return ast.new_comp_node(expr, eof)
 }
 
 // peek, returns a token at offset from current postion
@@ -133,6 +133,14 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 					}
 				}
 				ast.ParaExpr {
+					println(term.gray('$node.kind'))
+					child_nodes := node.child_nodes()
+					for i, child in child_nodes {
+						last_node := if i < child_nodes.len - 1 { false } else { true }
+						pretty_print(child, new_ident, last_node)
+					}
+				}
+				ast.CompilationNode {
 					println(term.gray('$node.kind'))
 					child_nodes := node.child_nodes()
 					for i, child in child_nodes {

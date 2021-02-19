@@ -11,5 +11,6 @@ enum SyntaxKind {
 	name_expr
 	assign_expr
 	operator_node
+	comp_node
 	empty
 }

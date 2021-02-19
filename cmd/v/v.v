@@ -2,7 +2,6 @@ import lib.comp.token
 import lib.comp.parser
 import lib.comp.binding
 import lib.comp
-// import lib.comp.ast
 import os
 import term
 import strings
@@ -38,7 +37,11 @@ fn print_exprs() {
 				break
 			} else if line == '#tree' {
 				show_tree = !show_tree
-				println(term.bright_blue(if show_tree { '  enabling tree' } else { '  disabling tree' }))
+				println(term.bright_blue(if show_tree {
+					'  enabling tree'
+				} else {
+					'  disabling tree'
+				}))
 				continue
 			} else if line == '#cls' {
 				term.clear()
@@ -53,7 +56,7 @@ fn print_exprs() {
 			continue
 		}
 		if show_tree {
-			parser.pretty_print(syntax_tree.root, '', true)
+			parser.pretty_print(syntax_tree.root.expr, '', true)
 		}
 
 		mut comp := comp.new_compilation(syntax_tree, table)

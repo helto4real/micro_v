@@ -1,22 +1,26 @@
 module parser
 
 import lib.comp.ast
-import lib.comp.token
 import lib.comp.util
 
 pub struct SyntaxTree {
 pub:
-	source    &util.SourceText // represents source code
-	root      ast.Expression
-	eof_token token.Token
-	log       &util.Diagnostics // errors when parsing
+	source &util.SourceText // represents source code
+	root   ast.CompilationNode
+	log    &util.Diagnostics // errors when parsing
 }
 
-fn new_syntax_tree(source &util.SourceText, log &util.Diagnostics, root ast.Expression, eof_token token.Token) SyntaxTree {
+// source &util.SourceText, log &util.Diagnostics, root ast.CompilationNode
+fn new_syntax_tree(text string) SyntaxTree {
+	mut parser := new_parser_from_text(text)
+	root := parser.parse_comp_node()
 	return SyntaxTree{
 		root: root
-		eof_token: eof_token
-		log: log
-		source: source
+		log: &parser.log
+		source: parser.source
 	}
+}
+
+pub fn parse_syntax_tree(text string) SyntaxTree {
+	return new_syntax_tree(text)
 }
