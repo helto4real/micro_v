@@ -5,6 +5,7 @@ import lib.comp
 // import lib.comp.ast
 import os
 import term
+import strings
 
 fn main() {
 	args := os.args[1..]
@@ -21,24 +22,37 @@ fn print_exprs() {
 	term.clear()
 	mut show_tree := false
 	table := binding.new_symbol_table()
+	mut builder := strings.new_builder(30)
 	for {
-		print(term.ok_message('expr:'))
-		print('> ')
+		if builder.len == 0 {
+			print(term.ok_message('$'))
+			print('> ')
+		}	else {
+			print('   | ')
+		}
 		line := os.get_line()
-		if line == '' {
-			break
-		}
-		if line == '#tree' {
-			show_tree = !show_tree
-			println(term.bright_blue(if show_tree { '  enabling tree' } else { '  disabling tree' }))
-			continue
-		}
-		if line == '#cls' {
-			term.clear()
-			continue
-		}
-		syntax_tree := parser.parse_syntax_tree(line)
+		is_blank := line == ''
 
+		if builder.len == 0 {
+			if is_blank {
+				builder = strings.new_builder(30)
+				break
+			} else if line == '#tree' {
+				show_tree = !show_tree
+				println(term.bright_blue(if show_tree { '  enabling tree' } else { '  disabling tree' }))
+				continue
+			} else if line == '#cls' {
+				term.clear()
+				continue
+			}
+		}
+		builder.write(line)
+		text := builder.last_n(builder.len)
+		syntax_tree := parser.parse_syntax_tree(text)
+
+		if !is_blank && syntax_tree.log.all.len > 0 {
+			continue
+		}
 		if show_tree {
 			parser.pretty_print(syntax_tree.root, '', true)
 		}
@@ -48,15 +62,15 @@ fn print_exprs() {
 		if res.result.len > 0 {
 			for err in res.result {
 				line_nr := syntax_tree.source.line_nr(err.pos.pos)
-				prefix := line[0..err.pos.pos]
+				prefix := text[0..err.pos.pos]
 				mut err_end_pos := err.pos.pos + err.pos.len
-				if err_end_pos > line.len {
-					err_end_pos = line.len
+				if err_end_pos > text.len {
+					err_end_pos = text.len
 				}
-				error := line[err.pos.pos..err_end_pos]
+				error := text[err.pos.pos..err_end_pos]
 
-				postfix := if err_end_pos + err.pos.len < line.len {
-					line[err.pos.pos + err.pos.len..]
+				postfix := if err_end_pos + err.pos.len < text.len {
+					text[err.pos.pos + err.pos.len..]
 				} else {
 					''
 				}
@@ -70,8 +84,9 @@ fn print_exprs() {
 				println('')
 			}
 		} else {
-			println(term.yellow('    $res.val'))
+			println(term.yellow('     $res.val'))
 		}
+		builder.go_back_to(0)
 	}
 }
 
