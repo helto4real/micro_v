@@ -49,14 +49,25 @@ fn print_exprs() {
 			for err in res.result {
 				line_nr := syntax_tree.source.line_nr(err.pos.pos)
 				prefix := line[0..err.pos.pos]
-				error := line[err.pos.pos..err.pos.pos + err.pos.len]
-				postfix := line[err.pos.pos + err.pos.len..]
+				mut err_end_pos := err.pos.pos + err.pos.len
+				if err_end_pos > line.len {
+					err_end_pos = line.len
+				}
+				error := line[err.pos.pos..err_end_pos]
+
+				postfix := if err_end_pos + err.pos.len < line.len {
+					line[err.pos.pos + err.pos.len..]
+				} else {
+					''
+				}
 
 				println(term.red(err.text))
+				println('')
 				print('$line_nr|   ')
 				print(prefix)
 				print(term.red(error))
 				println(postfix)
+				println('')
 			}
 		} else {
 			println(term.yellow('    $res.val'))
