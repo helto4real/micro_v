@@ -25,10 +25,9 @@ fn print_exprs() {
 	mut builder := strings.new_builder(30)
 	for {
 		if builder.len == 0 {
-			print(term.ok_message('$'))
-			print('> ')
-		}	else {
-			print('   | ')
+			print(term.ok_message('»'))
+		} else {
+			print(' | ')
 		}
 		line := os.get_line()
 		is_blank := line == ''
@@ -77,14 +76,14 @@ fn print_exprs() {
 
 				println(term.red(err.text))
 				println('')
-				print('$line_nr|   ')
+				print('$line_nr| ')
 				print(prefix.trim('\r\n'))
 				print(term.red(error))
 				println(postfix)
 				println('')
 			}
 		} else {
-			println(term.yellow('     $res.val'))
+			println(term.yellow('   $res.val'))
 		}
 		builder.go_back_to(0)
 	}
