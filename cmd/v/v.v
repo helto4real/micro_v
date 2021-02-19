@@ -46,7 +46,7 @@ fn print_exprs() {
 				continue
 			}
 		}
-		builder.write(line)
+		builder.writeln(line)
 		text := builder.last_n(builder.len)
 		syntax_tree := parser.parse_syntax_tree(text)
 
@@ -78,7 +78,7 @@ fn print_exprs() {
 				println(term.red(err.text))
 				println('')
 				print('$line_nr|   ')
-				print(prefix)
+				print(prefix.trim('\r\n'))
 				print(term.red(error))
 				println(postfix)
 				println('')
