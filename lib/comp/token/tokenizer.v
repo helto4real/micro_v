@@ -10,11 +10,11 @@ const (
 pub struct Tokenizer {
 	text string // text tokenized
 mut:
+	source &util.SourceText // represents source code
+	start_line_pos int
 	pos    int  // current position in file
 	start  int  // start of the token
-	ln     int = 1 // current line being parsed
 	len    int  // current parsed token len
-	col    int  = 1 // current colum being parsed
 	ch     byte = `\0` // current char
 	is_eof bool
 	kind   Kind // current token kind
@@ -24,12 +24,17 @@ pub mut:
 
 // instance a tokenizer from string
 pub fn new_tokenizer_from_string(text string) &Tokenizer {
-	if text.len > 0 {
-	}
+	source := util.new_source_text(text)
 	return &Tokenizer{
-		text: text
-		ch: if text.len > 0 { text[0] } else { `\0` }
-		is_eof: if text.len > 0 { false } else { true }
+		source: source
+		ch: source.at(0)
+	}
+}
+
+pub fn new_tokenizer_from_source(source &util.SourceText) &Tokenizer {
+	return &Tokenizer{
+		source: source
+		ch: source.at(0)
 	}
 }
 
@@ -168,7 +173,7 @@ pub fn (mut t Tokenizer) next_token() Token {
 	}
 	if text == '' {
 		// variable token lenght
-		text = t.text[t.start..t.pos]
+		text = t.source.str_range(t.start, t.pos)
 	}
 	return t.token(t.kind, t.start, text, len)
 }
@@ -182,8 +187,6 @@ fn (mut t Tokenizer) token(kind Kind, pos int, lit string, len int) Token {
 		pos: util.Pos{
 			pos: pos
 			len: len
-			ln: t.ln
-			col: t.col-len
 		}
 	}
 
@@ -194,23 +197,17 @@ fn (mut t Tokenizer) token(kind Kind, pos int, lit string, len int) Token {
 [inline]
 fn (mut t Tokenizer) incr_pos() {
 	t.pos++
-	t.col++
-	if t.pos >= t.text.len {
+	t.ch = t.source.at(t.pos)
+	if t.ch == `\0` {
 		t.is_eof = true
-		t.ch = `\0`
 		return
 	}
-	t.ch = t.text[t.pos]
 }
 
 // peek_pos, peeks the character at pos + n or '\0' if eof
 [inline]
 fn (mut t Tokenizer) peek_pos(n int) byte {
-	if t.pos + n < t.text.len {
-		return t.text[t.pos + n]
-	} else {
-		return `\0`
-	}
+	return t.source.at(n)
 }
 
 // skip_whitespace, skips all whitespace characters
@@ -220,20 +217,15 @@ fn (mut t Tokenizer) skip_whitespace() {
 			// Count \r\n as one line
 			if t.peek_pos(1) == `\n` {
 				t.incr_pos()
-				t.inc_line_nr()
+				t.source.add_line(t.start_line_pos, t.pos-1, 2)
+				t.start_line_pos = t.pos
 			}
 		} else if t.peek_pos(0) == `\n` {
-			t.inc_line_nr()
+			t.source.add_line(t.start_line_pos, t.pos-1, 1)
+			t.start_line_pos = t.pos
 		}
 		t.incr_pos()
 	}
-}
-
-// inc_line_nr, increments line number
-[inline]
-fn (mut t Tokenizer) inc_line_nr() {
-	t.ln++
-	t.col = 0
 }
 
 // is_name_char returns true if character is in a name
@@ -248,7 +240,7 @@ fn (mut t Tokenizer) read_identifier_or_keyword() {
 	for t.ch != `\0` && (is_name_char(t.ch) || t.ch.is_digit()) {
 		t.incr_pos()
 	}
-	name := t.text[t.start..t.pos]
+	name := t.source.str_range(t.start, t.pos)
 	kind := keywords[name]
 	if kind == .unknown {
 		t.kind = .name
@@ -260,7 +252,7 @@ fn (mut t Tokenizer) read_identifier_or_keyword() {
 // pos, returns current position
 [inline]
 fn (mut t Tokenizer) token_pos() util.Pos {
-	return util.new_pos(t.pos, t.len, t.ln, t.col)
+	return util.new_pos(t.pos, t.len)
 }
 
 // read_string_literal returns a string literal

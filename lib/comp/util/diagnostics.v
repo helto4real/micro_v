@@ -14,12 +14,12 @@ pub mut:
 }
 
 pub fn new_diagonistics() Diagnostics {
-	return Diagnostics {}
+	return Diagnostics{}
 }
 
 pub fn (mut d Diagnostics) merge(from_diag Diagnostics) {
 	for diag in from_diag {
-		d.all  << diag
+		d.all << diag
 	}
 }
 
@@ -35,22 +35,22 @@ pub fn (mut d Diagnostics) next() ?Diagnostic {
 }
 
 pub fn (mut d Diagnostics) error(text string, pos Pos) {
-	d.all << Diagnostic {
-		text: text 
+	d.all << Diagnostic{
+		text: text
 		pos: pos
 	}
 }
 
-
 pub fn (mut d Diagnostics) error_expected(typ string, got string, expected string, pos Pos) {
 	d.error('unexpected $typ: <$got>,  expected <$expected>', pos)
 }
+
 pub fn (mut d Diagnostics) error_unexpected(typ string, got string, pos Pos) {
 	d.error('unexpected $typ: <$got>', pos)
 }
 
 pub fn (mut d Diagnostics) error_var_not_exists(name string, pos Pos) {
-	d.error("variable <${name}> does not exist", pos)
+	d.error('variable <$name> does not exist', pos)
 }
 
 pub fn (mut d Diagnostics) error_name_already_defined(name string, pos Pos) {

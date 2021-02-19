@@ -7,7 +7,7 @@ import lib.comp.token
 import lib.comp.util
 
 pub struct Parser {
-	text string
+	source  &util.SourceText
 mut:
 	pos    int
 	tokens []token.Token
@@ -22,12 +22,14 @@ pub fn parse_syntax_tree(text string) SyntaxTree {
 
 // new_parser_from_text, instance a parser from a text input
 fn new_parser_from_text(text string) &Parser {
-	mut tnz := token.new_tokenizer_from_string(text)
+
+	source := util.new_source_text(text)
+	mut tnz := token.new_tokenizer_from_source(source)
 	tokens := tnz.scan_all()
 	mut diagnostics := util.new_diagonistics()
 	diagnostics.merge(tnz.log)
 	mut parser := &Parser{
-		text: text
+		source: source
 		tokens: tokens
 		log: diagnostics
 	}
