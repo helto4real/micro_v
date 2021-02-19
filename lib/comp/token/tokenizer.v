@@ -153,6 +153,9 @@ pub fn (mut t Tokenizer) next_token() Token {
 		}
 		`\0` {
 			t.kind = .eof
+			if t.pos - t.start_line_pos > 0 {
+				t.source.add_line(t.start_line_pos, t.pos-1, 0)
+			}
 			t.incr_pos()
 		}
 		`0`...`9` {
@@ -207,7 +210,7 @@ fn (mut t Tokenizer) incr_pos() {
 // peek_pos, peeks the character at pos + n or '\0' if eof
 [inline]
 fn (mut t Tokenizer) peek_pos(n int) byte {
-	return t.source.at(n)
+	return t.source.at(t.pos + n)
 }
 
 // skip_whitespace, skips all whitespace characters
@@ -216,13 +219,13 @@ fn (mut t Tokenizer) skip_whitespace() {
 		if t.ch == `\r` {
 			// Count \r\n as one line
 			if t.peek_pos(1) == `\n` {
-				t.incr_pos()
 				t.source.add_line(t.start_line_pos, t.pos-1, 2)
-				t.start_line_pos = t.pos
+				t.start_line_pos = t.pos+2
+				t.incr_pos()
 			}
-		} else if t.peek_pos(0) == `\n` {
+		} else if t.ch == `\n` {
 			t.source.add_line(t.start_line_pos, t.pos-1, 1)
-			t.start_line_pos = t.pos
+			t.start_line_pos = t.pos+1
 		}
 		t.incr_pos()
 	}

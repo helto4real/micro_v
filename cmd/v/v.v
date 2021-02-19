@@ -30,7 +30,7 @@ fn print_exprs() {
 		}
 		if line == '#tree' {
 			show_tree = !show_tree
-			println(term.bright_blue(if show_tree {'  enabling tree'}else{'  disabling tree'}))
+			println(term.bright_blue(if show_tree { '  enabling tree' } else { '  disabling tree' }))
 			continue
 		}
 		if line == '#cls' {
@@ -38,7 +38,7 @@ fn print_exprs() {
 			continue
 		}
 		syntax_tree := parser.parse_syntax_tree(line)
-		
+
 		if show_tree {
 			parser.pretty_print(syntax_tree.root, '', true)
 		}
@@ -47,12 +47,13 @@ fn print_exprs() {
 		res := comp.evaluate()
 		if res.result.len > 0 {
 			for err in res.result {
+				line_nr := syntax_tree.source.line_nr(err.pos.pos)
 				prefix := line[0..err.pos.pos]
-				error := line[err.pos.pos..err.pos.pos+err.pos.len]
-				postfix := line[err.pos.pos+err.pos.len..]
-				println('')
+				error := line[err.pos.pos..err.pos.pos + err.pos.len]
+				postfix := line[err.pos.pos + err.pos.len..]
+
 				println(term.red(err.text))
-				print('    ')
+				print('$line_nr|   ')
 				print(prefix)
 				print(term.red(error))
 				println(postfix)

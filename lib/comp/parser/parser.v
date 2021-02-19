@@ -39,7 +39,7 @@ fn new_parser_from_text(text string) &Parser {
 pub fn (mut p Parser) parse() SyntaxTree {
 	expr := p.parse_expr()
 	eof := p.match_token(.eof)
-	return new_syntax_tree(p.log, expr, eof)
+	return new_syntax_tree(p.source, p.log, expr, eof)
 }
 
 // peek, returns a token at offset from current postion

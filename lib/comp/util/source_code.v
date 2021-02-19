@@ -16,7 +16,7 @@ pub fn new_source_text(text string) &SourceText {
 }
 
 // line_nr, returns line number for current positio
-fn (s SourceText) line_nr(pos int) int {
+pub fn (s SourceText) line_nr(pos int) int {
 	// use binary search for line number
 	mut lower := 0
 	mut upper := s.lines.len - 1
@@ -60,11 +60,10 @@ pub fn (s &SourceText) at(pos int) byte {
 
 pub struct TextLine {
 	source &SourceText
+pub:
 	start  int
 	len    int
 	lb_len int
-pub:
-	pos Pos
 }
 
 fn new_text_line(source_text &SourceText, start int, len int, lb_len int) TextLine {

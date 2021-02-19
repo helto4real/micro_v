@@ -1,4 +1,5 @@
 module parser
+
 import lib.comp.token
 
 fn test_current() {
@@ -11,7 +12,7 @@ fn test_current() {
 fn test_current_peek() {
 	// some hard combinations to parse with or whithout whitespace
 	mut p := new_parser_from_text('abc 123')
-	
+
 	assert p.current_token().kind == .name
 	assert p.peek_token(1).kind == .number
 	assert p.peek_token(2).kind == .eof
@@ -104,5 +105,4 @@ fn test_match_token_not_exixt() {
 	assert tok.kind == .name
 	assert tok.pos.pos == 0
 	assert tok.lit == ''
-
 }

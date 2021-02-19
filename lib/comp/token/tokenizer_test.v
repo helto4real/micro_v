@@ -1,4 +1,5 @@
 module token
+
 import lib.comp.token
 
 const (
@@ -278,7 +279,7 @@ fn test_assign_declassign() {
 
 fn test_eq_ne() {
 	// some hard combinations to parse with or whithout whitespace
-		mut tkz := new_tokenizer_from_string('== = != =!= !!=')
+	mut tkz := new_tokenizer_from_string('== = != =!= !!=')
 	mut tokens := tkz.scan_all()
 	assert tokens[1].kind == .eq
 	assert tokens[1].lit == '='
@@ -330,35 +331,63 @@ fn test_single_keyword() {
 	check_parse_token(.key_mut, 'mut')
 }
 
-fn check_parse_token_lit(kind token.Kind, text string, lit string) {
-	check_parse_token_index(0, kind, text, lit) 
-	check_parse_token_index_whitspace(0, kind, text, lit) 
+fn check_parse_token_lit(kind Kind, text string, lit string) {
+	check_parse_token_index(0, kind, text, lit)
+	check_parse_token_index_whitspace(0, kind, text, lit)
 }
 
-fn check_parse_token(kind token.Kind, text string) {
-	check_parse_token_index(0, kind, text, text) 
-	check_parse_token_index_whitspace(0, kind, text, text) 
+fn check_parse_token(kind Kind, text string) {
+	check_parse_token_index(0, kind, text, text)
+	check_parse_token_index_whitspace(0, kind, text, text)
 }
+
 // Check both with and without whitespace
-fn check_parse_token_index_whitspace(index int, kind token.Kind, lit string, text string) {
-	for ws in valid_white_space {
+fn check_parse_token_index_whitspace(index int, kind Kind, lit string, text string) {
+	for ws in token.valid_white_space {
 		mut tkz := new_tokenizer_from_string('$ws$text$ws')
 		tokens := tkz.scan_all()
 		if tokens[index].kind != kind {
 			eprintln('for $text, got kind $tokens[index].kind, expected $kind ')
 		}
 		assert tokens[index].kind == kind
-		assert tokens[index].lit == lit		
+		assert tokens[index].lit == lit
 	}
 }
 
-fn check_parse_token_index(index int, kind token.Kind, lit string, text string) {
+fn check_parse_token_index(index int, kind Kind, lit string, text string) {
 	// without whitespace	
 	mut tkz := new_tokenizer_from_string(text)
 	tokens := tkz.scan_all()
-			if tokens[index].kind != kind {
-			eprintln('for $text, got kind $tokens[index].kind, expected $kind ')
-		}
+	if tokens[index].kind != kind {
+		eprintln('for $text, got kind $tokens[index].kind, expected $kind ')
+	}
 	assert tokens[index].kind == kind
 	assert tokens[index].lit == lit
+}
+
+fn test_line_number_parsing() {
+	mut tkz := new_tokenizer_from_string('123 abc\nhello world\ntrue')
+	_ := tkz.scan_all()
+	assert tkz.source.lines.len == 3
+	assert tkz.source.lines[0].str() == '123 abc'
+	assert tkz.source.lines[0].len == 7
+	assert tkz.source.lines[1].str() == 'hello world'
+	assert tkz.source.lines[1].len == 11
+	assert tkz.source.lines[2].str() == 'true'
+	assert tkz.source.lines[2].len == 4
+}
+
+fn test_line_number_parsing_cr_ln() {
+	mut tkz := new_tokenizer_from_string('123 abc\r\nhello world\r\ntrue')
+	_ := tkz.scan_all()
+
+	println('')
+	println('SRC: ${tkz.source.lines}')
+	assert tkz.source.lines.len == 3
+	assert tkz.source.lines[0].str() == '123 abc'
+	assert tkz.source.lines[0].len == 7
+	assert tkz.source.lines[1].str() == 'hello world'
+	assert tkz.source.lines[1].len == 11
+	assert tkz.source.lines[2].str() == 'true'
+	assert tkz.source.lines[2].len == 4
 }
