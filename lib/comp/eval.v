@@ -3,16 +3,39 @@ module comp
 import lib.comp.binding
 import lib.comp.types
 
+
+
+[heap]
+pub struct EvalVariables {
+mut:
+	vars map[voidptr]types.LitVal
+}
+
+pub fn new_eval_variables() &EvalVariables {
+	return &EvalVariables{}
+}
+
+pub fn (mut ev EvalVariables) assign_variable_value(var &binding.VariableSymbol, val types.LitVal) {
+	ev.vars[var] = val
+}
+
+pub fn (mut ev EvalVariables) lookup(var &binding.VariableSymbol) ?types.LitVal {
+	val := ev.vars[var] or {
+		return none
+	}
+	return val
+}
+
 pub struct Evaluator {
 	root binding.BoundExpr
 mut:
-	table &binding.SymbolTable
+	vars &EvalVariables
 }
 
-pub fn new_evaluator(root binding.BoundExpr, table &binding.SymbolTable) Evaluator {
+pub fn new_evaluator(root binding.BoundExpr, vars &EvalVariables) Evaluator {
 	return Evaluator{
 		root: root
-		table: table
+		vars: vars
 	}
 }
 
@@ -69,12 +92,7 @@ fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?types
 
 fn (mut e Evaluator) eval_bound_assign_expr(node binding.BoundAssignExpr) ?types.LitVal {
 	val := e.eval_expr(node.expr) ?
-	e.table.vars[node.name] = binding.Variable{
-		name: node.name
-		val: val
-		typ: val.typ()
-		is_mut: node.is_mut
-	}
+	e.vars.assign_variable_value(node.var, val)
 	return val
 }
 
@@ -83,6 +101,7 @@ fn (mut e Evaluator) eval_bound_literal_expr(root binding.BoundLiteralExpr) ?typ
 }
 
 fn (mut e Evaluator) eval_bound_variable_expr(root binding.BoundVariableExpr) ?types.LitVal {
-	return e.table.vars[root.name].val
+	var :=  e.vars.lookup(root.var) or {return none}
+	return var
 }
 

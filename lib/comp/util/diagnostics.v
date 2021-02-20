@@ -10,21 +10,21 @@ pub struct Diagnostics {
 mut:
 	iter_pos int
 pub mut:
-	all []Diagnostic
+	all []&Diagnostic
 }
 
-pub fn new_diagonistics() Diagnostics {
-	return Diagnostics{}
+pub fn new_diagonistics() &Diagnostics {
+	return &Diagnostics{}
 }
 
-pub fn (mut d Diagnostics) merge(from_diag Diagnostics) {
+pub fn (mut d Diagnostics) merge(from_diag &Diagnostics) {
 	for diag in from_diag {
 		d.all << diag
 	}
 }
 
 // iterator for more easy handling
-pub fn (mut d Diagnostics) next() ?Diagnostic {
+pub fn (mut d Diagnostics) next() ?&Diagnostic {
 	if d.iter_pos < d.all.len {
 		ret := d.all[d.iter_pos]
 		d.iter_pos++
@@ -35,7 +35,7 @@ pub fn (mut d Diagnostics) next() ?Diagnostic {
 }
 
 pub fn (mut d Diagnostics) error(text string, pos Pos) {
-	d.all << Diagnostic{
+	d.all << &Diagnostic{
 		text: text
 		pos: pos
 	}
@@ -60,3 +60,8 @@ pub fn (mut d Diagnostics) error_name_already_defined(name string, pos Pos) {
 pub fn (mut d Diagnostics) error_assign_non_mutable_variable(name string, pos Pos) {
 	d.error('assign non mutable varable: <$name>', pos)
 }
+
+pub fn (mut d Diagnostics) error_cannot_convert_variable_type(from_type string, to_type string, pos Pos) {
+	d.error('cannot convert type <$from_type> to <$to_type>', pos)
+}
+

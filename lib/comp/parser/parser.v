@@ -12,7 +12,7 @@ mut:
 	pos    int
 	tokens []token.Token
 pub mut:
-	log util.Diagnostics // errors when parsing
+	log &util.Diagnostics // errors when parsing
 }
 
 // pub fn parse_syntax_tree(text string) SyntaxTree {

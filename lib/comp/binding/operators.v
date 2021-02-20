@@ -200,12 +200,12 @@ struct BoundVariableExpr {
 pub:
 	kind BoundNodeKind = .variable_expr
 	typ  types.Type
-	name string
+	var &VariableSymbol
 }
 
-fn new_bound_variable_expr(name string, typ types.Type) BoundExpr {
+fn new_bound_variable_expr(var &VariableSymbol) BoundExpr {
 	return BoundVariableExpr{
-		typ: typ
-		name: name
+		var: var
+		typ: var.typ
 	}
 }

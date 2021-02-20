@@ -16,7 +16,7 @@ fn new_syntax_tree(text string) SyntaxTree {
 	root := parser.parse_comp_node()
 	return SyntaxTree{
 		root: root
-		log: &parser.log
+		log: parser.log
 		source: parser.source
 	}
 }

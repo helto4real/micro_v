@@ -19,7 +19,7 @@ mut:
 	is_eof bool
 	kind   Kind // current token kind
 pub mut:
-	log util.Diagnostics // errors when tokenizing
+	log &util.Diagnostics // errors when tokenizing
 }
 
 // instance a tokenizer from string
@@ -28,6 +28,7 @@ pub fn new_tokenizer_from_string(text string) &Tokenizer {
 	return &Tokenizer{
 		source: source
 		ch: source.at(0)
+		log: util.new_diagonistics()
 	}
 }
 
@@ -35,6 +36,7 @@ pub fn new_tokenizer_from_source(source &util.SourceText) &Tokenizer {
 	return &Tokenizer{
 		source: source
 		ch: source.at(0)
+		log: util.new_diagonistics()
 	}
 }
 

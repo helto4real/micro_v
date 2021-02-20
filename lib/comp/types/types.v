@@ -2,6 +2,10 @@ module types
 
 pub type Type = int
 
+pub fn (t Type) typ_str() string {
+	return types.built_in_types[int(t)]
+}
+
 pub type LitVal = bool | int | string
 
 pub fn (l LitVal) eq(r LitVal) bool {

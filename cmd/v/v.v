@@ -1,12 +1,13 @@
 import lib.comp.token
 import lib.comp.parser
-import lib.comp.binding
 import lib.comp
+// import lib.comp.binding
 import os
 import term
 import strings
 
 fn main() {
+
 	args := os.args[1..]
 	if args.len > 0 {
 		if '-tokeninzer' in args {
@@ -20,8 +21,10 @@ fn main() {
 fn print_exprs() {
 	term.clear()
 	mut show_tree := false
-	table := binding.new_symbol_table()
+	vars := comp.new_eval_variables()
 	mut builder := strings.new_builder(30)
+	mut prev_comp := &comp.Compilation(0)
+
 	for {
 		if builder.len == 0 {
 			print(term.ok_message('»'))
@@ -59,8 +62,13 @@ fn print_exprs() {
 			parser.pretty_print(syntax_tree.root.expr, '', true)
 		}
 
-		mut comp := comp.new_compilation(syntax_tree, table)
-		res := comp.evaluate()
+		mut comp := if prev_comp == 0 {
+			comp.new_compilation(syntax_tree)
+		} else {
+			prev_comp.continue_with(syntax_tree)
+		}
+		
+		res := comp.evaluate(vars)
 		if res.result.len > 0 {
 			for err in res.result {
 				line_nr := syntax_tree.source.line_nr(err.pos.pos)
@@ -87,6 +95,7 @@ fn print_exprs() {
 			}
 		} else {
 			println(term.yellow('   $res.val'))
+			prev_comp = comp
 		}
 		builder.go_back_to(0)
 	}

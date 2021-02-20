@@ -7,13 +7,13 @@ pub:
 	kind   BoundNodeKind = .assign_expr
 	typ    types.Type
 	is_mut bool
-	name   string
 	expr   BoundExpr
+	var    &VariableSymbol	
 }
 
-fn new_bound_assign_expr(name string, is_mut bool, expr BoundExpr) BoundExpr {
+fn new_bound_assign_expr(var &VariableSymbol, is_mut bool, expr BoundExpr) BoundExpr {
 	return BoundAssignExpr{
-		name: name
+		var: var
 		is_mut: is_mut
 		typ: expr.typ()
 		expr: expr

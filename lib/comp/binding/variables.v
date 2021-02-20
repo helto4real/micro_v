@@ -2,19 +2,23 @@ module binding
 
 import lib.comp.types
 
-pub struct Variable {
+[heap]
+pub struct VariableSymbol {
 pub:
 	name   string
 	typ    types.Type
-	val    types.LitVal
 	is_mut bool
 }
 
-pub struct SymbolTable {
-pub mut:
-	vars map[string]Variable
+pub fn (vs &VariableSymbol) str() string {
+	mut_str := if vs.is_mut {'mut '} else {''}
+	return 'VariableSymbol $mut_str <$vs.name> ($vs.typ)'
 }
 
-pub fn new_symbol_table() &SymbolTable {
-	return &SymbolTable{}
+pub fn new_variable_symbol(name string, typ types.Type, is_mut bool) &VariableSymbol {
+	return &VariableSymbol {
+		name: name
+		typ: typ
+		is_mut: is_mut
+	}
 }

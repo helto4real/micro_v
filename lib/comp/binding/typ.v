@@ -6,7 +6,7 @@ type BoundExpr = BoundBinaryExpr | BoundLiteralExpr | BoundUnaryExpression | Bou
 
 type BoundNode = BoundExpr
 
-fn (be BoundExpr) typ() types.Type {
+pub fn (be BoundExpr) typ() types.Type {
 	match be {
 		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr,
 		BoundAssignExpr{
@@ -15,7 +15,7 @@ fn (be BoundExpr) typ() types.Type {
 	}
 }
 
-fn (be BoundExpr) typ_str() string {
+pub fn (be BoundExpr) typ_str() string {
 	match be {
 		BoundLiteralExpr {
 			return types.built_in_types[int(be.typ)]
@@ -26,7 +26,7 @@ fn (be BoundExpr) typ_str() string {
 	}
 }
 
-fn (be BoundExpr) kind() BoundNodeKind {
+pub fn (be BoundExpr) kind() BoundNodeKind {
 	match be {
 		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr {
 			return be.kind
