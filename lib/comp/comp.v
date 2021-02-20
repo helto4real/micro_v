@@ -53,7 +53,7 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	if result.len > 0 {
 		return new_evaluation_result(result, 0)
 	}
-	mut evaluator := new_evaluator(global_scope.expr, vars)
+	mut evaluator := new_evaluator(global_scope.stmt, vars)
 	val := evaluator.evaluate() or {
 		println(term.fail_message('Error in eval: $err'))
 		0

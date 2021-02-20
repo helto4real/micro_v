@@ -18,11 +18,11 @@ pub fn new_binder(parent &BoundScope) &Binder {
 	}
 }
 
-pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.CompilationNode) &BoundGlobalScope {
+pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.ComplationSyntax) &BoundGlobalScope {
 	// TODO: make create_parent_scope
 	parent_scope := create_parent_scope(previous)
 	mut binder := new_binder(parent_scope)
-	expr := binder.bind_expr(comp_node.expr)
+	stmt := binder.bind_stmt(comp_node.stmt)
 	vars := binder.scope.vars()
 	// TODO: Check if diagnostics still work
 	// diagnostics := binder.log.all
@@ -30,7 +30,7 @@ pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.CompilationN
 	// 	// TODO: fix 
 	// 	diagnostics.prepend(previous.log.all) 
 	// }
-	return new_bound_global_scope(previous, binder.log, vars, expr)
+	return new_bound_global_scope(previous, binder.log, vars, stmt)
 }
 
 fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
@@ -57,7 +57,29 @@ fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
 	return parent
 }
 
-pub fn (mut b Binder) bind_expr(expr ast.Expression) BoundExpr {
+pub fn (mut b Binder) bind_stmt(stmt ast.StatementSyntax) BoundStmt {
+	match stmt {
+		ast.BlockStatementSyntax { return b.bind_block_stmt(stmt) }
+		ast.ExpressionStatementSyntax { return b.bind_expr_stmt(stmt) }
+
+		// else { panic('unexpected bound statement $stmt') }
+	}
+}
+
+pub fn (mut b Binder) bind_block_stmt(block_stmt ast.BlockStatementSyntax) BoundStmt {
+	mut stmts := []BoundStmt{}
+	for i, _ in block_stmt.statements {
+		stmts << b.bind_stmt(block_stmt.statements[i])
+	}
+	return new_bound_block_stmt(stmts)
+}
+
+pub fn (mut b Binder) bind_expr_stmt(expr_stmt ast.ExpressionStatementSyntax) BoundStmt {
+	expr := b.bind_expr(expr_stmt.expr)
+	return new_bound_expr_stmt(expr)
+}
+
+pub fn (mut b Binder) bind_expr(expr ast.ExpressionSyntax) BoundExpr {
 	match expr {
 		ast.LiteralExpr { return b.bind_literal_expr(expr) }
 		ast.UnaryExpr { return b.bind_unary_expr(expr) }
@@ -125,10 +147,3 @@ fn (mut b Binder) bind_literal_expr(syntax ast.LiteralExpr) BoundExpr {
 	return new_bound_literal_expr(val)
 }
 
-enum BoundNodeKind {
-	unary_expr
-	binary_expr
-	literal_expr
-	variable_expr
-	assign_expr
-}

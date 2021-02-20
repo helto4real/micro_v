@@ -62,15 +62,15 @@ pub mut:
 	vars   []&VariableSymbol
 pub:
 	previous &BoundGlobalScope
-	expr BoundExpr   
+	stmt BoundStmt   
 }
 
-pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagnostics, vars []&VariableSymbol, expr BoundExpr) &BoundGlobalScope {
+pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagnostics, vars []&VariableSymbol, stmt BoundStmt) &BoundGlobalScope {
 	return &BoundGlobalScope {
 		previous: previous
 		log: diagostics
 		vars: vars
-		expr: expr
+		stmt: stmt
 
 	}
 }

@@ -5,12 +5,16 @@ module ast
 //		rather than check for type of each node
 enum SyntaxKind {
 	literal_expr
-	binary_expr
-	unary_expr
-	para_expr
 	name_expr
+	unary_expr
+	binary_expr
+	para_expr
 	assign_expr
+	// nodes
 	operator_node
 	comp_node
+	// statements
+	block_stmt
+	expr_stmt
 	empty
 }

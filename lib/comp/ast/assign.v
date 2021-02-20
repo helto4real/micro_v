@@ -9,11 +9,11 @@ pub:
 	is_mut bool
 	ident  token.Token
 	eq_tok token.Token
-	expr   Expression
+	expr   ExpressionSyntax
 	pos    util.Pos
 }
 
-pub fn new_assign_expr(ident token.Token, is_mut bool, eq_tok token.Token, expr Expression) AssignExpr {
+pub fn new_assign_expr(ident token.Token, is_mut bool, eq_tok token.Token, expr ExpressionSyntax) AssignExpr {
 	return AssignExpr{
 		ident: ident
 		expr: expr

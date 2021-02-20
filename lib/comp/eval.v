@@ -5,12 +5,13 @@ import lib.comp.types
 
 
 pub struct Evaluator {
-	root binding.BoundExpr
+	root binding.BoundStmt
 mut:
 	vars &binding.EvalVariables
+	last_val types.LitVal
 }
 
-pub fn new_evaluator(root binding.BoundExpr, vars &binding.EvalVariables) Evaluator {
+pub fn new_evaluator(root binding.BoundStmt, vars &binding.EvalVariables) Evaluator {
 	return Evaluator{
 		root: root
 		vars: vars
@@ -18,7 +19,32 @@ pub fn new_evaluator(root binding.BoundExpr, vars &binding.EvalVariables) Evalua
 }
 
 pub fn (mut e Evaluator) evaluate() ?types.LitVal {
-	return e.eval_expr(e.root)
+	e.eval_stmt(e.root)
+	return e.last_val
+	// return e.eval_stmt(e.root)
+}
+
+fn (mut e Evaluator) eval_stmt(stmt binding.BoundStmt) {
+	match stmt {
+		binding.BoundBlockStmt {
+			e.eval_bound_block_stmt(stmt)
+		}
+		binding.BoundExprStmt {
+			e.eval_bound_expr_stmt(stmt)
+		}
+	}
+}
+
+fn (mut e Evaluator) eval_bound_block_stmt(block_stmt binding.BoundBlockStmt) {
+	for stmt in block_stmt.bound_stmts {
+		e.eval_stmt(stmt)
+	}
+}
+
+fn (mut e Evaluator) eval_bound_expr_stmt(stmt binding.BoundExprStmt) {
+	e.last_val = e.eval_expr(stmt.bound_expr) or {
+		panic('unexpected error evaluate expresseion $stmt.bound_expr')
+	}
 }
 
 fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {

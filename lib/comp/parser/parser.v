@@ -36,10 +36,10 @@ fn new_parser_from_text(text string) &Parser {
 	return parser
 }
 
-pub fn (mut p Parser) parse_comp_node() ast.CompilationNode {
-	expr := p.parse_expr()
+pub fn (mut p Parser) parse_comp_node() ast.ComplationSyntax {
+	stmt := p.parse_stmt()
 	eof := p.match_token(.eof)
-	return ast.new_comp_node(expr, eof)
+	return ast.new_comp_syntax(stmt, eof)
 }
 
 // peek, returns a token at offset from current postion
@@ -89,7 +89,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 	print(term.gray(marker))
 	new_ident := ident + if is_last { '   ' } else { '│  ' }
 	match node {
-		ast.Expression {
+		ast.ExpressionSyntax {
 			match node {
 				// bug prevents me from colapsing
 				ast.BinaryExpr {
@@ -140,7 +140,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
-				ast.CompilationNode {
+				ast.ComplationSyntax {
 					println(term.gray('$node.kind'))
 					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
@@ -153,6 +153,9 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 				}
 			}
 		}
+		ast.StatementSyntax {
+
+		}
 		token.Token {
 			print(term.gray('$node.kind:'))
 			println(term.bright_cyan('$node.lit'))
@@ -160,14 +163,40 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 	}
 }
 
+fn (mut p Parser) parse_stmt() ast.StatementSyntax {
+	if p.peek_token(0).kind == .lcbr {
+		return p.parse_block_stmt()
+	} else {
+		return p.parse_expression_stmt()
+	}
+}
+
+fn (mut p Parser) parse_block_stmt() ast.StatementSyntax {
+	open_brace_token := p.match_token(.lcbr)
+
+	mut stmts := []ast.StatementSyntax{}
+	for p.peek_token(0).kind != .eof && p.peek_token(0).kind != .rcbr {
+		stmt := p.parse_stmt()
+		stmts << stmt
+	}
+	close_brace_token := p.match_token(.rcbr)
+	
+	return ast.new_block_statement_syntax(open_brace_token, stmts, close_brace_token)
+}
+
+fn (mut p Parser) parse_expression_stmt() ast.ExpressionStatementSyntax {
+	expr := p.parse_expr()
+	return ast.new_expr_stmt_syntax(expr)
+}
+
 [inline]
-fn (mut p Parser) parse_expr() ast.Expression {
+fn (mut p Parser) parse_expr() ast.ExpressionSyntax {
 	return p.parse_assign_expr()
 }
 
 // parse_assign_expr parses an assignment expression
 //   can parse nested assignment x=y=10
-fn (mut p Parser) parse_assign_expr() ast.Expression {
+fn (mut p Parser) parse_assign_expr() ast.ExpressionSyntax {
 	mut is_mut := false
 	if p.peek_token(0).kind == .key_mut {
 		if p.peek_assignment(1) {
@@ -185,12 +214,12 @@ fn (mut p Parser) parse_assign_expr() ast.Expression {
 	return p.parse_binary_expr()
 }
 
-fn (mut p Parser) parse_binary_expr() ast.Expression {
+fn (mut p Parser) parse_binary_expr() ast.ExpressionSyntax {
 	return p.parse_binary_expr_prec(0)
 }
 
-fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.Expression {
-	mut left := ast.Expression(ast.EmptyExpr{})
+fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.ExpressionSyntax {
+	mut left := ast.ExpressionSyntax(ast.EmptyExpr{})
 	mut tok := p.current_token()
 
 	unary_op_prec := unary_operator_precedence(tok.kind)
@@ -216,7 +245,7 @@ fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.Expression {
 	return left
 }
 
-fn (mut p Parser) parse_primary_expr() ast.Expression {
+fn (mut p Parser) parse_primary_expr() ast.ExpressionSyntax {
 	tok := p.current_token()
 	match tok.kind {
 		.lpar {
@@ -234,7 +263,7 @@ fn (mut p Parser) parse_primary_expr() ast.Expression {
 	}
 }
 
-fn (mut p Parser) parse_number_literal() ast.Expression {
+fn (mut p Parser) parse_number_literal() ast.ExpressionSyntax {
 	number_token := p.match_token(.number)
 	val := strconv.atoi(number_token.lit) or {
 		// p.error('Failed to convert number to value <$number_token.lit>')
@@ -243,21 +272,21 @@ fn (mut p Parser) parse_number_literal() ast.Expression {
 	return ast.new_literal_expr(number_token, val)
 }
 
-fn (mut p Parser) parse_parantesize_expr() ast.Expression {
+fn (mut p Parser) parse_parantesize_expr() ast.ExpressionSyntax {
 	left := p.match_token(.lpar)
 	expr := p.parse_expr()
 	right := p.match_token(.rpar)
 	return ast.new_paranthesis_expr(left, expr, right)
 }
 
-fn (mut p Parser) parse_bool_literal() ast.Expression {
+fn (mut p Parser) parse_bool_literal() ast.ExpressionSyntax {
 	is_true := p.current_token().kind == .key_true
 	key_tok := p.match_token(if is_true { token.Kind.key_true } else { token.Kind.key_false })
 	val := key_tok.kind == .key_true
 	return ast.new_literal_expr(key_tok, val)
 }
 
-fn (mut p Parser) parse_name_expr() ast.Expression {
+fn (mut p Parser) parse_name_expr() ast.ExpressionSyntax {
 	ident_tok := p.match_token(.name)
 	return ast.new_name_expr(ident_tok)
 }

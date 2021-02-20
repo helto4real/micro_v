@@ -11,9 +11,9 @@ pub const (
 
 pub struct BinaryExpr {
 pub:
-	left        Expression
+	left        ExpressionSyntax
 	op          token.Token
-	right       Expression
+	right       ExpressionSyntax
 	kind        SyntaxKind = .binary_expr
 	pos         util.Pos
 	child_nodes []AstNode
@@ -21,7 +21,7 @@ pub:
 
 // new_binary_expr instance an binary expression 
 // with a left side, right side and operator
-pub fn new_binary_expr(left Expression, op token.Token, right Expression) BinaryExpr {
+pub fn new_binary_expr(left ExpressionSyntax, op token.Token, right ExpressionSyntax) BinaryExpr {
 	if !(op.kind in ast.binary_expr_tokens) {
 		panic('Expected a binary expresson token, got ($op.kind)')
 	}
@@ -41,7 +41,7 @@ pub fn (be &BinaryExpr) child_nodes() []AstNode {
 pub struct UnaryExpr {
 pub:
 	op          token.Token
-	operand     Expression
+	operand     ExpressionSyntax
 	kind        SyntaxKind = .unary_expr
 	pos         util.Pos
 	child_nodes []AstNode
@@ -49,7 +49,7 @@ pub:
 
 // new_binary_expr instance an binary expression 
 // with a left side, right side and operator
-pub fn new_unary_expr(op token.Token, operand Expression) UnaryExpr {
+pub fn new_unary_expr(op token.Token, operand ExpressionSyntax) UnaryExpr {
 	if !(op.kind in ast.unary_expr_tokens) {
 		panic('Expected a unary expresson token, got ($op.kind)')
 	}
@@ -70,12 +70,12 @@ pub:
 	kind             SyntaxKind = .para_expr
 	open_para_token  token.Token
 	close_para_token token.Token
-	expr             Expression
+	expr             ExpressionSyntax
 	pos              util.Pos
 	child_nodes      []AstNode
 }
 
-pub fn new_paranthesis_expr(open_para_token token.Token, expr Expression, close_para_token token.Token) ParaExpr {
+pub fn new_paranthesis_expr(open_para_token token.Token, expr ExpressionSyntax, close_para_token token.Token) ParaExpr {
 	return ParaExpr{
 		open_para_token: open_para_token
 		close_para_token: close_para_token
