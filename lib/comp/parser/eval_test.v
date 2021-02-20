@@ -3,100 +3,114 @@ import lib.comp.binding
 import lib.comp.parser
 import lib.comp
 
-fn test_eval_basic_exprs() {
-	mut t := binding.new_symbol_table()
 
-	assert eval_int(t, '2+2') == 4
-	assert eval_int(t, '10+2-4') == 8
-	// test precedence
-	assert eval_int(t, '10+8*2') == 26
-	assert eval_int(t, '10+8*2/4') == 14
-	// test parantheses 
-	assert eval_int(t, '(10+8)*2/4') == 9
-	assert eval_int(t, '(10+8)*((2+2)*(2+3))') == 360
-
-	// test unary expressions
-	assert eval_int(t, '-1') == -1
-
-	// test boolean expressions
-	assert eval_bool(t, 'true') == true
-	assert eval_bool(t, 'false') == false
-	assert eval_bool(t, 'true && true') == true
-	assert eval_bool(t, 'true && false') == false
-	assert eval_bool(t, 'false && false') == false
-	assert eval_bool(t, 'false && false') == false
-	assert eval_bool(t, 'true') == true
-	assert eval_bool(t, 'true || false') == true
-	assert eval_bool(t, 'true || true') == true
-	assert eval_bool(t, 'false || true') == true
-	assert eval_bool(t, 'false || false') == false
-
-	// test equals and not equals operators
-	assert eval_bool(t, '1 == 1') == true
-	assert eval_bool(t, '1 != 2') == true
-	assert eval_bool(t, 'true == true') == true
-	assert eval_bool(t, 'false == false') == true
-	assert eval_bool(t, 'false != true') == true
-
-	// test combo operators
-	assert eval_bool(t, '1==1 && 5==5') == true
-	assert eval_bool(t, '1!=2 && 3!=5') == true
-	assert eval_bool(t, '1==2 && 3!=5') == false
-	assert eval_bool(t, '1==2 || 3!=5') == true
+struct TestCompilationState {
+mut:
+	vars &binding.EvalVariables
+	prev_comp &comp.Compilation
 }
 
-fn test_eval_var_exprs() {
-	mut t := binding.new_symbol_table()
-
-	assert eval_int(t, 'x:=4') == 4
-	assert eval_int(t, 'x+4') == 8
-	assert eval_int(t, 'x+x') == 8
-	assert eval_int(t, 'x-x') == 0
-
-	assert eval_int(t, 'mut z:=4') == 4
-	assert eval_int(t, '(z=2)+z') == 4
-	
-	assert eval_bool(t, 'a:=true') == true
-	assert eval_bool(t, 'b:=true') == true
-	assert eval_bool(t, 'c:=false') == false
-	assert eval_bool(t, 'a==b') == true
-	assert eval_bool(t, 'a!=b') == false
-	assert eval_bool(t, 'a!=c') == true
-	assert eval_bool(t, 'a||c') == true
-	assert eval_bool(t, 'a&&c') == false
-}
-
-fn eval_int(table &binding.SymbolTable, expr string) int {
-	syntax_tree := parser.parse_syntax_tree(expr)
-	assert syntax_tree.log.all.len == 0
-
-	mut binder := binding.new_binder(table)
-	bounded_syntax := binder.bind_expr(syntax_tree.root.expr)
-	assert binder.log.all.len == 0
-
-	mut ev := comp.new_evaluator(bounded_syntax, table)
-	res := ev.evaluate() or { panic(err) }
-	if res is int {
-		return res
+pub fn new_test_compilation_state() &TestCompilationState {
+	return &TestCompilationState {
+		vars: binding.new_eval_variables()
+		prev_comp: &comp.Compilation(0)
 	}
-	panic('unexpected return type: $res')
 }
 
-fn eval_bool(table &binding.SymbolTable, expr string) bool {
+fn (mut tcs TestCompilationState) evaluate(expr string) comp.EvaluationResult {
 	syntax_tree := parser.parse_syntax_tree(expr)
+
 	if syntax_tree.log.all.len > 0 {
 		eprintln('expression error: $expr')
 		assert syntax_tree.log.all.len == 0
 	}
-	
-	mut binder := binding.new_binder(table)
-	bounded_syntax := binder.bind_expr(syntax_tree.root.expr)
-	assert binder.log.all.len == 0
 
-	mut ev := comp.new_evaluator(bounded_syntax, table)
-	res := ev.evaluate() or { panic(err) }
-	if res is bool {
-		return res
+	mut comp := if tcs.prev_comp == 0 {
+		comp.new_compilation(syntax_tree)
+	} else {
+		tcs.prev_comp.continue_with(syntax_tree)
+	}
+	res := comp.evaluate(tcs.vars)
+	tcs.prev_comp = comp
+	return res
+}
+
+pub fn (mut tcs TestCompilationState) eval_int(expr string) int {
+	res := tcs.evaluate(expr)
+	if res.val is int {
+		return res.val
 	}
 	panic('unexpected return type: $res')
 }
+
+pub fn (mut tcs TestCompilationState) eval_bool(expr string) bool {
+	res := tcs.evaluate(expr)
+	if res.val is bool {
+		return res.val
+	}
+	panic('unexpected return type: $res')
+}
+
+fn test_eval_basic_exprs() {
+	mut c := new_test_compilation_state()
+
+	assert c.eval_int('2+2') == 4
+	assert c.eval_int('10+2-4') == 8
+	// test precedene
+	assert c.eval_int('10+8*2') == 26
+	assert c.eval_int('10+8*2/4') == 14
+	// test paranthes 
+	assert c.eval_int('(10+8)*2/4') == 9
+	assert c.eval_int('(10+8)*((2+2)*(2+3))') == 360
+
+	// test unary expressions
+	assert c.eval_int('-1') == -1
+
+	// test boolean expressions
+	assert c.eval_bool('true') == true
+	assert c.eval_bool('false') == false
+	assert c.eval_bool('true && true') == true
+	assert c.eval_bool('true && false') == false
+	assert c.eval_bool('false && false') == false
+	assert c.eval_bool('false && false') == false
+	assert c.eval_bool('true') == true
+	assert c.eval_bool('true || false') == true
+	assert c.eval_bool('true || true') == true
+	assert c.eval_bool('false || true') == true
+	assert c.eval_bool('false || false') == false
+
+	// test equals and not equals operators
+	assert c.eval_bool('1 == 1') == true
+	assert c.eval_bool('1 != 2') == true
+	assert c.eval_bool('true == true') == true
+	assert c.eval_bool('false == false') == true
+	assert c.eval_bool('false != true') == true
+
+	// test combo operators
+	assert c.eval_bool('1==1 && 5==5') == true
+	assert c.eval_bool('1!=2 && 3!=5') == true
+	assert c.eval_bool('1==2 && 3!=5') == false
+	assert c.eval_bool('1==2 || 3!=5') == true
+}
+
+fn test_eval_var_exprs() {
+	mut c := new_test_compilation_state()
+
+	assert c.eval_int('x:=4') == 4
+	assert c.eval_int('x+4') == 8
+	assert c.eval_int('x+x') == 8
+	assert c.eval_int('x-x') == 0
+
+	assert c.eval_int('mut z:=4') == 4
+	assert c.eval_int('(z=2)+z') == 4
+	
+	assert c.eval_bool('a:=true') == true
+	assert c.eval_bool('b:=true') == true
+	assert c.eval_bool('c:=false') == false
+	assert c.eval_bool('a==b') == true
+	assert c.eval_bool('a!=b') == false
+	assert c.eval_bool('a!=c') == true
+	assert c.eval_bool('a||c') == true
+	assert c.eval_bool('a&&c') == false
+}
+

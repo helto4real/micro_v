@@ -45,7 +45,7 @@ pub fn (mut c Compilation) continue_with(syntax_tree parser.SyntaxTree) &Compila
 	return new_compilation_with_previous(c, syntax_tree)
 }
 
-pub fn (mut c Compilation) evaluate(vars &EvalVariables) EvaluationResult {
+pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResult {
 	mut global_scope := c.get_bound_global_scope()
 	mut result := []&util.Diagnostic{}
 	result << c.syntax.log.all

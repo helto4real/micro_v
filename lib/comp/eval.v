@@ -4,35 +4,13 @@ import lib.comp.binding
 import lib.comp.types
 
 
-
-[heap]
-pub struct EvalVariables {
-mut:
-	vars map[voidptr]types.LitVal
-}
-
-pub fn new_eval_variables() &EvalVariables {
-	return &EvalVariables{}
-}
-
-pub fn (mut ev EvalVariables) assign_variable_value(var &binding.VariableSymbol, val types.LitVal) {
-	ev.vars[var] = val
-}
-
-pub fn (mut ev EvalVariables) lookup(var &binding.VariableSymbol) ?types.LitVal {
-	val := ev.vars[var] or {
-		return none
-	}
-	return val
-}
-
 pub struct Evaluator {
 	root binding.BoundExpr
 mut:
-	vars &EvalVariables
+	vars &binding.EvalVariables
 }
 
-pub fn new_evaluator(root binding.BoundExpr, vars &EvalVariables) Evaluator {
+pub fn new_evaluator(root binding.BoundExpr, vars &binding.EvalVariables) Evaluator {
 	return Evaluator{
 		root: root
 		vars: vars

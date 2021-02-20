@@ -1,4 +1,5 @@
 import lib.comp.token
+import lib.comp.binding
 import lib.comp.parser
 import lib.comp
 // import lib.comp.binding
@@ -21,7 +22,7 @@ fn main() {
 fn print_exprs() {
 	term.clear()
 	mut show_tree := false
-	vars := comp.new_eval_variables()
+	mut vars := binding.new_eval_variables()
 	mut builder := strings.new_builder(30)
 	mut prev_comp := &comp.Compilation(0)
 
@@ -49,7 +50,13 @@ fn print_exprs() {
 			} else if line == '#cls' {
 				term.clear()
 				continue
+			} else if line == '#reset' {
+				prev_comp = &comp.Compilation(0)
+				vars = binding.new_eval_variables()
+				println(term.bright_blue('reset compilation'))
+				continue
 			}
+			
 		}
 		builder.writeln(line)
 		text := builder.last_n(builder.len)

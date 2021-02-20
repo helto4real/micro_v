@@ -2,35 +2,6 @@ module binding
 
 import lib.comp.util
 
-struct BoundScopeStack {
-mut:
-	stack util.Stack
-}
-
-pub fn new_bound_scope_stack() BoundScopeStack {
-	return BoundScopeStack {}
-}
-
-fn (mut bss BoundScopeStack) push(bound_scope &BoundScope) {
-	bss.stack.push(bound_scope)
-}
-
-fn (mut bss BoundScopeStack) pop() ?&BoundScope {
-	bound_scope := bss.stack.pop() or {return none}
-	return &BoundScope(bound_scope)
-}
-
-fn (bss BoundScopeStack) peek() ?&BoundScope {
-	bound_scope := bss.stack.peek() or {return none}
-	return &BoundScope(bound_scope)
-}
-
-[inline]
-fn (bss BoundScopeStack) is_empty() bool {
-	return bss.stack.is_empty()
-}
-
-
 struct BoundGlobalScopeStack {
 mut:
 	stack util.Stack

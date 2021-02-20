@@ -22,3 +22,24 @@ pub fn new_variable_symbol(name string, typ types.Type, is_mut bool) &VariableSy
 		is_mut: is_mut
 	}
 }
+
+[heap]
+pub struct EvalVariables {
+mut:
+	vars map[voidptr]types.LitVal
+}
+
+pub fn new_eval_variables() &EvalVariables {
+	return &EvalVariables{}
+}
+
+pub fn (mut ev EvalVariables) assign_variable_value(var &VariableSymbol, val types.LitVal) {
+	ev.vars[var] = val
+}
+
+pub fn (mut ev EvalVariables) lookup(var &VariableSymbol) ?types.LitVal {
+	val := ev.vars[var] or {
+		return none
+	}
+	return val
+}
