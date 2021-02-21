@@ -114,14 +114,6 @@ pub fn (mut t Tokenizer) next_token() Token {
 				t.kind = .eq
 			}
 		}
-		`;` {
-			t.kind = .semcol
-			t.incr_pos()
-		}
-		`.` {
-			t.kind = .dot
-			t.incr_pos()
-		}
 		`!` {
 			t.incr_pos()
 			if t.ch == `=` {
@@ -130,6 +122,32 @@ pub fn (mut t Tokenizer) next_token() Token {
 			} else {
 				t.kind = .exl_mark
 			}
+		}
+		`>` {
+			t.incr_pos()
+			if t.ch == `=` {
+				t.kind = .gt_eq
+				t.incr_pos()
+			} else {
+				t.kind = .gt
+			}
+		}
+		`<` {
+			t.incr_pos()
+			if t.ch == `=` {
+				t.kind = .lt_eq
+				t.incr_pos()
+			} else {
+				t.kind = .lt
+			}
+		}
+		`;` {
+			t.kind = .semcol
+			t.incr_pos()
+		}
+		`.` {
+			t.kind = .dot
+			t.incr_pos()
 		}
 		`&` {
 			t.incr_pos()

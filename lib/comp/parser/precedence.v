@@ -8,7 +8,7 @@ fn binary_operator_precedence(kind token.Kind) int {
 	return match kind {
 		.div, .mul { 5 }
 		.plus, .minus { 4 }
-		.eq_eq, .exl_mark_eq { 3 }
+		.eq_eq, .exl_mark_eq, .gt, .lt, .gt_eq, .lt_eq { 3 }
 		.amp_amp { 2 }
 		.pipe_pipe { 1 }
 		else { 0 }

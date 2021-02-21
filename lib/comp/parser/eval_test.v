@@ -83,6 +83,18 @@ fn test_eval_basic_exprs() {
 	assert c.eval_bool('false || true') == true
 	assert c.eval_bool('false || false') == false
 
+	// test lt, gt, le, ge
+	assert c.eval_bool('10 < 11') == true
+	assert c.eval_bool('10 <= 11') == true
+	assert c.eval_bool('10 > 9') == true
+	assert c.eval_bool('10 >= 9') == true
+	assert c.eval_bool('10 <= 10') == true
+	assert c.eval_bool('10 >= 10') == true
+
+	assert c.eval_bool('10 > 11') == false
+	assert c.eval_bool('10 >= 11') == false
+	assert c.eval_bool('10 < 9') == false
+	assert c.eval_bool('10 <= 9') == false
 	// test equals and not equals operators
 	assert c.eval_bool('1 == 1') == true
 	assert c.eval_bool('1 != 2') == true

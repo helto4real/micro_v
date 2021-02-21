@@ -97,6 +97,14 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 	operators << new_bound_binary_op(.eq_eq, .equals, int(types.TypeKind.bool_lit))
 	operators << new_bound_binary_op(.exl_mark_eq, .not_equals, int(types.TypeKind.bool_lit))
 
+	operators << new_bound_binary_op_with_res(.lt, .less, int(types.TypeKind.int_lit),
+		int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op_with_res(.gt, .greater, int(types.TypeKind.int_lit),
+		int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op_with_res(.lt_eq, .less_or_equals, int(types.TypeKind.int_lit),
+		int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op_with_res(.gt_eq, .greater_or_equals, int(types.TypeKind.int_lit),
+		int(types.TypeKind.bool_lit))
 	return operators
 }
 
@@ -123,6 +131,10 @@ pub enum BoundBinaryOperatorKind {
 	divition
 	equals
 	not_equals
+	less
+	greater
+	less_or_equals
+	greater_or_equals
 	logic_and
 	logic_or
 	not_supported

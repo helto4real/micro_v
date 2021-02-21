@@ -113,6 +113,12 @@ fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?types
 		.logic_or { return (left as bool) || (right as bool) }
 		.equals { return left.eq(right) }
 		.not_equals { return !left.eq(right) }
+
+		.greater { return left.gt(right) }
+		.less { return left.lt(right) }
+		.less_or_equals { return left.le(right) }
+		.greater_or_equals { return left.ge(right) }
+
 		else { panic('operator <$node.op.op_kind> exl_mark expected') }
 	}
 }
