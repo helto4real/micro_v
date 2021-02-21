@@ -13,9 +13,16 @@ pub fn new_pos(pos int, len int) Pos {
 	}
 }
 
-pub fn new_pos_from_bounds(start Pos, end Pos) Pos {
+pub fn new_pos_from_pos_bounds(start Pos, end Pos) Pos {
 	return Pos{
 		pos: start.pos
 		len: end.pos - start.pos + end.len
+	}
+}
+
+pub fn new_pos_from_bounds(start int, end int) Pos {
+	return Pos{
+		pos: start
+		len: end - start
 	}
 }

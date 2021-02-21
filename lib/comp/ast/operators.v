@@ -29,7 +29,7 @@ pub fn new_binary_expr(left ExpressionSyntax, op token.Token, right ExpressionSy
 		left: left
 		op: op
 		right: right
-		pos: util.new_pos_from_bounds(left.pos(), right.pos())
+		pos: util.new_pos_from_pos_bounds(left.pos(), right.pos())
 		child_nodes: [AstNode(left), op, right]
 	}
 }
@@ -56,7 +56,7 @@ pub fn new_unary_expr(op token.Token, operand ExpressionSyntax) UnaryExpr {
 	return UnaryExpr{
 		op: op
 		operand: operand
-		pos: util.new_pos_from_bounds(op.pos, operand.pos())
+		pos: util.new_pos_from_pos_bounds(op.pos, operand.pos())
 		child_nodes: [AstNode(op), operand]
 	}
 }
@@ -80,7 +80,7 @@ pub fn new_paranthesis_expr(open_para_token token.Token, expr ExpressionSyntax, 
 		open_para_token: open_para_token
 		close_para_token: close_para_token
 		expr: expr
-		pos: util.new_pos_from_bounds(open_para_token.pos, close_para_token.pos)
+		pos: util.new_pos_from_pos_bounds(open_para_token.pos, close_para_token.pos)
 		child_nodes: [AstNode(open_para_token), expr, close_para_token]
 	}
 }

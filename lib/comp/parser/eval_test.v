@@ -2,6 +2,7 @@
 import lib.comp.binding
 import lib.comp.parser
 import lib.comp
+import lib.comp.util
 
 
 struct TestCompilationState {
@@ -44,7 +45,7 @@ pub fn (mut tcs TestCompilationState) eval_int(expr string) int {
 }
 
 pub fn (mut tcs TestCompilationState) eval_stmt(stmt string) {
-	res := tcs.evaluate(stmt)
+	_ := tcs.evaluate(stmt)
 }
 
 pub fn (mut tcs TestCompilationState) eval_bool(expr string) bool {
@@ -118,3 +119,106 @@ fn test_eval_var_exprs() {
 	assert c.eval_bool('a&&c') == false
 }
 
+fn test_error_delcarations_binar_operator_type() {
+	code := "true[||]2"
+	error := ' binary operator || is not defined for types bool and int.'
+	assert_has_diagostics(code, error)
+}
+
+fn test_error_delcarations_unary_operator_undefined() {
+	code := "[+]true"
+	error := ' unary operator + is not defined for type bool.'
+	assert_has_diagostics(code, error)
+}
+
+// fn test_error_delcarations_assign_expected_var_decl_after_mut() {
+// 	code := "
+// 		{
+// 			mut [y]=2
+// 			x:=2
+// 		}
+// 	"
+// 	error := 'expected varable declaration after mut keyword'
+// 	assert_has_diagostics(code, error)
+// }
+
+fn test_error_delcarations_assign_different_types_error() {
+	code := "
+		{
+			mut x:=10
+			x=[true]
+		}
+	"
+	error := 'cannot convert type <bool> to <int>'
+	assert_has_diagostics(code, error)
+}
+
+fn test_error_delcarations_no_mut_assign_error() {
+	code := "
+		{
+			x:=10
+			x[=]100
+		}
+	"
+	error := 'assign non mutable varable: <x>'
+	assert_has_diagostics(code, error)
+}
+
+fn test_error_delcarations_report_errors() {
+	code := "
+		{
+			x:=10
+			y:=100
+			{
+				x:=true
+			}
+			[x]:=5
+		}
+	"
+	error := 'name: <x> already defined'
+	assert_has_diagostics(code, error)
+}
+
+fn assert_has_diagostics(text string, diagnostic_text string) {
+	mut print_err_info := false
+	vars := binding.new_eval_variables()
+
+	ann_text := util.parse_annotated_text(text)
+
+	syntax_tree := parser.parse_syntax_tree(ann_text.text)
+	mut comp := comp.new_compilation(syntax_tree)
+
+	res := comp.evaluate(vars)
+
+	defer {
+		if print_err_info {
+			// make sure we print info so we can find the method that is faulty	
+			println('input rule:')
+			println(text)
+			println('expected message:')
+			println(diagnostic_text)
+		}
+	}
+	expected_diagnostics := util.unindent_lines(diagnostic_text)
+
+	if ann_text.posns.len != expected_diagnostics.len {
+		panic('error: must mark as man pos as there are expected diagnostics')
+	}
+	assert expected_diagnostics.len == res.result.len
+
+	for i:=0; i<expected_diagnostics.len; i++ {
+		expected_message := expected_diagnostics[i]
+		actual_message := res.result[i].text
+
+		assert expected_message == actual_message
+
+		actual_pos := res.result[i].pos
+		expected_pos := ann_text.posns[i]
+
+		assert actual_pos == expected_pos
+		// assert actual_pos == expected_pos
+
+		
+	}
+	print_err_info = true
+}

@@ -17,7 +17,7 @@ pub fn new_assign_expr(ident token.Token, eq_tok token.Token, expr ExpressionSyn
 		ident: ident
 		expr: expr
 		eq_tok: eq_tok
-		pos: util.new_pos_from_bounds(ident.pos, expr.pos())
+		pos: util.new_pos_from_pos_bounds(ident.pos, expr.pos())
 	}
 }
 
