@@ -4,15 +4,14 @@ import lib.comp.parser
 import lib.comp
 import lib.comp.util
 
-
 struct TestCompilationState {
 mut:
-	vars &binding.EvalVariables
+	vars      &binding.EvalVariables
 	prev_comp &comp.Compilation
 }
 
 pub fn new_test_compilation_state() &TestCompilationState {
-	return &TestCompilationState {
+	return &TestCompilationState{
 		vars: binding.new_eval_variables()
 		prev_comp: &comp.Compilation(0)
 	}
@@ -101,14 +100,14 @@ fn test_eval_basic_exprs() {
 fn test_eval_var_exprs() {
 	mut c := new_test_compilation_state()
 
-	c.eval_stmt('x:=4') 
+	c.eval_stmt('x:=4')
 	assert c.eval_int('x+4') == 8
 	assert c.eval_int('x+x') == 8
 	assert c.eval_int('x-x') == 0
 
-	c.eval_stmt('mut z:=4') 
+	c.eval_stmt('mut z:=4')
 	assert c.eval_int('(z=2)+z') == 4
-	
+
 	c.eval_stmt('a:=true')
 	c.eval_stmt('b:=true')
 	c.eval_stmt('c:=false')
@@ -120,13 +119,13 @@ fn test_eval_var_exprs() {
 }
 
 fn test_error_delcarations_binar_operator_type() {
-	code := "true[||]2"
+	code := 'true[||]2'
 	error := ' binary operator || is not defined for types bool and int.'
 	assert_has_diagostics(code, error)
 }
 
 fn test_error_delcarations_unary_operator_undefined() {
-	code := "[+]true"
+	code := '[+]true'
 	error := ' unary operator + is not defined for type bool.'
 	assert_has_diagostics(code, error)
 }
@@ -143,29 +142,29 @@ fn test_error_delcarations_unary_operator_undefined() {
 // }
 
 fn test_error_delcarations_assign_different_types_error() {
-	code := "
+	code := '
 		{
 			mut x:=10
 			x=[true]
 		}
-	"
+	'
 	error := 'cannot convert type <bool> to <int>'
 	assert_has_diagostics(code, error)
 }
 
 fn test_error_delcarations_no_mut_assign_error() {
-	code := "
+	code := '
 		{
 			x:=10
 			x[=]100
 		}
-	"
+	'
 	error := 'assign non mutable varable: <x>'
 	assert_has_diagostics(code, error)
 }
 
 fn test_error_delcarations_report_errors() {
-	code := "
+	code := '
 		{
 			x:=10
 			y:=100
@@ -174,7 +173,7 @@ fn test_error_delcarations_report_errors() {
 			}
 			[x]:=5
 		}
-	"
+	'
 	error := 'name: <x> already defined'
 	assert_has_diagostics(code, error)
 }
@@ -206,7 +205,7 @@ fn assert_has_diagostics(text string, diagnostic_text string) {
 	}
 	assert expected_diagnostics.len == res.result.len
 
-	for i:=0; i<expected_diagnostics.len; i++ {
+	for i := 0; i < expected_diagnostics.len; i++ {
 		expected_message := expected_diagnostics[i]
 		actual_message := res.result[i].text
 
@@ -217,8 +216,6 @@ fn assert_has_diagostics(text string, diagnostic_text string) {
 
 		assert actual_pos == expected_pos
 		// assert actual_pos == expected_pos
-
-		
 	}
 	print_err_info = true
 }

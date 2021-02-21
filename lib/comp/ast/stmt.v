@@ -3,13 +3,11 @@ module ast
 import lib.comp.token
 import lib.comp.util
 
-
 pub fn (ex &StatementSyntax) children() []AstNode {
 	match ex {
 		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax {
 			return ex.child_nodes()
 		}
-
 	}
 }
 
@@ -53,10 +51,10 @@ pub fn (bs &BlockStatementSyntax) child_nodes() []AstNode {
 pub struct ExpressionStatementSyntax {
 pub:
 	// Node
-	kind              SyntaxKind = .expr_stmt
-	child_nodes       []AstNode
-	pos               util.Pos
-	expr 			  ExpressionSyntax
+	kind        SyntaxKind = .expr_stmt
+	child_nodes []AstNode
+	pos         util.Pos
+	expr        ExpressionSyntax
 }
 
 pub fn new_expr_stmt_syntax(expr ExpressionSyntax) ExpressionStatementSyntax {

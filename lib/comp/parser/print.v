@@ -1,4 +1,5 @@
 module parser
+
 import term
 import lib.comp.ast
 import lib.comp.token
@@ -82,7 +83,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 					for i, child in child_nodes {
 						last_node := if i < child_nodes.len - 1 { false } else { true }
 						pretty_print(child, new_ident, last_node)
-					}					
+					}
 				}
 				ast.ExpressionStatementSyntax {
 					println(term.gray('$node.kind'))

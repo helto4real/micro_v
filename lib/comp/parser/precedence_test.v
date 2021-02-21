@@ -10,8 +10,6 @@ fn test_binary_operator_precedence() {
 	assert unary_operator_precedence(.plus) > binary_operator_precedence(.plus)
 	assert unary_operator_precedence(.minus) > binary_operator_precedence(.plus)
 	assert unary_operator_precedence(.exl_mark) > binary_operator_precedence(.plus)
-	assert unary_operator_precedence(.exl_mark) == unary_operator_precedence(.plus) 
-	assert unary_operator_precedence(.exl_mark) == unary_operator_precedence(.minus) 
-
-			
+	assert unary_operator_precedence(.exl_mark) == unary_operator_precedence(.plus)
+	assert unary_operator_precedence(.exl_mark) == unary_operator_precedence(.minus)
 }

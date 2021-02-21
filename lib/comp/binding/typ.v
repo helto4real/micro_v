@@ -2,7 +2,8 @@ module binding
 
 import lib.comp.types
 
-type BoundExpr = BoundBinaryExpr | BoundLiteralExpr | BoundUnaryExpression | BoundVariableExpr | BoundAssignExpr
+type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundLiteralExpr | BoundUnaryExpression |
+	BoundVariableExpr
 
 type BoundStmt = BoundBlockStmt | BoundExprStmt | BoundVarDeclStmt
 
@@ -21,11 +22,10 @@ enum BoundNodeKind {
 	var_decl_stmt
 }
 
-
 pub fn (be BoundExpr) typ() types.Type {
 	match be {
-		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr,
-		BoundAssignExpr{
+		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr
+		{
 			return be.typ
 		}
 	}
@@ -44,7 +44,8 @@ pub fn (be BoundExpr) typ_str() string {
 
 pub fn (be BoundExpr) kind() BoundNodeKind {
 	match be {
-		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr {
+		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr
+		{
 			return be.kind
 		}
 	}

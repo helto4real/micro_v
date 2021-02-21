@@ -10,7 +10,7 @@ import lib.comp.util
 [heap]
 pub struct Compilation {
 mut:
-	previous &Compilation
+	previous     &Compilation
 	global_scope &binding.BoundGlobalScope
 pub mut:
 	syntax parser.SyntaxTree
@@ -40,7 +40,7 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 		if c.previous != 0 {
 			prev_glob_scope = c.previous.global_scope
 		}
-		c.global_scope = binding.bind_global_scope(prev_glob_scope, c.syntax.root)	
+		c.global_scope = binding.bind_global_scope(prev_glob_scope, c.syntax.root)
 	}
 	return c.global_scope
 }

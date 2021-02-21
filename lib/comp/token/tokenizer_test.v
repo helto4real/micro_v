@@ -382,7 +382,7 @@ fn test_line_number_parsing_cr_ln() {
 	_ := tkz.scan_all()
 
 	println('')
-	println('SRC: ${tkz.source.lines}')
+	println('SRC: $tkz.source.lines')
 	assert tkz.source.lines.len == 3
 	assert tkz.source.lines[0].str() == '123 abc'
 	assert tkz.source.lines[0].len == 7

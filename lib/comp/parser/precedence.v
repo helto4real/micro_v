@@ -19,7 +19,7 @@ fn binary_operator_precedence(kind token.Kind) int {
 fn unary_operator_precedence(kind token.Kind) int {
 	// the precedence of binary operators in order
 	return match kind {
-		.plus, .minus, .exl_mark{6}
-		else {0}
+		.plus, .minus, .exl_mark { 6 }
+		else { 0 }
 	}
 }

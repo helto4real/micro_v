@@ -8,7 +8,7 @@ mut:
 }
 
 pub fn new_bound_global_scope_stack() BoundGlobalScopeStack {
-	return BoundGlobalScopeStack {}
+	return BoundGlobalScopeStack{}
 }
 
 fn (mut bss BoundGlobalScopeStack) push(bound_scope &BoundGlobalScope) {
@@ -16,12 +16,12 @@ fn (mut bss BoundGlobalScopeStack) push(bound_scope &BoundGlobalScope) {
 }
 
 fn (mut bss BoundGlobalScopeStack) pop() ?&BoundGlobalScope {
-	bound_scope := bss.stack.pop() or {return none}
+	bound_scope := bss.stack.pop() or { return none }
 	return &BoundGlobalScope(bound_scope)
 }
 
 fn (bss BoundGlobalScopeStack) peek() ?&BoundGlobalScope {
-	bound_scope := bss.stack.peek() or {return none}
+	bound_scope := bss.stack.peek() or { return none }
 	return &BoundGlobalScope(bound_scope)
 }
 

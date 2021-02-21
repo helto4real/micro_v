@@ -1,21 +1,22 @@
 module util
+
 import strings
 
 pub struct AnnotatedText {
 pub:
-	text string
+	text  string
 	posns []Pos
 }
 
 fn new_annotated_text(text string, posns []Pos) AnnotatedText {
-	return AnnotatedText {
+	return AnnotatedText{
 		text: text
 		posns: posns
 	}
 }
 
 pub fn parse_annotated_text(text string) AnnotatedText {
-	mut b:= strings.new_builder(20)
+	mut b := strings.new_builder(20)
 	uindent_text := unindent(text)
 	mut posns := []Pos{cap: 20}
 	mut fake_stack := []int{cap: 20}
@@ -25,7 +26,9 @@ pub fn parse_annotated_text(text string) AnnotatedText {
 		if c == `[` {
 			fake_stack.prepend(pos)
 		} else if c == `]` {
-			if fake_stack.len == 0 { panic('unexpected error, missing "["?') }
+			if fake_stack.len == 0 {
+				panic('unexpected error, missing "["?')
+			}
 			start := fake_stack.pop()
 			end := pos
 			posns << new_pos_from_bounds(start, end)
@@ -35,9 +38,11 @@ pub fn parse_annotated_text(text string) AnnotatedText {
 		}
 	}
 
-	if fake_stack.len > 0 {panic('unexpected error, missing "]"?')}
+	if fake_stack.len > 0 {
+		panic('unexpected error, missing "]"?')
+	}
 
-	return AnnotatedText {
+	return AnnotatedText{
 		text: b.str()
 		posns: posns
 	}
@@ -45,9 +50,11 @@ pub fn parse_annotated_text(text string) AnnotatedText {
 
 pub fn unindent(text string) string {
 	mut lines := unindent_lines(text)
-	mut b:= strings.new_builder(lines.len)
+	mut b := strings.new_builder(lines.len)
 	for line in lines {
-		if line == '' {continue}
+		if line == '' {
+			continue
+		}
 		b.writeln(line)
 	}
 	return b.str()
@@ -63,15 +70,15 @@ pub fn unindent_lines(text string) []string {
 			continue
 		}
 		indent := line.len - line.trim_left(' \t').len
-		min_indent = if indent<min_indent {indent} else {min_indent}
+		min_indent = if indent < min_indent { indent } else { min_indent }
 		lines[i] = line[min_indent..]
 	}
 	// trim start and end empty lines but keep in between
-	for lines.len > 0 && lines[0].len ==0 {
+	for lines.len > 0 && lines[0].len == 0 {
 		lines.delete(0)
 	}
-	for lines.len > 0 && lines[lines.len-1].len ==0 {
-		lines.delete(lines.len-1)
+	for lines.len > 0 && lines[lines.len - 1].len == 0 {
+		lines.delete(lines.len - 1)
 	}
 	return lines
 }

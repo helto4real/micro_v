@@ -87,8 +87,10 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 	operators << new_bound_binary_op(.div, .divition, int(types.TypeKind.int_lit))
 
 	// accept int but returns bool
-	operators << new_bound_binary_op_with_res(.eq_eq, .equals, int(types.TypeKind.int_lit), int(types.TypeKind.bool_lit))
-	operators << new_bound_binary_op_with_res(.exl_mark_eq, .not_equals, int(types.TypeKind.int_lit), int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op_with_res(.eq_eq, .equals, int(types.TypeKind.int_lit),
+		int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op_with_res(.exl_mark_eq, .not_equals, int(types.TypeKind.int_lit),
+		int(types.TypeKind.bool_lit))
 
 	operators << new_bound_binary_op(.amp_amp, .logic_and, int(types.TypeKind.bool_lit))
 	operators << new_bound_binary_op(.pipe_pipe, .logic_or, int(types.TypeKind.bool_lit))
@@ -180,7 +182,8 @@ fn new_bound_literal_expr(val types.LitVal) BoundExpr {
 fn (mut b Binder) bind_unary_expr(syntax ast.UnaryExpr) BoundExpr {
 	bound_operand := b.bind_expr(syntax.operand)
 	bound_op := bind_unary_operator(syntax.op.kind, bound_operand.typ()) or {
-		b.log.error('unary operator $syntax.op.lit is not defined for type ${bound_operand.typ_str()}.', syntax.op.pos)
+		b.log.error('unary operator $syntax.op.lit is not defined for type ${bound_operand.typ_str()}.',
+			syntax.op.pos)
 		return bound_operand
 	}
 	return new_bound_unary_expr(bound_op, bound_operand)
@@ -190,7 +193,8 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 	bound_left := b.bind_expr(syntax.left)
 	bound_right := b.bind_expr(syntax.right)
 	bound_op := bind_binary_operator(syntax.op.kind, bound_left.typ(), bound_right.typ()) or {
-		b.log.error('binary operator $syntax.op.lit is not defined for types $bound_left.typ_str() and ${bound_right.typ_str()}.', syntax.op.pos)
+		b.log.error('binary operator $syntax.op.lit is not defined for types $bound_left.typ_str() and ${bound_right.typ_str()}.',
+			syntax.op.pos)
 		return bound_left
 	}
 	return new_bound_binary_expr(bound_left, bound_op, bound_right)
@@ -200,7 +204,7 @@ struct BoundVariableExpr {
 pub:
 	kind BoundNodeKind = .variable_expr
 	typ  types.Type
-	var &VariableSymbol
+	var  &VariableSymbol
 }
 
 fn new_bound_variable_expr(var &VariableSymbol) BoundExpr {

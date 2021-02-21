@@ -80,9 +80,7 @@ fn (mut p Parser) match_token(kind token.Kind) token.Token {
 	}
 }
 
-
 fn (mut p Parser) parse_stmt() ast.StatementSyntax {
-
 	match p.peek_token(0).kind {
 		.lcbr {
 			return p.parse_block_stmt()
@@ -90,7 +88,7 @@ fn (mut p Parser) parse_stmt() ast.StatementSyntax {
 		.key_mut {
 			if p.peek_var_decl(1) {
 				return p.parse_var_decl_stmt()
-			} 
+			}
 			p.log.error_expected_var_decl(p.peek_token(0).pos)
 		}
 		.name {
@@ -146,7 +144,6 @@ fn (mut p Parser) parse_expr() ast.ExpressionSyntax {
 // parse_assign_expr parses an assignment expression
 //   can parse nested assignment x=y=10
 fn (mut p Parser) parse_assign_expr() ast.ExpressionSyntax {
-	
 	if p.peek_assignment(0) {
 		ident_tok := p.match_token(.name)
 		op_token := p.match_token(.eq)

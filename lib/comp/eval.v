@@ -3,11 +3,10 @@ module comp
 import lib.comp.binding
 import lib.comp.types
 
-
 pub struct Evaluator {
 	root binding.BoundStmt
 mut:
-	vars &binding.EvalVariables
+	vars     &binding.EvalVariables
 	last_val types.LitVal = int(0)
 }
 
@@ -39,7 +38,7 @@ fn (mut e Evaluator) eval_stmt(stmt binding.BoundStmt) {
 }
 
 fn (mut e Evaluator) eval_bound_var_decl_stmt(node binding.BoundVarDeclStmt) {
-	val := e.eval_expr(node.expr) or {panic('unexpected compiler error')}
+	val := e.eval_expr(node.expr) or { panic('unexpected compiler error') }
 	e.vars.assign_variable_value(node.var, val)
 	e.last_val = val
 }
@@ -81,7 +80,7 @@ fn (mut e Evaluator) eval_bound_literal_expr(root binding.BoundLiteralExpr) ?typ
 }
 
 fn (mut e Evaluator) eval_bound_variable_expr(root binding.BoundVariableExpr) ?types.LitVal {
-	var :=  e.vars.lookup(root.var) or {return none}
+	var := e.vars.lookup(root.var) or { return none }
 	return var
 }
 
@@ -117,7 +116,3 @@ fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?types
 		else { panic('operator <$node.op.op_kind> exl_mark expected') }
 	}
 }
-
-
-
-

@@ -14,4 +14,3 @@ fn test_basic_annotation() {
 '
 	assert expected == unindent(text)
 }
-
