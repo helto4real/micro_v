@@ -11,6 +11,7 @@ pub:
 pub fn new_bound_scope(parent &BoundScope) &BoundScope {
 	return &BoundScope{
 		parent: parent
+		vars: map[string]&VariableSymbol{}
 	}
 }
 
@@ -42,17 +43,27 @@ pub fn (bs &BoundScope) vars() []&VariableSymbol {
 }
 
 pub fn (bs &BoundScope) str() string {
+	return bs.str_indent(0)
+}
+
+fn (bs &BoundScope) str_indent(level int) string {
+	ident := '  '.repeat(level)
 	mut b := strings.new_builder(0)
-	b.write('BoundScope (${voidptr(bs)}) [')
+	b.writeln('${ident}BS(${voidptr(bs)})')
+	b.writeln('${ident}[')
 	for i, _ in bs.vars {
-		v := bs.vars[i]
-		b.write(v.str())
-		b.write(', ')
+		var := bs.vars[i]
+		b.writeln('  ${var.str_ident(level)}')
+		// b.write(', ')
 	}
-	if bs.vars.len > 0 {
-		b.go_back(2)
+	// if bs.vars.len > 0 {
+	// 	b.go_back(2)
+	// }
+	if bs.parent != 0 {
+		b.writeln('${ident}  parent : {')
+		b.write(bs.parent.str_indent(level+1))
 	}
-	b.writeln(']')
+	b.writeln('${ident}]')
 	return b.str()
 }
 

@@ -1,4 +1,5 @@
 module binding
+import lib.comp.types
 
 pub struct BoundBlockStmt {
 pub:
@@ -21,5 +22,22 @@ pub:
 pub fn new_bound_expr_stmt(bound_expr BoundExpr) BoundExprStmt {
 	return BoundExprStmt {
 		bound_expr: bound_expr
+	}
+}
+
+pub struct BoundVarDeclStmt {
+pub:
+	typ    types.Type
+	is_mut bool
+	expr   BoundExpr
+	var    &VariableSymbol
+}
+
+fn new_var_decl_stmt(var &VariableSymbol, expr BoundExpr, is_mut bool) BoundStmt {
+	return BoundVarDeclStmt{
+		var: var
+		is_mut: is_mut
+		typ: expr.typ()
+		expr: expr
 	}
 }

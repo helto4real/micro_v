@@ -1,13 +1,12 @@
 module parser
 
-import term
 import strconv
 import lib.comp.ast
 import lib.comp.token
 import lib.comp.util
 
 pub struct Parser {
-	source  &util.SourceText
+	source &util.SourceText
 mut:
 	pos    int
 	tokens []token.Token
@@ -22,7 +21,6 @@ pub mut:
 
 // new_parser_from_text, instance a parser from a text input
 fn new_parser_from_text(text string) &Parser {
-
 	source := util.new_source_text(text)
 	mut tnz := token.new_tokenizer_from_source(source)
 	tokens := tnz.scan_all()
@@ -82,93 +80,44 @@ fn (mut p Parser) match_token(kind token.Kind) token.Token {
 	}
 }
 
-pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
-	marker := if is_last { '└──' } else { '├──' }
-
-	print(term.gray(ident))
-	print(term.gray(marker))
-	new_ident := ident + if is_last { '   ' } else { '│  ' }
-	match node {
-		ast.ExpressionSyntax {
-			match node {
-				// bug prevents me from colapsing
-				ast.BinaryExpr {
-					println(term.gray('$node.kind'))
-					child_nodes := node.child_nodes()
-					for i, child in child_nodes {
-						last_node := if i < child_nodes.len - 1 { false } else { true }
-						pretty_print(child, new_ident, last_node)
-					}
-				}
-				ast.UnaryExpr {
-					println(term.gray('$node.kind'))
-					child_nodes := node.child_nodes()
-					for i, child in child_nodes {
-						last_node := if i < child_nodes.len - 1 { false } else { true }
-						pretty_print(child, new_ident, last_node)
-					}
-				}
-				ast.LiteralExpr {
-					println(term.gray('$node.kind'))
-					child_nodes := node.child_nodes()
-					for i, child in child_nodes {
-						last_node := if i < child_nodes.len - 1 { false } else { true }
-						pretty_print(child, new_ident, last_node)
-					}
-				}
-				ast.NameExpr {
-					println(term.gray('$node.kind'))
-					child_nodes := node.child_nodes()
-					for i, child in child_nodes {
-						last_node := if i < child_nodes.len - 1 { false } else { true }
-						pretty_print(child, new_ident, last_node)
-					}
-				}
-				ast.AssignExpr {
-					println(term.gray('$node.kind'))
-					child_nodes := node.child_nodes()
-					for i, child in child_nodes {
-						last_node := if i < child_nodes.len - 1 { false } else { true }
-						pretty_print(child, new_ident, last_node)
-					}
-				}
-				ast.ParaExpr {
-					println(term.gray('$node.kind'))
-					child_nodes := node.child_nodes()
-					for i, child in child_nodes {
-						last_node := if i < child_nodes.len - 1 { false } else { true }
-						pretty_print(child, new_ident, last_node)
-					}
-				}
-				ast.ComplationSyntax {
-					println(term.gray('$node.kind'))
-					child_nodes := node.child_nodes()
-					for i, child in child_nodes {
-						last_node := if i < child_nodes.len - 1 { false } else { true }
-						pretty_print(child, new_ident, last_node)
-					}
-				}
-				ast.EmptyExpr {
-					panic('None expression should never exist!')
-				}
-			}
-		}
-		ast.StatementSyntax {
-
-		}
-		token.Token {
-			print(term.gray('$node.kind:'))
-			println(term.bright_cyan('$node.lit'))
-		}
-	}
-}
 
 fn (mut p Parser) parse_stmt() ast.StatementSyntax {
-	if p.peek_token(0).kind == .lcbr {
-		return p.parse_block_stmt()
-	} else {
-		return p.parse_expression_stmt()
+
+	match p.peek_token(0).kind {
+		.lcbr {
+			return p.parse_block_stmt()
+		}
+		.key_mut {
+			if p.peek_var_decl(1) {
+				return p.parse_var_decl_stmt()
+			} 
+			p.log.error_expected_var_decl(p.peek_token(0).pos)
+		}
+		.name {
+			if p.peek_var_decl(0) {
+				return p.parse_var_decl_stmt()
+			}
+		}
+		else {
+			return p.parse_expression_stmt()
+		}
 	}
+	return p.parse_expression_stmt()
+}
+
+fn (mut p Parser) parse_var_decl_stmt() ast.StatementSyntax {
+	mut is_mut := false
+	if p.peek_token(0).kind == .key_mut {
+		if p.peek_var_decl(1) {
+			// it is a mut assignment
+			is_mut = true
+			p.next_token()
+		}
+	}
+	ident_tok := p.match_token(.name)
+	op_token := p.match_token(.colon_eq)
+	right := p.parse_assign_expr()
+	return ast.new_var_decl_stmt(ident_tok, op_token, right, is_mut)
 }
 
 fn (mut p Parser) parse_block_stmt() ast.StatementSyntax {
@@ -180,7 +129,7 @@ fn (mut p Parser) parse_block_stmt() ast.StatementSyntax {
 		stmts << stmt
 	}
 	close_brace_token := p.match_token(.rcbr)
-	
+
 	return ast.new_block_statement_syntax(open_brace_token, stmts, close_brace_token)
 }
 
@@ -197,19 +146,12 @@ fn (mut p Parser) parse_expr() ast.ExpressionSyntax {
 // parse_assign_expr parses an assignment expression
 //   can parse nested assignment x=y=10
 fn (mut p Parser) parse_assign_expr() ast.ExpressionSyntax {
-	mut is_mut := false
-	if p.peek_token(0).kind == .key_mut {
-		if p.peek_assignment(1) {
-			// it is a mut assignment
-			is_mut = true
-			p.next_token()
-		}
-	}
+	
 	if p.peek_assignment(0) {
-		ident_tok := p.next_token()
-		op_token := p.next_token()
+		ident_tok := p.match_token(.name)
+		op_token := p.match_token(.eq)
 		right := p.parse_assign_expr()
-		return ast.new_assign_expr(ident_tok, is_mut, op_token, right)
+		return ast.new_assign_expr(ident_tok, op_token, right)
 	}
 	return p.parse_binary_expr()
 }

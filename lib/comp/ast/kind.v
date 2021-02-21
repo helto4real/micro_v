@@ -16,5 +16,6 @@ enum SyntaxKind {
 	// statements
 	block_stmt
 	expr_stmt
+	var_decl_stmt
 	empty
 }

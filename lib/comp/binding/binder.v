@@ -19,17 +19,14 @@ pub fn new_binder(parent &BoundScope) &Binder {
 }
 
 pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.ComplationSyntax) &BoundGlobalScope {
-	// TODO: make create_parent_scope
 	parent_scope := create_parent_scope(previous)
 	mut binder := new_binder(parent_scope)
 	stmt := binder.bind_stmt(comp_node.stmt)
 	vars := binder.scope.vars()
-	// TODO: Check if diagnostics still work
-	// diagnostics := binder.log.all
-	// if previous != 0 {
-	// 	// TODO: fix 
-	// 	diagnostics.prepend(previous.log.all) 
-	// }
+	mut diagnostics := binder.log.all
+	if previous != 0 && previous.log.all.len > 0 {
+		diagnostics.prepend(previous.log.all) 
+	}
 	return new_bound_global_scope(previous, binder.log, vars, stmt)
 }
 
@@ -48,12 +45,11 @@ fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
 		if prev == 0 {panic('unexpected return from stack')}
 		mut scope := new_bound_scope(parent)
 		for var in prev.vars {
-			
 			scope.try_declare(var)
 		}
 		parent = scope
 	}
-	// println('PARENT 2: $parent }')
+	
 	return parent
 }
 
@@ -61,16 +57,17 @@ pub fn (mut b Binder) bind_stmt(stmt ast.StatementSyntax) BoundStmt {
 	match stmt {
 		ast.BlockStatementSyntax { return b.bind_block_stmt(stmt) }
 		ast.ExpressionStatementSyntax { return b.bind_expr_stmt(stmt) }
-
-		// else { panic('unexpected bound statement $stmt') }
+		ast.VarDeclStmtSyntax { return b.bind_var_decl_stmt(stmt)}
 	}
 }
 
 pub fn (mut b Binder) bind_block_stmt(block_stmt ast.BlockStatementSyntax) BoundStmt {
+	b.scope = new_bound_scope(b.scope)
 	mut stmts := []BoundStmt{}
 	for i, _ in block_stmt.statements {
 		stmts << b.bind_stmt(block_stmt.statements[i])
 	}
+	b.scope = b.scope.parent
 	return new_bound_block_stmt(stmts)
 }
 
@@ -91,42 +88,39 @@ pub fn (mut b Binder) bind_expr(expr ast.ExpressionSyntax) BoundExpr {
 	}
 }
 
+pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmtSyntax) BoundStmt {
+	name := syntax.ident.lit
+	bound_expr := b.bind_expr(syntax.expr)
+
+	var := new_variable_symbol(name, bound_expr.typ(), syntax.is_mut)
+	res := b.scope.try_declare(var)
+	if res == false {
+		b.log.error_name_already_defined(name, syntax.ident.pos)
+	}
+	return new_var_decl_stmt(var, bound_expr, syntax.is_mut)
+}
+
 fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 	name := syntax.ident.lit
-	is_decl := syntax.eq_tok.kind == .colon_eq
 	bound_expr := b.bind_expr(syntax.expr)
-	mut is_declared_in_assignment := false
-	mut var := b.scope.lookup(name) or {&VariableSymbol(0)}
 	
-	if var == 0 {
-		// var does not exists in the the symbol table
-		if !is_decl {
-			// var have to be declared with := to be able to set a value
-			b.log.error_var_not_exists(name, syntax.ident.pos)
-			return new_bound_literal_expr(0)
-		}
-		var = new_variable_symbol(name, bound_expr.typ(), syntax.is_mut)
-		is_declared_in_assignment = true
-		b.scope.try_declare(var) 
+	// check is varable exist in scope
+	mut var := b.scope.lookup(name) or {
+		// var have to be declared with := to be able to set a value
+		b.log.error_var_not_exists(name, syntax.ident.pos)
+		return bound_expr
+	}
+		
+	if !var.is_mut {
+		// trying to assign a nom a mutable var
+		b.log.error_assign_non_mutable_variable(name, syntax.eq_tok.pos)
 	}
 
-	if !is_declared_in_assignment {
-		if is_decl {
-			// var exists and it is re-declared
-			b.log.error_name_already_defined(name, syntax.ident.pos)
-			return new_bound_literal_expr(0)
-		}
-		if !var.is_mut {
-			// trying to assign a nom a mutable var
-			b.log.error_assign_non_mutable_variable(name, syntax.ident.pos)
-			return new_bound_literal_expr(0)
-		}
-	}
 	if bound_expr.typ() != var.typ {
 		b.log.error_cannot_convert_variable_type(bound_expr.typ_str(), var.typ.typ_str(), syntax.expr.pos())
 		return bound_expr
 	}
-	return new_bound_assign_expr(var, syntax.is_mut, bound_expr)
+	return new_bound_assign_expr(var, bound_expr)
 }
 
 fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {

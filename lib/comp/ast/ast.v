@@ -3,10 +3,6 @@ module ast
 import lib.comp.token
 import lib.comp.util
 
-// Sumtype expressions
-pub type ExpressionSyntax = AssignExpr | BinaryExpr | EmptyExpr | LiteralExpr | NameExpr | ParaExpr |
-	UnaryExpr | ComplationSyntax
-
 pub fn (e &ExpressionSyntax) kind() SyntaxKind {
 	match e {
 		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, EmptyExpr, NameExpr, AssignExpr, ComplationSyntax {

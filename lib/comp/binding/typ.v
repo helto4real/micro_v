@@ -4,7 +4,7 @@ import lib.comp.types
 
 type BoundExpr = BoundBinaryExpr | BoundLiteralExpr | BoundUnaryExpression | BoundVariableExpr | BoundAssignExpr
 
-type BoundStmt = BoundBlockStmt | BoundExprStmt
+type BoundStmt = BoundBlockStmt | BoundExprStmt | BoundVarDeclStmt
 
 type BoundNode = BoundExpr | BoundStmt
 
@@ -18,6 +18,7 @@ enum BoundNodeKind {
 	// Stmts
 	block_stmt
 	expr_stmt
+	var_decl_stmt
 }
 
 

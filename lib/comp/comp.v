@@ -24,7 +24,7 @@ pub fn new_compilation(syntax_tree parser.SyntaxTree) &Compilation {
 	}
 }
 
-pub fn new_compilation_with_previous(previous &Compilation, syntax_tree parser.SyntaxTree) &Compilation {
+fn new_compilation_with_previous(previous &Compilation, syntax_tree parser.SyntaxTree) &Compilation {
 	return &Compilation{
 		syntax: syntax_tree
 		global_scope: &binding.BoundGlobalScope(0)
@@ -34,14 +34,18 @@ pub fn new_compilation_with_previous(previous &Compilation, syntax_tree parser.S
 
 pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 	// TODO: Make this thread safe
+	mut prev_glob_scope := &binding.BoundGlobalScope(0)
 	if c.global_scope == 0 {
-		prev_glob_scope := if c.previous != 0 {c.previous.global_scope} else {&binding.BoundGlobalScope(0)}
+		// println('${voidptr(c.previous)}')
+		if c.previous != 0 {
+			prev_glob_scope = c.previous.global_scope
+		}
 		c.global_scope = binding.bind_global_scope(prev_glob_scope, c.syntax.root)	
 	}
 	return c.global_scope
 }
 
-pub fn (mut c Compilation) continue_with(syntax_tree parser.SyntaxTree) &Compilation {
+pub fn (c &Compilation) continue_with(syntax_tree parser.SyntaxTree) &Compilation {
 	return new_compilation_with_previous(c, syntax_tree)
 }
 

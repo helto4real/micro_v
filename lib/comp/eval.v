@@ -8,7 +8,7 @@ pub struct Evaluator {
 	root binding.BoundStmt
 mut:
 	vars &binding.EvalVariables
-	last_val types.LitVal
+	last_val types.LitVal = int(0)
 }
 
 pub fn new_evaluator(root binding.BoundStmt, vars &binding.EvalVariables) Evaluator {
@@ -32,7 +32,16 @@ fn (mut e Evaluator) eval_stmt(stmt binding.BoundStmt) {
 		binding.BoundExprStmt {
 			e.eval_bound_expr_stmt(stmt)
 		}
+		binding.BoundVarDeclStmt {
+			e.eval_bound_var_decl_stmt(stmt)
+		}
 	}
+}
+
+fn (mut e Evaluator) eval_bound_var_decl_stmt(node binding.BoundVarDeclStmt) {
+	val := e.eval_expr(node.expr) or {panic('unexpected compiler error')}
+	e.vars.assign_variable_value(node.var, val)
+	e.last_val = val
 }
 
 fn (mut e Evaluator) eval_bound_block_stmt(block_stmt binding.BoundBlockStmt) {
@@ -67,6 +76,21 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 	}
 }
 
+fn (mut e Evaluator) eval_bound_literal_expr(root binding.BoundLiteralExpr) ?types.LitVal {
+	return root.val
+}
+
+fn (mut e Evaluator) eval_bound_variable_expr(root binding.BoundVariableExpr) ?types.LitVal {
+	var :=  e.vars.lookup(root.var) or {return none}
+	return var
+}
+
+fn (mut e Evaluator) eval_bound_assign_expr(node binding.BoundAssignExpr) ?types.LitVal {
+	val := e.eval_expr(node.expr) ?
+	e.vars.assign_variable_value(node.var, val)
+	return val
+}
+
 fn (mut e Evaluator) eval_bound_unary_expr(node binding.BoundUnaryExpression) ?types.LitVal {
 	operand := e.eval_expr(node.operand) ?
 	match node.op.op_kind {
@@ -94,18 +118,6 @@ fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?types
 	}
 }
 
-fn (mut e Evaluator) eval_bound_assign_expr(node binding.BoundAssignExpr) ?types.LitVal {
-	val := e.eval_expr(node.expr) ?
-	e.vars.assign_variable_value(node.var, val)
-	return val
-}
 
-fn (mut e Evaluator) eval_bound_literal_expr(root binding.BoundLiteralExpr) ?types.LitVal {
-	return root.val
-}
 
-fn (mut e Evaluator) eval_bound_variable_expr(root binding.BoundVariableExpr) ?types.LitVal {
-	var :=  e.vars.lookup(root.var) or {return none}
-	return var
-}
 

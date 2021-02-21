@@ -65,3 +65,6 @@ pub fn (mut d Diagnostics) error_cannot_convert_variable_type(from_type string, 
 	d.error('cannot convert type <$from_type> to <$to_type>', pos)
 }
 
+pub fn (mut d Diagnostics) error_expected_var_decl(pos Pos) {
+	d.error('expected varable declaration after mut keyword', pos)
+}

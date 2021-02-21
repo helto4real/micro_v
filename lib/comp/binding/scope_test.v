@@ -7,6 +7,11 @@ fn test_single_scope() {
 	var := binding.new_variable_symbol('in_scope_var', int(types.TypeKind.int_lit), false)
 	assert scope.try_declare(var) == true
 
+	// again should result in false
+	var_another := binding.new_variable_symbol('in_scope_var', int(types.TypeKind.int_lit), false)
+	assert scope.try_declare(var_another) == false
+
+
 	lookup_var := scope.lookup('in_scope_var') or {
 		assert false 
 		return
@@ -25,6 +30,10 @@ fn test_parent_scope() {
 
 	var := binding.new_variable_symbol('in_scope_var', int(types.TypeKind.int_lit), false)
 	assert parent_scope.try_declare(var) == true
+
+	// again should result in false
+	var_another := binding.new_variable_symbol('in_scope_var', int(types.TypeKind.int_lit), false)
+	assert parent_scope.try_declare(var_another) == false
 
 	lookup_var := scope.lookup('in_scope_var') or {
 		assert false 

@@ -102,6 +102,7 @@ fn print_exprs() {
 			}
 		} else {
 			println(term.yellow('   $res.val'))
+			// println('VARS: $vars')
 			prev_comp = comp
 		}
 		builder.go_back_to(0)

@@ -43,6 +43,10 @@ pub fn (mut tcs TestCompilationState) eval_int(expr string) int {
 	panic('unexpected return type: $res')
 }
 
+pub fn (mut tcs TestCompilationState) eval_stmt(stmt string) {
+	res := tcs.evaluate(stmt)
+}
+
 pub fn (mut tcs TestCompilationState) eval_bool(expr string) bool {
 	res := tcs.evaluate(expr)
 	if res.val is bool {
@@ -96,17 +100,17 @@ fn test_eval_basic_exprs() {
 fn test_eval_var_exprs() {
 	mut c := new_test_compilation_state()
 
-	assert c.eval_int('x:=4') == 4
+	c.eval_stmt('x:=4') 
 	assert c.eval_int('x+4') == 8
 	assert c.eval_int('x+x') == 8
 	assert c.eval_int('x-x') == 0
 
-	assert c.eval_int('mut z:=4') == 4
+	c.eval_stmt('mut z:=4') 
 	assert c.eval_int('(z=2)+z') == 4
 	
-	assert c.eval_bool('a:=true') == true
-	assert c.eval_bool('b:=true') == true
-	assert c.eval_bool('c:=false') == false
+	c.eval_stmt('a:=true')
+	c.eval_stmt('b:=true')
+	c.eval_stmt('c:=false')
 	assert c.eval_bool('a==b') == true
 	assert c.eval_bool('a!=b') == false
 	assert c.eval_bool('a!=c') == true
