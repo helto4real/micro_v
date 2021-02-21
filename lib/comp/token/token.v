@@ -50,6 +50,8 @@ pub enum Kind {
 	// Keywords
 	keyword_beg // start of keywords
 	key_fn // 'fn'
+	key_if // 'if'
+	key_else // 'else'
 	key_module // 'module'
 	key_struct // 'struct'
 	key_true // 'true'
@@ -111,6 +113,8 @@ fn build_token_str() []string {
 	s[Kind.key_true] = 'true'
 	s[Kind.key_false] = 'false'
 	s[Kind.key_fn] = 'fn'
+	s[Kind.key_if] = 'if'
+	s[Kind.key_else] = 'else'
 	s[Kind.key_module] = 'module'
 	s[Kind.key_struct] = 'struct'
 	return s

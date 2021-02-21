@@ -5,7 +5,7 @@ import lib.comp.util
 
 pub fn (ex &StatementSyntax) children() []AstNode {
 	match ex {
-		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax {
+		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax, IfStmtSyntax {
 			return ex.child_nodes()
 		}
 	}
@@ -13,7 +13,7 @@ pub fn (ex &StatementSyntax) children() []AstNode {
 
 pub fn (ex &StatementSyntax) pos() util.Pos {
 	match ex {
-		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax {
+		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax, IfStmtSyntax {
 			return ex.pos
 		}
 	}

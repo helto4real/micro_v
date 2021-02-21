@@ -60,7 +60,11 @@ pub fn (mut b Binder) bind_stmt(stmt ast.StatementSyntax) BoundStmt {
 		ast.BlockStatementSyntax { return b.bind_block_stmt(stmt) }
 		ast.ExpressionStatementSyntax { return b.bind_expr_stmt(stmt) }
 		ast.VarDeclStmtSyntax { return b.bind_var_decl_stmt(stmt) }
+		ast.IfStmtSyntax { return b.bind_if_stmt(stmt) }
 	}
+}
+pub fn (mut b Binder) bind_if_stmt(if_stmt ast.IfStmtSyntax) BoundStmt {
+	return BoundStmt{}
 }
 
 pub fn (mut b Binder) bind_block_stmt(block_stmt ast.BlockStatementSyntax) BoundStmt {

@@ -12,10 +12,12 @@ enum SyntaxKind {
 	assign_expr
 	// nodes
 	operator_node
+	else_node
 	comp_node
 	// statements
 	block_stmt
 	expr_stmt
 	var_decl_stmt
+	if_stmt
 	empty
 }

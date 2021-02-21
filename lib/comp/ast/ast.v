@@ -12,9 +12,6 @@ pub fn (e &ExpressionSyntax) kind() SyntaxKind {
 	}
 }
 
-// Nodes in syntax tree
-pub type AstNode = ExpressionSyntax | StatementSyntax | token.Token
-
 pub fn (ex &ExpressionSyntax) children() []AstNode {
 	match ex {
 		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, EmptyExpr, AssignExpr, ComplationSyntax
@@ -35,7 +32,7 @@ pub fn (ex &ExpressionSyntax) pos() util.Pos {
 
 pub fn (ex &AstNode) pos() util.Pos {
 	match ex {
-		ExpressionSyntax, StatementSyntax {
+		ExpressionSyntax, StatementSyntax, ElseClauseSyntax {
 			return ex.pos()
 		}
 		token.Token {

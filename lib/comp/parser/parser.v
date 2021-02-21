@@ -91,6 +91,9 @@ fn (mut p Parser) parse_stmt() ast.StatementSyntax {
 			}
 			p.log.error_expected_var_decl(p.peek_token(0).pos)
 		}
+		.key_if {
+			return p.parse_if_stmt()
+		}
 		.name {
 			if p.peek_var_decl(0) {
 				return p.parse_var_decl_stmt()
@@ -101,6 +104,26 @@ fn (mut p Parser) parse_stmt() ast.StatementSyntax {
 		}
 	}
 	return p.parse_expression_stmt()
+}
+
+fn (mut p Parser) parse_if_stmt() ast.StatementSyntax {
+	if_key := p.match_token(.key_if)
+	cond := p.parse_expr()
+	block := p.parse_block_stmt()
+	else_clause := p.parse_else_clause()
+
+	return ast.new_if_stmt(if_key, cond, block, else_clause)
+}
+
+fn (mut p Parser) parse_else_clause() ast.ElseClauseSyntax {
+	if p.peek_token(0).kind != .key_else {
+		// hacky, not using reference type so node need to know
+		// it is not defined
+		return ast.new_empty_else_clause_node()
+	}
+	else_key := p.match_token(.key_else)
+	block := p.parse_block_stmt()
+	return ast.new_else_clause_node(else_key, block)
 }
 
 fn (mut p Parser) parse_var_decl_stmt() ast.StatementSyntax {
