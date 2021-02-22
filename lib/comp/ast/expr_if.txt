@@ -1,0 +1,67 @@
+// module ast
+
+// import lib.comp.token
+// import lib.comp.util
+
+// pub struct IfExprSyntax {
+// pub:
+// 	kind   SyntaxKind = .if_expr
+// 	pos    util.Pos
+// 	nodes  []AstNode
+
+// 	key_if_tok  token.Token
+// 	cond   ExpressionSyntax
+// 	expr  ExpressionSyntax
+// 	else_clause ElseClauseExprSyntax
+// }
+
+// pub fn new_if_stmt(key_if_tok token.Token, cond ExpressionSyntax, expr ExpressionSyntax, else_clause ElseClauseExprSyntax) IfExprSyntax {
+// 	return IfExprSyntax{
+// 		key_if_tok: key_if_tok
+// 		cond: cond
+// 		expr: expr
+// 		else_clause: else_clause
+// 		pos: util.new_pos_from_pos_bounds(key_if_tok.pos, expr.pos())
+// 		nodes: [AstNode(key_if_tok), cond, expr, else_clause]
+// 	}
+// }
+
+// pub fn (iss &IfExprSyntax) child_nodes() []AstNode {
+// 	return iss.nodes
+// }
+
+
+// pub struct ElseClauseExprSyntax {
+// pub:
+// 	kind   SyntaxKind = .else_expr_node
+// 	pos    util.Pos
+// 	nodes  []AstNode
+
+// 	key_else_tok  token.Token
+// 	expr  ExpressionSyntax
+// 	is_defined bool
+// }
+
+// pub fn new_else_clause_node(key_else_tok token.Token, expr ExpressionSyntax) ElseClauseExprSyntax {
+// 	return ElseClauseExprSyntax{
+// 		key_else_tok: key_else_tok
+// 		expr: expr
+// 		pos: util.new_pos_from_pos_bounds(key_else_tok.pos, expr.pos())
+// 		nodes: [AstNode(key_else_tok), expr]
+// 		is_defined: true
+// 	}
+// }
+
+// pub fn new_empty_else_clause_expr_node() ElseClauseExprSyntax {
+// 	return ElseClauseExprSyntax{
+// 		is_defined: false
+// 	}
+// }
+
+// pub fn (ecs &ElseClauseExprSyntax) child_nodes() []AstNode {
+// 	return ecs.nodes
+// }
+
+// pub fn (ecs &ElseClauseExprSyntax) pos() util.Pos {
+// 	return ecs.pos
+// }

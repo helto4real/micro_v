@@ -5,7 +5,7 @@ import lib.comp.types
 type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundLiteralExpr | BoundUnaryExpression |
 	BoundVariableExpr
 
-type BoundStmt = BoundBlockStmt | BoundExprStmt | BoundVarDeclStmt
+type BoundStmt = BoundBlockStmt | BoundExprStmt | BoundVarDeclStmt | BoundIfStmt
 
 type BoundNode = BoundExpr | BoundStmt
 
@@ -20,6 +20,7 @@ enum BoundNodeKind {
 	block_stmt
 	expr_stmt
 	var_decl_stmt
+	if_stmt
 }
 
 pub fn (be BoundExpr) typ() types.Type {

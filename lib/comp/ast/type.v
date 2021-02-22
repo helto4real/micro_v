@@ -6,7 +6,7 @@ type StatementSyntax = BlockStatementSyntax | ExpressionStatementSyntax | VarDec
 
 // Sumtype expressions
 pub type ExpressionSyntax = AssignExpr | BinaryExpr | ComplationSyntax | EmptyExpr | LiteralExpr |
-	NameExpr | ParaExpr | UnaryExpr
+	NameExpr | ParaExpr | UnaryExpr //| IfExprSyntax
 
 // Nodes in syntax tree
 pub type AstNode = ExpressionSyntax | StatementSyntax | ElseClauseSyntax | token.Token

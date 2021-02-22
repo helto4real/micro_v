@@ -130,6 +130,14 @@ fn test_eval_var_exprs() {
 	assert c.eval_bool('a&&c') == false
 }
 
+fn test_if_else_stmt() {
+	mut c := new_test_compilation_state()
+	
+	assert c.eval_int('if 10==10 {1}') == 1
+	assert c.eval_bool('if 11>10 {true}') == true
+	assert c.eval_int('if 10==10 {10} else {20}') == 10
+	assert c.eval_int('if 10!=10 {10} else {20}') == 20
+}
 fn test_error_delcarations_binar_operator_type() {
 	code := 'true[||]2'
 	error := ' binary operator || is not defined for types bool and int.'

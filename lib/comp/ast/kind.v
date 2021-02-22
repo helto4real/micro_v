@@ -10,9 +10,11 @@ enum SyntaxKind {
 	binary_expr
 	para_expr
 	assign_expr
+	if_expr
 	// nodes
 	operator_node
 	else_node
+	else_expr_node
 	comp_node
 	// statements
 	block_stmt

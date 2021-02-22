@@ -34,9 +34,26 @@ fn (mut e Evaluator) eval_stmt(stmt binding.BoundStmt) {
 		binding.BoundVarDeclStmt {
 			e.eval_bound_var_decl_stmt(stmt)
 		}
+		binding.BoundIfStmt {
+			e.eval_bound_if_stmt(stmt)
+		}
 	}
 }
 
+fn (mut e Evaluator) eval_bound_if_stmt(node binding.BoundIfStmt) {
+	cond := e.eval_expr(node.cond) or { panic('unexpected compiler error') }
+
+	if cond is bool {
+		if cond==true {
+			e.eval_stmt(node.block_stmt)
+		} else if node.has_else {
+			e.eval_stmt(node.else_clause)
+		}
+	} else {
+		panic('unexpected type in expression')
+	}
+	
+}
 fn (mut e Evaluator) eval_bound_var_decl_stmt(node binding.BoundVarDeclStmt) {
 	val := e.eval_expr(node.expr) or { panic('unexpected compiler error') }
 	e.vars.assign_variable_value(node.var, val)

@@ -28,6 +28,7 @@ pub fn new_bound_expr_stmt(bound_expr BoundExpr) BoundExprStmt {
 
 pub struct BoundVarDeclStmt {
 pub:
+	kind  BoundNodeKind = .var_decl_stmt
 	typ    types.Type
 	is_mut bool
 	expr   BoundExpr

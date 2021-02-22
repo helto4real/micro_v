@@ -64,7 +64,16 @@ pub fn (mut b Binder) bind_stmt(stmt ast.StatementSyntax) BoundStmt {
 	}
 }
 pub fn (mut b Binder) bind_if_stmt(if_stmt ast.IfStmtSyntax) BoundStmt {
-	return BoundStmt{}
+	cond := b.bind_expr(if_stmt.cond)
+	blss := if_stmt.block_stmt as ast.BlockStatementSyntax
+	block_stmt := b.bind_block_stmt(blss)
+
+	if if_stmt.else_clause.is_defined {
+		bls := if_stmt.else_clause.block_stmt as ast.BlockStatementSyntax
+		else_stmt := b.bind_block_stmt(bls)
+		return new_if_else_stmt(cond, block_stmt, else_stmt)
+	}
+	return new_if_stmt(cond, block_stmt)
 }
 
 pub fn (mut b Binder) bind_block_stmt(block_stmt ast.BlockStatementSyntax) BoundStmt {
