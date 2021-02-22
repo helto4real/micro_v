@@ -137,6 +137,17 @@ fn test_if_else_stmt() {
 	assert c.eval_bool('if 11>10 {true}') == true
 	assert c.eval_int('if 10==10 {10} else {20}') == 10
 	assert c.eval_int('if 10!=10 {10} else {20}') == 20
+	assert c.eval_int("
+	{
+		a:=100
+		mut b:=200
+		if a>b {
+			b=1
+		} else {
+			b=2
+		}
+		b
+	}") == 2
 }
 fn test_error_delcarations_binar_operator_type() {
 	code := 'true[||]2'
@@ -198,8 +209,34 @@ fn test_error_delcarations_report_errors() {
 	assert_has_diagostics(code, error)
 }
 
+fn test_error_if_has_expr_wrong_type_report_errors() {
+	code := '
+		{
+			x:=10
+			if [x] {10}
+		}
+	'
+	error := 'expected boolean expression'
+	assert_has_diagostics(code, error)
+}
+
+fn test_error_if_wrong_type_report_errors() {
+	code := '
+		{
+			x:=10
+			y:=100
+			{
+				x:=true
+			}
+			[x]:=5
+		}
+	'
+	error := 'name: <x> already defined'
+	assert_has_diagostics(code, error)
+}
+
 fn assert_has_diagostics(text string, diagnostic_text string) {
-	mut print_err_info := false
+	mut print_err_info := true
 	vars := binding.new_eval_variables()
 
 	ann_text := util.parse_annotated_text(text)
@@ -237,5 +274,5 @@ fn assert_has_diagostics(text string, diagnostic_text string) {
 		assert actual_pos == expected_pos
 		// assert actual_pos == expected_pos
 	}
-	print_err_info = true
+	print_err_info = false
 }

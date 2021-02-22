@@ -63,7 +63,7 @@ fn (bs &BoundScope) str_indent(level int) string {
 	// }
 	if bs.parent != 0 {
 		b.writeln('$ident  parent : {')
-		b.write(bs.parent.str_indent(level + 1))
+		b.write_string(bs.parent.str_indent(level + 1))
 	}
 	b.writeln('$ident]')
 	return b.str()

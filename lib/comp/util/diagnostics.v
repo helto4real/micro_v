@@ -68,3 +68,8 @@ pub fn (mut d Diagnostics) error_cannot_convert_variable_type(from_type string, 
 pub fn (mut d Diagnostics) error_expected_var_decl(pos Pos) {
 	d.error('expected varable declaration after mut keyword', pos)
 }
+
+pub fn (mut d Diagnostics) error_expected_bool_expr(pos Pos) {
+	d.error('expected boolean expression', pos)
+}
+

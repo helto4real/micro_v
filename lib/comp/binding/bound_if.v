@@ -1,7 +1,5 @@
 module binding
 
-import lib.comp.ast
-import lib.comp.util
 import lib.comp.types
 
 pub struct BoundIfStmt {

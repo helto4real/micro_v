@@ -3,6 +3,7 @@ module binding
 
 import lib.comp.ast
 import lib.comp.util
+import lib.comp.types
 
 [heap]
 pub struct Binder {
@@ -65,15 +66,20 @@ pub fn (mut b Binder) bind_stmt(stmt ast.StatementSyntax) BoundStmt {
 }
 pub fn (mut b Binder) bind_if_stmt(if_stmt ast.IfStmtSyntax) BoundStmt {
 	cond := b.bind_expr(if_stmt.cond)
-	blss := if_stmt.block_stmt as ast.BlockStatementSyntax
-	block_stmt := b.bind_block_stmt(blss)
-
-	if if_stmt.else_clause.is_defined {
-		bls := if_stmt.else_clause.block_stmt as ast.BlockStatementSyntax
-		else_stmt := b.bind_block_stmt(bls)
-		return new_if_else_stmt(cond, block_stmt, else_stmt)
+	if cond.typ() != int(types.TypeKind.bool_lit) {
+		// We expect the condition to be a boolean expression
+		b.log.error_expected_bool_expr(if_stmt.cond.pos())
 	}
-	return new_if_stmt(cond, block_stmt)
+
+	then_stmt := if_stmt.then_stmt as ast.BlockStatementSyntax
+	bound_then_stmt := b.bind_block_stmt(then_stmt)
+
+	if if_stmt.has_else {
+		else_stmt := if_stmt.else_stmt as ast.BlockStatementSyntax
+		bound_else_stmt := b.bind_block_stmt(else_stmt)
+		return new_if_else_stmt(cond, bound_then_stmt, bound_else_stmt)
+	}
+	return new_if_stmt(cond, bound_then_stmt)
 }
 
 pub fn (mut b Binder) bind_block_stmt(block_stmt ast.BlockStatementSyntax) BoundStmt {

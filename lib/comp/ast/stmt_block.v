@@ -3,22 +3,6 @@ module ast
 import lib.comp.token
 import lib.comp.util
 
-pub fn (ex &StatementSyntax) children() []AstNode {
-	match ex {
-		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax, IfStmtSyntax {
-			return ex.child_nodes()
-		}
-	}
-}
-
-pub fn (ex &StatementSyntax) pos() util.Pos {
-	match ex {
-		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax, IfStmtSyntax {
-			return ex.pos
-		}
-	}
-}
-
 pub struct BlockStatementSyntax {
 pub:
 	// Node
@@ -45,25 +29,5 @@ pub fn new_block_statement_syntax(open_brace_token token.Token, statements []Sta
 }
 
 pub fn (bs &BlockStatementSyntax) child_nodes() []AstNode {
-	return bs.child_nodes
-}
-
-pub struct ExpressionStatementSyntax {
-pub:
-	// Node
-	kind        SyntaxKind = .expr_stmt
-	child_nodes []AstNode
-	pos         util.Pos
-	expr        ExpressionSyntax
-}
-
-pub fn new_expr_stmt_syntax(expr ExpressionSyntax) ExpressionStatementSyntax {
-	return ExpressionStatementSyntax{
-		expr: expr
-		child_nodes: [AstNode(expr)]
-	}
-}
-
-pub fn (bs &ExpressionStatementSyntax) child_nodes() []AstNode {
 	return bs.child_nodes
 }

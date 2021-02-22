@@ -3,44 +3,6 @@ module ast
 import lib.comp.token
 import lib.comp.util
 
-pub fn (e &ExpressionSyntax) kind() SyntaxKind {
-	match e {
-		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, EmptyExpr, NameExpr, AssignExpr, ComplationSyntax
-		{
-			return e.kind
-		}
-	}
-}
-
-pub fn (ex &ExpressionSyntax) children() []AstNode {
-	match ex {
-		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, EmptyExpr, AssignExpr, ComplationSyntax
-		{
-			return ex.child_nodes()
-		}
-	}
-}
-
-pub fn (ex &ExpressionSyntax) pos() util.Pos {
-	match ex {
-		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, EmptyExpr, AssignExpr, ComplationSyntax
-		{
-			return ex.pos
-		}
-	}
-}
-
-pub fn (ex &AstNode) pos() util.Pos {
-	match ex {
-		ExpressionSyntax, StatementSyntax, ElseClauseSyntax {
-			return ex.pos()
-		}
-		token.Token {
-			return ex.pos
-		}
-	}
-}
-
 pub struct EmptyExpr {
 pub:
 	kind SyntaxKind = .empty

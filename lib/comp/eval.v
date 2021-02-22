@@ -50,7 +50,7 @@ fn (mut e Evaluator) eval_bound_if_stmt(node binding.BoundIfStmt) {
 			e.eval_stmt(node.else_clause)
 		}
 	} else {
-		panic('unexpected type in expression')
+		panic('unexpected type in if condition')
 	}
 	
 }
