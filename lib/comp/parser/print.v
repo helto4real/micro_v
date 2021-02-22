@@ -78,9 +78,6 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
-				ast.EmptyExpr {
-					panic('None expression should never exist!')
-				}
 			}
 		}
 		ast.StatementSyntax {

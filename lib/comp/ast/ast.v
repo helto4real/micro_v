@@ -3,15 +3,15 @@ module ast
 import lib.comp.token
 import lib.comp.util
 
-pub struct EmptyExpr {
-pub:
-	kind SyntaxKind = .empty
-	pos  util.Pos
-}
+// pub struct EmptyExpr {
+// pub:
+// 	kind SyntaxKind = .empty
+// 	pos  util.Pos
+// }
 
-pub fn (ee &EmptyExpr) child_nodes() []AstNode {
-	return []AstNode{}
-}
+// pub fn (ee &EmptyExpr) child_nodes() []AstNode {
+// 	return []AstNode{}
+// }
 
 pub struct ComplationSyntax {
 pub:

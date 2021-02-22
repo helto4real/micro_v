@@ -175,7 +175,7 @@ fn (mut p Parser) parse_binary_expr() ast.ExpressionSyntax {
 }
 
 fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.ExpressionSyntax {
-	mut left := ast.ExpressionSyntax(ast.EmptyExpr{})
+	mut left := ast.ExpressionSyntax{}
 	mut tok := p.current_token()
 
 	unary_op_prec := unary_operator_precedence(tok.kind)
