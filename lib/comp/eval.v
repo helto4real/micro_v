@@ -44,7 +44,7 @@ fn (mut e Evaluator) eval_bound_if_stmt(node binding.BoundIfStmt) {
 	cond := e.eval_expr(node.cond) or { panic('unexpected compiler error') }
 
 	if cond is bool {
-		if cond==true {
+		if cond == true {
 			e.eval_stmt(node.block_stmt)
 		} else if node.has_else {
 			e.eval_stmt(node.else_clause)
@@ -52,7 +52,6 @@ fn (mut e Evaluator) eval_bound_if_stmt(node binding.BoundIfStmt) {
 	} else {
 		panic('unexpected type in if condition')
 	}
-	
 }
 fn (mut e Evaluator) eval_bound_var_decl_stmt(node binding.BoundVarDeclStmt) {
 	val := e.eval_expr(node.expr) or { panic('unexpected compiler error') }
@@ -89,7 +88,25 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 		binding.BoundAssignExpr {
 			return e.eval_bound_assign_expr(node)
 		}
+		binding.BoundIfExpr {
+			return e.eval_bound_if_expr(node)
+		}
 	}
+}
+
+fn (mut e Evaluator) eval_bound_if_expr(node binding.BoundIfExpr) ?types.LitVal {
+	cond := e.eval_expr(node.cond) or { panic('unexpected compiler error') }
+
+	if cond is bool {
+		if cond == true {
+			e.eval_stmt(node.then_stmt)
+		} else {
+			e.eval_stmt(node.else_stmt)
+		}
+	} else {
+		panic('unexpected type in if condition')
+	}
+	return e.last_val
 }
 
 fn (mut e Evaluator) eval_bound_literal_expr(root binding.BoundLiteralExpr) ?types.LitVal {
@@ -130,12 +147,10 @@ fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?types
 		.logic_or { return (left as bool) || (right as bool) }
 		.equals { return left.eq(right) }
 		.not_equals { return !left.eq(right) }
-
 		.greater { return left.gt(right) }
 		.less { return left.lt(right) }
 		.less_or_equals { return left.le(right) }
 		.greater_or_equals { return left.ge(right) }
-
 		else { panic('operator <$node.op.op_kind> exl_mark expected') }
 	}
 }

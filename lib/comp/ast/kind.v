@@ -10,6 +10,7 @@ enum SyntaxKind {
 	binary_expr
 	para_expr
 	assign_expr
+	range_expr
 	if_expr
 	// nodes
 	operator_node

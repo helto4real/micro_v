@@ -105,8 +105,24 @@ pub fn (mut b Binder) bind_expr(expr ast.ExpressionSyntax) BoundExpr {
 		ast.ParaExpr { return b.bind_para_expr(expr) }
 		ast.NameExpr { return b.bind_name_expr(expr) }
 		ast.AssignExpr { return b.bind_assign_expr(expr) }
+		ast.IfExprSyntax { return b.bind_if_expr(expr) }
 		else { panic('unexpected bound expression $expr') }
 	}
+}
+
+pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExprSyntax) BoundExpr {
+	cond := b.bind_expr(if_expr.cond)
+	if cond.typ() != int(types.TypeKind.bool_lit) {
+		// We expect the condition to be a boolean expression
+		b.log.error_expected_bool_expr(if_expr.cond.pos())
+	}
+
+	then_stmt := if_expr.then_stmt as ast.BlockStatementSyntax
+	bound_then_stmt := b.bind_block_stmt(then_stmt)
+
+	else_stmt := if_expr.else_stmt as ast.BlockStatementSyntax
+	bound_else_stmt := b.bind_block_stmt(else_stmt)
+	return new_if_else_expr(cond, bound_then_stmt, bound_else_stmt)
 }
 
 pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmtSyntax) BoundStmt {

@@ -2,10 +2,10 @@ module binding
 
 import lib.comp.types
 
-type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundLiteralExpr | BoundUnaryExpression |
-	BoundVariableExpr
+type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundIfExpr | BoundLiteralExpr |
+	BoundUnaryExpression | BoundVariableExpr
 
-type BoundStmt = BoundBlockStmt | BoundExprStmt | BoundVarDeclStmt | BoundIfStmt
+type BoundStmt = BoundBlockStmt | BoundExprStmt | BoundIfStmt | BoundVarDeclStmt
 
 type BoundNode = BoundExpr | BoundStmt
 
@@ -16,6 +16,7 @@ enum BoundNodeKind {
 	literal_expr
 	variable_expr
 	assign_expr
+	if_expr
 	// Stmts
 	block_stmt
 	expr_stmt
@@ -25,8 +26,8 @@ enum BoundNodeKind {
 
 pub fn (be BoundExpr) typ() types.Type {
 	match be {
-		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr
-		{
+		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr,
+		BoundIfExpr {
 			return be.typ
 		}
 	}
@@ -37,7 +38,8 @@ pub fn (be BoundExpr) typ_str() string {
 		BoundLiteralExpr {
 			return types.built_in_types[int(be.typ)]
 		}
-		BoundUnaryExpression, BoundBinaryExpr, BoundVariableExpr, BoundAssignExpr {
+		BoundUnaryExpression, BoundBinaryExpr, BoundVariableExpr, BoundAssignExpr, BoundIfExpr
+		 {
 			return types.built_in_types[int(be.typ)]
 		}
 	}
@@ -45,8 +47,8 @@ pub fn (be BoundExpr) typ_str() string {
 
 pub fn (be BoundExpr) kind() BoundNodeKind {
 	match be {
-		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr
-		{
+		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr,
+		BoundIfExpr {
 			return be.kind
 		}
 	}

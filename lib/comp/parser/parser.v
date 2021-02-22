@@ -110,13 +110,13 @@ fn (mut p Parser) parse_if_stmt() ast.StatementSyntax {
 	if_key := p.match_token(.key_if)
 	cond := p.parse_expr()
 	then_block := p.parse_block_stmt()
-	
+
 	if p.peek_token(0).kind == .key_else {
 		else_key := p.match_token(.key_else)
 		else_block := p.parse_block_stmt()
 		return ast.new_if_else_stmt(if_key, cond, then_block, else_key, else_block)
 	}
-	
+
 	return ast.new_if_stmt(if_key, cond, then_block)
 }
 
@@ -131,7 +131,7 @@ fn (mut p Parser) parse_var_decl_stmt() ast.StatementSyntax {
 	}
 	ident_tok := p.match_token(.name)
 	op_token := p.match_token(.colon_eq)
-	right := p.parse_assign_expr()
+	right := p.parse_assign_right_expr()
 	return ast.new_var_decl_stmt(ident_tok, op_token, right, is_mut)
 }
 
@@ -155,7 +155,31 @@ fn (mut p Parser) parse_expression_stmt() ast.ExpressionStatementSyntax {
 
 [inline]
 fn (mut p Parser) parse_expr() ast.ExpressionSyntax {
+	tok := p.current_token()
+	match tok.kind {
+		.key_if {
+			return p.parse_if_expr()
+		}
+		.name {
+			if p.peek_token(1).kind == .eq {
+				return p.parse_assign_expr()
+			}
+		}
+		else {
+			return p.parse_assign_expr()
+		}
+	}
 	return p.parse_assign_expr()
+}
+
+fn (mut p Parser) parse_if_expr() ast.ExpressionSyntax {
+	if_key := p.match_token(.key_if)
+	cond := p.parse_expr()
+	then_block := p.parse_block_stmt()
+
+	else_key := p.match_token(.key_else)
+	else_block := p.parse_block_stmt()
+	return ast.new_if_expr(if_key, cond, then_block, else_key, else_block)
 }
 
 // parse_assign_expr parses an assignment expression
@@ -164,10 +188,18 @@ fn (mut p Parser) parse_assign_expr() ast.ExpressionSyntax {
 	if p.peek_assignment(0) {
 		ident_tok := p.match_token(.name)
 		op_token := p.match_token(.eq)
-		right := p.parse_assign_expr()
+		right := p.parse_assign_right_expr()
 		return ast.new_assign_expr(ident_tok, op_token, right)
 	}
 	return p.parse_binary_expr()
+}
+
+fn (mut p Parser) parse_assign_right_expr() ast.ExpressionSyntax {
+	if p.peek_token(0).kind == .key_if {
+		// it is an if expression
+		return p.parse_if_expr()
+	}
+	return p.parse_assign_expr()
 }
 
 fn (mut p Parser) parse_binary_expr() ast.ExpressionSyntax {

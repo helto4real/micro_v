@@ -83,6 +83,10 @@ fn test_eval_basic_exprs() {
 	assert c.eval_bool('false || true') == true
 	assert c.eval_bool('false || false') == false
 
+	// test if expressions
+	assert c.eval_int('{ mut a:=0 if true {a=100} else {a=200} a}') == 100
+	assert c.eval_int('{ mut a:=0 if false {a=100} else {a=200} a}') == 200
+
 	// test lt, gt, le, ge
 	assert c.eval_bool('10 < 11') == true
 	assert c.eval_bool('10 <= 11') == true
@@ -132,12 +136,12 @@ fn test_eval_var_exprs() {
 
 fn test_if_else_stmt() {
 	mut c := new_test_compilation_state()
-	
+
 	assert c.eval_int('if 10==10 {1}') == 1
 	assert c.eval_bool('if 11>10 {true}') == true
 	assert c.eval_int('if 10==10 {10} else {20}') == 10
 	assert c.eval_int('if 10!=10 {10} else {20}') == 20
-	assert c.eval_int("
+	assert c.eval_int('
 	{
 		a:=100
 		mut b:=200
@@ -147,7 +151,7 @@ fn test_if_else_stmt() {
 			b=2
 		}
 		b
-	}") == 2
+	}') == 2
 }
 fn test_error_delcarations_binar_operator_type() {
 	code := 'true[||]2'
