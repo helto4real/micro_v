@@ -309,6 +309,8 @@ fn test_single_token() {
 	check_parse_token(.dot, '.')
 	check_parse_token(.comma, ',')
 	check_parse_token(.eq, '=')
+	check_parse_token(.gt, '>')
+	check_parse_token(.lt, '<')
 	check_parse_token(.colon_eq, ':=')
 	check_parse_token(.plus, '+')
 	check_parse_token(.minus, '-')
@@ -316,6 +318,8 @@ fn test_single_token() {
 	check_parse_token(.div, '/')
 	check_parse_token(.pipe, '|')
 	check_parse_token(.eq_eq, '==')
+	check_parse_token(.lt_eq, '<=')
+	check_parse_token(.gt_eq, '>=')
 	check_parse_token(.exl_mark_eq, '!=')
 	check_parse_token(.exl_mark, '!')
 	check_parse_token(.pipe_pipe, '||')
@@ -382,7 +386,7 @@ fn test_line_number_parsing_cr_ln() {
 	_ := tkz.scan_all()
 
 	println('')
-	println('SRC: ${tkz.source.lines}')
+	println('SRC: $tkz.source.lines')
 	assert tkz.source.lines.len == 3
 	assert tkz.source.lines[0].str() == '123 abc'
 	assert tkz.source.lines[0].len == 7

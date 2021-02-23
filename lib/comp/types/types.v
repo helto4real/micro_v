@@ -10,21 +10,77 @@ pub type LitVal = bool | int | string
 
 pub fn (l LitVal) eq(r LitVal) bool {
 	if l.type_name() != r.type_name() {
-		panic('no equals is defined between types ${l.type_name()} and ${r.type_name()}')
+		panic('no equals is defined between types $l.type_name() and $r.type_name()')
 	}
 	return match l {
 		string {
-			l== (r as string)
+			l == (r as string)
 		}
 		int {
-			l== (r as int)
+			l == (r as int)
 		}
 		bool {
-			l== (r as bool)
+			l == (r as bool)
 		}
 	}
-
 }
+
+pub fn (l LitVal) lt(r LitVal) bool {
+	if l.type_name() != r.type_name() {
+		panic('no <lt> is defined between types $l.type_name() and $r.type_name()')
+	}
+	return match l {
+		int {
+			l < (r as int)
+		} else {
+			panic('no lt is defined for type besides int')
+			false
+		}
+	}
+}
+
+pub fn (l LitVal) gt(r LitVal) bool {
+	if l.type_name() != r.type_name() {
+		panic('no <gt> is defined between types $l.type_name() and $r.type_name()')
+	}
+	return match l {
+		int {
+			l > (r as int)
+		} else {
+			panic('no gt is defined for type besides int')
+			false
+		}
+	}
+}
+
+pub fn (l LitVal) ge(r LitVal) bool {
+	if l.type_name() != r.type_name() {
+		panic('no <ge> is defined between types $l.type_name() and $r.type_name()')
+	}
+	return match l {
+		int {
+			l >= (r as int)
+		} else {
+			panic('no ge is defined for type besides int')
+			false
+		}
+	}
+}
+
+pub fn (l LitVal) le(r LitVal) bool {
+	if l.type_name() != r.type_name() {
+		panic('no <le> is defined between types $l.type_name() and $r.type_name()')
+	}
+	return match l {
+		int {
+			l <= (r as int)
+		} else {
+			panic('no le is defined for type besides int')
+			false
+		}
+	}
+}
+
 pub fn (l LitVal) typ() Type {
 	return match l {
 		string {

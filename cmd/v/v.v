@@ -8,7 +8,6 @@ import term
 import strings
 
 fn main() {
-
 	args := os.args[1..]
 	if args.len > 0 {
 		if '-tokeninzer' in args {
@@ -56,7 +55,6 @@ fn print_exprs() {
 				println(term.bright_blue('reset compilation'))
 				continue
 			}
-			
 		}
 		builder.writeln(line)
 		text := builder.last_n(builder.len)
@@ -74,7 +72,7 @@ fn print_exprs() {
 		} else {
 			prev_comp.continue_with(syntax_tree)
 		}
-		
+
 		res := comp.evaluate(vars)
 		if res.result.len > 0 {
 			for err in res.result {

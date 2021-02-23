@@ -10,14 +10,14 @@ const (
 pub struct Tokenizer {
 	text string // text tokenized
 mut:
-	source &util.SourceText // represents source code
+	source         &util.SourceText // represents source code
 	start_line_pos int
-	pos    int  // current position in file
-	start  int  // start of the token
-	len    int  // current parsed token len
-	ch     byte = `\0` // current char
-	is_eof bool
-	kind   Kind // current token kind
+	pos            int  // current position in file
+	start          int  // start of the token
+	len            int  // current parsed token len
+	ch             byte = `\0` // current char
+	is_eof         bool
+	kind           Kind // current token kind
 pub mut:
 	log &util.Diagnostics // errors when tokenizing
 }
@@ -114,14 +114,6 @@ pub fn (mut t Tokenizer) next_token() Token {
 				t.kind = .eq
 			}
 		}
-		`;` {
-			t.kind = .semcol
-			t.incr_pos()
-		}
-		`.` {
-			t.kind = .dot
-			t.incr_pos()
-		}
 		`!` {
 			t.incr_pos()
 			if t.ch == `=` {
@@ -129,6 +121,37 @@ pub fn (mut t Tokenizer) next_token() Token {
 				t.incr_pos()
 			} else {
 				t.kind = .exl_mark
+			}
+		}
+		`>` {
+			t.incr_pos()
+			if t.ch == `=` {
+				t.kind = .gt_eq
+				t.incr_pos()
+			} else {
+				t.kind = .gt
+			}
+		}
+		`<` {
+			t.incr_pos()
+			if t.ch == `=` {
+				t.kind = .lt_eq
+				t.incr_pos()
+			} else {
+				t.kind = .lt
+			}
+		}
+		`;` {
+			t.kind = .semcol
+			t.incr_pos()
+		}
+		`.` {
+			t.incr_pos()
+			if t.ch == `.` {
+				t.kind = .dot_dot
+				t.incr_pos()
+			} else {
+				t.kind = .dot
 			}
 		}
 		`&` {
@@ -156,7 +179,7 @@ pub fn (mut t Tokenizer) next_token() Token {
 		`\0` {
 			t.kind = .eof
 			if t.pos - t.start_line_pos > 0 {
-				t.source.add_line(t.start_line_pos, t.pos-1, 0)
+				t.source.add_line(t.start_line_pos, t.pos - 1, 0)
 			}
 			t.incr_pos()
 		}
@@ -221,13 +244,13 @@ fn (mut t Tokenizer) skip_whitespace() {
 		if t.ch == `\r` {
 			// Count \r\n as one line
 			if t.peek_pos(1) == `\n` {
-				t.source.add_line(t.start_line_pos, t.pos-1, 2)
-				t.start_line_pos = t.pos+2
+				t.source.add_line(t.start_line_pos, t.pos - 1, 2)
+				t.start_line_pos = t.pos + 2
 				t.incr_pos()
 			}
 		} else if t.ch == `\n` {
-			t.source.add_line(t.start_line_pos, t.pos-1, 1)
-			t.start_line_pos = t.pos+1
+			t.source.add_line(t.start_line_pos, t.pos - 1, 1)
+			t.start_line_pos = t.pos + 1
 		}
 		t.incr_pos()
 	}

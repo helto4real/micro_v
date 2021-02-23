@@ -6,7 +6,7 @@ pub struct Token {
 pub:
 	kind Kind     // the token number/enum; for quick comparisons
 	lit  string   // literal representation of the token
-	pos  util.Pos 	  // position in the file
+	pos  util.Pos // position in the file
 }
 
 pub fn (t Token) str() string {
@@ -28,8 +28,11 @@ pub enum Kind {
 	colon // ':'
 	semcol // ';'
 	dot // '.'
+	dot_dot // '..'
 	comma // ','
 	eq // '='
+	gt // '>'
+	lt // '<'
 	colon_eq // ':='
 	plus // '+'
 	minus // '-'
@@ -38,6 +41,8 @@ pub enum Kind {
 	amp // '&'
 	pipe // '|'
 	eq_eq // '=='
+	gt_eq // '>='
+	lt_eq // '<='
 	exl_mark_eq // '!='
 	exl_mark // '!'
 	pipe_pipe // '||'
@@ -46,11 +51,15 @@ pub enum Kind {
 	// Keywords
 	keyword_beg // start of keywords
 	key_fn // 'fn'
+	key_if // 'if'
+	key_else // 'else'
 	key_module // 'module'
 	key_struct // 'struct'
 	key_true // 'true'
 	key_false // 'false'
 	key_mut // 'mut'
+	key_for // 'for'
+	key_in // 'in'
 	keyword_end // end of keywords
 	_end_ // end of enum
 }
@@ -79,8 +88,12 @@ fn build_token_str() []string {
 	s[Kind.string] = '' // no default value
 	s[Kind.number] = '' // no default value
 	s[Kind.eq] = '='
+	s[Kind.gt] = '>'
+	s[Kind.lt] = '<'
 	s[Kind.colon_eq] = ':='
 	s[Kind.eq_eq] = '=='
+	s[Kind.lt_eq] = '<='
+	s[Kind.gt_eq] = '>='
 	s[Kind.exl_mark_eq] = '!='
 	s[Kind.plus] = '+'
 	s[Kind.div] = '-'
@@ -93,6 +106,7 @@ fn build_token_str() []string {
 	s[Kind.lpar] = '('
 	s[Kind.rpar] = ')'
 	s[Kind.dot] = '.'
+	s[Kind.dot_dot] = '..'
 	s[Kind.comma] = ','
 	s[Kind.colon] = ':'
 	s[Kind.semcol] = ';'
@@ -103,7 +117,11 @@ fn build_token_str() []string {
 	s[Kind.key_true] = 'true'
 	s[Kind.key_false] = 'false'
 	s[Kind.key_fn] = 'fn'
+	s[Kind.key_if] = 'if'
+	s[Kind.key_else] = 'else'
 	s[Kind.key_module] = 'module'
 	s[Kind.key_struct] = 'struct'
+	s[Kind.key_for] = 'for'
+	s[Kind.key_in] = 'in'
 	return s
 }
