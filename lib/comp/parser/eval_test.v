@@ -239,7 +239,7 @@ fn test_error_if_has_expr_wrong_type_report_errors() {
 			if [x] {10}
 		}
 	'
-	error := 'expected boolean expression'
+	error := 'expected type <bool> in expression, got <int>'
 	assert_has_diagostics(code, error)
 }
 

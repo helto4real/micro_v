@@ -34,10 +34,10 @@ fn new_parser_from_text(text string) &Parser {
 	return parser
 }
 
-pub fn (mut p Parser) parse_comp_node() ast.ComplationSyntax {
+pub fn (mut p Parser) parse_comp_node() ast.CompExpr {
 	stmt := p.parse_stmt()
 	eof := p.match_token(.eof)
-	return ast.new_comp_syntax(stmt, eof)
+	return ast.new_comp_expr(stmt, eof)
 }
 
 // peek, returns a token at offset from current postion
@@ -80,7 +80,7 @@ fn (mut p Parser) match_token(kind token.Kind) token.Token {
 	}
 }
 
-fn (mut p Parser) parse_stmt() ast.StatementSyntax {
+fn (mut p Parser) parse_stmt() ast.Stmt {
 	match p.peek_token(0).kind {
 		.lcbr {
 			return p.parse_block_stmt()
@@ -118,28 +118,27 @@ fn (mut p Parser) parse_stmt() ast.StatementSyntax {
 
 // parse_for_range_stmt, parse for x in 1..10 {}
 //		we only allow blocks
-fn (mut p Parser) parse_for_stmt(has_cond bool) ast.StatementSyntax {
-
+fn (mut p Parser) parse_for_stmt(has_cond bool) ast.Stmt {
 	for_key := p.match_token(.key_for)
-	mut cond := if has_cond {p.parse_expr()} else { ast.ExpressionSyntax{}}
+	mut cond := if has_cond { p.parse_expr() } else { ast.Expr{} }
 	body := p.parse_block_stmt()
-	
+
 	return ast.new_for_stmt(for_key, cond, body, has_cond)
 }
 
 // parse_for_range_stmt, parse for x in 1..10 {}
 //		we only allow blocks
-fn (mut p Parser) parse_for_range_stmt() ast.StatementSyntax {
+fn (mut p Parser) parse_for_range_stmt() ast.Stmt {
 	for_key := p.match_token(.key_for)
 	ident := p.match_token(.name)
 	key_in := p.match_token(.key_in)
 	range := p.parse_range_expr()
 	stmt := p.parse_block_stmt()
-	
+
 	return ast.new_for_range_stmt(for_key, ident, key_in, range, stmt)
 }
 
-fn (mut p Parser) parse_if_stmt() ast.StatementSyntax {
+fn (mut p Parser) parse_if_stmt() ast.Stmt {
 	if_key := p.match_token(.key_if)
 	cond := p.parse_expr()
 	then_block := p.parse_block_stmt()
@@ -153,7 +152,7 @@ fn (mut p Parser) parse_if_stmt() ast.StatementSyntax {
 	return ast.new_if_stmt(if_key, cond, then_block)
 }
 
-fn (mut p Parser) parse_var_decl_stmt() ast.StatementSyntax {
+fn (mut p Parser) parse_var_decl_stmt() ast.Stmt {
 	mut is_mut := false
 	if p.peek_token(0).kind == .key_mut {
 		if p.peek_var_decl(1) {
@@ -168,26 +167,33 @@ fn (mut p Parser) parse_var_decl_stmt() ast.StatementSyntax {
 	return ast.new_var_decl_stmt(ident_tok, op_token, right, is_mut)
 }
 
-fn (mut p Parser) parse_block_stmt() ast.StatementSyntax {
+fn (mut p Parser) parse_block_stmt() ast.Stmt {
 	open_brace_token := p.match_token(.lcbr)
 
-	mut stmts := []ast.StatementSyntax{}
+	mut stmts := []ast.Stmt{}
 	for p.peek_token(0).kind != .eof && p.peek_token(0).kind != .rcbr {
+		start_tok := p.current_token()
 		stmt := p.parse_stmt()
 		stmts << stmt
+		// if parse stmt did not consume any tokens 
+		// let's skip it and continue
+		if p.current_token() == start_tok {
+			// makes sure we not in infinite loop
+			p.next_token()
+		}
 	}
 	close_brace_token := p.match_token(.rcbr)
 
-	return ast.new_block_statement_syntax(open_brace_token, stmts, close_brace_token)
+	return ast.new_block_stmt(open_brace_token, stmts, close_brace_token)
 }
 
-fn (mut p Parser) parse_expression_stmt() ast.ExpressionStatementSyntax {
+fn (mut p Parser) parse_expression_stmt() ast.ExprStmt {
 	expr := p.parse_expr()
-	return ast.new_expr_stmt_syntax(expr)
+	return ast.new_expr_stmt(expr)
 }
 
 [inline]
-fn (mut p Parser) parse_expr() ast.ExpressionSyntax {
+fn (mut p Parser) parse_expr() ast.Expr {
 	tok := p.current_token()
 	match tok.kind {
 		.key_if {
@@ -211,14 +217,14 @@ fn (mut p Parser) parse_expr() ast.ExpressionSyntax {
 	return p.parse_assign_expr()
 }
 
-fn (mut p Parser) parse_range_expr() ast.ExpressionSyntax {
+fn (mut p Parser) parse_range_expr() ast.Expr {
 	from_num := p.parse_number_literal()
 	range_tok := p.match_token(.dot_dot)
 	to_num := p.parse_number_literal()
 	return ast.new_range_expr(from_num, range_tok, to_num)
 }
 
-fn (mut p Parser) parse_if_expr() ast.ExpressionSyntax {
+fn (mut p Parser) parse_if_expr() ast.Expr {
 	if_key := p.match_token(.key_if)
 	cond := p.parse_expr()
 	then_block := p.parse_block_stmt()
@@ -230,7 +236,7 @@ fn (mut p Parser) parse_if_expr() ast.ExpressionSyntax {
 
 // parse_assign_expr parses an assignment expression
 //   can parse nested assignment x=y=10
-fn (mut p Parser) parse_assign_expr() ast.ExpressionSyntax {
+fn (mut p Parser) parse_assign_expr() ast.Expr {
 	if p.peek_assignment(0) {
 		ident_tok := p.match_token(.name)
 		op_token := p.match_token(.eq)
@@ -240,7 +246,7 @@ fn (mut p Parser) parse_assign_expr() ast.ExpressionSyntax {
 	return p.parse_binary_expr()
 }
 
-fn (mut p Parser) parse_assign_right_expr() ast.ExpressionSyntax {
+fn (mut p Parser) parse_assign_right_expr() ast.Expr {
 	if p.peek_token(0).kind == .key_if {
 		// it is an if expression
 		return p.parse_if_expr()
@@ -248,12 +254,12 @@ fn (mut p Parser) parse_assign_right_expr() ast.ExpressionSyntax {
 	return p.parse_assign_expr()
 }
 
-fn (mut p Parser) parse_binary_expr() ast.ExpressionSyntax {
+fn (mut p Parser) parse_binary_expr() ast.Expr {
 	return p.parse_binary_expr_prec(0)
 }
 
-fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.ExpressionSyntax {
-	mut left := ast.ExpressionSyntax{}
+fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.Expr {
+	mut left := ast.Expr{}
 	mut tok := p.current_token()
 
 	unary_op_prec := unary_operator_precedence(tok.kind)
@@ -279,7 +285,7 @@ fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.ExpressionSy
 	return left
 }
 
-fn (mut p Parser) parse_primary_expr() ast.ExpressionSyntax {
+fn (mut p Parser) parse_primary_expr() ast.Expr {
 	tok := p.current_token()
 	match tok.kind {
 		.lpar {
@@ -297,7 +303,7 @@ fn (mut p Parser) parse_primary_expr() ast.ExpressionSyntax {
 	}
 }
 
-fn (mut p Parser) parse_number_literal() ast.ExpressionSyntax {
+fn (mut p Parser) parse_number_literal() ast.Expr {
 	number_token := p.match_token(.number)
 	val := strconv.atoi(number_token.lit) or {
 		// p.error('Failed to convert number to value <$number_token.lit>')
@@ -306,21 +312,21 @@ fn (mut p Parser) parse_number_literal() ast.ExpressionSyntax {
 	return ast.new_literal_expr(number_token, val)
 }
 
-fn (mut p Parser) parse_parantesize_expr() ast.ExpressionSyntax {
+fn (mut p Parser) parse_parantesize_expr() ast.Expr {
 	left := p.match_token(.lpar)
 	expr := p.parse_expr()
 	right := p.match_token(.rpar)
 	return ast.new_paranthesis_expr(left, expr, right)
 }
 
-fn (mut p Parser) parse_bool_literal() ast.ExpressionSyntax {
+fn (mut p Parser) parse_bool_literal() ast.Expr {
 	is_true := p.current_token().kind == .key_true
 	key_tok := p.match_token(if is_true { token.Kind.key_true } else { token.Kind.key_false })
 	val := key_tok.kind == .key_true
 	return ast.new_literal_expr(key_tok, val)
 }
 
-fn (mut p Parser) parse_name_expr() ast.ExpressionSyntax {
+fn (mut p Parser) parse_name_expr() ast.Expr {
 	ident_tok := p.match_token(.name)
 	return ast.new_name_expr(ident_tok)
 }

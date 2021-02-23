@@ -3,7 +3,7 @@ module ast
 import lib.comp.token
 import lib.comp.util
 
-pub struct IfStmtSyntax {
+pub struct IfStmt {
 pub:
 	kind         SyntaxKind = .if_stmt
 	pos          util.Pos
@@ -11,13 +11,13 @@ pub:
 	has_else     bool
 	key_if_tok   token.Token
 	key_else_tok token.Token
-	cond         ExpressionSyntax
-	then_stmt    StatementSyntax
-	else_stmt    StatementSyntax
+	cond         Expr
+	then_stmt    Stmt
+	else_stmt    Stmt
 }
 
-pub fn new_if_else_stmt(key_if_tok token.Token, cond ExpressionSyntax, then_stmt StatementSyntax, key_else_tok token.Token, else_stmt StatementSyntax) IfStmtSyntax {
-	return IfStmtSyntax{
+pub fn new_if_else_stmt(key_if_tok token.Token, cond Expr, then_stmt Stmt, key_else_tok token.Token, else_stmt Stmt) IfStmt {
+	return IfStmt{
 		key_if_tok: key_if_tok
 		key_else_tok: key_else_tok
 		cond: cond
@@ -29,8 +29,8 @@ pub fn new_if_else_stmt(key_if_tok token.Token, cond ExpressionSyntax, then_stmt
 	}
 }
 
-pub fn new_if_stmt(key_if_tok token.Token, cond ExpressionSyntax, then_stmt StatementSyntax) IfStmtSyntax {
-	return IfStmtSyntax{
+pub fn new_if_stmt(key_if_tok token.Token, cond Expr, then_stmt Stmt) IfStmt {
+	return IfStmt{
 		key_if_tok: key_if_tok
 		cond: cond
 		has_else: false
@@ -40,6 +40,6 @@ pub fn new_if_stmt(key_if_tok token.Token, cond ExpressionSyntax, then_stmt Stat
 	}
 }
 
-pub fn (iss &IfStmtSyntax) child_nodes() []AstNode {
+pub fn (iss &IfStmt) child_nodes() []AstNode {
 	return iss.nodes
 }

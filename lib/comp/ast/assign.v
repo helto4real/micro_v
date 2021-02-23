@@ -10,11 +10,11 @@ pub:
 
 	ident  token.Token
 	eq_tok token.Token
-	expr   ExpressionSyntax
+	expr   Expr
 	pos    util.Pos
 }
 
-pub fn new_assign_expr(ident token.Token, eq_tok token.Token, expr ExpressionSyntax) AssignExpr {
+pub fn new_assign_expr(ident token.Token, eq_tok token.Token, expr Expr) AssignExpr {
 	return AssignExpr{
 		ident: ident
 		expr: expr

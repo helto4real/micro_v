@@ -19,7 +19,7 @@ pub fn new_binder(parent &BoundScope) &Binder {
 	}
 }
 
-pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.ComplationSyntax) &BoundGlobalScope {
+pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.CompExpr) &BoundGlobalScope {
 	parent_scope := create_parent_scope(previous)
 	mut binder := new_binder(parent_scope)
 	stmt := binder.bind_stmt(comp_node.stmt)
@@ -56,18 +56,18 @@ fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
 	return parent
 }
 
-pub fn (mut b Binder) bind_stmt(stmt ast.StatementSyntax) BoundStmt {
+pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 	match stmt {
-		ast.BlockStatementSyntax { return b.bind_block_stmt(stmt) }
-		ast.ExpressionStatementSyntax { return b.bind_expr_stmt(stmt) }
-		ast.VarDeclStmtSyntax { return b.bind_var_decl_stmt(stmt) }
-		ast.IfStmtSyntax { return b.bind_if_stmt(stmt) }
-		ast.ForRangeSyntax { return b.bind_for_range_stmt(stmt) }
-		ast.ForSyntax { return b.bind_for_stmt(stmt) }
+		ast.BlockStmt { return b.bind_block_stmt(stmt) }
+		ast.ExprStmt { return b.bind_expr_stmt(stmt) }
+		ast.VarDeclStmt { return b.bind_var_decl_stmt(stmt) }
+		ast.IfStmt { return b.bind_if_stmt(stmt) }
+		ast.ForRangeStmt { return b.bind_for_range_stmt(stmt) }
+		ast.ForStmt { return b.bind_for_stmt(stmt) }
 	}
 }
 
-pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForSyntax) BoundStmt {
+pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 
 	cond := if for_stmt.has_cond { 
 			b.bind_expr_type(for_stmt.cond, int(types.TypeKind.bool_lit)) 
@@ -80,7 +80,7 @@ pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForSyntax) BoundStmt {
 	return new_for_stmt(cond, body, for_stmt.has_cond)
 }
 
-pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeSyntax) BoundStmt {
+pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) BoundStmt {
 	ident_name := for_range_stmt.ident_tok.lit
 
 	range := b.bind_expr(for_range_stmt.range)
@@ -98,21 +98,21 @@ pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeSyntax) Bou
 
 	return new_for_range_stmt(ident, range, body)
 }
-pub fn (mut b Binder) bind_if_stmt(if_stmt ast.IfStmtSyntax) BoundStmt {
+pub fn (mut b Binder) bind_if_stmt(if_stmt ast.IfStmt) BoundStmt {
 	cond := b.bind_expr_type(if_stmt.cond, int(types.TypeKind.bool_lit))
 
-	then_stmt := if_stmt.then_stmt as ast.BlockStatementSyntax
+	then_stmt := if_stmt.then_stmt as ast.BlockStmt
 	bound_then_stmt := b.bind_block_stmt(then_stmt)
 
 	if if_stmt.has_else {
-		else_stmt := if_stmt.else_stmt as ast.BlockStatementSyntax
+		else_stmt := if_stmt.else_stmt as ast.BlockStmt
 		bound_else_stmt := b.bind_block_stmt(else_stmt)
 		return new_if_else_stmt(cond, bound_then_stmt, bound_else_stmt)
 	}
 	return new_if_stmt(cond, bound_then_stmt)
 }
 
-pub fn (mut b Binder) bind_block_stmt(block_stmt ast.BlockStatementSyntax) BoundStmt {
+pub fn (mut b Binder) bind_block_stmt(block_stmt ast.BlockStmt) BoundStmt {
 	b.scope = new_bound_scope(b.scope)
 	mut stmts := []BoundStmt{}
 	for i, _ in block_stmt.statements {
@@ -122,12 +122,12 @@ pub fn (mut b Binder) bind_block_stmt(block_stmt ast.BlockStatementSyntax) Bound
 	return new_bound_block_stmt(stmts)
 }
 
-pub fn (mut b Binder) bind_expr_stmt(expr_stmt ast.ExpressionStatementSyntax) BoundStmt {
+pub fn (mut b Binder) bind_expr_stmt(expr_stmt ast.ExprStmt) BoundStmt {
 	expr := b.bind_expr(expr_stmt.expr)
 	return new_bound_expr_stmt(expr)
 }
 
-pub fn (mut b Binder) bind_expr_type(expr ast.ExpressionSyntax, typ types.Type) BoundExpr {
+pub fn (mut b Binder) bind_expr_type(expr ast.Expr, typ types.Type) BoundExpr {
 	bound_expr := b.bind_expr(expr)
 
 	if bound_expr.typ() != typ {
@@ -137,7 +137,7 @@ pub fn (mut b Binder) bind_expr_type(expr ast.ExpressionSyntax, typ types.Type) 
 	return bound_expr
 }
 
-pub fn (mut b Binder) bind_expr(expr ast.ExpressionSyntax) BoundExpr {
+pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 	match expr {
 		ast.LiteralExpr { return b.bind_literal_expr(expr) }
 		ast.UnaryExpr { return b.bind_unary_expr(expr) }
@@ -145,37 +145,37 @@ pub fn (mut b Binder) bind_expr(expr ast.ExpressionSyntax) BoundExpr {
 		ast.ParaExpr { return b.bind_para_expr(expr) }
 		ast.NameExpr { return b.bind_name_expr(expr) }
 		ast.AssignExpr { return b.bind_assign_expr(expr) }
-		ast.IfExprSyntax { return b.bind_if_expr(expr) }
-		ast.RangeExprSyntax { return b.bind_range_expr(expr) }
+		ast.IfExpr { return b.bind_if_expr(expr) }
+		ast.RangeExpr { return b.bind_range_expr(expr) }
 		else { panic('unexpected bound expression $expr') }
 	}
 }
-pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExprSyntax) BoundExpr {
-	from_expr := b.bind_expr(range_expr.from_expr)
-	to_expr := b.bind_expr(range_expr.to_expr)
+pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
+	from_expr := b.bind_expr(range_expr.from)
+	to_expr := b.bind_expr(range_expr.to)
 
 	if from_expr.typ() != to_expr.typ() {
-		b.log.error_expected_same_type_in_range_expr(from_expr.typ().typ_str(), range_expr.to_expr.pos())
+		b.log.error_expected_same_type_in_range_expr(from_expr.typ().typ_str(), range_expr.to.pos())
 	}
 	return new_range_expr(from_expr, to_expr)
 }
 
-pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExprSyntax) BoundExpr {
+pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 	cond := b.bind_expr(if_expr.cond)
 	if cond.typ() != int(types.TypeKind.bool_lit) {
 		// We expect the condition to be a boolean expression
 		b.log.error_expected_bool_expr(if_expr.cond.pos())
 	}
 
-	then_stmt := if_expr.then_stmt as ast.BlockStatementSyntax
+	then_stmt := if_expr.then_stmt as ast.BlockStmt
 	bound_then_stmt := b.bind_block_stmt(then_stmt)
 
-	else_stmt := if_expr.else_stmt as ast.BlockStatementSyntax
+	else_stmt := if_expr.else_stmt as ast.BlockStmt
 	bound_else_stmt := b.bind_block_stmt(else_stmt)
 	return new_if_else_expr(cond, bound_then_stmt, bound_else_stmt)
 }
 
-pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmtSyntax) BoundStmt {
+pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 	name := syntax.ident.lit
 	bound_expr := b.bind_expr(syntax.expr)
 
@@ -189,6 +189,12 @@ pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmtSyntax) BoundStmt
 
 fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 	name := syntax.ident.lit
+
+	if name.len == 0 {
+		// This means it was inserted by the parser and error
+		// is already reporterd, just return error expression
+		return new_bound_literal_expr(0)
+	}
 	bound_expr := b.bind_expr(syntax.expr)
 
 	// check is varable exist in scope
@@ -217,6 +223,11 @@ fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {
 
 fn (mut b Binder) bind_name_expr(syntax ast.NameExpr) BoundExpr {
 	name := syntax.ident_tok.lit
+	if name.len == 0 {
+		// the parser inserted the token so we already reported 
+		// correct error so just return an error expression
+		return new_bound_literal_expr(0)
+	}
 	variable := b.scope.lookup(name) or {
 		b.log.error_var_not_exists(name, syntax.ident_tok.pos)
 		return new_bound_literal_expr(0)

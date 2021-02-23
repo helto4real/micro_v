@@ -3,7 +3,7 @@ module ast
 import lib.comp.token
 import lib.comp.util
 
-pub struct ForRangeSyntax {
+pub struct ForRangeStmt {
 pub:
 	// Node
 	kind        SyntaxKind = .for_range_stmt
@@ -13,12 +13,12 @@ pub:
 	key_for_tok token.Token
 	ident_tok   token.Token
 	key_in_tok  token.Token
-	range       ExpressionSyntax
-	body        StatementSyntax
+	range       Expr
+	body        Stmt
 }
 
-pub fn new_for_range_stmt(key_for_tok token.Token, ident_tok token.Token, key_in_tok token.Token, range ExpressionSyntax, body StatementSyntax) ForRangeSyntax {
-	return ForRangeSyntax{
+pub fn new_for_range_stmt(key_for_tok token.Token, ident_tok token.Token, key_in_tok token.Token, range Expr, body Stmt) ForRangeStmt {
+	return ForRangeStmt{
 		key_for_tok: key_for_tok
 		ident_tok: ident_tok
 		key_in_tok: key_in_tok
@@ -29,11 +29,11 @@ pub fn new_for_range_stmt(key_for_tok token.Token, ident_tok token.Token, key_in
 	}
 }
 
-pub fn (fr &ForRangeSyntax) child_nodes() []AstNode {
+pub fn (fr &ForRangeStmt) child_nodes() []AstNode {
 	return fr.child_nodes
 }
 
-pub struct ForSyntax {
+pub struct ForStmt {
 pub:
 	// Node
 	kind        SyntaxKind = .for_stmt
@@ -42,16 +42,16 @@ pub:
 	has_cond    bool
 
 	key_for_tok token.Token
-	cond        ExpressionSyntax
-	body        StatementSyntax
+	cond        Expr
+	body        Stmt
 }
 
-pub fn (fs &ForSyntax) child_nodes() []AstNode {
+pub fn (fs &ForStmt) child_nodes() []AstNode {
 	return fs.child_nodes
 }
 
-pub fn new_for_stmt(key_for_tok token.Token, cond ExpressionSyntax, body StatementSyntax, has_cond bool) ForSyntax {
-	return ForSyntax{
+pub fn new_for_stmt(key_for_tok token.Token, cond Expr, body Stmt, has_cond bool) ForStmt {
+	return ForStmt{
 		key_for_tok: key_for_tok
 		cond: cond
 		body: body

@@ -11,7 +11,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 	print(term.gray(marker))
 	new_ident := ident + if is_last { '   ' } else { '│  ' }
 	match node {
-		ast.ExpressionSyntax {
+		ast.Expr {
 			match node {
 				// bug prevents me from colapsing
 				ast.BinaryExpr {
@@ -62,7 +62,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
-				ast.ComplationSyntax {
+				ast.CompExpr {
 					println(term.gray('$node.kind'))
 					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
@@ -70,7 +70,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
-				ast.IfExprSyntax {
+				ast.IfExpr {
 					println(term.gray('$node.kind'))
 					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
@@ -78,7 +78,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
-				ast.RangeExprSyntax {
+				ast.RangeExpr {
 					println(term.gray('$node.kind'))
 					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
@@ -88,9 +88,9 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 				}
 			}
 		}
-		ast.StatementSyntax {
+		ast.Stmt {
 			match node {
-				ast.BlockStatementSyntax {
+				ast.BlockStmt {
 					println(term.gray('$node.kind'))
 					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
@@ -98,7 +98,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
-				ast.ExpressionStatementSyntax {
+				ast.ExprStmt {
 					println(term.gray('$node.kind'))
 					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
@@ -106,7 +106,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
-				ast.VarDeclStmtSyntax {
+				ast.VarDeclStmt {
 					println(term.gray('$node.kind'))
 					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
@@ -114,7 +114,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
-				ast.IfStmtSyntax {
+				ast.IfStmt {
 					println(term.gray('$node.kind'))
 					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
@@ -122,7 +122,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
-				ast.ForRangeSyntax {
+				ast.ForRangeStmt {
 					println(term.gray('$node.kind'))
 					child_nodes := node.child_nodes()
 					for i, child in child_nodes {
@@ -130,7 +130,7 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
-				ast.ForSyntax {
+				ast.ForStmt {
 					println(term.gray('$node.kind'))
 					child_nodes := node.child_nodes()
 					for i, child in child_nodes {

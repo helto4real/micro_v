@@ -3,19 +3,19 @@ import lib.comp.token
 import lib.comp.util
 
 // Sumtype statements
-type StatementSyntax = BlockStatementSyntax | ExpressionStatementSyntax | 
-	VarDeclStmtSyntax | IfStmtSyntax | ForRangeSyntax | ForSyntax
+type Stmt = BlockStmt | ExprStmt | 
+	VarDeclStmt | IfStmt | ForRangeStmt | ForStmt
 
 // Sumtype expressions
-pub type ExpressionSyntax = AssignExpr | BinaryExpr | ComplationSyntax | LiteralExpr |
-	NameExpr | ParaExpr | UnaryExpr | IfExprSyntax | RangeExprSyntax
+pub type Expr = AssignExpr | BinaryExpr | CompExpr | LiteralExpr |
+	NameExpr | ParaExpr | UnaryExpr | IfExpr | RangeExpr
 
 // Nodes in syntax tree
-pub type AstNode = ExpressionSyntax | StatementSyntax | token.Token
+pub type AstNode = Expr | Stmt | token.Token
 
 pub fn (ex &AstNode) pos() util.Pos {
 	match ex {
-		ExpressionSyntax, StatementSyntax {
+		Expr, Stmt {
 			return ex.pos()
 		}
 		token.Token {
@@ -24,49 +24,49 @@ pub fn (ex &AstNode) pos() util.Pos {
 	}
 }
 
-pub fn (e &ExpressionSyntax) kind() SyntaxKind {
+pub fn (e &Expr) kind() SyntaxKind {
 	match e {
 		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, 
-		ComplationSyntax, IfExprSyntax, RangeExprSyntax
+		CompExpr, IfExpr, RangeExpr
 		{
 			return e.kind
 		}
 	}
 }
 
-pub fn (ex &ExpressionSyntax) children() []AstNode {
+pub fn (ex &Expr) children() []AstNode {
 	match ex {
 		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, 
-		ComplationSyntax, IfExprSyntax, RangeExprSyntax
+		CompExpr, IfExpr, RangeExpr
 		{
 			return ex.child_nodes()
 		}
 	}
 }
 
-pub fn (ex &ExpressionSyntax) pos() util.Pos {
+pub fn (ex &Expr) pos() util.Pos {
 	match ex {
 		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, 
-		ComplationSyntax, IfExprSyntax, RangeExprSyntax
+		CompExpr, IfExpr, RangeExpr
 		{
 			return ex.pos
 		}
 	}
 }
 
-pub fn (ex &StatementSyntax) children() []AstNode {
+pub fn (ex &Stmt) children() []AstNode {
 	match ex {
-		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax, 
-		IfStmtSyntax, ForRangeSyntax, ForSyntax {
+		BlockStmt, ExprStmt, VarDeclStmt, 
+		IfStmt, ForRangeStmt, ForStmt {
 			return ex.child_nodes()
 		}
 	}
 }
 
-pub fn (ex &StatementSyntax) pos() util.Pos {
+pub fn (ex &Stmt) pos() util.Pos {
 	match ex {
-		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax, 
-		IfStmtSyntax, ForRangeSyntax, ForSyntax {
+		BlockStmt, ExprStmt, VarDeclStmt, 
+		IfStmt, ForRangeStmt, ForStmt {
 			return ex.pos
 		}
 	}
