@@ -122,6 +122,22 @@ pub fn pretty_print(node ast.AstNode, ident string, is_last bool) {
 						pretty_print(child, new_ident, last_node)
 					}
 				}
+				ast.ForRangeSyntax {
+					println(term.gray('$node.kind'))
+					child_nodes := node.child_nodes()
+					for i, child in child_nodes {
+						last_node := if i < child_nodes.len - 1 { false } else { true }
+						pretty_print(child, new_ident, last_node)
+					}
+				}
+				ast.ForSyntax {
+					println(term.gray('$node.kind'))
+					child_nodes := node.child_nodes()
+					for i, child in child_nodes {
+						last_node := if i < child_nodes.len - 1 { false } else { true }
+						pretty_print(child, new_ident, last_node)
+					}
+				}
 			}
 		}
 		token.Token {

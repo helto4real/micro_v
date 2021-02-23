@@ -3,9 +3,10 @@ module binding
 import lib.comp.types
 
 type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundIfExpr | BoundLiteralExpr |
-	BoundUnaryExpression | BoundVariableExpr | BoundRangeExpr
+	BoundRangeExpr | BoundUnaryExpression | BoundVariableExpr
 
-type BoundStmt = BoundBlockStmt | BoundExprStmt | BoundIfStmt | BoundVarDeclStmt
+type BoundStmt = BoundBlockStmt | BoundExprStmt | BoundForRangeStmt | BoundForStmt | BoundIfStmt |
+	BoundVarDeclStmt
 
 type BoundNode = BoundExpr | BoundStmt
 
@@ -23,12 +24,14 @@ enum BoundNodeKind {
 	expr_stmt
 	var_decl_stmt
 	if_stmt
+	for_stmt
+	for_range_stmt
 }
 
 pub fn (be BoundExpr) typ() types.Type {
 	match be {
 		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr,
-		BoundIfExpr, BoundRangeExpr{
+		BoundIfExpr, BoundRangeExpr {
 			return be.typ
 		}
 	}
@@ -39,9 +42,8 @@ pub fn (be BoundExpr) typ_str() string {
 		BoundLiteralExpr {
 			return types.built_in_types[int(be.typ)]
 		}
-		BoundUnaryExpression, BoundBinaryExpr, BoundVariableExpr, BoundAssignExpr, 
-		BoundIfExpr, BoundRangeExpr
-		{
+		BoundUnaryExpression, BoundBinaryExpr, BoundVariableExpr, BoundAssignExpr, BoundIfExpr,
+		BoundRangeExpr {
 			return types.built_in_types[int(be.typ)]
 		}
 	}

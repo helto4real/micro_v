@@ -1,5 +1,5 @@
 module comp
-
+import strings
 import lib.comp.binding
 import lib.comp.types
 
@@ -37,9 +37,53 @@ fn (mut e Evaluator) eval_stmt(stmt binding.BoundStmt) {
 		binding.BoundIfStmt {
 			e.eval_bound_if_stmt(stmt)
 		}
+		binding.BoundForRangeStmt {
+			e.eval_bound_for_range_stmt(stmt)
+		}
+		binding.BoundForStmt {
+			e.eval_bound_for_stmt(stmt)
+		}
 	}
 }
 
+// TODO: Will remove the print out of these functions onces println is implemented
+fn (mut e Evaluator) eval_bound_for_stmt(node binding.BoundForStmt) {
+	mut b:= strings.new_builder(0)
+	mut first_loop := true
+	for {
+			if node.has_cond {
+				cond := e.eval_expr(node.cond) or { panic('unexpected error evaluate expression')}
+				if (cond as bool) == false {
+					break
+				}
+			}
+		e.eval_stmt(node.body)
+		if !first_loop {b.write_string('   ')}
+		b.writeln('${e.last_val}')
+		first_loop = false
+	}
+	e.last_val = b.str()
+}
+
+fn (mut e Evaluator) eval_bound_for_range_stmt(node binding.BoundForRangeStmt) {
+	range := node.range as binding.BoundRangeExpr
+	from := e.eval_expr(range.from_exp) or {panic('unexpected eval expression')}
+	to := e.eval_expr(range.to_exp) or {panic('unexpected eval expression')}
+
+	mut b:= strings.new_builder(0)
+	if from is int {
+		to_int := to as int
+		for i in from .. to_int {
+			e.vars.assign_variable_value(node.ident, i)
+			// println('ident: $ident, range: $range')
+			e.eval_stmt(node.body)
+			if i != from {b.write_string('   ')}
+			b.writeln('${e.last_val}')
+		}
+	}
+	// val := types.LitVal(b.str())
+	e.last_val = b.str()
+}
 fn (mut e Evaluator) eval_bound_if_stmt(node binding.BoundIfStmt) {
 	cond := e.eval_expr(node.cond) or { panic('unexpected compiler error') }
 

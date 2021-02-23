@@ -22,5 +22,7 @@ enum SyntaxKind {
 	expr_stmt
 	var_decl_stmt
 	if_stmt
+	for_stmt
+	for_range_stmt
 	empty
 }

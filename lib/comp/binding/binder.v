@@ -62,14 +62,44 @@ pub fn (mut b Binder) bind_stmt(stmt ast.StatementSyntax) BoundStmt {
 		ast.ExpressionStatementSyntax { return b.bind_expr_stmt(stmt) }
 		ast.VarDeclStmtSyntax { return b.bind_var_decl_stmt(stmt) }
 		ast.IfStmtSyntax { return b.bind_if_stmt(stmt) }
+		ast.ForRangeSyntax { return b.bind_for_range_stmt(stmt) }
+		ast.ForSyntax { return b.bind_for_stmt(stmt) }
 	}
 }
-pub fn (mut b Binder) bind_if_stmt(if_stmt ast.IfStmtSyntax) BoundStmt {
-	cond := b.bind_expr(if_stmt.cond)
-	if cond.typ() != int(types.TypeKind.bool_lit) {
-		// We expect the condition to be a boolean expression
-		b.log.error_expected_bool_expr(if_stmt.cond.pos())
+
+pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForSyntax) BoundStmt {
+
+	cond := if for_stmt.has_cond { 
+			b.bind_expr_type(for_stmt.cond, int(types.TypeKind.bool_lit)) 
+		} else {
+			BoundExpr{}
+		}
+		
+	body := b.bind_stmt(for_stmt.body)
+
+	return new_for_stmt(cond, body, for_stmt.has_cond)
+}
+
+pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeSyntax) BoundStmt {
+	ident_name := for_range_stmt.ident_tok.lit
+
+	range := b.bind_expr(for_range_stmt.range)
+	
+	// TODO: Check same type
+	ident := new_variable_symbol(ident_name, range.typ(), false)
+	res := b.scope.try_declare(ident)
+		
+	body := b.bind_stmt(for_range_stmt.body)
+
+
+	if res == false {
+		b.log.error_name_already_defined(ident_name, for_range_stmt.ident_tok.pos)
 	}
+
+	return new_for_range_stmt(ident, range, body)
+}
+pub fn (mut b Binder) bind_if_stmt(if_stmt ast.IfStmtSyntax) BoundStmt {
+	cond := b.bind_expr_type(if_stmt.cond, int(types.TypeKind.bool_lit))
 
 	then_stmt := if_stmt.then_stmt as ast.BlockStatementSyntax
 	bound_then_stmt := b.bind_block_stmt(then_stmt)
@@ -97,6 +127,16 @@ pub fn (mut b Binder) bind_expr_stmt(expr_stmt ast.ExpressionStatementSyntax) Bo
 	return new_bound_expr_stmt(expr)
 }
 
+pub fn (mut b Binder) bind_expr_type(expr ast.ExpressionSyntax, typ types.Type) BoundExpr {
+	bound_expr := b.bind_expr(expr)
+
+	if bound_expr.typ() != typ {
+		// We expect the condition to be a boolean expression
+		b.log.error_expected_correct_type_expr(typ.typ_str(), bound_expr.typ().typ_str(), expr.pos())
+	}
+	return bound_expr
+}
+
 pub fn (mut b Binder) bind_expr(expr ast.ExpressionSyntax) BoundExpr {
 	match expr {
 		ast.LiteralExpr { return b.bind_literal_expr(expr) }
@@ -113,6 +153,10 @@ pub fn (mut b Binder) bind_expr(expr ast.ExpressionSyntax) BoundExpr {
 pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExprSyntax) BoundExpr {
 	from_expr := b.bind_expr(range_expr.from_expr)
 	to_expr := b.bind_expr(range_expr.to_expr)
+
+	if from_expr.typ() != to_expr.typ() {
+		b.log.error_expected_same_type_in_range_expr(from_expr.typ().typ_str(), range_expr.to_expr.pos())
+	}
 	return new_range_expr(from_expr, to_expr)
 }
 

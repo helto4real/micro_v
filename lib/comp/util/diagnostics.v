@@ -73,3 +73,10 @@ pub fn (mut d Diagnostics) error_expected_bool_expr(pos Pos) {
 	d.error('expected boolean expression', pos)
 }
 
+pub fn (mut d Diagnostics) error_expected_correct_type_expr(expeced_type string, actual_type string, pos Pos) {
+	d.error('expected type <$expeced_type> in expression, got <$actual_type>', pos)
+}
+
+pub fn (mut d Diagnostics) error_expected_same_type_in_range_expr(typ string, pos Pos) {
+	d.error('expected same type <$typ> in range expression', pos)
+}

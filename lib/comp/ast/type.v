@@ -3,7 +3,8 @@ import lib.comp.token
 import lib.comp.util
 
 // Sumtype statements
-type StatementSyntax = BlockStatementSyntax | ExpressionStatementSyntax | VarDeclStmtSyntax | IfStmtSyntax
+type StatementSyntax = BlockStatementSyntax | ExpressionStatementSyntax | 
+	VarDeclStmtSyntax | IfStmtSyntax | ForRangeSyntax | ForSyntax
 
 // Sumtype expressions
 pub type ExpressionSyntax = AssignExpr | BinaryExpr | ComplationSyntax | LiteralExpr |
@@ -55,7 +56,8 @@ pub fn (ex &ExpressionSyntax) pos() util.Pos {
 
 pub fn (ex &StatementSyntax) children() []AstNode {
 	match ex {
-		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax, IfStmtSyntax {
+		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax, 
+		IfStmtSyntax, ForRangeSyntax, ForSyntax {
 			return ex.child_nodes()
 		}
 	}
@@ -63,7 +65,8 @@ pub fn (ex &StatementSyntax) children() []AstNode {
 
 pub fn (ex &StatementSyntax) pos() util.Pos {
 	match ex {
-		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax, IfStmtSyntax {
+		BlockStatementSyntax, ExpressionStatementSyntax, VarDeclStmtSyntax, 
+		IfStmtSyntax, ForRangeSyntax, ForSyntax {
 			return ex.pos
 		}
 	}

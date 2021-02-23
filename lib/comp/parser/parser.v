@@ -94,6 +94,16 @@ fn (mut p Parser) parse_stmt() ast.StatementSyntax {
 		.key_if {
 			return p.parse_if_stmt()
 		}
+		.key_for {
+			if p.peek_token(1).kind == .name && p.peek_token(2).kind == .key_in {
+				// for x in 0..10 {}
+				return p.parse_for_range_stmt()
+			} else if p.peek_token(1).kind == .lcbr {
+				return p.parse_for_stmt(false)
+			} else {
+				return p.parse_for_stmt(true)
+			}
+		}
 		.name {
 			if p.peek_var_decl(0) {
 				return p.parse_var_decl_stmt()
@@ -104,6 +114,29 @@ fn (mut p Parser) parse_stmt() ast.StatementSyntax {
 		}
 	}
 	return p.parse_expression_stmt()
+}
+
+// parse_for_range_stmt, parse for x in 1..10 {}
+//		we only allow blocks
+fn (mut p Parser) parse_for_stmt(has_cond bool) ast.StatementSyntax {
+
+	for_key := p.match_token(.key_for)
+	mut cond := if has_cond {p.parse_expr()} else { ast.ExpressionSyntax{}}
+	body := p.parse_block_stmt()
+	
+	return ast.new_for_stmt(for_key, cond, body, has_cond)
+}
+
+// parse_for_range_stmt, parse for x in 1..10 {}
+//		we only allow blocks
+fn (mut p Parser) parse_for_range_stmt() ast.StatementSyntax {
+	for_key := p.match_token(.key_for)
+	ident := p.match_token(.name)
+	key_in := p.match_token(.key_in)
+	range := p.parse_range_expr()
+	stmt := p.parse_block_stmt()
+	
+	return ast.new_for_range_stmt(for_key, ident, key_in, range, stmt)
 }
 
 fn (mut p Parser) parse_if_stmt() ast.StatementSyntax {

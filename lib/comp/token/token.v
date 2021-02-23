@@ -58,6 +58,8 @@ pub enum Kind {
 	key_true // 'true'
 	key_false // 'false'
 	key_mut // 'mut'
+	key_for // 'for'
+	key_in // 'in'
 	keyword_end // end of keywords
 	_end_ // end of enum
 }
@@ -119,5 +121,7 @@ fn build_token_str() []string {
 	s[Kind.key_else] = 'else'
 	s[Kind.key_module] = 'module'
 	s[Kind.key_struct] = 'struct'
+	s[Kind.key_for] = 'for'
+	s[Kind.key_in] = 'in'
 	return s
 }
