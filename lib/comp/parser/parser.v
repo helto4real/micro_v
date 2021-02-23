@@ -165,11 +165,24 @@ fn (mut p Parser) parse_expr() ast.ExpressionSyntax {
 				return p.parse_assign_expr()
 			}
 		}
+		.number {
+			// .. range 
+			if p.peek_token(1).kind == .dot_dot {
+				return p.parse_range_expr()
+			}
+		}
 		else {
 			return p.parse_assign_expr()
 		}
 	}
 	return p.parse_assign_expr()
+}
+
+fn (mut p Parser) parse_range_expr() ast.ExpressionSyntax {
+	from_num := p.parse_number_literal()
+	range_tok := p.match_token(.dot_dot)
+	to_num := p.parse_number_literal()
+	return ast.new_range_expr(from_num, range_tok, to_num)
 }
 
 fn (mut p Parser) parse_if_expr() ast.ExpressionSyntax {

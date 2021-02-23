@@ -7,7 +7,7 @@ type StatementSyntax = BlockStatementSyntax | ExpressionStatementSyntax | VarDec
 
 // Sumtype expressions
 pub type ExpressionSyntax = AssignExpr | BinaryExpr | ComplationSyntax | LiteralExpr |
-	NameExpr | ParaExpr | UnaryExpr | IfExprSyntax
+	NameExpr | ParaExpr | UnaryExpr | IfExprSyntax | RangeExprSyntax
 
 // Nodes in syntax tree
 pub type AstNode = ExpressionSyntax | StatementSyntax | token.Token
@@ -25,7 +25,8 @@ pub fn (ex &AstNode) pos() util.Pos {
 
 pub fn (e &ExpressionSyntax) kind() SyntaxKind {
 	match e {
-		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, ComplationSyntax, IfExprSyntax
+		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, 
+		ComplationSyntax, IfExprSyntax, RangeExprSyntax
 		{
 			return e.kind
 		}
@@ -34,7 +35,8 @@ pub fn (e &ExpressionSyntax) kind() SyntaxKind {
 
 pub fn (ex &ExpressionSyntax) children() []AstNode {
 	match ex {
-		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, ComplationSyntax, IfExprSyntax
+		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, 
+		ComplationSyntax, IfExprSyntax, RangeExprSyntax
 		{
 			return ex.child_nodes()
 		}
@@ -43,7 +45,8 @@ pub fn (ex &ExpressionSyntax) children() []AstNode {
 
 pub fn (ex &ExpressionSyntax) pos() util.Pos {
 	match ex {
-		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, ComplationSyntax, IfExprSyntax
+		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, 
+		ComplationSyntax, IfExprSyntax, RangeExprSyntax
 		{
 			return ex.pos
 		}

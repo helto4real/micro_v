@@ -91,7 +91,16 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 		binding.BoundIfExpr {
 			return e.eval_bound_if_expr(node)
 		}
+		binding.BoundRangeExpr {
+			return e.eval_bound_range_expr(node)
+		}
 	}
+}
+
+fn (mut e Evaluator) eval_bound_range_expr(node binding.BoundRangeExpr) ?types.LitVal {
+	from_val := e.eval_expr(node.from_exp) ?
+	to_val := e.eval_expr(node.to_exp) ?
+	return '${from_val as int}..${to_val as int}'
 }
 
 fn (mut e Evaluator) eval_bound_if_expr(node binding.BoundIfExpr) ?types.LitVal {

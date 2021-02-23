@@ -5,15 +5,15 @@ import lib.comp.util
 
 pub struct IfStmtSyntax {
 pub:
-	kind   SyntaxKind = .if_stmt
-	pos    util.Pos
-	nodes  []AstNode
-	has_else bool
-	key_if_tok  token.Token
-	key_else_tok  token.Token
-	cond   ExpressionSyntax
-	then_stmt  StatementSyntax
-	else_stmt StatementSyntax
+	kind         SyntaxKind = .if_stmt
+	pos          util.Pos
+	nodes        []AstNode
+	has_else     bool
+	key_if_tok   token.Token
+	key_else_tok token.Token
+	cond         ExpressionSyntax
+	then_stmt    StatementSyntax
+	else_stmt    StatementSyntax
 }
 
 pub fn new_if_else_stmt(key_if_tok token.Token, cond ExpressionSyntax, then_stmt StatementSyntax, key_else_tok token.Token, else_stmt StatementSyntax) IfStmtSyntax {

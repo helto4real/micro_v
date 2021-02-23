@@ -55,6 +55,14 @@ pub fn (mut tcs TestCompilationState) eval_bool(expr string) bool {
 	panic('unexpected return type: $res')
 }
 
+pub fn (mut tcs TestCompilationState) eval_string(expr string) string {
+	res := tcs.evaluate(expr)
+	if res.val is string {
+		return res.val
+	}
+	panic('unexpected return type: $res')
+}
+
 fn test_eval_basic_exprs() {
 	mut c := new_test_compilation_state()
 
@@ -134,6 +142,12 @@ fn test_eval_var_exprs() {
 	assert c.eval_bool('a&&c') == false
 }
 
+fn test_range_expr() {
+	mut c := new_test_compilation_state()
+	assert c.eval_string('1..10') == '1..10'
+	assert c.eval_string('10..1') == '10..1'
+}
+
 fn test_if_else_stmt() {
 	mut c := new_test_compilation_state()
 
@@ -175,6 +189,11 @@ fn test_error_delcarations_unary_operator_undefined() {
 // 	error := 'expected varable declaration after mut keyword'
 // 	assert_has_diagostics(code, error)
 // }
+fn test_error_range_type_error() {
+	code := '1..[a]'
+	error := 'unexpected token: <name>,  expected <number>\nunexpected token: <name>,  expected <eof>'
+	assert_has_diagostics(code, error)
+}
 
 fn test_error_delcarations_assign_different_types_error() {
 	code := '
@@ -240,7 +259,10 @@ fn test_error_if_wrong_type_report_errors() {
 }
 
 fn assert_has_diagostics(text string, diagnostic_text string) {
-	mut print_err_info := true
+	assert_has_multi_diagostics(text, diagnostic_text, 1)
+}
+
+fn assert_has_multi_diagostics(text string, diagnostic_text string, nr_of_err_msg int) {
 	vars := binding.new_eval_variables()
 
 	ann_text := util.parse_annotated_text(text)
@@ -250,33 +272,51 @@ fn assert_has_diagostics(text string, diagnostic_text string) {
 
 	res := comp.evaluate(vars)
 
-	defer {
-		if print_err_info {
-			// make sure we print info so we can find the method that is faulty	
-			println('input rule:')
-			println(text)
-			println('expected message:')
-			println(diagnostic_text)
-		}
-	}
 	expected_diagnostics := util.unindent_lines(diagnostic_text)
 
-	if ann_text.posns.len != expected_diagnostics.len {
-		panic('error: must mark as man pos as there are expected diagnostics')
+	if expected_diagnostics.len != res.result.len {
+		assert_err_info_diag(text, diagnostic_text, '', res.result)
+		assert expected_diagnostics.len == res.result.len
 	}
-	assert expected_diagnostics.len == res.result.len
 
 	for i := 0; i < expected_diagnostics.len; i++ {
 		expected_message := expected_diagnostics[i]
 		actual_message := res.result[i].text
 
-		assert expected_message == actual_message
+		if expected_message != actual_message {
+			assert_err_info(text, diagnostic_text, actual_message)
+			println('expected diagnostics:')
+			println(expected_diagnostics)
+			println('actual result:')
+			println(res.result)
+			assert expected_message == actual_message
+		}
 
-		actual_pos := res.result[i].pos
-		expected_pos := ann_text.posns[i]
+		if i < ann_text.posns.len {
+			actual_pos := res.result[i].pos
+			expected_pos := ann_text.posns[i]
 
-		assert actual_pos == expected_pos
-		// assert actual_pos == expected_pos
+			if actual_pos != expected_pos {
+				assert_err_info(text, diagnostic_text, actual_message)
+				assert actual_pos == expected_pos
+			}
+		}
 	}
-	print_err_info = false
+}
+
+fn assert_err_info(input_rule string, expected_message string, actual_message string) {
+	assert_err_info_diag(input_rule, expected_message, actual_message, []&util.Diagnostic{})
+}
+fn assert_err_info_diag(input_rule string, expected_message string, actual_message string, actual_diagnostics []&util.Diagnostic) {
+	// make sure we print info so we can find the method that is faulty	
+	eprintln('input rule:')
+	eprintln(input_rule)
+	eprintln('expected message:')
+	eprintln(expected_message)
+	eprintln('actual message:')
+	eprintln(actual_message)
+	if actual_diagnostics.len > 0 {
+		eprintln('actual diagnistics:')
+		eprintln(actual_diagnostics)
+	}
 }

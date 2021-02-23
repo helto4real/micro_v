@@ -146,8 +146,13 @@ pub fn (mut t Tokenizer) next_token() Token {
 			t.incr_pos()
 		}
 		`.` {
-			t.kind = .dot
 			t.incr_pos()
+			if t.ch == `.` {
+				t.kind = .dot_dot
+				t.incr_pos()
+			} else {
+				t.kind = .dot
+			}
 		}
 		`&` {
 			t.incr_pos()

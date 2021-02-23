@@ -16,13 +16,13 @@ pub:
 	to_expr   ExpressionSyntax
 }
 
-pub fn new_range_expr(range_tok token.Token, from_expr ExpressionSyntax, to_expr ExpressionSyntax, key_else_tok token.Token, else_stmt StatementSyntax) RangeExprSyntax {
+pub fn new_range_expr(from_expr ExpressionSyntax, range_tok token.Token, to_expr ExpressionSyntax) RangeExprSyntax {
 	return RangeExprSyntax{
 		range_tok: range_tok
 		from_expr: from_expr
 		to_expr: to_expr
 		pos: util.new_pos_from_pos_bounds(range_tok.pos, to_expr.pos())
-		nodes: [AstNode(range_tok), from_expr, to_expr]
+		nodes: [AstNode(from_expr), range_tok, to_expr]
 	}
 }
 

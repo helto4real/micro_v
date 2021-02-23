@@ -106,8 +106,14 @@ pub fn (mut b Binder) bind_expr(expr ast.ExpressionSyntax) BoundExpr {
 		ast.NameExpr { return b.bind_name_expr(expr) }
 		ast.AssignExpr { return b.bind_assign_expr(expr) }
 		ast.IfExprSyntax { return b.bind_if_expr(expr) }
+		ast.RangeExprSyntax { return b.bind_range_expr(expr) }
 		else { panic('unexpected bound expression $expr') }
 	}
+}
+pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExprSyntax) BoundExpr {
+	from_expr := b.bind_expr(range_expr.from_expr)
+	to_expr := b.bind_expr(range_expr.to_expr)
+	return new_range_expr(from_expr, to_expr)
 }
 
 pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExprSyntax) BoundExpr {
