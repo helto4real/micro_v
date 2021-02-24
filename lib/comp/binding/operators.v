@@ -37,6 +37,8 @@ fn build_bound_unary_operators() []BoundUnaryOperator {
 	operators << new_bound_unary_op(.plus, .identity, int(types.TypeKind.int_lit))
 	operators << new_bound_unary_op(.minus, .negation, int(types.TypeKind.int_lit))
 
+	operators << new_bound_unary_op(.tilde, .ones_compl, int(types.TypeKind.int_lit))
+
 	return operators
 }
 
@@ -85,6 +87,10 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 	operators << new_bound_binary_op(.minus, .subraction, int(types.TypeKind.int_lit))
 	operators << new_bound_binary_op(.mul, .multiplication, int(types.TypeKind.int_lit))
 	operators << new_bound_binary_op(.div, .divition, int(types.TypeKind.int_lit))
+	
+	operators << new_bound_binary_op(.amp, .bitwise_and, int(types.TypeKind.int_lit))
+	operators << new_bound_binary_op(.pipe, .bitwise_or, int(types.TypeKind.int_lit))
+	operators << new_bound_binary_op(.hat, .bitwise_xor, int(types.TypeKind.int_lit))
 
 	// accept int but returns bool
 	operators << new_bound_binary_op_with_res(.eq_eq, .equals, int(types.TypeKind.int_lit),
@@ -121,6 +127,7 @@ pub enum BoundUnaryOperatorKind {
 	identity
 	negation
 	logic_negation
+	ones_compl
 	not_supported
 }
 
@@ -137,6 +144,9 @@ pub enum BoundBinaryOperatorKind {
 	greater_or_equals
 	logic_and
 	logic_or
+	bitwise_and
+	bitwise_or
+	bitwise_xor
 	not_supported
 }
 

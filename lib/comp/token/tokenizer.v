@@ -172,6 +172,14 @@ pub fn (mut t Tokenizer) next_token() Token {
 				t.kind = .pipe
 			}
 		}
+		`~` {
+			t.kind = .tilde
+			t.incr_pos()
+		}
+		`^` {
+			t.kind = .hat
+			t.incr_pos()
+		}
 		`,` {
 			t.kind = .comma
 			t.incr_pos()

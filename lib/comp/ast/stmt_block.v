@@ -18,11 +18,13 @@ pub fn new_block_stmt(open_brc token.Token, stmts []Stmt, close_brc token.Token)
 	mut child_nodes := [AstNode(open_brc)]
 	child_nodes.insert(0,stmts.map(AstNode(it)))
 	child_nodes << close_brc
+	
 	return BlockStmt{
 		open_brc: open_brc
 		stmts: stmts
 		close_brc: close_brc
 		child_nodes: child_nodes
+		pos: util.new_pos_from_pos_bounds(open_brc.pos, close_brc.pos)	
 	}
 }
 

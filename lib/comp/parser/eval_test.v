@@ -77,6 +77,16 @@ fn test_eval_basic_exprs() {
 
 	// test unary expressions
 	assert c.eval_int('-1') == -1
+	assert c.eval_int('~1') == -2
+
+	// test more operators
+	assert c.eval_int('1 | 2') == 3
+	assert c.eval_int('1 | 0') == 1
+	assert c.eval_int('1 & 2') == 0
+	assert c.eval_int('1 & 0') == 0
+	assert c.eval_int('0 ^ 1') == 1
+	assert c.eval_int('1 ^ 3') == 2
+
 
 	// test boolean expressions
 	assert c.eval_bool('true') == true

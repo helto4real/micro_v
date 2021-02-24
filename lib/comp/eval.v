@@ -183,6 +183,7 @@ fn (mut e Evaluator) eval_bound_unary_expr(node binding.BoundUnaryExpression) ?t
 		.identity { return operand as int }
 		.negation { return -(operand as int) }
 		.logic_negation { return !(operand as bool) }
+		.ones_compl { return ~(operand as int) }
 		else { panic('unexpected unary token $node.op.op_kind') }
 	}
 }
@@ -198,6 +199,9 @@ fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?types
 		.divition { return (left as int) / (right as int) }
 		.logic_and { return (left as bool) && (right as bool) }
 		.logic_or { return (left as bool) || (right as bool) }
+		.bitwise_and {return (left as int) & (right as int)	}
+		.bitwise_or {return (left as int) | (right as int)	}
+		.bitwise_xor {return (left as int) ^ (right as int)	}
 		.equals { return left.eq(right) }
 		.not_equals { return !left.eq(right) }
 		.greater { return left.gt(right) }

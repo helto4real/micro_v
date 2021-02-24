@@ -56,5 +56,6 @@ pub fn new_for_stmt(key_for token.Token, cond_expr Expr, body_stmt Stmt, has_con
 		cond_expr: cond_expr
 		body_stmt: body_stmt
 		has_cond: has_cond
+		pos: util.new_pos_from_pos_bounds(key_for.pos, body_stmt.pos())	
 	}
 }
