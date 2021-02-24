@@ -16,9 +16,7 @@ pub:
 
 pub fn new_block_stmt(open_brc token.Token, statements []Stmt, close_brc token.Token) BlockStmt {
 	mut child_nodes := [AstNode(open_brc)]
-	for i, _ in statements {
-		child_nodes << statements[i]
-	}
+	child_nodes.insert(0,statements.map(AstNode(it)))
 	child_nodes << close_brc
 	return BlockStmt{
 		open_brc: open_brc

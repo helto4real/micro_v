@@ -122,7 +122,6 @@ fn (mut p Parser) parse_for_stmt(has_cond bool) ast.Stmt {
 	for_key := p.match_token(.key_for)
 	mut cond := if has_cond { p.parse_expr() } else { ast.Expr{} }
 	body := p.parse_block_stmt()
-
 	return ast.new_for_stmt(for_key, cond, body, has_cond)
 }
 
@@ -170,6 +169,15 @@ fn (mut p Parser) parse_var_decl_stmt() ast.Stmt {
 fn (mut p Parser) parse_block_stmt() ast.Stmt {
 	open_brace_token := p.match_token(.lcbr)
 
+	mut stmts := p.parse_multi_stmt()
+
+	close_brace_token := p.match_token(.rcbr)
+
+	return ast.new_block_stmt(open_brace_token, stmts, close_brace_token)
+}
+
+[inline]
+fn (mut p Parser) parse_multi_stmt() []ast.Stmt {
 	mut stmts := []ast.Stmt{}
 	for p.peek_token(0).kind != .eof && p.peek_token(0).kind != .rcbr {
 		start_tok := p.current_token()
@@ -182,17 +190,15 @@ fn (mut p Parser) parse_block_stmt() ast.Stmt {
 			p.next_token()
 		}
 	}
-	close_brace_token := p.match_token(.rcbr)
-
-	return ast.new_block_stmt(open_brace_token, stmts, close_brace_token)
+	return stmts
 }
 
+[inline]
 fn (mut p Parser) parse_expression_stmt() ast.ExprStmt {
 	expr := p.parse_expr()
 	return ast.new_expr_stmt(expr)
 }
 
-[inline]
 fn (mut p Parser) parse_expr() ast.Expr {
 	tok := p.current_token()
 	match tok.kind {
@@ -216,6 +222,7 @@ fn (mut p Parser) parse_expr() ast.Expr {
 	}
 	return p.parse_assign_expr()
 }
+
 
 fn (mut p Parser) parse_range_expr() ast.Expr {
 	from_num := p.parse_number_literal()
