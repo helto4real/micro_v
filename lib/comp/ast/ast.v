@@ -3,7 +3,7 @@ module ast
 import lib.comp.token
 import lib.comp.util
 
-pub struct CompExpr {
+pub struct CompNode {
 pub:
 	kind        SyntaxKind = .comp_node
 	eof_tok     token.Token
@@ -12,14 +12,14 @@ pub:
 	child_nodes []AstNode
 }
 
-pub fn new_comp_expr(stmt Stmt, eof_tok token.Token) CompExpr {
-	return CompExpr{
+pub fn new_comp_expr(stmt Stmt, eof_tok token.Token) CompNode {
+	return CompNode{
 		pos: stmt.pos()
 		stmt: stmt
 		eof_tok: eof_tok
 		child_nodes: [AstNode(stmt)]
 	}
 }
-pub fn (cn &CompExpr) child_nodes() []AstNode {
+pub fn (cn &CompNode) child_nodes() []AstNode {
 	return cn.child_nodes
 }

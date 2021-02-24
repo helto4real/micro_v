@@ -8,15 +8,15 @@ pub:
 	typ  types.Type
 
 	ident &VariableSymbol
-	range BoundExpr
-	body  BoundStmt
+	range_expr BoundExpr
+	body_stmt  BoundStmt
 }
 
-fn new_for_range_stmt(ident &VariableSymbol, range BoundExpr, body BoundStmt) BoundStmt {
+fn new_for_range_stmt(ident &VariableSymbol, range_expr BoundExpr, body_stmt BoundStmt) BoundStmt {
 	return BoundForRangeStmt{
 		ident: ident
-		range: range
-		body: body
+		range_expr: range_expr
+		body_stmt: body_stmt
 	}
 }
 
@@ -26,14 +26,14 @@ pub:
 	typ      types.Type
 	has_cond bool
 
-	cond BoundExpr
-	body BoundStmt
+	cond_expr BoundExpr
+	body_stmt BoundStmt
 }
 
-fn new_for_stmt(cond BoundExpr, body BoundStmt, has_cond bool) BoundStmt {
+fn new_for_stmt(cond_expr BoundExpr, body_stmt BoundStmt, has_cond bool) BoundStmt {
 	return BoundForStmt{
-		cond: cond
-		body: body
+		cond_expr: cond_expr
+		body_stmt: body_stmt
 		has_cond: has_cond
 	}
 }

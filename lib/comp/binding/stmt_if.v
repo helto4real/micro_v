@@ -6,23 +6,23 @@ pub struct BoundIfStmt {
 pub:
 	kind        BoundNodeKind = .if_stmt
 	typ         types.Type
-	cond        BoundExpr
+	cond_expr        BoundExpr
 	has_else    bool
 	block_stmt  BoundStmt
 	else_clause BoundStmt
 }
 
-fn new_if_stmt(cond BoundExpr, block_stmt BoundStmt) BoundStmt {
+fn new_if_stmt(cond_expr BoundExpr, block_stmt BoundStmt) BoundStmt {
 	return BoundIfStmt{
-		cond: cond
-		typ: cond.typ()
+		cond_expr: cond_expr
+		typ: cond_expr.typ()
 		block_stmt: block_stmt
 	}
 }
-fn new_if_else_stmt(cond BoundExpr, block_stmt BoundStmt, else_clause BoundStmt) BoundStmt {
+fn new_if_else_stmt(cond_expr BoundExpr, block_stmt BoundStmt, else_clause BoundStmt) BoundStmt {
 	return BoundIfStmt{
-		cond: cond
-		typ: cond.typ()
+		cond_expr: cond_expr
+		typ: cond_expr.typ()
 		block_stmt: block_stmt
 		else_clause: else_clause
 		has_else: true

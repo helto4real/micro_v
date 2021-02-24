@@ -13,20 +13,20 @@ pub:
 
 	key_if    token.Token
 	key_else  token.Token
-	cond      Expr
+	cond_expr      Expr
 	then_stmt Stmt
 	else_stmt Stmt
 }
 
-pub fn new_if_expr(key_if token.Token, cond Expr, then_stmt Stmt, key_else token.Token, else_stmt Stmt) IfExpr {
+pub fn new_if_expr(key_if token.Token, cond_expr Expr, then_stmt Stmt, key_else token.Token, else_stmt Stmt) IfExpr {
 	return IfExpr{
 		key_if: key_if
 		key_else: key_else
-		cond: cond
+		cond_expr: cond_expr
 		then_stmt: then_stmt
 		else_stmt: else_stmt
 		pos: util.new_pos_from_pos_bounds(key_if.pos, else_stmt.pos())
-		nodes: [AstNode(key_if), cond, then_stmt, key_else, else_stmt]
+		nodes: [AstNode(key_if), cond_expr, then_stmt, key_else, else_stmt]
 	}
 }
 

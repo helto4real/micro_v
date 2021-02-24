@@ -78,5 +78,5 @@ pub fn (mut d Diagnostics) error_expected_correct_type_expr(expeced_type string,
 }
 
 pub fn (mut d Diagnostics) error_expected_same_type_in_range_expr(typ string, pos Pos) {
-	d.error('expected same type <$typ> in range expression', pos)
+	d.error('expected same type <$typ> in range_expr expression', pos)
 }

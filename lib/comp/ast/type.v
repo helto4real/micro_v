@@ -7,7 +7,7 @@ type Stmt = BlockStmt | ExprStmt |
 	VarDeclStmt | IfStmt | ForRangeStmt | ForStmt
 
 // Sumtype expressions
-pub type Expr = AssignExpr | BinaryExpr | CompExpr | LiteralExpr |
+pub type Expr = AssignExpr | BinaryExpr | CompNode | LiteralExpr |
 	NameExpr | ParaExpr | UnaryExpr | IfExpr | RangeExpr
 
 // Nodes in syntax tree
@@ -27,7 +27,7 @@ pub fn (ex &AstNode) pos() util.Pos {
 pub fn (e &Expr) kind() SyntaxKind {
 	match e {
 		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, 
-		CompExpr, IfExpr, RangeExpr
+		CompNode, IfExpr, RangeExpr
 		{
 			return e.kind
 		}
@@ -37,7 +37,7 @@ pub fn (e &Expr) kind() SyntaxKind {
 pub fn (ex &Expr) children() []AstNode {
 	match ex {
 		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, 
-		CompExpr, IfExpr, RangeExpr
+		CompNode, IfExpr, RangeExpr
 		{
 			return ex.child_nodes()
 		}
@@ -47,7 +47,7 @@ pub fn (ex &Expr) children() []AstNode {
 pub fn (ex &Expr) pos() util.Pos {
 	match ex {
 		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, 
-		CompExpr, IfExpr, RangeExpr
+		CompNode, IfExpr, RangeExpr
 		{
 			return ex.pos
 		}

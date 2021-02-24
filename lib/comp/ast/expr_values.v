@@ -32,16 +32,16 @@ pub fn (le &LiteralExpr) child_nodes() []AstNode {
 pub struct NameExpr {
 pub:
 	kind        SyntaxKind = .name_expr
-	ident_tok   token.Token
+	ident   token.Token
 	pos         util.Pos
 	child_nodes []AstNode
 }
 
-pub fn new_name_expr(ident_tok token.Token) NameExpr {
+pub fn new_name_expr(ident token.Token) NameExpr {
 	return NameExpr{
-		ident_tok: ident_tok
-		pos: ident_tok.pos
-		child_nodes: [AstNode(ident_tok)]
+		ident: ident
+		pos: ident.pos
+		child_nodes: [AstNode(ident)]
 	}
 }
 

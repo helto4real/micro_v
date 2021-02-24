@@ -34,7 +34,7 @@ fn new_parser_from_text(text string) &Parser {
 	return parser
 }
 
-pub fn (mut p Parser) parse_comp_node() ast.CompExpr {
+pub fn (mut p Parser) parse_comp_node() ast.CompNode {
 	stmt := p.parse_stmt()
 	eof := p.match_token(.eof)
 	return ast.new_comp_expr(stmt, eof)
@@ -44,7 +44,7 @@ pub fn (mut p Parser) parse_comp_node() ast.CompExpr {
 [inline]
 fn (mut p Parser) peek_token(offset int) token.Token {
 	index := p.pos + offset
-	// return last token if index out of range
+	// return last token if index out of range_expr
 	if index >= p.tokens.len {
 		return p.tokens[p.tokens.len - 1]
 	}
@@ -120,9 +120,9 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 //		we only allow blocks
 fn (mut p Parser) parse_for_stmt(has_cond bool) ast.Stmt {
 	for_key := p.match_token(.key_for)
-	mut cond := if has_cond { p.parse_expr() } else { ast.Expr{} }
-	body := p.parse_block_stmt()
-	return ast.new_for_stmt(for_key, cond, body, has_cond)
+	mut cond_expr := if has_cond { p.parse_expr() } else { ast.Expr{} }
+	body_stmt := p.parse_block_stmt()
+	return ast.new_for_stmt(for_key, cond_expr, body_stmt, has_cond)
 }
 
 // parse_for_range_stmt, parse for x in 1..10 {}
@@ -131,24 +131,24 @@ fn (mut p Parser) parse_for_range_stmt() ast.Stmt {
 	for_key := p.match_token(.key_for)
 	ident := p.match_token(.name)
 	key_in := p.match_token(.key_in)
-	range := p.parse_range_expr()
+	range_expr := p.parse_range_expr()
 	stmt := p.parse_block_stmt()
 
-	return ast.new_for_range_stmt(for_key, ident, key_in, range, stmt)
+	return ast.new_for_range_stmt(for_key, ident, key_in, range_expr, stmt)
 }
 
 fn (mut p Parser) parse_if_stmt() ast.Stmt {
 	if_key := p.match_token(.key_if)
-	cond := p.parse_expr()
+	cond_expr := p.parse_expr()
 	then_block := p.parse_block_stmt()
 
 	if p.peek_token(0).kind == .key_else {
 		else_key := p.match_token(.key_else)
 		else_block := p.parse_block_stmt()
-		return ast.new_if_else_stmt(if_key, cond, then_block, else_key, else_block)
+		return ast.new_if_else_stmt(if_key, cond_expr, then_block, else_key, else_block)
 	}
 
-	return ast.new_if_stmt(if_key, cond, then_block)
+	return ast.new_if_stmt(if_key, cond_expr, then_block)
 }
 
 fn (mut p Parser) parse_var_decl_stmt() ast.Stmt {
@@ -160,10 +160,10 @@ fn (mut p Parser) parse_var_decl_stmt() ast.Stmt {
 			p.next_token()
 		}
 	}
-	ident_tok := p.match_token(.name)
+	ident := p.match_token(.name)
 	op_token := p.match_token(.colon_eq)
 	right := p.parse_assign_right_expr()
-	return ast.new_var_decl_stmt(ident_tok, op_token, right, is_mut)
+	return ast.new_var_decl_stmt(ident, op_token, right, is_mut)
 }
 
 fn (mut p Parser) parse_block_stmt() ast.Stmt {
@@ -211,7 +211,7 @@ fn (mut p Parser) parse_expr() ast.Expr {
 			}
 		}
 		.number {
-			// .. range 
+			// .. range_expr 
 			if p.peek_token(1).kind == .dot_dot {
 				return p.parse_range_expr()
 			}
@@ -233,22 +233,22 @@ fn (mut p Parser) parse_range_expr() ast.Expr {
 
 fn (mut p Parser) parse_if_expr() ast.Expr {
 	if_key := p.match_token(.key_if)
-	cond := p.parse_expr()
+	cond_expr := p.parse_expr()
 	then_block := p.parse_block_stmt()
 
 	else_key := p.match_token(.key_else)
 	else_block := p.parse_block_stmt()
-	return ast.new_if_expr(if_key, cond, then_block, else_key, else_block)
+	return ast.new_if_expr(if_key, cond_expr, then_block, else_key, else_block)
 }
 
 // parse_assign_expr parses an assignment expression
 //   can parse nested assignment x=y=10
 fn (mut p Parser) parse_assign_expr() ast.Expr {
 	if p.peek_assignment(0) {
-		ident_tok := p.match_token(.name)
+		ident := p.match_token(.name)
 		op_token := p.match_token(.eq)
 		right := p.parse_assign_right_expr()
-		return ast.new_assign_expr(ident_tok, op_token, right)
+		return ast.new_assign_expr(ident, op_token, right)
 	}
 	return p.parse_binary_expr()
 }
@@ -334,6 +334,6 @@ fn (mut p Parser) parse_bool_literal() ast.Expr {
 }
 
 fn (mut p Parser) parse_name_expr() ast.Expr {
-	ident_tok := p.match_token(.name)
-	return ast.new_name_expr(ident_tok)
+	ident := p.match_token(.name)
+	return ast.new_name_expr(ident)
 }

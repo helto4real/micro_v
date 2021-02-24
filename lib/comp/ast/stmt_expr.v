@@ -4,20 +4,21 @@ import lib.comp.util
 
 pub struct ExprStmt {
 pub:
-	// Node
+	// general ast node
 	kind        SyntaxKind = .expr_stmt
-	child_nodes []AstNode
 	pos         util.Pos
-	expr        Expr
+	child_nodes []AstNode
+	// child nodes
+	expr Expr
 }
 
 pub fn new_expr_stmt(expr Expr) ExprStmt {
 	return ExprStmt{
-		expr: expr
+		pos: expr.pos()
 		child_nodes: [AstNode(expr)]
+		expr: expr
 	}
 }
-
-pub fn (bs &ExprStmt) child_nodes() []AstNode {
-	return bs.child_nodes
+pub fn (e &ExprStmt) child_nodes() []AstNode {
+	return e.child_nodes
 }

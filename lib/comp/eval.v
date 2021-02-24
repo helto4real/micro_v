@@ -52,12 +52,12 @@ fn (mut e Evaluator) eval_bound_for_stmt(node binding.BoundForStmt) {
 	mut first_loop := true
 	for {
 			if node.has_cond {
-				cond := e.eval_expr(node.cond) or { panic('unexpected error evaluate expression')}
-				if (cond as bool) == false {
+				cond_expr := e.eval_expr(node.cond_expr) or { panic('unexpected error evaluate expression')}
+				if (cond_expr as bool) == false {
 					break
 				}
 			}
-		e.eval_stmt(node.body)
+		e.eval_stmt(node.body_stmt)
 		if !first_loop {b.write_string('   ')}
 		b.writeln('${e.last_val}')
 		first_loop = false
@@ -66,17 +66,17 @@ fn (mut e Evaluator) eval_bound_for_stmt(node binding.BoundForStmt) {
 }
 
 fn (mut e Evaluator) eval_bound_for_range_stmt(node binding.BoundForRangeStmt) {
-	range := node.range as binding.BoundRangeExpr
-	from := e.eval_expr(range.from_exp) or {panic('unexpected eval expression')}
-	to := e.eval_expr(range.to_exp) or {panic('unexpected eval expression')}
+	range_expr := node.range_expr as binding.BoundRangeExpr
+	from := e.eval_expr(range_expr.from_exp) or {panic('unexpected eval expression')}
+	to := e.eval_expr(range_expr.to_exp) or {panic('unexpected eval expression')}
 
 	mut b:= strings.new_builder(0)
 	if from is int {
 		to_int := to as int
 		for i in from .. to_int {
 			e.vars.assign_variable_value(node.ident, i)
-			// println('ident: $ident, range: $range')
-			e.eval_stmt(node.body)
+			// println('ident: $ident, range_expr: $range_expr')
+			e.eval_stmt(node.body_stmt)
 			if i != from {b.write_string('   ')}
 			b.writeln('${e.last_val}')
 		}
@@ -85,10 +85,10 @@ fn (mut e Evaluator) eval_bound_for_range_stmt(node binding.BoundForRangeStmt) {
 	e.last_val = b.str()
 }
 fn (mut e Evaluator) eval_bound_if_stmt(node binding.BoundIfStmt) {
-	cond := e.eval_expr(node.cond) or { panic('unexpected compiler error') }
+	cond_expr := e.eval_expr(node.cond_expr) or { panic('unexpected compiler error') }
 
-	if cond is bool {
-		if cond == true {
+	if cond_expr is bool {
+		if cond_expr == true {
 			e.eval_stmt(node.block_stmt)
 		} else if node.has_else {
 			e.eval_stmt(node.else_clause)
@@ -148,10 +148,10 @@ fn (mut e Evaluator) eval_bound_range_expr(node binding.BoundRangeExpr) ?types.L
 }
 
 fn (mut e Evaluator) eval_bound_if_expr(node binding.BoundIfExpr) ?types.LitVal {
-	cond := e.eval_expr(node.cond) or { panic('unexpected compiler error') }
+	cond_expr := e.eval_expr(node.cond_expr) or { panic('unexpected compiler error') }
 
-	if cond is bool {
-		if cond == true {
+	if cond_expr is bool {
+		if cond_expr == true {
 			e.eval_stmt(node.then_stmt)
 		} else {
 			e.eval_stmt(node.else_stmt)

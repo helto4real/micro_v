@@ -5,33 +5,33 @@ import lib.comp.util
 
 pub struct ForRangeStmt {
 pub:
-	// Node
+	// general ast node
 	kind        SyntaxKind = .for_range_stmt
-	child_nodes []AstNode
 	pos         util.Pos
-
-	key_for_tok token.Token
-	ident_tok   token.Token
-	key_in_tok  token.Token
-	range       Expr
-	body        Stmt
+	child_nodes []AstNode
+	// child nodes
+	key_for    token.Token
+	ident      token.Token
+	key_in     token.Token
+	range_expr Expr
+	body_stmt  Stmt
 }
 
-pub fn new_for_range_stmt(key_for_tok token.Token, ident_tok token.Token, key_in_tok token.Token, range Expr, body Stmt) ForRangeStmt {
+pub fn new_for_range_stmt(key_for token.Token, ident token.Token, key_in token.Token, range_expr Expr, body_stmt Stmt) ForRangeStmt {
 	return ForRangeStmt{
-		key_for_tok: key_for_tok
-		ident_tok: ident_tok
-		key_in_tok: key_in_tok
-		range: range
-		body: body
-		pos: util.new_pos_from_pos_bounds(key_for_tok.pos, body.pos())
-		child_nodes: [AstNode(key_for_tok), ident_tok, key_in_tok, range, body]
+		pos: util.new_pos_from_pos_bounds(key_for.pos, body_stmt.pos())
+		child_nodes: [AstNode(key_for), ident, key_in, range_expr, body_stmt]
+		key_for: key_for
+		ident: ident
+		key_in: key_in
+		range_expr: range_expr
+		body_stmt: body_stmt
 	}
 }
-
-pub fn (fr &ForRangeStmt) child_nodes() []AstNode {
-	return fr.child_nodes
+pub fn (e &ForRangeStmt) child_nodes() []AstNode {
+	return e.child_nodes
 }
+
 
 pub struct ForStmt {
 pub:
@@ -41,20 +41,20 @@ pub:
 	pos         util.Pos
 	has_cond    bool
 
-	key_for_tok token.Token
-	cond        Expr
-	body        Stmt
+	key_for token.Token
+	cond_expr        Expr
+	body_stmt        Stmt
 }
 
 pub fn (fs &ForStmt) child_nodes() []AstNode {
 	return fs.child_nodes
 }
 
-pub fn new_for_stmt(key_for_tok token.Token, cond Expr, body Stmt, has_cond bool) ForStmt {
+pub fn new_for_stmt(key_for token.Token, cond_expr Expr, body_stmt Stmt, has_cond bool) ForStmt {
 	return ForStmt{
-		key_for_tok: key_for_tok
-		cond: cond
-		body: body
+		key_for: key_for
+		cond_expr: cond_expr
+		body_stmt: body_stmt
 		has_cond: has_cond
 	}
 }
