@@ -9,5 +9,3 @@ fn (mut p Parser) peek_var_decl(n int) bool {
 fn (mut p Parser) peek_assignment(n int) bool {
 	return p.peek_token(n).kind == .name && p.peek_token(n + 1).kind == .eq
 }
-
-

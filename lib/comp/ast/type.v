@@ -1,4 +1,5 @@
 module ast
+
 import term
 import lib.comp.token
 import lib.comp.util
@@ -26,24 +27,28 @@ pub fn (ex &AstNode) pos() util.Pos {
 
 pub fn (ex &AstNode) child_nodes() []AstNode {
 	match ex {
-		Expr {return ex.child_nodes()}
-		Stmt {return ex.child_nodes()}
-		token.Token {return []AstNode{}}
+		Expr { return ex.child_nodes() }
+		Stmt { return ex.child_nodes() }
+		token.Token { return []AstNode{} }
 	}
 }
 
 pub fn (ex &AstNode) node_str() string {
 	match ex {
-		Expr {return ex.node_str()}
-		Stmt {return ex.node_str()}
-		token.Token {return ex.lit}
+		Expr { return ex.node_str() }
+		Stmt { return ex.node_str() }
+		token.Token { return ex.lit }
 	}
 }
 
 pub fn (ex &AstNode) tree_print() {
 	match ex {
-		Expr {ex.tree_print()}
-		Stmt {ex.tree_print()}
+		Expr {
+			ex.tree_print()
+		}
+		Stmt {
+			ex.tree_print()
+		}
 		token.Token {
 			println(ex.lit)
 		}
@@ -52,43 +57,43 @@ pub fn (ex &AstNode) tree_print() {
 
 pub fn (e &Expr) kind() SyntaxKind {
 	match e {
-		LiteralExpr {return e.kind}
-		BinaryExpr {return e.kind}
-		UnaryExpr {return e.kind}
-		ParaExpr {return e.kind}
-		NameExpr {return e.kind}
-		AssignExpr {return e.kind}
-		CompNode {return e.kind}
-		IfExpr {return e.kind}
-		RangeExpr {return e.kind}
+		LiteralExpr { return e.kind }
+		BinaryExpr { return e.kind }
+		UnaryExpr { return e.kind }
+		ParaExpr { return e.kind }
+		NameExpr { return e.kind }
+		AssignExpr { return e.kind }
+		CompNode { return e.kind }
+		IfExpr { return e.kind }
+		RangeExpr { return e.kind }
 	}
 }
 
 pub fn (ex &Expr) node_str() string {
 	match ex {
-		LiteralExpr {return ex.node_str()}
-		BinaryExpr {return ex.node_str()}
-		UnaryExpr {return ex.node_str()}
-		ParaExpr {return ex.node_str()}
-		NameExpr {return ex.node_str()}
-		AssignExpr {return ex.node_str()}
-		CompNode {return ex.node_str()}
-		IfExpr {return ex.node_str()}
-		RangeExpr {return ex.node_str()}
-		}
+		LiteralExpr { return ex.node_str() }
+		BinaryExpr { return ex.node_str() }
+		UnaryExpr { return ex.node_str() }
+		ParaExpr { return ex.node_str() }
+		NameExpr { return ex.node_str() }
+		AssignExpr { return ex.node_str() }
+		CompNode { return ex.node_str() }
+		IfExpr { return ex.node_str() }
+		RangeExpr { return ex.node_str() }
+	}
 }
 
 pub fn (ex &Expr) child_nodes() []AstNode {
 	match ex {
-		LiteralExpr {return ex.child_nodes}
-		BinaryExpr {return ex.child_nodes}
-		UnaryExpr {return ex.child_nodes}
-		ParaExpr {return ex.child_nodes}
-		NameExpr {return ex.child_nodes}
-		AssignExpr {return ex.child_nodes}
-		CompNode {return ex.child_nodes}
-		IfExpr {return ex.child_nodes}
-		RangeExpr {return ex.child_nodes}
+		LiteralExpr { return ex.child_nodes }
+		BinaryExpr { return ex.child_nodes }
+		UnaryExpr { return ex.child_nodes }
+		ParaExpr { return ex.child_nodes }
+		NameExpr { return ex.child_nodes }
+		AssignExpr { return ex.child_nodes }
+		CompNode { return ex.child_nodes }
+		IfExpr { return ex.child_nodes }
+		RangeExpr { return ex.child_nodes }
 	}
 }
 
@@ -103,15 +108,15 @@ pub fn (ex &Expr) pos() util.Pos {
 
 pub fn (ex &Expr) tree_print() {
 	match ex {
-		LiteralExpr {tree_print(ex)}
-		BinaryExpr {tree_print(ex)}
-		UnaryExpr {tree_print(ex)}
-		ParaExpr {tree_print(ex)}
-		NameExpr {tree_print(ex)}
-		AssignExpr {tree_print(ex)}
-		CompNode {tree_print(ex)}
-		IfExpr {tree_print(ex)}
-		RangeExpr {tree_print(ex)}
+		LiteralExpr { tree_print(ex) }
+		BinaryExpr { tree_print(ex) }
+		UnaryExpr { tree_print(ex) }
+		ParaExpr { tree_print(ex) }
+		NameExpr { tree_print(ex) }
+		AssignExpr { tree_print(ex) }
+		CompNode { tree_print(ex) }
+		IfExpr { tree_print(ex) }
+		RangeExpr { tree_print(ex) }
 	}
 }
 
@@ -123,7 +128,7 @@ pub fn (ex &Stmt) node_str() string {
 		IfStmt { return ex.node_str() }
 		ForRangeStmt { return ex.node_str() }
 		ForStmt { return ex.node_str() }
-		}
+	}
 }
 
 pub fn (ex &Stmt) child_nodes() []AstNode {
@@ -165,14 +170,13 @@ fn tree_print(node &Node) {
 	pretty_print_tree(node, '', true)
 }
 
-
 fn pretty_print_tree(node &Node, indent string, is_last bool) {
 	marker := if is_last { '└──' } else { '├──' }
 
 	print(term.gray(indent))
 	print(term.gray(marker))
 	new_ident := indent + if is_last { '   ' } else { '│  ' }
-	
+
 	node_str := node.node_str()
 
 	if node_str[0] == `&` {

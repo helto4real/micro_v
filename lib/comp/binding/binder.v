@@ -68,13 +68,12 @@ pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 }
 
 pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
+	cond_expr := if for_stmt.has_cond {
+		b.bind_expr_type(for_stmt.cond_expr, int(types.TypeKind.bool_lit))
+	} else {
+		BoundExpr{}
+	}
 
-	cond_expr := if for_stmt.has_cond { 
-			b.bind_expr_type(for_stmt.cond_expr, int(types.TypeKind.bool_lit)) 
-		} else {
-			BoundExpr{}
-		}
-		
 	body_stmt := b.bind_stmt(for_stmt.body_stmt)
 
 	return new_for_stmt(cond_expr, body_stmt, for_stmt.has_cond)
@@ -84,13 +83,12 @@ pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) Bound
 	ident_name := for_range_stmt.ident.lit
 
 	range_expr := b.bind_expr(for_range_stmt.range_expr)
-	
+
 	// TODO: Check same type
 	ident := new_variable_symbol(ident_name, range_expr.typ(), false)
 	res := b.scope.try_declare(ident)
-		
-	body_stmt := b.bind_stmt(for_range_stmt.body_stmt)
 
+	body_stmt := b.bind_stmt(for_range_stmt.body_stmt)
 
 	if res == false {
 		b.log.error_name_already_defined(ident_name, for_range_stmt.ident.pos)
@@ -132,7 +130,8 @@ pub fn (mut b Binder) bind_expr_type(expr ast.Expr, typ types.Type) BoundExpr {
 
 	if bound_expr.typ() != typ {
 		// We expect the condition to be a boolean expression
-		b.log.error_expected_correct_type_expr(typ.typ_str(), bound_expr.typ().typ_str(), expr.pos())
+		b.log.error_expected_correct_type_expr(typ.typ_str(), bound_expr.typ().typ_str(),
+			expr.pos())
 	}
 	return bound_expr
 }

@@ -32,7 +32,8 @@ pub fn (l LitVal) lt(r LitVal) bool {
 	return match l {
 		int {
 			l < (r as int)
-		} else {
+		}
+		else {
 			panic('no lt is defined for type besides int')
 			false
 		}
@@ -46,7 +47,8 @@ pub fn (l LitVal) gt(r LitVal) bool {
 	return match l {
 		int {
 			l > (r as int)
-		} else {
+		}
+		else {
 			panic('no gt is defined for type besides int')
 			false
 		}
@@ -60,7 +62,8 @@ pub fn (l LitVal) ge(r LitVal) bool {
 	return match l {
 		int {
 			l >= (r as int)
-		} else {
+		}
+		else {
 			panic('no ge is defined for type besides int')
 			false
 		}
@@ -74,7 +77,8 @@ pub fn (l LitVal) le(r LitVal) bool {
 	return match l {
 		int {
 			l <= (r as int)
-		} else {
+		}
+		else {
 			panic('no le is defined for type besides int')
 			false
 		}

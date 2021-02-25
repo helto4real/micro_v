@@ -79,7 +79,6 @@ pub fn (ex &BoundBinaryOperator) node_str() string {
 	return typeof(ex).name
 }
 
-
 pub fn new_bound_binary_op(kind token.Kind, op_kind BoundBinaryOperatorKind, typ types.Type) BoundBinaryOperator {
 	return new_bound_binary_op_full(kind, op_kind, typ, typ, typ)
 }
@@ -181,7 +180,6 @@ pub fn (ex &BoundUnaryExpression) node_str() string {
 	return typeof(ex).name
 }
 
-
 struct BoundBinaryExpr {
 pub:
 	kind        BoundNodeKind
@@ -206,7 +204,6 @@ fn new_bound_binary_expr(left BoundExpr, op BoundBinaryOperator, right BoundExpr
 pub fn (ex &BoundBinaryExpr) node_str() string {
 	return typeof(ex).name
 }
-
 
 struct BoundLiteralExpr {
 pub:

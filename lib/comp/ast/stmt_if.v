@@ -11,7 +11,7 @@ pub:
 	has_else     bool
 	key_if_tok   token.Token
 	key_else_tok token.Token
-	cond_expr         Expr
+	cond_expr    Expr
 	then_stmt    Stmt
 	else_stmt    Stmt
 }

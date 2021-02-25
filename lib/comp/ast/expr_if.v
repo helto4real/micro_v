@@ -7,13 +7,13 @@ import lib.comp.util
 //	x := if i < 100 {10} else {20}
 pub struct IfExpr {
 pub:
-	kind  SyntaxKind = .if_expr
-	pos   util.Pos
+	kind        SyntaxKind = .if_expr
+	pos         util.Pos
 	child_nodes []AstNode
 
 	key_if    token.Token
 	key_else  token.Token
-	cond_expr      Expr
+	cond_expr Expr
 	then_stmt Stmt
 	else_stmt Stmt
 }

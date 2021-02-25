@@ -7,8 +7,8 @@ import lib.comp.util
 //	ex: 1..10
 pub struct RangeExpr {
 pub:
-	kind  SyntaxKind = .range_expr
-	pos   util.Pos
+	kind        SyntaxKind = .range_expr
+	pos         util.Pos
 	child_nodes []AstNode
 
 	range token.Token

@@ -1,4 +1,5 @@
 module comp
+
 import strings
 import lib.comp.binding
 import lib.comp.types
@@ -48,18 +49,22 @@ fn (mut e Evaluator) eval_stmt(stmt binding.BoundStmt) {
 
 // TODO: Will remove the print out of these functions onces println is implemented
 fn (mut e Evaluator) eval_bound_for_stmt(node binding.BoundForStmt) {
-	mut b:= strings.new_builder(0)
+	mut b := strings.new_builder(0)
 	mut first_loop := true
 	for {
-			if node.has_cond {
-				cond_expr := e.eval_expr(node.cond_expr) or { panic('unexpected error evaluate expression')}
-				if (cond_expr as bool) == false {
-					break
-				}
+		if node.has_cond {
+			cond_expr := e.eval_expr(node.cond_expr) or {
+				panic('unexpected error evaluate expression')
 			}
+			if (cond_expr as bool) == false {
+				break
+			}
+		}
 		e.eval_stmt(node.body_stmt)
-		if !first_loop {b.write_string('   ')}
-		b.writeln('${e.last_val}')
+		if !first_loop {
+			b.write_string('   ')
+		}
+		b.writeln('$e.last_val')
 		first_loop = false
 	}
 	e.last_val = b.str()
@@ -67,18 +72,20 @@ fn (mut e Evaluator) eval_bound_for_stmt(node binding.BoundForStmt) {
 
 fn (mut e Evaluator) eval_bound_for_range_stmt(node binding.BoundForRangeStmt) {
 	range_expr := node.range_expr as binding.BoundRangeExpr
-	from := e.eval_expr(range_expr.from_exp) or {panic('unexpected eval expression')}
-	to := e.eval_expr(range_expr.to_exp) or {panic('unexpected eval expression')}
+	from := e.eval_expr(range_expr.from_exp) or { panic('unexpected eval expression') }
+	to := e.eval_expr(range_expr.to_exp) or { panic('unexpected eval expression') }
 
-	mut b:= strings.new_builder(0)
+	mut b := strings.new_builder(0)
 	if from is int {
 		to_int := to as int
 		for i in from .. to_int {
 			e.vars.assign_variable_value(node.ident, i)
 			// println('ident: $ident, range_expr: $range_expr')
 			e.eval_stmt(node.body_stmt)
-			if i != from {b.write_string('   ')}
-			b.writeln('${e.last_val}')
+			if i != from {
+				b.write_string('   ')
+			}
+			b.writeln('$e.last_val')
 		}
 	}
 	// val := types.LitVal(b.str())
@@ -199,9 +206,9 @@ fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?types
 		.divition { return (left as int) / (right as int) }
 		.logic_and { return (left as bool) && (right as bool) }
 		.logic_or { return (left as bool) || (right as bool) }
-		.bitwise_and {return (left as int) & (right as int)	}
-		.bitwise_or {return (left as int) | (right as int)	}
-		.bitwise_xor {return (left as int) ^ (right as int)	}
+		.bitwise_and { return (left as int) & (right as int) }
+		.bitwise_or { return (left as int) | (right as int) }
+		.bitwise_xor { return (left as int) ^ (right as int) }
 		.equals { return left.eq(right) }
 		.not_equals { return !left.eq(right) }
 		.greater { return left.gt(right) }

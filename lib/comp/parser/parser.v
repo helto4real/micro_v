@@ -224,7 +224,6 @@ fn (mut p Parser) parse_expr() ast.Expr {
 	return p.parse_assign_expr()
 }
 
-
 fn (mut p Parser) parse_range_expr() ast.Expr {
 	from_num := p.parse_number_literal()
 	range_tok := p.match_token(.dot_dot)

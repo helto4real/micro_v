@@ -36,7 +36,7 @@ pub fn (ex &LiteralExpr) node_str() string {
 pub struct NameExpr {
 pub:
 	kind        SyntaxKind = .name_expr
-	ident   token.Token
+	ident       token.Token
 	pos         util.Pos
 	child_nodes []AstNode
 }

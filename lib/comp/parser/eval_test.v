@@ -87,7 +87,6 @@ fn test_eval_basic_exprs() {
 	assert c.eval_int('0 ^ 1') == 1
 	assert c.eval_int('1 ^ 3') == 2
 
-
 	// test boolean expressions
 	assert c.eval_bool('true') == true
 	assert c.eval_bool('false') == false

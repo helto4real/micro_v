@@ -22,9 +22,9 @@ pub fn (ex &BoundBlockStmt) node_str() string {
 
 pub struct BoundExprStmt {
 pub:
-	kind       BoundNodeKind = .expr_stmt
+	kind        BoundNodeKind = .expr_stmt
 	child_nodes []BoundNode
-	bound_expr BoundExpr
+	bound_expr  BoundExpr
 }
 
 pub fn new_bound_expr_stmt(bound_expr BoundExpr) BoundExprStmt {
@@ -35,12 +35,12 @@ pub fn new_bound_expr_stmt(bound_expr BoundExpr) BoundExprStmt {
 
 pub struct BoundVarDeclStmt {
 pub:
-	kind  BoundNodeKind = .var_decl_stmt
-	typ    types.Type
+	kind        BoundNodeKind = .var_decl_stmt
+	typ         types.Type
 	child_nodes []BoundNode
-	is_mut bool
-	expr   BoundExpr
-	var    &VariableSymbol
+	is_mut      bool
+	expr        BoundExpr
+	var         &VariableSymbol
 }
 
 fn new_var_decl_stmt(var &VariableSymbol, expr BoundExpr, is_mut bool) BoundStmt {
