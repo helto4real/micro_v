@@ -26,6 +26,9 @@
             "pub fn (e &$1Stmt) child_nodes() []AstNode {",
             "	return e.child_nodes",
             "}",
+            "pub fn (ex &$1Stmt) node_str() string {",
+            "	return typeof(ex).name",
+            "}",
         ],
         "description": ""
     },
@@ -53,8 +56,11 @@
             "		// insert nodes here",
             "	}",
             "}",
-            "pub fn (e &$1Expr) child_nodes() []AstNode {",
-            "	return e.child_nodes",
+            "pub fn (ex &$1Expr) child_nodes() []AstNode {",
+            "	return ex.child_nodes",
+            "}",
+            "pub fn (ex &$1Expr) node_str() string {",
+            "	return typeof(ex).name",
             "}",
         ],
         "description": ""
