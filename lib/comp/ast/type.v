@@ -14,6 +14,11 @@ pub type Expr = AssignExpr | BinaryExpr | CompNode | IfExpr | LiteralExpr | Name
 // Nodes in syntax tree
 pub type AstNode = Expr | Stmt | token.Token
 
+pub interface Node {
+	child_nodes() []AstNode
+	node_str() string
+}
+
 pub fn (ex &AstNode) pos() util.Pos {
 	match ex {
 		Expr, Stmt {
@@ -159,11 +164,6 @@ pub fn (ex &Stmt) tree_print() {
 		ForRangeStmt { tree_print(ex) }
 		ForStmt { tree_print(ex) }
 	}
-}
-
-pub interface Node {
-	child_nodes() []AstNode
-	node_str() string
 }
 
 fn tree_print(node &Node) {
