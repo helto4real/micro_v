@@ -182,6 +182,7 @@ fn pretty_print_tree(node &Node, indent string, is_last bool) {
 	if node_str[0] == `&` {
 		println(term.gray(node_str[5..]))
 	} else {
+		print(term.gray('Token '))
 		println(term.bright_cyan(node_str))
 	}
 

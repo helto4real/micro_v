@@ -63,9 +63,6 @@ fn print_exprs() {
 		if !is_blank && syntax_tree.log.all.len > 0 {
 			continue
 		}
-		if show_tree {
-			syntax_tree.root.stmt.tree_print()
-		}
 
 		mut comp := if prev_comp == 0 {
 			comp.new_compilation(syntax_tree)
@@ -99,6 +96,9 @@ fn print_exprs() {
 				println('')
 			}
 		} else {
+			if show_tree {
+				syntax_tree.root.stmt.tree_print()
+			}
 			println(term.yellow('   $res.val'))
 			// println('VARS: $vars')
 			prev_comp = comp
