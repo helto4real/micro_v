@@ -38,6 +38,10 @@ pub fn (be &BinaryExpr) child_nodes() []AstNode {
 	return be.child_nodes
 }
 
+pub fn (ex &BinaryExpr) node_str() string {
+	return typeof(ex).name
+}
+
 pub struct UnaryExpr {
 pub:
 	op          token.Token
@@ -65,6 +69,10 @@ pub fn (be &UnaryExpr) child_nodes() []AstNode {
 	return be.child_nodes
 }
 
+pub fn (ex &UnaryExpr) node_str() string {
+	return typeof(ex).name
+}
+
 pub struct ParaExpr {
 pub:
 	kind             SyntaxKind = .para_expr
@@ -87,4 +95,8 @@ pub fn new_paranthesis_expr(open_para_token token.Token, expr Expr, close_para_t
 
 pub fn (pe &ParaExpr) child_nodes() []AstNode {
 	return pe.child_nodes
+}
+
+pub fn (ex &ParaExpr) node_str() string {
+	return typeof(ex).name
 }

@@ -64,7 +64,7 @@ fn print_exprs() {
 			continue
 		}
 		if show_tree {
-			parser.pretty_print(syntax_tree.root.stmt, '', true)
+			syntax_tree.root.stmt.tree_print()
 		}
 
 		mut comp := if prev_comp == 0 {

@@ -29,6 +29,9 @@ pub fn new_bound_unary_op_with_ret(kind token.Kind, op_kind BoundUnaryOperatorKi
 		res_typ: res_typ
 	}
 }
+pub fn (ex &BoundUnaryOperator) node_str() string {
+	return typeof(ex).name
+}
 
 fn build_bound_unary_operators() []BoundUnaryOperator {
 	mut operators := []BoundUnaryOperator{}
@@ -72,6 +75,11 @@ pub fn new_bound_binary_op_full(kind token.Kind, op_kind BoundBinaryOperatorKind
 	}
 }
 
+pub fn (ex &BoundBinaryOperator) node_str() string {
+	return typeof(ex).name
+}
+
+
 pub fn new_bound_binary_op(kind token.Kind, op_kind BoundBinaryOperatorKind, typ types.Type) BoundBinaryOperator {
 	return new_bound_binary_op_full(kind, op_kind, typ, typ, typ)
 }
@@ -87,7 +95,7 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 	operators << new_bound_binary_op(.minus, .subraction, int(types.TypeKind.int_lit))
 	operators << new_bound_binary_op(.mul, .multiplication, int(types.TypeKind.int_lit))
 	operators << new_bound_binary_op(.div, .divition, int(types.TypeKind.int_lit))
-	
+
 	operators << new_bound_binary_op(.amp, .bitwise_and, int(types.TypeKind.int_lit))
 	operators << new_bound_binary_op(.pipe, .bitwise_or, int(types.TypeKind.int_lit))
 	operators << new_bound_binary_op(.hat, .bitwise_xor, int(types.TypeKind.int_lit))
@@ -152,14 +160,16 @@ pub enum BoundBinaryOperatorKind {
 
 struct BoundUnaryExpression {
 pub:
-	kind    BoundNodeKind
-	typ     types.Type
-	op      BoundUnaryOperator
-	operand BoundExpr
+	kind        BoundNodeKind
+	typ         types.Type
+	child_nodes []BoundNode
+	op          BoundUnaryOperator
+	operand     BoundExpr
 }
 
 fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr {
 	return BoundUnaryExpression{
+		child_nodes: [BoundNode(operand)]
 		kind: .unary_expr
 		typ: op.res_typ
 		op: op
@@ -167,17 +177,24 @@ fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr {
 	}
 }
 
+pub fn (ex &BoundUnaryExpression) node_str() string {
+	return typeof(ex).name
+}
+
+
 struct BoundBinaryExpr {
 pub:
-	kind  BoundNodeKind
-	typ   types.Type
-	op    BoundBinaryOperator
-	left  BoundExpr
-	right BoundExpr
+	kind        BoundNodeKind
+	typ         types.Type
+	child_nodes []BoundNode
+	left        BoundExpr
+	op          BoundBinaryOperator
+	right       BoundExpr
 }
 
 fn new_bound_binary_expr(left BoundExpr, op BoundBinaryOperator, right BoundExpr) BoundExpr {
 	return BoundBinaryExpr{
+		child_nodes: [BoundNode(left), right]
 		kind: .binary_expr
 		typ: op.res_typ
 		op: op
@@ -186,11 +203,17 @@ fn new_bound_binary_expr(left BoundExpr, op BoundBinaryOperator, right BoundExpr
 	}
 }
 
+pub fn (ex &BoundBinaryExpr) node_str() string {
+	return typeof(ex).name
+}
+
+
 struct BoundLiteralExpr {
 pub:
-	kind BoundNodeKind
-	typ  types.Type
-	val  types.LitVal
+	kind        BoundNodeKind
+	typ         types.Type
+	child_nodes []BoundNode
+	val         types.LitVal
 }
 
 fn new_bound_literal_expr(val types.LitVal) BoundExpr {
@@ -199,6 +222,9 @@ fn new_bound_literal_expr(val types.LitVal) BoundExpr {
 		kind: .literal_expr
 		val: val
 	}
+}
+pub fn (ex &BoundLiteralExpr) node_str() string {
+	return typeof(ex).name
 }
 
 fn (mut b Binder) bind_unary_expr(syntax ast.UnaryExpr) BoundExpr {
@@ -224,9 +250,10 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 
 struct BoundVariableExpr {
 pub:
-	kind BoundNodeKind = .variable_expr
-	typ  types.Type
-	var  &VariableSymbol
+	kind        BoundNodeKind = .variable_expr
+	typ         types.Type
+	child_nodes []BoundNode
+	var         &VariableSymbol
 }
 
 fn new_bound_variable_expr(var &VariableSymbol) BoundExpr {
@@ -234,4 +261,8 @@ fn new_bound_variable_expr(var &VariableSymbol) BoundExpr {
 		var: var
 		typ: var.typ
 	}
+}
+
+pub fn (ex &BoundVariableExpr) node_str() string {
+	return typeof(ex).name
 }

@@ -37,7 +37,8 @@ fn new_parser_from_text(text string) &Parser {
 pub fn (mut p Parser) parse_comp_node() ast.CompNode {
 	stmt := p.parse_stmt()
 	eof := p.match_token(.eof)
-	return ast.new_comp_expr(stmt, eof)
+	node := ast.new_comp_expr(stmt, eof)
+	return node
 }
 
 // peek, returns a token at offset from current postion

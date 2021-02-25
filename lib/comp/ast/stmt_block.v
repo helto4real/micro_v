@@ -31,3 +31,7 @@ pub fn new_block_stmt(open_brc token.Token, stmts []Stmt, close_brc token.Token)
 pub fn (bs &BlockStmt) child_nodes() []AstNode {
 	return bs.child_nodes
 }
+
+pub fn (ex &BlockStmt) node_str() string {
+	return typeof(ex).name
+}

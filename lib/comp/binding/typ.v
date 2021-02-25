@@ -28,6 +28,17 @@ enum BoundNodeKind {
 	for_range_stmt
 }
 
+pub fn (bn &BoundNode) child_nodes() []BoundNode {
+	match bn {
+		BoundExpr {
+			return bn.child_nodes()
+		}
+		BoundStmt {
+			return bn.child_nodes()
+		}
+	}
+}
+
 pub fn (be BoundExpr) typ() types.Type {
 	match be {
 		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr,
@@ -54,6 +65,24 @@ pub fn (be BoundExpr) kind() BoundNodeKind {
 		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr,
 		BoundIfExpr, BoundRangeExpr {
 			return be.kind
+		}
+	}
+}
+
+pub fn (be BoundExpr) child_nodes() []BoundNode {
+	match be {
+		BoundUnaryExpression, BoundBinaryExpr, BoundLiteralExpr, BoundVariableExpr, BoundAssignExpr,
+		BoundIfExpr, BoundRangeExpr {
+			return be.child_nodes
+		}
+	}
+}
+
+pub fn (bs BoundStmt) child_nodes() []BoundNode {
+	match bs {
+		BoundBlockStmt, BoundExprStmt, BoundForRangeStmt, BoundForStmt, BoundIfStmt, BoundVarDeclStmt
+		{
+			return bs.child_nodes
 		}
 	}
 }

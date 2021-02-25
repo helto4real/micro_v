@@ -1,17 +1,18 @@
-{
-	a:= 1
-	{
-		a:=2
-	}
+
+struct TestStruct {
+	test_bool bool
 }
 
-{1+1}
+fn (t TestStruct) some_func() int {
+	return 0
+}
+type Sum = TestStruct | int
+fn main() {
+	x := TestStruct {
+		
+	}
+	$for z in Sum.methods {
+		println(z)
 
-{
-	a:=10
-	if 1=1 {
-		b:= a
-	} else {
-		b:=22
 	}
 }

@@ -32,6 +32,9 @@ pub fn (e &ForRangeStmt) child_nodes() []AstNode {
 	return e.child_nodes
 }
 
+pub fn (ex &ForRangeStmt) node_str() string {
+	return typeof(ex).name
+}
 
 pub struct ForStmt {
 pub:
@@ -41,9 +44,9 @@ pub:
 	pos         util.Pos
 	has_cond    bool
 
-	key_for token.Token
-	cond_expr        Expr
-	body_stmt        Stmt
+	key_for   token.Token
+	cond_expr Expr
+	body_stmt Stmt
 }
 
 pub fn (fs &ForStmt) child_nodes() []AstNode {
@@ -56,6 +59,10 @@ pub fn new_for_stmt(key_for token.Token, cond_expr Expr, body_stmt Stmt, has_con
 		cond_expr: cond_expr
 		body_stmt: body_stmt
 		has_cond: has_cond
-		pos: util.new_pos_from_pos_bounds(key_for.pos, body_stmt.pos())	
+		pos: util.new_pos_from_pos_bounds(key_for.pos, body_stmt.pos())
 	}
+}
+
+pub fn (iss &ForStmt) node_str() string {
+	return typeof(iss).name
 }

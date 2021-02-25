@@ -29,6 +29,10 @@ pub fn (le &LiteralExpr) child_nodes() []AstNode {
 	return le.child_nodes
 }
 
+pub fn (ex &LiteralExpr) node_str() string {
+	return typeof(ex).name
+}
+
 pub struct NameExpr {
 pub:
 	kind        SyntaxKind = .name_expr
@@ -47,4 +51,8 @@ pub fn new_name_expr(ident token.Token) NameExpr {
 
 pub fn (ne &NameExpr) child_nodes() []AstNode {
 	return ne.child_nodes
+}
+
+pub fn (ex &NameExpr) node_str() string {
+	return typeof(ex).name
 }

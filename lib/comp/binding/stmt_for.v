@@ -4,12 +4,12 @@ import lib.comp.types
 
 pub struct BoundForRangeStmt {
 pub:
-	kind BoundNodeKind = .for_range_stmt
-	typ  types.Type
-
-	ident &VariableSymbol
-	range_expr BoundExpr
-	body_stmt  BoundStmt
+	kind        BoundNodeKind = .for_range_stmt
+	typ         types.Type
+	child_nodes []BoundNode
+	ident       &VariableSymbol
+	range_expr  BoundExpr
+	body_stmt   BoundStmt
 }
 
 fn new_for_range_stmt(ident &VariableSymbol, range_expr BoundExpr, body_stmt BoundStmt) BoundStmt {
@@ -20,11 +20,15 @@ fn new_for_range_stmt(ident &VariableSymbol, range_expr BoundExpr, body_stmt Bou
 	}
 }
 
+pub fn (ex &BoundForRangeStmt) node_str() string {
+	return typeof(ex).name
+}
 pub struct BoundForStmt {
 pub:
-	kind     BoundNodeKind = .for_stmt
-	typ      types.Type
-	has_cond bool
+	kind        BoundNodeKind = .for_stmt
+	typ         types.Type
+	child_nodes []BoundNode
+	has_cond    bool
 
 	cond_expr BoundExpr
 	body_stmt BoundStmt
@@ -36,4 +40,7 @@ fn new_for_stmt(cond_expr BoundExpr, body_stmt BoundStmt, has_cond bool) BoundSt
 		body_stmt: body_stmt
 		has_cond: has_cond
 	}
+}
+pub fn (ex &BoundForStmt) node_str() string {
+	return typeof(ex).name
 }

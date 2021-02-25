@@ -23,3 +23,7 @@ pub fn new_comp_expr(stmt Stmt, eof_tok token.Token) CompNode {
 pub fn (cn &CompNode) child_nodes() []AstNode {
 	return cn.child_nodes
 }
+
+pub fn (ex &CompNode) node_str() string {
+	return typeof(ex).name
+}

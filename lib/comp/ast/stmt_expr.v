@@ -22,3 +22,7 @@ pub fn new_expr_stmt(expr Expr) ExprStmt {
 pub fn (e &ExprStmt) child_nodes() []AstNode {
 	return e.child_nodes
 }
+
+pub fn (ex &ExprStmt) node_str() string {
+	return typeof(ex).name
+}

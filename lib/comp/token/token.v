@@ -14,6 +14,10 @@ pub fn (t Token) str() string {
 	// return "tok: [$t.pos.pos, ($t.pos.ln, $t.pos.col)] $t.kind '$t.lit'"
 }
 
+pub fn (ex Token) node_str() string {
+	return ex.lit
+}
+
 // Kind of token
 pub enum Kind {
 	unknown

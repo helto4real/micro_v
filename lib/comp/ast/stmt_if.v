@@ -43,3 +43,7 @@ pub fn new_if_stmt(key_if_tok token.Token, cond_expr Expr, then_stmt Stmt) IfStm
 pub fn (iss &IfStmt) child_nodes() []AstNode {
 	return iss.nodes
 }
+
+pub fn (iss &IfStmt) node_str() string {
+	return typeof(iss).name
+}

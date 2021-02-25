@@ -6,7 +6,8 @@ pub struct BoundIfStmt {
 pub:
 	kind        BoundNodeKind = .if_stmt
 	typ         types.Type
-	cond_expr        BoundExpr
+	child_nodes []BoundNode
+	cond_expr   BoundExpr
 	has_else    bool
 	block_stmt  BoundStmt
 	else_clause BoundStmt
@@ -27,4 +28,8 @@ fn new_if_else_stmt(cond_expr BoundExpr, block_stmt BoundStmt, else_clause Bound
 		else_clause: else_clause
 		has_else: true
 	}
+}
+
+pub fn (ex &BoundIfStmt) node_str() string {
+	return typeof(ex).name
 }
