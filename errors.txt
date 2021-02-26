@@ -1,0 +1,10 @@
+&lib.comp.util.Diagnostics{
+    iter_pos: 0
+    all: [lib.comp.util.Diagnostic{
+        pos: lib.comp.util.Pos{
+            pos: 52
+            len: 1
+        }
+        text: 'unexpected token: <eof>,  expected <rcbr>'
+    }]
+}

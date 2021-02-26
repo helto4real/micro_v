@@ -157,73 +157,6 @@ pub enum BoundBinaryOperatorKind {
 	not_supported
 }
 
-struct BoundUnaryExpression {
-pub:
-	kind        BoundNodeKind
-	typ         types.Type
-	child_nodes []BoundNode
-	op          BoundUnaryOperator
-	operand     BoundExpr
-}
-
-fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr {
-	return BoundUnaryExpression{
-		child_nodes: [BoundNode(operand)]
-		kind: .unary_expr
-		typ: op.res_typ
-		op: op
-		operand: operand
-	}
-}
-
-pub fn (ex &BoundUnaryExpression) node_str() string {
-	return typeof(ex).name
-}
-
-struct BoundBinaryExpr {
-pub:
-	kind        BoundNodeKind
-	typ         types.Type
-	child_nodes []BoundNode
-	left        BoundExpr
-	op          BoundBinaryOperator
-	right       BoundExpr
-}
-
-fn new_bound_binary_expr(left BoundExpr, op BoundBinaryOperator, right BoundExpr) BoundExpr {
-	return BoundBinaryExpr{
-		child_nodes: [BoundNode(left), right]
-		kind: .binary_expr
-		typ: op.res_typ
-		op: op
-		left: left
-		right: right
-	}
-}
-
-pub fn (ex &BoundBinaryExpr) node_str() string {
-	return typeof(ex).name
-}
-
-struct BoundLiteralExpr {
-pub:
-	kind        BoundNodeKind
-	typ         types.Type
-	child_nodes []BoundNode
-	val         types.LitVal
-}
-
-fn new_bound_literal_expr(val types.LitVal) BoundExpr {
-	return BoundLiteralExpr{
-		typ: val.typ()
-		kind: .literal_expr
-		val: val
-	}
-}
-pub fn (ex &BoundLiteralExpr) node_str() string {
-	return typeof(ex).name
-}
-
 fn (mut b Binder) bind_unary_expr(syntax ast.UnaryExpr) BoundExpr {
 	bound_operand := b.bind_expr(syntax.operand)
 	bound_op := bind_unary_operator(syntax.op.kind, bound_operand.typ()) or {
@@ -245,21 +178,3 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 	return new_bound_binary_expr(bound_left, bound_op, bound_right)
 }
 
-struct BoundVariableExpr {
-pub:
-	kind        BoundNodeKind = .variable_expr
-	typ         types.Type
-	child_nodes []BoundNode
-	var         &VariableSymbol
-}
-
-fn new_bound_variable_expr(var &VariableSymbol) BoundExpr {
-	return BoundVariableExpr{
-		var: var
-		typ: var.typ
-	}
-}
-
-pub fn (ex &BoundVariableExpr) node_str() string {
-	return typeof(ex).name
-}

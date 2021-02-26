@@ -1,0 +1,19 @@
+module binding
+
+pub struct BoundBlockStmt {
+pub:
+	kind        BoundNodeKind = .block_stmt
+	child_nodes []BoundNode
+	bound_stmts []BoundStmt
+}
+
+pub fn new_bound_block_stmt(bound_stmts []BoundStmt) BoundBlockStmt {
+	return BoundBlockStmt{
+		bound_stmts: bound_stmts
+		child_nodes: bound_stmts.map(BoundNode(it))
+	}
+}
+
+pub fn (ex &BoundBlockStmt) node_str() string {
+	return typeof(ex).name
+}

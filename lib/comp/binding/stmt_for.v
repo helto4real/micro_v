@@ -17,6 +17,7 @@ fn new_for_range_stmt(ident &VariableSymbol, range_expr BoundExpr, body_stmt Bou
 		ident: ident
 		range_expr: range_expr
 		body_stmt: body_stmt
+		child_nodes: [BoundNode(range_expr), body_stmt]
 	}
 }
 
