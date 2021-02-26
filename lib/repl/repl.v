@@ -10,9 +10,13 @@ import lib.comp.types
 import lib.comp.token
 import lib.comp.util
 import lib.comp
+import lib.comp.ast.walker
+import lib.comp.ast
 
 struct App {
 mut:
+	tree		  []string
+	show_tree     bool
 	tui           &tui.Context = 0
 	ed            &Buffer      = 0
 	viewport      int
@@ -21,13 +25,12 @@ mut:
 	status        string
 	error_msg     string
 	has_val       bool
-	val           types.LitVal = 0
+	val           types.LitVal = ' '
 	// is multi line editing
 	is_ml bool
 
 	vars      &binding.EvalVariables = 0
 	prev_comp &comp.Compilation      = 0
-	show_tree bool
 }
 
 fn (a &App) view_height() int {
@@ -78,6 +81,12 @@ fn (mut a App) message() {
 	} else if a.error_msg.len > 0 {
 		a.tui.draw_text(2, b.lines.len + 1, a.error_msg)
 	}
+
+	if a.tree.len > 0 {
+		for i, s in a.tree {
+			a.tui.draw_text(0, i + 5, s)
+		}
+	}
 }
 fn (mut a App) footer() {
 	w, h := a.tui.window_width, a.tui.window_height
@@ -110,6 +119,32 @@ fn (mut a App) footer() {
 	}
 }
 
+fn (mut a App) visit_tree(node ast.Node, last_child bool, indent string) ?string {
+
+	mut b := strings.new_builder(0)
+
+	marker := if last_child { '└──' } else { '├──' }
+
+	b.write_string(term.gray(indent))
+	if indent.len > 0 {
+		b.write_string(term.gray(marker))
+	}
+	new_ident := indent + if last_child { '   ' } else { '│  ' }
+	node_str := node.node_str()
+
+	if node_str[0] == `&` {
+		b.write_string(term.gray(node_str[5..]))
+		b.writeln(term.gray(node_str[5..]))
+	} else {
+		b.write_string(term.gray('Token '))
+		b.writeln(term.bright_cyan(node_str))
+	}
+
+	a.tree << b.str()
+	// a.tree << '${node.node_str()} ($last_child)'
+	return new_ident
+}
+
 fn event(e &tui.Event, x voidptr) {
 	mut app := &App(x)
 	mut buffer := app.ed
@@ -135,6 +170,13 @@ fn event(e &tui.Event, x voidptr) {
 							app.val = res.val
 							app.status = ''
 							app.error_msg = ''
+
+							if app.show_tree {
+								walker.walk_tree(app, syntax_tree.root)
+							}
+							// walker.inspect(syntax_tree.root)
+							// fn (node ast.Node, data voidptr)
+
 						} else {
 							mut b := strings.new_builder(0)
 							text := buffer.raw() // syntax_tree.source.str()
@@ -199,7 +241,11 @@ fn event(e &tui.Event, x voidptr) {
 			48...57, 97...122 {
 				if e.modifiers == .ctrl {
 					if e.code == .s {
+						// save current raw text
 						os.write_file('output.txt', buffer.raw()) or { }
+					} else if e.code == .t {
+						// tree mode
+						app.show_tree = !app.show_tree
 					}
 				} else {
 					buffer.put(e.ascii.ascii_str())

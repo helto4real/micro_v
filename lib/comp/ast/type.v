@@ -1,6 +1,5 @@
 module ast
 
-import term
 import lib.comp.token
 import lib.comp.util
 
@@ -43,20 +42,6 @@ pub fn (ex &AstNode) node_str() string {
 		Expr { return ex.node_str() }
 		Stmt { return ex.node_str() }
 		token.Token { return ex.lit }
-	}
-}
-
-pub fn (ex &AstNode) tree_print() {
-	match ex {
-		Expr {
-			ex.tree_print()
-		}
-		Stmt {
-			ex.tree_print()
-		}
-		token.Token {
-			println(ex.lit)
-		}
 	}
 }
 
@@ -111,20 +96,6 @@ pub fn (ex &Expr) pos() util.Pos {
 	}
 }
 
-pub fn (ex &Expr) tree_print() {
-	match ex {
-		LiteralExpr { tree_print(ex) }
-		BinaryExpr { tree_print(ex) }
-		UnaryExpr { tree_print(ex) }
-		ParaExpr { tree_print(ex) }
-		NameExpr { tree_print(ex) }
-		AssignExpr { tree_print(ex) }
-		CompNode { tree_print(ex) }
-		IfExpr { tree_print(ex) }
-		RangeExpr { tree_print(ex) }
-	}
-}
-
 pub fn (ex &Stmt) node_str() string {
 	match ex {
 		BlockStmt { return ex.node_str() }
@@ -155,41 +126,3 @@ pub fn (ex &Stmt) pos() util.Pos {
 	}
 }
 
-pub fn (ex &Stmt) tree_print() {
-	match ex {
-		BlockStmt { tree_print(ex) }
-		ExprStmt { tree_print(ex) }
-		VarDeclStmt { tree_print(ex) }
-		IfStmt { tree_print(ex) }
-		ForRangeStmt { tree_print(ex) }
-		ForStmt { tree_print(ex) }
-	}
-}
-
-fn tree_print(node &Node) {
-	pretty_print_tree(node, '', true)
-}
-
-fn pretty_print_tree(node &Node, indent string, is_last bool) {
-	marker := if is_last { '└──' } else { '├──' }
-
-	print(term.gray(indent))
-	print(term.gray(marker))
-	new_ident := indent + if is_last { '   ' } else { '│  ' }
-
-	node_str := node.node_str()
-
-	if node_str[0] == `&` {
-		println(term.gray(node_str[5..]))
-	} else {
-		print(term.gray('Token '))
-		println(term.bright_cyan(node_str))
-	}
-
-	child_nodes := node.child_nodes()
-	for i, _ in child_nodes {
-		child := child_nodes[i]
-		last_node := if i < child_nodes.len - 1 { false } else { true }
-		pretty_print_tree(child, new_ident, last_node)
-	}
-}

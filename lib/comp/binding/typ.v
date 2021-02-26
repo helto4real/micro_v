@@ -81,7 +81,7 @@ pub fn (be BoundExpr) child_nodes() []BoundNode {
 pub fn (bs BoundStmt) child_nodes() []BoundNode {
 	match bs {
 		BoundBlockStmt, BoundExprStmt, BoundForRangeStmt, BoundForStmt, BoundIfStmt, BoundVarDeclStmt
-		 {
+		{
 			return bs.child_nodes
 		}
 	}
