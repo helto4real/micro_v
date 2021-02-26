@@ -166,14 +166,14 @@ fn event(e &tui.Event, x voidptr) {
 							app.status = res.result[0].text
 							app.t = 3
 							app.error_msg = b.str()
-							os.write_file('errors.txt', '$res') or { }
+							// os.write_file('errors.txt', '$res') or { }
 						}
 					} else {
 						app.error_msg = ''
 						app.has_val = false
 						app.status = syntax_tree.log.all[0].text
 						app.t = 1
-						os.write_file('errors.txt', '$syntax_tree.log') or { }
+						// os.write_file('errors.txt', '$syntax_tree.log') or { }
 					}
 				}
 				buffer.put('\n')
