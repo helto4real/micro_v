@@ -2,12 +2,14 @@ import lib.comp.token
 import lib.comp.binding
 import lib.comp.parser
 import lib.comp
+import lib.repl
 // import lib.comp.binding
 import os
 import term
 import strings
 
 fn main() {
+
 	args := os.args[1..]
 	if args.len > 0 {
 		if '-tokeninzer' in args {
@@ -15,22 +17,24 @@ fn main() {
 			exit(0)
 		}
 	}
-	print_exprs()
+	repl.run() ?
+	// print_exprs() ?
 }
 
-fn print_exprs() {
+fn print_exprs() ? {
 	term.clear()
 	mut show_tree := false
 	mut vars := binding.new_eval_variables()
 	mut builder := strings.new_builder(30)
 	mut prev_comp := &comp.Compilation(0)
-
+	
 	for {
 		if builder.len == 0 {
 			print(term.ok_message('»'))
 		} else {
 			print(' | ')
 		}
+
 		line := os.get_line()
 		is_blank := line == ''
 
