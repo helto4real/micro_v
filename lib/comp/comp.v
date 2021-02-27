@@ -11,8 +11,8 @@ import lib.comp.util
 pub struct Compilation {
 mut:
 	previous     &Compilation
-	global_scope &binding.BoundGlobalScope
 pub mut:
+	global_scope &binding.BoundGlobalScope
 	syntax parser.SyntaxTree
 }
 

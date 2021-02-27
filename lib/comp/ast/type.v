@@ -4,7 +4,7 @@ import lib.comp.token
 import lib.comp.util
 
 // Sumtype statements
-type Stmt = BlockStmt | ExprStmt | ForRangeStmt | ForStmt | IfStmt | VarDeclStmt
+pub type Stmt = BlockStmt | ExprStmt | ForRangeStmt | ForStmt | IfStmt | VarDeclStmt
 
 // Sumtype expressions
 pub type Expr = AssignExpr | BinaryExpr | CompNode | IfExpr | LiteralExpr | NameExpr |

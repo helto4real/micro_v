@@ -2,7 +2,7 @@ module binding
 
 import lib.comp.types
 
-struct BoundUnaryExpression {
+pub struct BoundUnaryExpression {
 pub:
 	kind        BoundNodeKind
 	typ         types.Type

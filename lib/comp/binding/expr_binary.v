@@ -2,7 +2,7 @@ module binding
 
 import lib.comp.types
 
-struct BoundBinaryExpr {
+pub struct BoundBinaryExpr {
 pub:
 	kind        BoundNodeKind
 	typ         types.Type

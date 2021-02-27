@@ -2,7 +2,7 @@ module binding
 
 import lib.comp.types
 
-struct BoundLiteralExpr {
+pub struct BoundLiteralExpr {
 pub:
 	kind        BoundNodeKind
 	typ         types.Type

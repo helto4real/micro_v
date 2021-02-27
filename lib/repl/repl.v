@@ -11,12 +11,15 @@ import lib.comp.token
 import lib.comp.util
 import lib.comp
 import lib.comp.ast.walker
+import lib.comp.binding.walker as bwalker
 import lib.comp.ast
 
 struct App {
 mut:
 	tree		  []string
+	btree		  []string
 	show_tree     bool
+	show_btree    bool
 	tui           &tui.Context = 0
 	ed            &Buffer      = 0
 	viewport      int
@@ -86,6 +89,12 @@ fn (mut a App) message() {
 		for i, s in a.tree {
 			a.tui.draw_text(0, i + 5, s)
 		}
+		// a.tree.clear()
+	} else if a.btree.len > 0 {
+		for i, bs in a.btree {
+			a.tui.draw_text(0, i + 5, bs)
+		}
+		// a.btree.clear()
 	}
 }
 fn (mut a App) footer() {
@@ -133,7 +142,7 @@ fn (mut a App) visit_tree(node ast.Node, last_child bool, indent string) ?string
 	node_str := node.node_str()
 
 	if node_str[0] == `&` {
-		b.write_string(term.gray(node_str[5..]))
+		// b.write_string(term.gray(node_str[5..]))
 		b.writeln(term.gray(node_str[5..]))
 	} else {
 		b.write_string(term.gray('Token '))
@@ -141,6 +150,37 @@ fn (mut a App) visit_tree(node ast.Node, last_child bool, indent string) ?string
 	}
 
 	a.tree << b.str()
+	// a.tree << '${node.node_str()} ($last_child)'
+	return new_ident
+}
+
+fn (mut a App) visit_btree(node binding.BoundNode, last_child bool, indent string) ?string {
+
+	mut b := strings.new_builder(0)
+
+	marker := if last_child { '└──' } else { '├──' }
+
+	b.write_string(term.gray(indent))
+	if indent.len > 0 {
+		b.write_string(term.gray(marker))
+	}
+	new_ident := indent + if last_child { '   ' } else { '│  ' }
+	node_str := node.node_str()
+
+	b.write_string(term.gray(node_str[9..]))
+	match node {
+		binding.BoundExpr {
+			if node is binding.BoundLiteralExpr {		
+				b.writeln(term.bright_cyan(' $node.val'))
+			} else {
+				b.writeln('')
+			}
+		} 
+		else {b.writeln('')}
+	}
+	
+
+	a.btree << b.str()
 	// a.tree << '${node.node_str()} ($last_child)'
 	return new_ident
 }
@@ -173,6 +213,8 @@ fn event(e &tui.Event, x voidptr) {
 
 							if app.show_tree {
 								walker.walk_tree(app, syntax_tree.root)
+							} else if app.show_btree {
+								bwalker.walk_tree(app, comp.global_scope.stmt)
 							}
 							// walker.inspect(syntax_tree.root)
 							// fn (node ast.Node, data voidptr)
@@ -246,6 +288,9 @@ fn event(e &tui.Event, x voidptr) {
 					} else if e.code == .t {
 						// tree mode
 						app.show_tree = !app.show_tree
+					} else if e.code == .b {
+						// tree mode
+						app.show_btree = !app.show_btree
 					}
 				} else {
 					buffer.put(e.ascii.ascii_str())

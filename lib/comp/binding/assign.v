@@ -2,7 +2,7 @@ module binding
 
 import lib.comp.types
 
-struct BoundAssignExpr {
+pub struct BoundAssignExpr {
 pub:
 	kind        BoundNodeKind = .assign_expr
 	typ         types.Type

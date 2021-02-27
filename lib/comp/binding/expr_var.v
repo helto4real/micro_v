@@ -2,7 +2,7 @@ module binding
 
 import lib.comp.types
 
-struct BoundVariableExpr {
+pub struct BoundVariableExpr {
 pub:
 	kind        BoundNodeKind = .variable_expr
 	typ         types.Type
