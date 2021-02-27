@@ -20,12 +20,7 @@ fn (mut l Lowerer) rewrite_expr_stmt(stmt binding.BoundExprStmt) binding.BoundSt
 	new_expr := l.rewrite_expr(stmt.bound_expr)
 	return binding.new_bound_expr_stmt(new_expr)
 }
-fn (mut l Lowerer) rewrite_for_range_stmt(stmt binding.BoundForRangeStmt) binding.BoundStmt {
-	return stmt
-}
-fn (mut l Lowerer) rewrite_for_stmt(stmt binding.BoundForStmt) binding.BoundStmt {
-	return stmt
-}
+
 fn (mut l Lowerer) rewrite_var_decl_stmt(stmt binding.BoundVarDeclStmt) binding.BoundStmt {
 	new_expr := l.rewrite_expr(stmt.expr)
 	return binding.new_var_decl_stmt(stmt.var, new_expr, stmt.is_mut)
