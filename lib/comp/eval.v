@@ -1,6 +1,4 @@
 module comp
-
-import strings
 import lib.comp.binding
 import lib.comp.types
 
@@ -19,102 +17,180 @@ pub fn new_evaluator(root binding.BoundStmt, vars &binding.EvalVariables) Evalua
 }
 
 pub fn (mut e Evaluator) evaluate() ?types.LitVal {
-	e.eval_stmt(e.root)
+
+	mut label_to_index := map[string]int
+	for i, s in e.root.child_nodes() {
+		if s is binding.BoundStmt {
+			if s is binding.BoundLabelStmt {
+				label_to_index[s.name] = i + 1
+			}
+		}
+    }
+	mut index := 0
+	for index < e.root.child_nodes().len {
+		stmt := e.root.child_nodes()[index]
+		match stmt {
+			binding.BoundStmt {
+				match stmt {
+					// binding.BoundBlockStmt {
+					// 	e.eval_bound_block_stmt(stmt)
+					// 	index++
+					// }
+					// binding.BoundExprStmt {
+					// 	e.eval_bound_expr_stmt(stmt)
+					// 	index++
+					// }
+					binding.BoundVarDeclStmt {
+						e.eval_bound_var_decl_stmt(stmt)
+						index++
+					}
+					binding.BoundExprStmt {
+						e.eval_bound_expr_stmt(stmt)
+						index++
+					}
+					// binding.BoundIfStmt {
+					// 	e.eval_bound_if_stmt(stmt)
+					// 	index++
+					// }
+					// binding.BoundForRangeStmt {
+					// 	e.eval_bound_for_range_stmt(stmt)
+					// 	index++
+					// }
+					// binding.BoundForStmt {
+					// 	e.eval_bound_for_stmt(stmt)
+					// 	index++
+					// }
+					binding.BoundGotoStmt {
+						index = label_to_index[stmt.label]
+					}
+					binding.BoundCondGotoStmt {
+						cond := e.eval_expr(stmt.cond) ?
+						if cond is bool {
+							if cond == stmt.jump_if_true {
+								index = label_to_index[stmt.label]
+							} else {
+								index ++
+							}
+						} else {
+							panic('bound goto could never have other than bool conditions')
+						}
+					}
+					binding.BoundLabelStmt {
+						e.eval_bound_label_stmt(stmt)
+						index++
+					}
+					else {panic('unexpected stmt typ: ${stmt.node_str()}')} // Will never happen
+				}
+			}
+			else {panic('unexpected stmt typ: ${stmt.node_str()}')} // Will never happen
+		}
+	}
 	return e.last_val
-	// return e.eval_stmt(e.root)
 }
 
-fn (mut e Evaluator) eval_stmt(stmt binding.BoundStmt) {
-	match stmt {
-		binding.BoundBlockStmt {
-			e.eval_bound_block_stmt(stmt)
-		}
-		binding.BoundExprStmt {
-			e.eval_bound_expr_stmt(stmt)
-		}
-		binding.BoundVarDeclStmt {
-			e.eval_bound_var_decl_stmt(stmt)
-		}
-		binding.BoundIfStmt {
-			e.eval_bound_if_stmt(stmt)
-		}
-		binding.BoundForRangeStmt {
-			e.eval_bound_for_range_stmt(stmt)
-		}
-		binding.BoundForStmt {
-			e.eval_bound_for_stmt(stmt)
-		}
-	}
-}
+// fn (mut e Evaluator) eval_stmt(stmt binding.BoundStmt) {
+// 	match stmt {
+// 		binding.BoundBlockStmt {
+// 			e.eval_bound_block_stmt(stmt)
+// 		}
+// 		binding.BoundExprStmt {
+// 			e.eval_bound_expr_stmt(stmt)
+// 		}
+// 		binding.BoundVarDeclStmt {
+// 			e.eval_bound_var_decl_stmt(stmt)
+// 		}
+// 		binding.BoundIfStmt {
+// 			e.eval_bound_if_stmt(stmt)
+// 		}
+// 		binding.BoundForRangeStmt {
+// 			e.eval_bound_for_range_stmt(stmt)
+// 		}
+// 		binding.BoundForStmt {
+// 			e.eval_bound_for_stmt(stmt)
+// 		} 
+// 		else {}
+// 	}
+// }
 
+// fn (mut e Evaluator) eval_stmt(stmt binding.BoundStmt) {
+
+// }
+
+fn (mut e Evaluator) eval_bound_label_stmt(node binding.BoundLabelStmt) {
+
+}
+fn (mut e Evaluator) eval_bound_goto_stmt(node binding.BoundGotoStmt) {
+}
+fn (mut e Evaluator) eval_bound_cond_goto_stmt(node binding.BoundCondGotoStmt) {
+}
 // TODO: Will remove the print out of these functions onces println is implemented
-fn (mut e Evaluator) eval_bound_for_stmt(node binding.BoundForStmt) {
-	mut b := strings.new_builder(0)
-	mut first_loop := true
-	for {
-		if node.has_cond {
-			cond_expr := e.eval_expr(node.cond_expr) or {
-				panic('unexpected error evaluate expression')
-			}
-			if (cond_expr as bool) == false {
-				break
-			}
-		}
-		e.eval_stmt(node.body_stmt)
-		if !first_loop {
-			b.write_string('   ')
-		}
-		b.writeln('$e.last_val')
-		first_loop = false
-	}
-	e.last_val = b.str()
-}
+// fn (mut e Evaluator) eval_bound_for_stmt(node binding.BoundForStmt) {
+// 	mut b := strings.new_builder(0)
+// 	mut first_loop := true
+// 	for {
+// 		if node.has_cond {
+// 			cond_expr := e.eval_expr(node.cond_expr) or {
+// 				panic('unexpected error evaluate expression')
+// 			}
+// 			if (cond_expr as bool) == false {
+// 				break
+// 			}
+// 		}
+// 		e.eval_stmt(node.body_stmt)
+// 		if !first_loop {
+// 			b.write_string('   ')
+// 		}
+// 		b.writeln('$e.last_val')
+// 		first_loop = false
+// 	}
+// 	e.last_val = b.str()
+// }
 
-fn (mut e Evaluator) eval_bound_for_range_stmt(node binding.BoundForRangeStmt) {
-	range_expr := node.range_expr as binding.BoundRangeExpr
-	from := e.eval_expr(range_expr.from_exp) or { panic('unexpected eval expression') }
-	to := e.eval_expr(range_expr.to_exp) or { panic('unexpected eval expression') }
+// fn (mut e Evaluator) eval_bound_for_range_stmt(node binding.BoundForRangeStmt) {
+// 	range_expr := node.range_expr as binding.BoundRangeExpr
+// 	from := e.eval_expr(range_expr.from_exp) or { panic('unexpected eval expression') }
+// 	to := e.eval_expr(range_expr.to_exp) or { panic('unexpected eval expression') }
 
-	mut b := strings.new_builder(0)
-	if from is int {
-		to_int := to as int
-		for i in from .. to_int {
-			e.vars.assign_variable_value(node.ident, i)
-			// println('ident: $ident, range_expr: $range_expr')
-			e.eval_stmt(node.body_stmt)
-			if i != from {
-				b.write_string('   ')
-			}
-			b.writeln('$e.last_val')
-		}
-	}
-	// val := types.LitVal(b.str())
-	e.last_val = b.str()
-}
-fn (mut e Evaluator) eval_bound_if_stmt(node binding.BoundIfStmt) {
-	cond_expr := e.eval_expr(node.cond_expr) or { panic('unexpected compiler error') }
+// 	mut b := strings.new_builder(0)
+// 	if from is int {
+// 		to_int := to as int
+// 		for i in from .. to_int {
+// 			e.vars.assign_variable_value(node.ident, i)
+// 			// println('ident: $ident, range_expr: $range_expr')
+// 			e.eval_stmt(node.body_stmt)
+// 			if i != from {
+// 				b.write_string('   ')
+// 			}
+// 			b.writeln('$e.last_val')
+// 		}
+// 	}
+// 	// val := types.LitVal(b.str())
+// 	e.last_val = b.str()
+// }
+// fn (mut e Evaluator) eval_bound_if_stmt(node binding.BoundIfStmt) {
+// 	cond_expr := e.eval_expr(node.cond_expr) or { panic('unexpected compiler error') }
 
-	if cond_expr is bool {
-		if cond_expr == true {
-			e.eval_stmt(node.block_stmt)
-		} else if node.has_else {
-			e.eval_stmt(node.else_clause)
-		}
-	} else {
-		panic('unexpected type in if condition')
-	}
-}
+// 	if cond_expr is bool {
+// 		if cond_expr == true {
+// 			e.eval_stmt(node.block_stmt)
+// 		} else if node.has_else {
+// 			e.eval_stmt(node.else_clause)
+// 		}
+// 	} else {
+// 		panic('unexpected type in if condition')
+// 	}
+// }
 fn (mut e Evaluator) eval_bound_var_decl_stmt(node binding.BoundVarDeclStmt) {
 	val := e.eval_expr(node.expr) or { panic('unexpected compiler error') }
 	e.vars.assign_variable_value(node.var, val)
 	e.last_val = val
 }
 
-fn (mut e Evaluator) eval_bound_block_stmt(block_stmt binding.BoundBlockStmt) {
-	for stmt in block_stmt.bound_stmts {
-		e.eval_stmt(stmt)
-	}
-}
+// fn (mut e Evaluator) eval_bound_block_stmt(block_stmt binding.BoundBlockStmt) {
+// 	for stmt in block_stmt.bound_stmts {
+// 		e.eval_stmt(stmt)
+// 	}
+// }
 
 fn (mut e Evaluator) eval_bound_expr_stmt(stmt binding.BoundExprStmt) {
 	e.last_val = e.eval_expr(stmt.bound_expr) or {
@@ -127,7 +203,7 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 		binding.BoundLiteralExpr {
 			return e.eval_bound_literal_expr(node)
 		}
-		binding.BoundUnaryExpression {
+		binding.BoundUnaryExpr {
 			return e.eval_bound_unary_expr(node)
 		}
 		binding.BoundBinaryExpr {
@@ -139,14 +215,17 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 		binding.BoundAssignExpr {
 			return e.eval_bound_assign_expr(node)
 		}
-		binding.BoundIfExpr {
-			return e.eval_bound_if_expr(node)
-		}
+		// binding.BoundIfExpr {
+		// 	return e.eval_bound_if_expr(node)
+		// }
 		binding.BoundRangeExpr {
 			return e.eval_bound_range_expr(node)
 		}
+		else {panic('unexpected eval expr ${node}')}
 	}
 }
+
+
 
 fn (mut e Evaluator) eval_bound_range_expr(node binding.BoundRangeExpr) ?types.LitVal {
 	from_val := e.eval_expr(node.from_exp) ?
@@ -154,20 +233,20 @@ fn (mut e Evaluator) eval_bound_range_expr(node binding.BoundRangeExpr) ?types.L
 	return '${from_val as int}..${to_val as int}'
 }
 
-fn (mut e Evaluator) eval_bound_if_expr(node binding.BoundIfExpr) ?types.LitVal {
-	cond_expr := e.eval_expr(node.cond_expr) or { panic('unexpected compiler error') }
+// fn (mut e Evaluator) eval_bound_if_expr(node binding.BoundIfExpr) ?types.LitVal {
+// 	cond_expr := e.eval_expr(node.cond_expr) or { panic('unexpected compiler error') }
 
-	if cond_expr is bool {
-		if cond_expr == true {
-			e.eval_stmt(node.then_stmt)
-		} else {
-			e.eval_stmt(node.else_stmt)
-		}
-	} else {
-		panic('unexpected type in if condition')
-	}
-	return e.last_val
-}
+// 	if cond_expr is bool {
+// 		if cond_expr == true {
+// 			e.eval_stmt(node.then_stmt)
+// 		} else {
+// 			e.eval_stmt(node.else_stmt)
+// 		}
+// 	} else {
+// 		panic('unexpected type in if condition')
+// 	}
+// 	return e.last_val
+// }
 
 fn (mut e Evaluator) eval_bound_literal_expr(root binding.BoundLiteralExpr) ?types.LitVal {
 	return root.val
@@ -184,7 +263,7 @@ fn (mut e Evaluator) eval_bound_assign_expr(node binding.BoundAssignExpr) ?types
 	return val
 }
 
-fn (mut e Evaluator) eval_bound_unary_expr(node binding.BoundUnaryExpression) ?types.LitVal {
+fn (mut e Evaluator) eval_bound_unary_expr(node binding.BoundUnaryExpr) ?types.LitVal {
 	operand := e.eval_expr(node.operand) ?
 	match node.op.op_kind {
 		.identity { return operand as int }

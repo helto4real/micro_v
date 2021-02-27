@@ -2,7 +2,7 @@ module binding
 
 import lib.comp.types
 
-pub struct BoundUnaryExpression {
+pub struct BoundUnaryExpr {
 pub:
 	kind        BoundNodeKind
 	typ         types.Type
@@ -11,8 +11,8 @@ pub:
 	operand     BoundExpr
 }
 
-fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr {
-	return BoundUnaryExpression{
+pub fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr {
+	return BoundUnaryExpr{
 		child_nodes: [BoundNode(operand)]
 		kind: .unary_expr
 		typ: op.res_typ
@@ -21,6 +21,6 @@ fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr {
 	}
 }
 
-pub fn (ex &BoundUnaryExpression) node_str() string {
+pub fn (ex &BoundUnaryExpr) node_str() string {
 	return typeof(ex).name
 }

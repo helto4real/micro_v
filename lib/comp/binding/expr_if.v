@@ -12,7 +12,7 @@ pub:
 	else_stmt   BoundStmt
 }
 
-fn new_if_else_expr(cond_expr BoundExpr, then_stmt BoundStmt, else_stmt BoundStmt) BoundExpr {
+pub fn new_if_else_expr(cond_expr BoundExpr, then_stmt BoundStmt, else_stmt BoundStmt) BoundExpr {
 	return BoundIfExpr{
 		child_nodes: [BoundNode(cond_expr), then_stmt, else_stmt]
 		cond_expr: cond_expr

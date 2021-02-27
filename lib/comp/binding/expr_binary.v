@@ -12,7 +12,7 @@ pub:
 	right       BoundExpr
 }
 
-fn new_bound_binary_expr(left BoundExpr, op BoundBinaryOperator, right BoundExpr) BoundExpr {
+pub fn new_bound_binary_expr(left BoundExpr, op BoundBinaryOperator, right BoundExpr) BoundExpr {
 	return BoundBinaryExpr{
 		child_nodes: [BoundNode(left), right]
 		kind: .binary_expr

@@ -8,6 +8,7 @@ import lib.comp.binding
 import lib.comp.parser
 import lib.comp.types
 import lib.comp.token
+import lib.comp.lowering
 import lib.comp.util
 import lib.comp
 import lib.comp.ast.walker
@@ -16,10 +17,12 @@ import lib.comp.ast
 
 struct App {
 mut:
-	tree		  []string
-	btree		  []string
+	tree          []string
+	btree         []string
+	ltree         []string
 	show_tree     bool
 	show_btree    bool
+	show_ltree    bool
 	tui           &tui.Context = 0
 	ed            &Buffer      = 0
 	viewport      int
@@ -129,7 +132,6 @@ fn (mut a App) footer() {
 }
 
 fn (mut a App) visit_tree(node ast.Node, last_child bool, indent string) ?string {
-
 	mut b := strings.new_builder(0)
 
 	marker := if last_child { '└──' } else { '├──' }
@@ -155,7 +157,6 @@ fn (mut a App) visit_tree(node ast.Node, last_child bool, indent string) ?string
 }
 
 fn (mut a App) visit_btree(node binding.BoundNode, last_child bool, indent string) ?string {
-
 	mut b := strings.new_builder(0)
 
 	marker := if last_child { '└──' } else { '├──' }
@@ -170,18 +171,30 @@ fn (mut a App) visit_btree(node binding.BoundNode, last_child bool, indent strin
 	b.write_string(term.gray(node_str[9..]))
 	match node {
 		binding.BoundExpr {
-			if node is binding.BoundLiteralExpr {		
+			if node is binding.BoundLiteralExpr {
 				b.writeln(term.bright_cyan(' $node.val'))
+			} else if node is binding.BoundBinaryExpr {
+				b.writeln(term.bright_cyan(' $node.op.kind'))
+			} else if node is binding.BoundUnaryExpr {
+				b.writeln(term.bright_cyan(' $node.op.kind'))
 			} else {
 				b.writeln('')
 			}
-		} 
-		else {b.writeln('')}
+		}
+		binding.BoundStmt {
+			if node is binding.BoundLabelStmt {
+				b.writeln(term.bright_cyan(' $node.name'))
+			} else if node is binding.BoundCondGotoStmt {
+				b.writeln(term.bright_cyan(' $node.jump_if_true -> $node.label'))
+			} else if node is binding.BoundGotoStmt {
+				b.writeln(term.bright_cyan(' $node.label'))
+			} else {
+				b.writeln('')
+			}
+		}
 	}
-	
 
 	a.btree << b.str()
-	// a.tree << '${node.node_str()} ($last_child)'
 	return new_ident
 }
 
@@ -215,10 +228,12 @@ fn event(e &tui.Event, x voidptr) {
 								walker.walk_tree(app, syntax_tree.root)
 							} else if app.show_btree {
 								bwalker.walk_tree(app, comp.global_scope.stmt)
+							} else if app.show_ltree {
+								lowered_tree := lowering.lower(comp.global_scope.stmt)
+								bwalker.walk_tree(app, binding.BoundStmt(lowered_tree))
 							}
 							// walker.inspect(syntax_tree.root)
 							// fn (node ast.Node, data voidptr)
-
 						} else {
 							mut b := strings.new_builder(0)
 							text := buffer.raw() // syntax_tree.source.str()
@@ -288,9 +303,18 @@ fn event(e &tui.Event, x voidptr) {
 					} else if e.code == .t {
 						// tree mode
 						app.show_tree = !app.show_tree
+						app.show_btree = false
+						app.show_ltree = false
 					} else if e.code == .b {
 						// tree mode
 						app.show_btree = !app.show_btree
+						app.show_tree = false
+						app.show_ltree = false
+					} else if e.code == .l {
+						// tree mode
+						app.show_ltree = !app.show_btree
+						app.show_tree = false
+						app.show_btree = false
 					}
 				} else {
 					buffer.put(e.ascii.ascii_str())

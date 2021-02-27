@@ -12,7 +12,7 @@ pub:
 	var         &VariableSymbol
 }
 
-fn new_var_decl_stmt(var &VariableSymbol, expr BoundExpr, is_mut bool) BoundStmt {
+pub fn new_var_decl_stmt(var &VariableSymbol, expr BoundExpr, is_mut bool) BoundStmt {
 	return BoundVarDeclStmt{
 		var: var
 		is_mut: is_mut

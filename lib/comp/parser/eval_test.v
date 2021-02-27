@@ -188,16 +188,7 @@ fn test_error_delcarations_unary_operator_undefined() {
 	assert_has_diagostics(code, error)
 }
 
-// fn test_error_delcarations_assign_expected_var_decl_after_mut() {
-// 	code := "
-// 		{
-// 			mut [y]=2
-// 			x:=2
-// 		}
-// 	"
-// 	error := 'expected varable declaration after mut keyword'
-// 	assert_has_diagostics(code, error)
-// }
+
 fn test_error_range_type_error() {
 	code := '1..[a]'
 	error := 'unexpected token: <name>,  expected <number>\nunexpected token: <name>,  expected <eof>'

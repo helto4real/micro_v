@@ -1,11 +1,12 @@
 // comp module implements the compiler and evaluator 
 module comp
-
+import os
 import term
 import lib.comp.parser
 import lib.comp.binding
 import lib.comp.types
 import lib.comp.util
+import lib.comp.lowering
 
 [heap]
 pub struct Compilation {
@@ -30,6 +31,13 @@ fn new_compilation_with_previous(previous &Compilation, syntax_tree parser.Synta
 		global_scope: &binding.BoundGlobalScope(0)
 		previous: previous
 	}
+}
+
+pub fn (mut c Compilation) get_statement() binding.BoundBlockStmt {
+	result := c.get_bound_global_scope().stmt
+	lower := lowering.lower(result)
+	return lower
+
 }
 
 pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
@@ -57,7 +65,9 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	if result.len > 0 {
 		return new_evaluation_result(result, 0)
 	}
-	mut evaluator := new_evaluator(global_scope.stmt, vars)
+	stmt := c.get_statement()
+	os.write_file('lowered.txt', '$stmt') or {}
+	mut evaluator := new_evaluator(stmt, vars)
 	val := evaluator.evaluate() or {
 		println(term.fail_message('Error in eval: $err'))
 		0

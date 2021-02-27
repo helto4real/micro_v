@@ -11,7 +11,7 @@ pub:
 	var         &VariableSymbol
 }
 
-fn new_bound_assign_expr(var &VariableSymbol, expr BoundExpr) BoundExpr {
+pub fn new_bound_assign_expr(var &VariableSymbol, expr BoundExpr) BoundExpr {
 	return BoundAssignExpr{
 		child_nodes: [BoundNode(expr)]
 		var: var

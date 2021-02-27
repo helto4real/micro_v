@@ -3,10 +3,10 @@ module binding
 import lib.comp.types
 
 pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundIfExpr | BoundLiteralExpr |
-	BoundRangeExpr | BoundUnaryExpression | BoundVariableExpr
+	BoundRangeExpr | BoundUnaryExpr | BoundVariableExpr
 
 pub type BoundStmt = BoundBlockStmt | BoundExprStmt | BoundForRangeStmt | BoundForStmt |
-	BoundIfStmt | BoundVarDeclStmt
+	BoundIfStmt | BoundVarDeclStmt | BoundGotoStmt | BoundLabelStmt | BoundCondGotoStmt
 
 pub type BoundNode = BoundExpr | BoundStmt
 
@@ -48,7 +48,7 @@ pub fn (bn &BoundNode) node_str() string {
 pub fn (be BoundExpr) typ() types.Type {
 	match be {
 		BoundLiteralExpr { return be.typ }
-		BoundUnaryExpression { return be.typ }
+		BoundUnaryExpr { return be.typ }
 		BoundBinaryExpr { return be.typ }
 		BoundVariableExpr { return be.typ }
 		BoundAssignExpr { return be.typ }
@@ -60,7 +60,7 @@ pub fn (be BoundExpr) typ() types.Type {
 pub fn (be BoundExpr) typ_str() string {
 	match be {
 		BoundLiteralExpr { return types.built_in_types[int(be.typ)] }
-		BoundUnaryExpression { return types.built_in_types[int(be.typ)] }
+		BoundUnaryExpr { return types.built_in_types[int(be.typ)] }
 		BoundBinaryExpr { return types.built_in_types[int(be.typ)] }
 		BoundVariableExpr { return types.built_in_types[int(be.typ)] }
 		BoundAssignExpr { return types.built_in_types[int(be.typ)] }
@@ -71,7 +71,7 @@ pub fn (be BoundExpr) typ_str() string {
 pub fn (be BoundExpr) node_str() string {
 	match be {
 		BoundLiteralExpr { return be.node_str() }
-		BoundUnaryExpression { return be.node_str() }
+		BoundUnaryExpr { return be.node_str() }
 		BoundBinaryExpr { return be.node_str() }
 		BoundVariableExpr { return be.node_str() }
 		BoundAssignExpr { return be.node_str() }
@@ -82,7 +82,7 @@ pub fn (be BoundExpr) node_str() string {
 
 pub fn (be BoundExpr) kind() BoundNodeKind {
 	match be {
-		BoundUnaryExpression { return be.kind }
+		BoundUnaryExpr { return be.kind }
 		BoundBinaryExpr { return be.kind }
 		BoundLiteralExpr { return be.kind }
 		BoundVariableExpr { return be.kind }
@@ -94,7 +94,7 @@ pub fn (be BoundExpr) kind() BoundNodeKind {
 
 pub fn (be BoundExpr) child_nodes() []BoundNode {
 	match be {
-		BoundUnaryExpression { return be.child_nodes }
+		BoundUnaryExpr { return be.child_nodes }
 		BoundBinaryExpr { return be.child_nodes }
 		BoundLiteralExpr { return be.child_nodes }
 		BoundVariableExpr { return be.child_nodes }
@@ -112,6 +112,9 @@ pub fn (bs BoundStmt) child_nodes() []BoundNode {
 		BoundForStmt { return bs.child_nodes }
 		BoundIfStmt { return bs.child_nodes }
 		BoundVarDeclStmt { return bs.child_nodes }
+		BoundGotoStmt { return bs.child_nodes }
+		BoundCondGotoStmt { return bs.child_nodes }
+		BoundLabelStmt { return bs.child_nodes }
 	}
 }
 pub fn (bs BoundStmt) node_str() string {
@@ -122,5 +125,8 @@ pub fn (bs BoundStmt) node_str() string {
 		BoundForStmt { return bs.node_str() }
 		BoundIfStmt { return bs.node_str() }
 		BoundVarDeclStmt { return bs.node_str() }
+		BoundGotoStmt { return bs.node_str() }
+		BoundCondGotoStmt { return bs.node_str() }
+		BoundLabelStmt { return bs.node_str() }
 	}
 }
