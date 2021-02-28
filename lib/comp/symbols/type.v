@@ -1,21 +1,28 @@
 module symbols
 
-import lib.comp.types
-
-[heap]
 pub struct TypeSymbol {
 pub:
 	name   string
-	typ    types.Type
 }
 
-pub fn (ts &TypeSymbol) str() string {
+pub fn (ts TypeSymbol) str() string {
 	return ts.name
 }
 
-pub fn new_type_symbol(name string, typ types.Type) &TypeSymbol {
-	return &TypeSymbol{
-		name: name
-		typ: typ
+pub fn new_int_symbol() TypeSymbol {
+	return TypeSymbol{
+		name: 'int'
+	}
+}
+
+pub fn new_bool_symbol() TypeSymbol {
+	return TypeSymbol{
+		name: 'bool'
+	}
+}
+
+pub fn new_string_symbol() TypeSymbol {
+	return TypeSymbol{
+		name: 'string'
 	}
 }
