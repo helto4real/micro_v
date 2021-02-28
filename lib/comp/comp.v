@@ -6,7 +6,6 @@ import lib.comp.binding
 import lib.comp.types
 import lib.comp.util
 import lib.comp.lowering
-import lib.comp.binding.walker
 
 [heap]
 pub struct Compilation {
