@@ -304,10 +304,19 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 		.number {
 			return p.parse_number_literal()
 		}
+		.string {
+			return p.parse_string_literal()
+		}
 		else {
 			return p.parse_name_expr()
 		}
 	}
+}
+
+fn (mut p Parser) parse_string_literal() ast.Expr {
+	string_token := p.match_token(.string)
+	
+	return ast.new_literal_expr(string_token, string_token.lit[1..string_token.lit.len-1])
 }
 
 fn (mut p Parser) parse_number_literal() ast.Expr {

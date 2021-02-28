@@ -34,14 +34,6 @@ pub fn (mut e Evaluator) evaluate() ?types.LitVal {
 		match stmt {
 			binding.BoundStmt {
 				match stmt {
-					// binding.BoundBlockStmt {
-					// 	e.eval_bound_block_stmt(stmt)
-					// 	index++
-					// }
-					// binding.BoundExprStmt {
-					// 	e.eval_bound_expr_stmt(stmt)
-					// 	index++
-					// }
 					binding.BoundVarDeclStmt {
 						e.eval_bound_var_decl_stmt(stmt)
 						index++
@@ -50,18 +42,6 @@ pub fn (mut e Evaluator) evaluate() ?types.LitVal {
 						e.eval_bound_expr_stmt(stmt)
 						index++
 					}
-					// binding.BoundIfStmt {
-					// 	e.eval_bound_if_stmt(stmt)
-					// 	index++
-					// }
-					// binding.BoundForRangeStmt {
-					// 	e.eval_bound_for_range_stmt(stmt)
-					// 	index++
-					// }
-					// binding.BoundForStmt {
-					// 	e.eval_bound_for_stmt(stmt)
-					// 	index++
-					// }
 					binding.BoundGotoStmt {
 						index = label_to_index[stmt.label]
 					}
@@ -89,112 +69,11 @@ pub fn (mut e Evaluator) evaluate() ?types.LitVal {
 	return e.last_val
 }
 
-// fn (mut e Evaluator) eval_bound_label_stmt(node binding.BoundLabelStmt) {
-
-// }
-// fn (mut e Evaluator) eval_bound_goto_stmt(node binding.BoundGotoStmt) {
-// }
-// fn (mut e Evaluator) eval_bound_cond_goto_stmt(node binding.BoundCondGotoStmt) {
-// }
-// TODO: Will remove the print out of these functions onces println is implemented
-// fn (mut e Evaluator) eval_bound_for_stmt(node binding.BoundForStmt) {
-// 	print(node)
-// 	mut b := strings.new_builder(0)
-// 	mut first_loop := true
-// 	for {
-// 		if node.has_cond {
-// 			cond_expr := e.eval_expr(node.cond_expr) or {
-// 				panic('unexpected error evaluate expression')
-// 			}
-// 			if (cond_expr as bool) == false {
-// 				break
-// 			}
-// 		}
-// 		e.eval_stmt(node.body_stmt)
-// 		if !first_loop {
-// 			b.write_string('   ')
-// 		}
-// 		b.writeln('$e.last_val')
-// 		first_loop = false
-// 	}
-// 	e.last_val = b.str()
-// }
-
-// fn (mut e Evaluator) eval_bound_block_stmt(block_stmt binding.BoundBlockStmt) {
-// 	for stmt in block_stmt.bound_stmts {
-// 		e.eval_stmt(stmt)
-// 	}
-// }
-
-// fn (mut e Evaluator) eval_stmt(stmt binding.BoundStmt) {
-// 	match stmt {
-// 		binding.BoundBlockStmt {
-// 			e.eval_bound_block_stmt(stmt)
-// 		}
-// 		binding.BoundExprStmt {
-// 			e.eval_bound_expr_stmt(stmt)
-// 		}
-// 		binding.BoundVarDeclStmt {
-// 			e.eval_bound_var_decl_stmt(stmt)
-// 		}
-// 		// binding.BoundIfStmt {
-// 		// 	e.eval_bound_if_stmt(stmt)
-// 		// }
-// 		// binding.BoundForRangeStmt {
-// 		// 	e.eval_bound_for_range_stmt(stmt)
-// 		// }
-// 		binding.BoundForStmt {
-// 			e.eval_bound_for_stmt(stmt)
-// 		}
-// 		else {}
-// 	}
-// }
-
-// fn (mut e Evaluator) eval_bound_for_range_stmt(node binding.BoundForRangeStmt) {
-// 	range_expr := node.range_expr as binding.BoundRangeExpr
-// 	from := e.eval_expr(range_expr.from_exp) or { panic('unexpected eval expression') }
-// 	to := e.eval_expr(range_expr.to_exp) or { panic('unexpected eval expression') }
-
-// 	mut b := strings.new_builder(0)
-// 	if from is int {
-// 		to_int := to as int
-// 		for i in from .. to_int {
-// 			e.vars.assign_variable_value(node.ident, i)
-// 			// println('ident: $ident, range_expr: $range_expr')
-// 			e.eval_stmt(node.body_stmt)
-// 			if i != from {
-// 				b.write_string('   ')
-// 			}
-// 			b.writeln('$e.last_val')
-// 		}
-// 	}
-// 	// val := types.LitVal(b.str())
-// 	e.last_val = b.str()
-// }
-// fn (mut e Evaluator) eval_bound_if_stmt(node binding.BoundIfStmt) {
-// 	cond_expr := e.eval_expr(node.cond_expr) or { panic('unexpected compiler error') }
-
-// 	if cond_expr is bool {
-// 		if cond_expr == true {
-// 			e.eval_stmt(node.block_stmt)
-// 		} else if node.has_else {
-// 			e.eval_stmt(node.else_clause)
-// 		}
-// 	} else {
-// 		panic('unexpected type in if condition')
-// 	}
-// }
 fn (mut e Evaluator) eval_bound_var_decl_stmt(node binding.BoundVarDeclStmt) {
 	val := e.eval_expr(node.expr) or { panic('unexpected compiler error') }
 	e.vars.assign_variable_value(node.var, val)
 	e.last_val = val
 }
-
-// fn (mut e Evaluator) eval_bound_block_stmt(block_stmt binding.BoundBlockStmt) {
-// 	for stmt in block_stmt.bound_stmts {
-// 		e.eval_stmt(stmt)
-// 	}
-// }
 
 fn (mut e Evaluator) eval_bound_expr_stmt(stmt binding.BoundExprStmt) {
 	e.last_val = e.eval_expr(stmt.bound_expr) or {
@@ -284,6 +163,7 @@ fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?types
 		.less { return left.lt(right) }
 		.less_or_equals { return left.le(right) }
 		.greater_or_equals { return left.ge(right) }
+		.str_concat {return (left as string) + (right as string) }
 		else { panic('operator <$node.op.op_kind> exl_mark expected') }
 	}
 }

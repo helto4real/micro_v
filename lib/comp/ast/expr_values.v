@@ -14,7 +14,7 @@ pub:
 }
 
 pub fn new_literal_expr(tok token.Token, val types.LitVal) LiteralExpr {
-	if tok.kind !in [.number, .key_true, .key_false] {
+	if tok.kind !in [.number, .string, .key_true, .key_false] {
 		panic('Expected a number token')
 	}
 	return LiteralExpr{

@@ -90,6 +90,7 @@ pub fn new_bound_binary_op_with_res(kind token.Kind, op_kind BoundBinaryOperator
 fn build_bound_binary_operators() []BoundBinaryOperator {
 	mut operators := []BoundBinaryOperator{}
 
+	// int
 	operators << new_bound_binary_op(.plus, .addition, int(types.TypeKind.int_lit))
 	operators << new_bound_binary_op(.minus, .subraction, int(types.TypeKind.int_lit))
 	operators << new_bound_binary_op(.mul, .multiplication, int(types.TypeKind.int_lit))
@@ -98,6 +99,9 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 	operators << new_bound_binary_op(.amp, .bitwise_and, int(types.TypeKind.int_lit))
 	operators << new_bound_binary_op(.pipe, .bitwise_or, int(types.TypeKind.int_lit))
 	operators << new_bound_binary_op(.hat, .bitwise_xor, int(types.TypeKind.int_lit))
+
+	// strings
+	operators << new_bound_binary_op(.plus, .str_concat, int(types.TypeKind.string_lit))
 
 	// accept int but returns bool
 	operators << new_bound_binary_op_with_res(.eq_eq, .equals, int(types.TypeKind.int_lit),
@@ -154,6 +158,7 @@ pub enum BoundBinaryOperatorKind {
 	bitwise_and
 	bitwise_or
 	bitwise_xor
+	str_concat
 	not_supported
 }
 
