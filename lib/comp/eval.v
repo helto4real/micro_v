@@ -1,8 +1,8 @@
 module comp
+
 // import strings
 import lib.comp.binding
 import lib.comp.types
-
 
 pub struct Evaluator {
 	root binding.BoundStmt
@@ -19,15 +19,14 @@ pub fn new_evaluator(root binding.BoundStmt, vars &binding.EvalVariables) Evalua
 }
 
 pub fn (mut e Evaluator) evaluate() ?types.LitVal {
-
-	mut label_to_index := map[string]int
+	mut label_to_index := map[string]int{}
 	for i, s in e.root.child_nodes() {
 		if s is binding.BoundStmt {
 			if s is binding.BoundLabelStmt {
 				label_to_index[s.name] = i + 1
 			}
 		}
-    }
+	}
 	mut index := 0
 	for index < e.root.child_nodes().len {
 		stmt := e.root.child_nodes()[index]
@@ -51,7 +50,7 @@ pub fn (mut e Evaluator) evaluate() ?types.LitVal {
 							if cond == stmt.jump_if_true {
 								index = label_to_index[stmt.label]
 							} else {
-								index ++
+								index++
 							}
 						} else {
 							panic('bound goto could never have other than bool conditions')
@@ -60,10 +59,14 @@ pub fn (mut e Evaluator) evaluate() ?types.LitVal {
 					binding.BoundLabelStmt {
 						index++
 					}
-					else {panic('unexpected stmt typ: ${stmt.node_str()}')} // Will never happen
+					else {
+						panic('unexpected stmt typ: $stmt.node_str()')
+					} // Will never happen
 				}
 			}
-			else {panic('unexpected stmt typ: ${stmt.node_str()}')} // Will never happen
+			else {
+				panic('unexpected stmt typ: $stmt.node_str()')
+			} // Will never happen
 		}
 	}
 	return e.last_val
@@ -104,18 +107,17 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 		binding.BoundRangeExpr {
 			return e.eval_bound_range_expr(node)
 		}
-		else {panic('unexpected eval expr ${node}')}
+		else {
+			panic('unexpected eval expr $node')
+		}
 	}
 }
-
-
 
 fn (mut e Evaluator) eval_bound_range_expr(node binding.BoundRangeExpr) ?types.LitVal {
 	from_val := e.eval_expr(node.from_exp) ?
 	to_val := e.eval_expr(node.to_exp) ?
 	return '${from_val as int}..${to_val as int}'
 }
-
 
 fn (mut e Evaluator) eval_bound_literal_expr(root binding.BoundLiteralExpr) ?types.LitVal {
 	return root.val
@@ -163,7 +165,7 @@ fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?types
 		.less { return left.lt(right) }
 		.less_or_equals { return left.le(right) }
 		.greater_or_equals { return left.ge(right) }
-		.str_concat {return (left as string) + (right as string) }
+		.str_concat { return (left as string) + (right as string) }
 		else { panic('operator <$node.op.op_kind> exl_mark expected') }
 	}
 }

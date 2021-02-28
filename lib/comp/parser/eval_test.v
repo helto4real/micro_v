@@ -164,6 +164,13 @@ fn test_loops() {
 	assert c.eval_int('{mut a:= 0 for b in 0..10 {a = a + b} a}') == 45
 }
 
+fn test_string_expressions() {
+	mut c := new_test_compilation_state()
+	assert c.eval_string('"hello"') == 'hello'
+	assert c.eval_string("'hello'") == 'hello'
+	assert c.eval_string("'hello' + ' world'") == 'hello world'
+}
+
 fn test_if_else_stmt() {
 	mut c := new_test_compilation_state()
 

@@ -4,6 +4,7 @@ module binding
 import lib.comp.ast
 import lib.comp.util
 import lib.comp.types
+import lib.comp.symbols
 
 [heap]
 pub struct Binder {
@@ -85,7 +86,7 @@ pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) Bound
 	range_expr := b.bind_expr(for_range_stmt.range_expr)
 
 	// TODO: Check same type
-	ident := new_variable_symbol(ident_name, range_expr.typ(), false)
+	ident := symbols.new_variable_symbol(ident_name, range_expr.typ(), false)
 	res := b.scope.try_declare(ident)
 
 	body_stmt := b.bind_stmt(for_range_stmt.body_stmt)
@@ -178,7 +179,7 @@ pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 	name := syntax.ident.lit
 	bound_expr := b.bind_expr(syntax.expr)
 
-	var := new_variable_symbol(name, bound_expr.typ(), syntax.is_mut)
+	var := symbols.new_variable_symbol(name, bound_expr.typ(), syntax.is_mut)
 	res := b.scope.try_declare(var)
 	if res == false {
 		b.log.error_name_already_defined(name, syntax.ident.pos)

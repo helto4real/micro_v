@@ -2,10 +2,11 @@ module binding
 
 import strings
 import lib.comp.util
+import lib.comp.symbols
 
 pub struct BoundScope {
 mut:
-	vars map[string]&VariableSymbol
+	vars map[string]&symbols.VariableSymbol
 pub:
 	parent &BoundScope
 }
@@ -13,11 +14,11 @@ pub:
 pub fn new_bound_scope(parent &BoundScope) &BoundScope {
 	return &BoundScope{
 		parent: parent
-		vars: map[string]&VariableSymbol{}
+		vars: map[string]&symbols.VariableSymbol{}
 	}
 }
 
-pub fn (bs &BoundScope) lookup(name string) ?&VariableSymbol {
+pub fn (bs &BoundScope) lookup(name string) ?&symbols.VariableSymbol {
 	var := bs.vars[name] or {
 		if bs.parent > 0 {
 			return bs.parent.lookup(name)
@@ -27,7 +28,7 @@ pub fn (bs &BoundScope) lookup(name string) ?&VariableSymbol {
 	return var
 }
 
-pub fn (mut bs BoundScope) try_declare(var &VariableSymbol) bool {
+pub fn (mut bs BoundScope) try_declare(var &symbols.VariableSymbol) bool {
 	if var.name in bs.vars {
 		return false
 	}
@@ -35,8 +36,8 @@ pub fn (mut bs BoundScope) try_declare(var &VariableSymbol) bool {
 	return true
 }
 
-pub fn (bs &BoundScope) vars() []&VariableSymbol {
-	mut res := []&VariableSymbol{}
+pub fn (bs &BoundScope) vars() []&symbols.VariableSymbol {
+	mut res := []&symbols.VariableSymbol{}
 	for i, _ in bs.vars {
 		v := bs.vars[i]
 		res << v
@@ -72,13 +73,13 @@ fn (bs &BoundScope) str_indent(level int) string {
 pub struct BoundGlobalScope {
 pub mut:
 	log  &util.Diagnostics // errors when parsing
-	vars []&VariableSymbol
+	vars []&symbols.VariableSymbol
 pub:
 	previous &BoundGlobalScope
 	stmt     BoundStmt
 }
 
-pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagnostics, vars []&VariableSymbol, stmt BoundStmt) &BoundGlobalScope {
+pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagnostics, vars []&symbols.VariableSymbol, stmt BoundStmt) &BoundGlobalScope {
 	return &BoundGlobalScope{
 		previous: previous
 		log: diagostics

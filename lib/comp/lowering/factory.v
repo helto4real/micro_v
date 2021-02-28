@@ -3,6 +3,7 @@ module lowering
 import lib.comp.binding
 import lib.comp.types
 import lib.comp.token
+import lib.comp.symbols
 
 fn block(stmts ...binding.BoundStmt) binding.BoundStmt {
 	return binding.new_bound_block_stmt(stmts)
@@ -23,13 +24,13 @@ fn label(label string) binding.BoundStmt {
 	return binding.new_bound_label_stmt(label)
 }
 
-fn var_decl(var &binding.VariableSymbol, expr binding.BoundExpr, is_mut bool) binding.BoundVarDeclStmt {
+fn var_decl(var &symbols.VariableSymbol, expr binding.BoundExpr, is_mut bool) binding.BoundVarDeclStmt {
 	// new_variable_symbol(name string, typ types.Type, is_mut bool)
 	// new_variable_symbol
 	return binding.new_var_decl_stmt(var, expr, is_mut) as binding.BoundVarDeclStmt
 }
 fn var_decl_local(name string, typ types.Type, expr binding.BoundExpr, is_mut bool) binding.BoundVarDeclStmt {
-	var := binding.new_variable_symbol(name, typ , is_mut)
+	var := symbols.new_variable_symbol(name, typ , is_mut)
 	return binding.new_var_decl_stmt(var, expr, is_mut) as binding.BoundVarDeclStmt
 }
 //new_for_stmt(cond_expr BoundExpr, body_stmt BoundStmt, has_cond bool) BoundStmt

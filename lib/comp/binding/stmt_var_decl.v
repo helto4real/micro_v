@@ -1,6 +1,7 @@
 module binding
 
 import lib.comp.types
+import lib.comp.symbols
 
 pub struct BoundVarDeclStmt {
 pub:
@@ -9,10 +10,10 @@ pub:
 	child_nodes []BoundNode
 	is_mut      bool
 	expr        BoundExpr
-	var         &VariableSymbol
+	var         &symbols.VariableSymbol
 }
 
-pub fn new_var_decl_stmt(var &VariableSymbol, expr BoundExpr, is_mut bool) BoundStmt {
+pub fn new_var_decl_stmt(var &symbols.VariableSymbol, expr BoundExpr, is_mut bool) BoundStmt {
 	return BoundVarDeclStmt{
 		var: var
 		is_mut: is_mut
