@@ -1,12 +1,12 @@
 // comp module implements the compiler and evaluator 
 module comp
-import os
 import term
 import lib.comp.parser
 import lib.comp.binding
 import lib.comp.types
 import lib.comp.util
 import lib.comp.lowering
+import lib.comp.binding.walker
 
 [heap]
 pub struct Compilation {
@@ -66,7 +66,6 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 		return new_evaluation_result(result, 0)
 	}
 	stmt := c.get_statement()
-	os.write_file('lowered.txt', '$stmt') or {}
 	mut evaluator := new_evaluator(stmt, vars)
 	val := evaluator.evaluate() or {
 		println(term.fail_message('Error in eval: $err'))

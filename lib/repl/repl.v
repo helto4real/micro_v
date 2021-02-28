@@ -175,6 +175,8 @@ fn (mut a App) visit_btree(node binding.BoundNode, last_child bool, indent strin
 				b.writeln(term.bright_cyan(' $node.val'))
 			} else if node is binding.BoundBinaryExpr {
 				b.writeln(term.bright_cyan(' $node.op.kind'))
+			} else if node is binding.BoundVariableExpr {
+				b.writeln(term.bright_cyan(' $node.var.name ($node.var.typ.typ_str())'))
 			} else if node is binding.BoundUnaryExpr {
 				b.writeln(term.bright_cyan(' $node.op.kind'))
 			} else {
@@ -188,6 +190,8 @@ fn (mut a App) visit_btree(node binding.BoundNode, last_child bool, indent strin
 				b.writeln(term.bright_cyan(' $node.jump_if_true -> $node.label'))
 			} else if node is binding.BoundGotoStmt {
 				b.writeln(term.bright_cyan(' $node.label'))
+			} else if node is binding.BoundVarDeclStmt {
+				b.writeln(term.bright_cyan(' $node.var.name ($node.var.typ.typ_str())'))
 			} else {
 				b.writeln('')
 			}

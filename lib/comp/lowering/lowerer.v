@@ -1,18 +1,27 @@
 module lowering
 
 import lib.comp.binding
+import lib.comp.types
 
 pub struct Lowerer {
 mut:
+	shallow bool 
 	label_count int
 }
 
-pub fn new_lowerer() Lowerer {
-	return Lowerer{}
+pub fn new_lowerer(shallow bool) Lowerer {
+	return Lowerer{shallow:shallow}
 }
 
 pub fn lower(stmt binding.BoundStmt) binding.BoundBlockStmt {
-	mut lowerer := new_lowerer()
+	mut lowerer := new_lowerer(false)
+	result := lowerer.rewrite_stmt(stmt)
+	return flatten(result)
+}
+
+// lower just the nodes in first level
+pub fn lower_shallow(stmt binding.BoundStmt) binding.BoundBlockStmt {
+	mut lowerer := new_lowerer(true)
 	result := lowerer.rewrite_stmt(stmt)
 	return flatten(result)
 }
@@ -50,6 +59,10 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt binding.BoundIfStmt) binding.BoundStmt {
 
 		end_label_name := l.gen_label()
 		res := block(goto_false(end_label_name, stmt.cond_expr), stmt.block_stmt, label(end_label_name))
+		
+		if l.shallow {
+			return res
+		}
 		return l.rewrite_stmt(res)
 	} else {
 		// if <condition>
@@ -73,6 +86,10 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt binding.BoundIfStmt) binding.BoundStmt {
 
 		res := block(goto_false(else_label, stmt.cond_expr), stmt.block_stmt, goto_label(end_label),
 			label(else_label), stmt.else_clause, label(end_label))
+		
+		if l.shallow {
+			return res
+		}
 		return l.rewrite_stmt(res)
 	}
 }
@@ -105,37 +122,62 @@ fn (mut l Lowerer) rewrite_for_stmt(stmt binding.BoundForStmt) binding.BoundStmt
 			label(continue_label),
 			goto_true(body_label, stmt.cond_expr)
 		)
+		if l.shallow {
+			return res
+		}
 		return l.rewrite_stmt(res)
 
-	} else {}
+	} else {
+		panic('unexpected empty condition')
+	}
 
 
 	return stmt
 }
 
 fn (mut l Lowerer) rewrite_for_range_stmt(stmt binding.BoundForRangeStmt) binding.BoundStmt {
-		// The for range is transformed it two stages, this stage transforms it
-		// to a normal for statement
+	// The for range is transformed it two stages, this stage transforms it
+	// to a normal for statement
 
-		// for <var> in <lower>..<upper>
-		//      <body>
-		//
-		// ----->
-		// {
-		//   mut var := <lower>
-		//   upper := <upper>
-		//   for <var> < upper {
-		//      <body>
-		//      continue: //todo: add continue and break to loops
-		//      <var> = <var> + 1
-		//   }
-		// }	
-		range := stmt.range_expr as binding.BoundRangeExpr
-		// mut var := lower
-		lower_decl := var_decl(stmt.ident, range.from_exp , true)
-	return stmt
+	// for <var> in <lower>..<upper>
+	//      <body>
+	//
+	// ----->
+	// {
+	//   mut var := <lower>
+	//   upper := <upper>
+	//   for <var> < upper {
+	//      <body>
+	//      continue: //todo: add continue and break to loops
+	//      <var> = <var> + 1
+	//   }
+	// }	
+	range := stmt.range_expr as binding.BoundRangeExpr
+	// mut var := lower
+	lower_decl := var_decl(stmt.ident, range.from_exp , true)
+	upper_decl := var_decl_local('upper', int(types.TypeKind.int_lit), range.to_exp , false)
+	res := block(
+		lower_decl,
+		upper_decl,
+		for_stmt(
+			less_than(
+				variable(lower_decl),
+				variable(upper_decl)
+			),
+			block(
+				stmt.body_stmt,
+				increment(
+					variable(lower_decl)
+				)
+			)
+		),
+	)
+	if l.shallow {
+			return res
+		}
+	return l.rewrite_stmt(res)
+
 }
-
 
 pub fn (mut l Lowerer) rewrite_if_expr(expr binding.BoundIfExpr) binding.BoundExpr {
 	cond_expr := l.rewrite_expr(expr.cond_expr)

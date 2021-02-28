@@ -10,7 +10,7 @@ pub:
 	val         types.LitVal
 }
 
-fn new_bound_literal_expr(val types.LitVal) BoundExpr {
+pub fn new_bound_literal_expr(val types.LitVal) BoundExpr {
 	return BoundLiteralExpr{
 		typ: val.typ()
 		kind: .literal_expr

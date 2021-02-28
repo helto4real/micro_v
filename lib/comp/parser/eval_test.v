@@ -161,7 +161,7 @@ fn test_loops() {
 	mut c := new_test_compilation_state()
 	assert c.eval_int('{mut a:=10 for a > 5 {a = a-1} a}') == 5
 	assert c.eval_int('{mut a:= 0 for a < 3 {a = a+1} a}') == 3
-	assert c.eval_int('{mut a:= 0 for b in 0..10 {a = a + b} a}') == 3
+	assert c.eval_int('{mut a:= 0 for b in 0..10 {a = a + b} a}') == 45
 }
 
 fn test_if_else_stmt() {

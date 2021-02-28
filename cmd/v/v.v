@@ -1,6 +1,7 @@
 import lib.comp.token
 import lib.repl
 import os
+// import lib.comp.binding.walker
 // import lib.comp.binding
 // import lib.comp.parser
 // import lib.comp
@@ -14,9 +15,41 @@ fn main() {
 			exit(0)
 		}
 	}
+
 	repl.run() ?
-	// res := evaluate('{ mut a:=0 if false {a=100} else {a=200} a}')
-	// println(res)
+
+
+	// syntax_tree := parser.parse_syntax_tree(
+	// 	'
+	// 	    {
+	// 			mut a := 0
+	// 			for b in 0..10 {
+	// 				a = a + b
+	// 			}
+	// 			a
+	// 		}
+	// 		')
+	// // syntax_tree := parser.parse_syntax_tree(
+	// // 	'
+	// // 	    {
+	// // 			mut a := 0
+	// // 			mut b := 0
+	// // 			for a < 5{
+	// // 				b = b - 1
+	// // 				a = a + 1
+					
+	// // 			}
+	// // 			b
+	// // 		}
+	// // 		')
+	// if syntax_tree.log.all.len > 0 {
+	// 	println('syntax error')
+	// 	return
+	// }
+	// vars :=  binding.new_eval_variables()
+	// mut comp := comp.new_compilation(syntax_tree)
+	// res := comp.evaluate(vars)
+	// println('RES: $res')
 }
 
 // fn evaluate(expr string) comp.EvaluationResult {

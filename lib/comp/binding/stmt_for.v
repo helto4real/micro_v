@@ -35,11 +35,12 @@ pub:
 	body_stmt BoundStmt
 }
 
-fn new_for_stmt(cond_expr BoundExpr, body_stmt BoundStmt, has_cond bool) BoundStmt {
+pub fn new_for_stmt(cond_expr BoundExpr, body_stmt BoundStmt, has_cond bool) BoundStmt {
 	return BoundForStmt{
 		cond_expr: cond_expr
 		body_stmt: body_stmt
 		has_cond: has_cond
+		child_nodes: [BoundNode(cond_expr), body_stmt]
 	}
 }
 pub fn (ex &BoundForStmt) node_str() string {

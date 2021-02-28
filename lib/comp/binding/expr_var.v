@@ -10,7 +10,7 @@ pub:
 	var         &VariableSymbol
 }
 
-fn new_bound_variable_expr(var &VariableSymbol) BoundExpr {
+pub fn new_bound_variable_expr(var &VariableSymbol) BoundExpr {
 	return BoundVariableExpr{
 		var: var
 		typ: var.typ
