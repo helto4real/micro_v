@@ -2,6 +2,7 @@
 module binding
 
 import lib.comp.ast
+import lib.comp.token
 import lib.comp.util
 import lib.comp.symbols
 
@@ -79,20 +80,20 @@ pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 	return new_for_stmt(cond_expr, body_stmt, for_stmt.has_cond)
 }
 
-pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) BoundStmt {
-	ident_name := for_range_stmt.ident.lit
+pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, is_mut bool) &symbols.VariableSymbol {
+	name := ident.lit
+	variable := symbols.new_variable_symbol(name, typ, is_mut)
 
-	range_expr := b.bind_expr(for_range_stmt.range_expr)
-
-	// TODO: Check same type
-	ident := symbols.new_variable_symbol(ident_name, range_expr.typ(), false)
-	res := b.scope.try_declare(ident)
-
-	body_stmt := b.bind_stmt(for_range_stmt.body_stmt)
-
-	if res == false {
-		b.log.error_name_already_defined(ident_name, for_range_stmt.ident.pos)
+	if !b.scope.try_declare(variable) {
+		b.log.error_name_already_defined(name, ident.pos)
 	}
+	return variable
+}
+
+pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) BoundStmt {
+	range_expr := b.bind_expr(for_range_stmt.range_expr)
+	ident := b.bind_variable(for_range_stmt.ident, range_expr.typ(), false)
+	body_stmt := b.bind_stmt(for_range_stmt.body_stmt)
 
 	return new_for_range_stmt(ident, range_expr, body_stmt)
 }
@@ -127,10 +128,11 @@ pub fn (mut b Binder) bind_expr_stmt(expr_stmt ast.ExprStmt) BoundStmt {
 
 pub fn (mut b Binder) bind_expr_type(expr ast.Expr, typ symbols.TypeSymbol) BoundExpr {
 	bound_expr := b.bind_expr(expr)
-	if bound_expr.typ() != typ {
+
+	if typ != symbols.error_symbol && bound_expr.typ() != symbols.error_symbol
+		&& typ != bound_expr.typ() {
 		// We expect the condition to be a boolean expression
-		b.log.error_expected_correct_type_expr(typ.name, bound_expr.typ().name,
-			expr.pos())
+		b.log.error_expected_correct_type_expr(typ.name, bound_expr.typ().name, expr.pos())
 	}
 	return bound_expr
 }
@@ -174,14 +176,9 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 }
 
 pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
-	name := syntax.ident.lit
 	bound_expr := b.bind_expr(syntax.expr)
+	var := b.bind_variable(syntax.ident, bound_expr.typ(), syntax.is_mut)
 
-	var := symbols.new_variable_symbol(name, bound_expr.typ(), syntax.is_mut)
-	res := b.scope.try_declare(var)
-	if res == false {
-		b.log.error_name_already_defined(name, syntax.ident.pos)
-	}
 	return new_var_decl_stmt(var, bound_expr, syntax.is_mut)
 }
 

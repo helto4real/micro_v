@@ -48,7 +48,7 @@ fn variable(var_decl binding.BoundVarDeclStmt) binding.BoundVariableExpr {
 
 fn binary(left binding.BoundExpr, kind token.Kind, right binding.BoundExpr) binding.BoundExpr {
 	// todo: fix error handling
-	op := binding.bind_binary_operator(kind, left.typ(), right.typ()) or {panic(err)}
+	op := binding.bind_binary_operator(kind, left.typ(), right.typ()) or {panic(err.msg)}
 	
 	return binding.new_bound_binary_expr(left , op, right ) 
 }

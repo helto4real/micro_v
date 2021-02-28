@@ -2,11 +2,11 @@ module types
 import symbols
 
 
-pub type Type = int
+// pub type Type = int
 
-pub fn (t Type) typ_str() string {
-	return types.built_in_types[int(t)]
-}
+// pub fn (t Type) typ_str() string {
+// 	return types.built_in_types[int(t)]
+// }
 
 pub struct None {}
 pub type LitVal = bool | int | string
