@@ -1,11 +1,11 @@
 module binding
 
-import lib.comp.types
+import lib.comp.symbols
 
 pub struct BoundCondGotoStmt {
 pub:
 	kind        BoundNodeKind = .for_range_stmt
-	typ         types.Type
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	label		string
 	cond	    BoundExpr

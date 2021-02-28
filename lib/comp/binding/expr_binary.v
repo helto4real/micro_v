@@ -1,11 +1,11 @@
 module binding
 
-import lib.comp.types
+import lib.comp.symbols
 
 pub struct BoundBinaryExpr {
 pub:
 	kind        BoundNodeKind
-	typ         types.Type
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	left        BoundExpr
 	op          BoundBinaryOperator

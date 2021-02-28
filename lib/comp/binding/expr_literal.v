@@ -1,11 +1,12 @@
 module binding
 
+import lib.comp.symbols
 import lib.comp.types
 
 pub struct BoundLiteralExpr {
 pub:
 	kind        BoundNodeKind
-	typ         types.Type
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	val         types.LitVal
 }

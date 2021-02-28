@@ -1,28 +1,25 @@
 module symbols
-
+pub const (
+	int_symbol = new_type_symbol('int')
+	bool_symbol = new_type_symbol('bool')
+	string_symbol = new_type_symbol('string')
+	undefined_symbol = new_type_symbol('undefined')
+)
 pub struct TypeSymbol {
 pub:
 	name   string
+}
+
+pub fn (ts TypeSymbol) == (rts TypeSymbol) bool {
+	return ts.name == rts.name
 }
 
 pub fn (ts TypeSymbol) str() string {
 	return ts.name
 }
 
-pub fn new_int_symbol() TypeSymbol {
-	return TypeSymbol{
-		name: 'int'
-	}
-}
-
-pub fn new_bool_symbol() TypeSymbol {
-	return TypeSymbol{
-		name: 'bool'
-	}
-}
-
-pub fn new_string_symbol() TypeSymbol {
-	return TypeSymbol{
-		name: 'string'
+pub fn new_type_symbol(name string) TypeSymbol {
+	return TypeSymbol {
+		name: name
 	}
 }

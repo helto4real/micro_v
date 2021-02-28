@@ -1,4 +1,6 @@
 module types
+import symbols
+
 
 pub type Type = int
 
@@ -86,16 +88,16 @@ pub fn (l LitVal) le(r LitVal) bool {
 	}
 }
 
-pub fn (l LitVal) typ() Type {
+pub fn (l LitVal) typ() symbols.TypeSymbol {
 	return match l {
 		string {
-			1
+			symbols.string_symbol
 		}
 		int {
-			2
+			symbols.int_symbol
 		}
 		bool {
-			3
+			symbols.bool_symbol
 		}
 	}
 }

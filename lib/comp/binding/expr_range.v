@@ -1,11 +1,11 @@
 module binding
 
-import lib.comp.types
+import lib.comp.symbols
 
 pub struct BoundRangeExpr {
 pub:
 	kind        BoundNodeKind = .range_expr
-	typ         types.Type
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	from_exp    BoundExpr
 	to_exp      BoundExpr

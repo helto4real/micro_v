@@ -25,11 +25,11 @@ fn label(label string) binding.BoundStmt {
 }
 
 fn var_decl(var &symbols.VariableSymbol, expr binding.BoundExpr, is_mut bool) binding.BoundVarDeclStmt {
-	// new_variable_symbol(name string, typ types.Type, is_mut bool)
+	// new_variable_symbol(name string, typ symbols.TypeSymbol, is_mut bool)
 	// new_variable_symbol
 	return binding.new_var_decl_stmt(var, expr, is_mut) as binding.BoundVarDeclStmt
 }
-fn var_decl_local(name string, typ types.Type, expr binding.BoundExpr, is_mut bool) binding.BoundVarDeclStmt {
+fn var_decl_local(name string, typ symbols.TypeSymbol, expr binding.BoundExpr, is_mut bool) binding.BoundVarDeclStmt {
 	var := symbols.new_variable_symbol(name, typ , is_mut)
 	return binding.new_var_decl_stmt(var, expr, is_mut) as binding.BoundVarDeclStmt
 }

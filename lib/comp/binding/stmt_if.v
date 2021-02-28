@@ -1,11 +1,11 @@
 module binding
 
-import lib.comp.types
+import lib.comp.symbols
 
 pub struct BoundIfStmt {
 pub:
 	kind        BoundNodeKind = .if_stmt
-	typ         types.Type
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	cond_expr   BoundExpr
 	has_else    bool

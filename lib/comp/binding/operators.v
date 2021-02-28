@@ -1,7 +1,7 @@
 module binding
 
 import lib.comp.ast
-import lib.comp.types
+import lib.comp.symbols
 import lib.comp.token
 
 const (
@@ -13,15 +13,15 @@ pub struct BoundUnaryOperator {
 pub:
 	op_kind BoundUnaryOperatorKind
 	kind    token.Kind
-	op_typ  types.Type
-	res_typ types.Type
+	op_typ  symbols.TypeSymbol
+	res_typ symbols.TypeSymbol
 }
 
-pub fn new_bound_unary_op(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ types.Type) BoundUnaryOperator {
-	return new_bound_unary_op_with_ret(kind, op_kind, op_typ, types.Type(0))
+pub fn new_bound_unary_op(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ symbols.TypeSymbol) BoundUnaryOperator {
+	return new_bound_unary_op_with_ret(kind, op_kind, op_typ, symbols.undefined_symbol)
 }
 
-pub fn new_bound_unary_op_with_ret(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ types.Type, res_typ types.Type) BoundUnaryOperator {
+pub fn new_bound_unary_op_with_ret(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ symbols.TypeSymbol, res_typ symbols.TypeSymbol) BoundUnaryOperator {
 	return BoundUnaryOperator{
 		kind: kind
 		op_kind: op_kind
@@ -36,16 +36,16 @@ pub fn (ex &BoundUnaryOperator) node_str() string {
 fn build_bound_unary_operators() []BoundUnaryOperator {
 	mut operators := []BoundUnaryOperator{}
 
-	operators << new_bound_unary_op(.exl_mark, .logic_negation, int(types.TypeKind.bool_lit))
-	operators << new_bound_unary_op(.plus, .identity, int(types.TypeKind.int_lit))
-	operators << new_bound_unary_op(.minus, .negation, int(types.TypeKind.int_lit))
+	operators << new_bound_unary_op(.exl_mark, .logic_negation, symbols.bool_symbol)
+	operators << new_bound_unary_op(.plus, .identity, symbols.int_symbol)
+	operators << new_bound_unary_op(.minus, .negation, symbols.int_symbol)
 
-	operators << new_bound_unary_op(.tilde, .ones_compl, int(types.TypeKind.int_lit))
+	operators << new_bound_unary_op(.tilde, .ones_compl, symbols.int_symbol)
 
 	return operators
 }
 
-pub fn bind_unary_operator(kind token.Kind, op_typ types.Type) ?BoundUnaryOperator {
+pub fn bind_unary_operator(kind token.Kind, op_typ symbols.TypeSymbol) ?BoundUnaryOperator {
 	for op in binding.bound_unary_operators {
 		if op.kind == kind && op.op_typ == op_typ {
 			return op
@@ -60,12 +60,12 @@ pub struct BoundBinaryOperator {
 pub:
 	op_kind   BoundBinaryOperatorKind
 	kind      token.Kind
-	left_typ  types.Type
-	right_typ types.Type
-	res_typ   types.Type
+	left_typ  symbols.TypeSymbol
+	right_typ symbols.TypeSymbol
+	res_typ   symbols.TypeSymbol
 }
 
-pub fn new_bound_binary_op_full(kind token.Kind, op_kind BoundBinaryOperatorKind, left_typ types.Type, right_typ types.Type, res_typ types.Type) BoundBinaryOperator {
+pub fn new_bound_binary_op_full(kind token.Kind, op_kind BoundBinaryOperatorKind, left_typ symbols.TypeSymbol, right_typ symbols.TypeSymbol, res_typ symbols.TypeSymbol) BoundBinaryOperator {
 	return BoundBinaryOperator{
 		kind: kind
 		op_kind: op_kind
@@ -79,11 +79,11 @@ pub fn (ex &BoundBinaryOperator) node_str() string {
 	return typeof(ex).name
 }
 
-pub fn new_bound_binary_op(kind token.Kind, op_kind BoundBinaryOperatorKind, typ types.Type) BoundBinaryOperator {
+pub fn new_bound_binary_op(kind token.Kind, op_kind BoundBinaryOperatorKind, typ symbols.TypeSymbol) BoundBinaryOperator {
 	return new_bound_binary_op_full(kind, op_kind, typ, typ, typ)
 }
 
-pub fn new_bound_binary_op_with_res(kind token.Kind, op_kind BoundBinaryOperatorKind, op_typ types.Type, res_typ types.Type) BoundBinaryOperator {
+pub fn new_bound_binary_op_with_res(kind token.Kind, op_kind BoundBinaryOperatorKind, op_typ symbols.TypeSymbol, res_typ symbols.TypeSymbol) BoundBinaryOperator {
 	return new_bound_binary_op_full(kind, op_kind, op_typ, op_typ, res_typ)
 }
 
@@ -91,41 +91,41 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 	mut operators := []BoundBinaryOperator{}
 
 	// int
-	operators << new_bound_binary_op(.plus, .addition, int(types.TypeKind.int_lit))
-	operators << new_bound_binary_op(.minus, .subraction, int(types.TypeKind.int_lit))
-	operators << new_bound_binary_op(.mul, .multiplication, int(types.TypeKind.int_lit))
-	operators << new_bound_binary_op(.div, .divition, int(types.TypeKind.int_lit))
+	operators << new_bound_binary_op(.plus, .addition, symbols.int_symbol)
+	operators << new_bound_binary_op(.minus, .subraction, symbols.int_symbol)
+	operators << new_bound_binary_op(.mul, .multiplication, symbols.int_symbol)
+	operators << new_bound_binary_op(.div, .divition, symbols.int_symbol)
 
-	operators << new_bound_binary_op(.amp, .bitwise_and, int(types.TypeKind.int_lit))
-	operators << new_bound_binary_op(.pipe, .bitwise_or, int(types.TypeKind.int_lit))
-	operators << new_bound_binary_op(.hat, .bitwise_xor, int(types.TypeKind.int_lit))
+	operators << new_bound_binary_op(.amp, .bitwise_and, symbols.int_symbol)
+	operators << new_bound_binary_op(.pipe, .bitwise_or, symbols.int_symbol)
+	operators << new_bound_binary_op(.hat, .bitwise_xor, symbols.int_symbol)
 
 	// strings
-	operators << new_bound_binary_op(.plus, .str_concat, int(types.TypeKind.string_lit))
+	operators << new_bound_binary_op(.plus, .str_concat, symbols.string_symbol)
 
 	// accept int but returns bool
-	operators << new_bound_binary_op_with_res(.eq_eq, .equals, int(types.TypeKind.int_lit),
-		int(types.TypeKind.bool_lit))
-	operators << new_bound_binary_op_with_res(.exl_mark_eq, .not_equals, int(types.TypeKind.int_lit),
-		int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op_with_res(.eq_eq, .equals, symbols.int_symbol,
+		symbols.bool_symbol)
+	operators << new_bound_binary_op_with_res(.exl_mark_eq, .not_equals, symbols.int_symbol,
+		symbols.bool_symbol)
 
-	operators << new_bound_binary_op(.amp_amp, .logic_and, int(types.TypeKind.bool_lit))
-	operators << new_bound_binary_op(.pipe_pipe, .logic_or, int(types.TypeKind.bool_lit))
-	operators << new_bound_binary_op(.eq_eq, .equals, int(types.TypeKind.bool_lit))
-	operators << new_bound_binary_op(.exl_mark_eq, .not_equals, int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op(.amp_amp, .logic_and, symbols.bool_symbol)
+	operators << new_bound_binary_op(.pipe_pipe, .logic_or, symbols.bool_symbol)
+	operators << new_bound_binary_op(.eq_eq, .equals, symbols.bool_symbol)
+	operators << new_bound_binary_op(.exl_mark_eq, .not_equals, symbols.bool_symbol)
 
-	operators << new_bound_binary_op_with_res(.lt, .less, int(types.TypeKind.int_lit),
-		int(types.TypeKind.bool_lit))
-	operators << new_bound_binary_op_with_res(.gt, .greater, int(types.TypeKind.int_lit),
-		int(types.TypeKind.bool_lit))
-	operators << new_bound_binary_op_with_res(.lt_eq, .less_or_equals, int(types.TypeKind.int_lit),
-		int(types.TypeKind.bool_lit))
-	operators << new_bound_binary_op_with_res(.gt_eq, .greater_or_equals, int(types.TypeKind.int_lit),
-		int(types.TypeKind.bool_lit))
+	operators << new_bound_binary_op_with_res(.lt, .less, symbols.int_symbol,
+		symbols.bool_symbol)
+	operators << new_bound_binary_op_with_res(.gt, .greater, symbols.int_symbol,
+		symbols.bool_symbol)
+	operators << new_bound_binary_op_with_res(.lt_eq, .less_or_equals, symbols.int_symbol,
+		symbols.bool_symbol)
+	operators << new_bound_binary_op_with_res(.gt_eq, .greater_or_equals, symbols.int_symbol,
+		symbols.bool_symbol)
 	return operators
 }
 
-pub fn bind_binary_operator(kind token.Kind, left_typ types.Type, right_typ types.Type) ?BoundBinaryOperator {
+pub fn bind_binary_operator(kind token.Kind, left_typ symbols.TypeSymbol, right_typ symbols.TypeSymbol) ?BoundBinaryOperator {
 	for op in binding.bound_binary_operators {
 		if op.kind == kind && op.left_typ == left_typ && op.right_typ == right_typ {
 			return op
@@ -165,7 +165,7 @@ pub enum BoundBinaryOperatorKind {
 fn (mut b Binder) bind_unary_expr(syntax ast.UnaryExpr) BoundExpr {
 	bound_operand := b.bind_expr(syntax.operand)
 	bound_op := bind_unary_operator(syntax.op.kind, bound_operand.typ()) or {
-		b.log.error('unary operator $syntax.op.lit is not defined for type ${bound_operand.typ_str()}.',
+		b.log.error('unary operator $syntax.op.lit is not defined for type ${bound_operand.typ().name}.',
 			syntax.op.pos)
 		return bound_operand
 	}
@@ -176,7 +176,7 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 	bound_left := b.bind_expr(syntax.left)
 	bound_right := b.bind_expr(syntax.right)
 	bound_op := bind_binary_operator(syntax.op.kind, bound_left.typ(), bound_right.typ()) or {
-		b.log.error('binary operator $syntax.op.lit is not defined for types $bound_left.typ_str() and ${bound_right.typ_str()}.',
+		b.log.error('binary operator $syntax.op.lit is not defined for types ${bound_left.typ().name} and ${bound_right.typ().name}.',
 			syntax.op.pos)
 		return bound_left
 	}

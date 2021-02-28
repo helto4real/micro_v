@@ -3,7 +3,6 @@ module binding
 
 import lib.comp.ast
 import lib.comp.util
-import lib.comp.types
 import lib.comp.symbols
 
 [heap]
@@ -70,7 +69,7 @@ pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 
 pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 	cond_expr := if for_stmt.has_cond {
-		b.bind_expr_type(for_stmt.cond_expr, int(types.TypeKind.bool_lit))
+		b.bind_expr_type(for_stmt.cond_expr, symbols.bool_symbol)
 	} else {
 		BoundExpr{}
 	}
@@ -98,7 +97,7 @@ pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) Bound
 	return new_for_range_stmt(ident, range_expr, body_stmt)
 }
 pub fn (mut b Binder) bind_if_stmt(if_stmt ast.IfStmt) BoundStmt {
-	cond_expr := b.bind_expr_type(if_stmt.cond_expr, int(types.TypeKind.bool_lit))
+	cond_expr := b.bind_expr_type(if_stmt.cond_expr, symbols.bool_symbol)
 
 	then_stmt := if_stmt.then_stmt as ast.BlockStmt
 	bound_then_stmt := b.bind_block_stmt(then_stmt)
@@ -126,12 +125,11 @@ pub fn (mut b Binder) bind_expr_stmt(expr_stmt ast.ExprStmt) BoundStmt {
 	return new_bound_expr_stmt(expr)
 }
 
-pub fn (mut b Binder) bind_expr_type(expr ast.Expr, typ types.Type) BoundExpr {
+pub fn (mut b Binder) bind_expr_type(expr ast.Expr, typ symbols.TypeSymbol) BoundExpr {
 	bound_expr := b.bind_expr(expr)
-
 	if bound_expr.typ() != typ {
 		// We expect the condition to be a boolean expression
-		b.log.error_expected_correct_type_expr(typ.typ_str(), bound_expr.typ().typ_str(),
+		b.log.error_expected_correct_type_expr(typ.name, bound_expr.typ().name,
 			expr.pos())
 	}
 	return bound_expr
@@ -155,14 +153,14 @@ pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 	to_expr := b.bind_expr(range_expr.to)
 
 	if from_expr.typ() != to_expr.typ() {
-		b.log.error_expected_same_type_in_range_expr(from_expr.typ().typ_str(), range_expr.to.pos())
+		b.log.error_expected_same_type_in_range_expr(from_expr.typ().name, range_expr.to.pos())
 	}
 	return new_range_expr(from_expr, to_expr)
 }
 
 pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 	cond_expr := b.bind_expr(if_expr.cond_expr)
-	if cond_expr.typ() != int(types.TypeKind.bool_lit) {
+	if cond_expr.typ() != symbols.int_symbol {
 		// We expect the condition to be a boolean expression
 		b.log.error_expected_bool_expr(if_expr.cond_expr.pos())
 	}
@@ -210,7 +208,7 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 	}
 
 	if bound_expr.typ() != var.typ {
-		b.log.error_cannot_convert_variable_type(bound_expr.typ_str(), var.typ.typ_str(),
+		b.log.error_cannot_convert_variable_type(bound_expr.typ().name, var.typ.name,
 			syntax.expr.pos())
 		return bound_expr
 	}

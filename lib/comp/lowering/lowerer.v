@@ -1,7 +1,7 @@
 module lowering
 
 import lib.comp.binding
-import lib.comp.types
+import lib.comp.symbols
 
 pub struct Lowerer {
 mut:
@@ -155,7 +155,7 @@ fn (mut l Lowerer) rewrite_for_range_stmt(stmt binding.BoundForRangeStmt) bindin
 	range := stmt.range_expr as binding.BoundRangeExpr
 	// mut var := lower
 	lower_decl := var_decl(stmt.ident, range.from_exp , true)
-	upper_decl := var_decl_local('upper', int(types.TypeKind.int_lit), range.to_exp , false)
+	upper_decl := var_decl_local('upper', symbols.int_symbol, range.to_exp , false)
 	res := block(
 		lower_decl,
 		upper_decl,

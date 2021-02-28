@@ -5,11 +5,11 @@ import lib.comp.symbols
 fn test_single_scope() {
 	mut scope := binding.new_bound_scope(&binding.BoundScope(0))
 
-	var := symbols.new_variable_symbol('in_scope_var', int(types.TypeKind.int_lit), false)
+	var := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol, false)
 	assert scope.try_declare(var) == true
 
 	// again should result in false
-	var_another := symbols.new_variable_symbol('in_scope_var', int(types.TypeKind.int_lit),
+	var_another := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol,
 		false)
 	assert scope.try_declare(var_another) == false
 
@@ -27,11 +27,11 @@ fn test_parent_scope() {
 	mut parent_scope := binding.new_bound_scope(&binding.BoundScope(0))
 	mut scope := binding.new_bound_scope(parent_scope)
 
-	var := symbols.new_variable_symbol('in_scope_var', int(types.TypeKind.int_lit), false)
+	var := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol, false)
 	assert parent_scope.try_declare(var) == true
 
 	// again should result in false
-	var_another := symbols.new_variable_symbol('in_scope_var', int(types.TypeKind.int_lit),
+	var_another := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol,
 		false)
 	assert parent_scope.try_declare(var_another) == false
 

@@ -1,6 +1,6 @@
 module binding
 
-import lib.comp.types
+import lib.comp.symbols
 
 pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundIfExpr | BoundLiteralExpr |
 	BoundRangeExpr | BoundUnaryExpr | BoundVariableExpr
@@ -45,7 +45,7 @@ pub fn (bn &BoundNode) node_str() string {
 	}
 }
 
-pub fn (be BoundExpr) typ() types.Type {
+pub fn (be BoundExpr) typ() symbols.TypeSymbol {
 	match be {
 		BoundLiteralExpr { return be.typ }
 		BoundUnaryExpr { return be.typ }
@@ -59,13 +59,13 @@ pub fn (be BoundExpr) typ() types.Type {
 
 pub fn (be BoundExpr) typ_str() string {
 	match be {
-		BoundLiteralExpr { return types.built_in_types[int(be.typ)] }
-		BoundUnaryExpr { return types.built_in_types[int(be.typ)] }
-		BoundBinaryExpr { return types.built_in_types[int(be.typ)] }
-		BoundVariableExpr { return types.built_in_types[int(be.typ)] }
-		BoundAssignExpr { return types.built_in_types[int(be.typ)] }
-		BoundIfExpr { return types.built_in_types[int(be.typ)] }
-		BoundRangeExpr { return types.built_in_types[int(be.typ)] }
+		BoundLiteralExpr { return be.typ.name }
+		BoundUnaryExpr { return be.typ.name }
+		BoundBinaryExpr { return be.typ.name }
+		BoundVariableExpr { return be.typ.name }
+		BoundAssignExpr { return be.typ.name }
+		BoundIfExpr { return be.typ.name }
+		BoundRangeExpr { return be.typ.name }
 	}
 }
 pub fn (be BoundExpr) node_str() string {

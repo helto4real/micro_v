@@ -1,12 +1,11 @@
 module binding
 
-import lib.comp.types
 import lib.comp.symbols
 
 pub struct BoundVarDeclStmt {
 pub:
 	kind        BoundNodeKind = .var_decl_stmt
-	typ         types.Type
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	is_mut      bool
 	expr        BoundExpr

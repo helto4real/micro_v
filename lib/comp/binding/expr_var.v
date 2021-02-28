@@ -1,12 +1,11 @@
 module binding
 
-import lib.comp.types
 import lib.comp.symbols
 
 pub struct BoundVariableExpr {
 pub:
 	kind        BoundNodeKind = .variable_expr
-	typ         types.Type
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	var         &symbols.VariableSymbol
 }

@@ -1,12 +1,11 @@
 module binding
 
-import lib.comp.types
 import lib.comp.symbols
 
 pub struct BoundForRangeStmt {
 pub:
 	kind        BoundNodeKind = .for_range_stmt
-	typ         types.Type
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	ident       &symbols.VariableSymbol
 	range_expr  BoundExpr
@@ -28,7 +27,7 @@ pub fn (ex &BoundForRangeStmt) node_str() string {
 pub struct BoundForStmt {
 pub:
 	kind        BoundNodeKind = .for_stmt
-	typ         types.Type
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	has_cond    bool
 
