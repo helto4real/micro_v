@@ -224,11 +224,11 @@ fn (mut b Binder) bind_name_expr(syntax ast.NameExpr) BoundExpr {
 	if name.len == 0 {
 		// the parser inserted the token so we already reported 
 		// correct error so just return an error expression
-		return new_bound_literal_expr(0)
+		return new_bound_error_expr()
 	}
 	variable := b.scope.lookup(name) or {
 		b.log.error_var_not_exists(name, syntax.ident.pos)
-		return new_bound_literal_expr(0)
+		return new_bound_error_expr()
 	}
 	return new_bound_variable_expr(variable)
 }

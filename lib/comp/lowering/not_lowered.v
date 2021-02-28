@@ -45,10 +45,14 @@ pub fn (mut l Lowerer) rewrite_expr(expr binding.BoundExpr) binding.BoundExpr {
 		binding.BoundIfExpr { return l.rewrite_if_expr(expr) }
 		binding.BoundRangeExpr { return l.rewrite_range_expr(expr) }
 		binding.BoundVariableExpr { return l.rewrite_variable_expr(expr) }
+		binding.BoundErrorExpr { return l.rewrite_error_expr(expr) }
 		// else { panic('unexpected bound expression $expr') }
 	}
 }
 
+pub fn (mut l Lowerer) rewrite_error_expr(expr binding.BoundErrorExpr) binding.BoundExpr {
+	return expr
+}
 pub fn (mut l Lowerer) rewrite_variable_expr(expr binding.BoundVariableExpr) binding.BoundExpr {
 	return expr
 }

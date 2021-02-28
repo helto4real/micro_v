@@ -3,6 +3,7 @@ pub const (
 	int_symbol = new_type_symbol('int')
 	bool_symbol = new_type_symbol('bool')
 	string_symbol = new_type_symbol('string')
+	error_symbol = new_type_symbol('?')
 	undefined_symbol = new_type_symbol('undefined')
 )
 pub struct TypeSymbol {
