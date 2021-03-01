@@ -12,4 +12,6 @@ pub const (
 	print_symbol     = new_function_symbol('print', [new_param_symbol('text', string_symbol,
 		false)], void_symbol)
 	input_symbol     = new_function_symbol('input', [], string_symbol)
+
+	built_in_functions = [println_symbol, print_symbol, input_symbol]
 )

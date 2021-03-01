@@ -40,7 +40,7 @@ fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
 		stack.push(prev)
 		prev = prev.previous
 	}
-	mut parent := &BoundScope(0)
+	mut parent := create_root_scope()
 
 	for !stack.is_empty() {
 		prev = stack.pop() or { &BoundGlobalScope(0) }
@@ -55,6 +55,14 @@ fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
 	}
 
 	return parent
+}
+
+fn create_root_scope() &BoundScope {
+	mut result := new_bound_scope(&BoundScope(0))
+	for f in symbols.built_in_functions {
+		result.try_declare_fn(f)
+	}
+	return result
 }
 
 pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
@@ -154,38 +162,32 @@ pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	mut args := []BoundExpr{}
 
-	for i := 0; i<expr.params.len(); i++ {
-		param_expr := expr.params.at(i) as ast.Expr 
+	for i := 0; i < expr.params.len(); i++ {
+		param_expr := expr.params.at(i) as ast.Expr
 		arg_expr := b.bind_expr(param_expr)
 		args << arg_expr
 	}
 
-	
-	// TODO: Check for built-in functions here
-	// - If exist
-	// - if nr of arguments is same
-	// - check type
 	func_name := expr.ident.lit
-	func := symbols.lookup_built_in_function(func_name) or {
+	func := b.scope.lookup_fn(func_name) or {
 		b.log.error_undefinded_function(func_name, expr.ident.pos)
 		return new_bound_error_expr()
 	}
 
 	if expr.params.len() != func.params.len {
 		b.log.error_wrong_argument_count(func_name, func.params.len, expr.pos)
-		return new_bound_error_expr()	
+		return new_bound_error_expr()
 	}
 
-	for i := 0; i<expr.params.len(); i++ {
+	for i := 0; i < expr.params.len(); i++ {
 		bound_arg := args[i]
 		param := func.params[i]
-		
-		if bound_arg.typ() != param.typ {
-			
-			b.log.error_wrong_argument_type(param.name, param.typ.name, bound_arg.typ().name, expr.pos)
-			return new_bound_error_expr()	
-		}
 
+		if bound_arg.typ() != param.typ {
+			b.log.error_wrong_argument_type(param.name, param.typ.name, bound_arg.typ().name,
+				expr.pos)
+			return new_bound_error_expr()
+		}
 	}
 
 	return new_bound_call_expr(func, args)

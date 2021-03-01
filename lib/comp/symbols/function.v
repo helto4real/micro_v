@@ -24,8 +24,6 @@ pub fn new_function_symbol(name string, params []ParamSymbol, typ TypeSymbol) Fu
 }
 
 pub fn lookup_built_in_function(name string) ?FunctionSymbol {
-	built_in_functions := [println_symbol, print_symbol, input_symbol]
-
 	for f in built_in_functions {
 		if f.name == name {
 			return f

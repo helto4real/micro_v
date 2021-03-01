@@ -6,7 +6,7 @@ import lib.comp.symbols
 
 pub struct BoundScope {
 mut:
-	vars map[string]&symbols.VariableSymbol
+	vars  map[string]&symbols.VariableSymbol
 	funcs map[string]symbols.FunctionSymbol
 pub:
 	parent &BoundScope
@@ -59,6 +59,15 @@ pub fn (bs &BoundScope) vars() []&symbols.VariableSymbol {
 	mut res := []&symbols.VariableSymbol{}
 	for i, _ in bs.vars {
 		v := bs.vars[i]
+		res << v
+	}
+	return res
+}
+
+pub fn (bs &BoundScope) funcs() []symbols.FunctionSymbol {
+	mut res := []symbols.FunctionSymbol{}
+	for i, _ in bs.funcs {
+		v := bs.funcs[i]
 		res << v
 	}
 	return res
