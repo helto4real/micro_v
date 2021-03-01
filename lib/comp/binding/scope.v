@@ -7,6 +7,7 @@ import lib.comp.symbols
 pub struct BoundScope {
 mut:
 	vars map[string]&symbols.VariableSymbol
+	funcs map[string]symbols.FunctionSymbol
 pub:
 	parent &BoundScope
 }
@@ -15,6 +16,7 @@ pub fn new_bound_scope(parent &BoundScope) &BoundScope {
 	return &BoundScope{
 		parent: parent
 		vars: map[string]&symbols.VariableSymbol{}
+		funcs: map[string]symbols.FunctionSymbol{}
 	}
 }
 
@@ -33,6 +35,23 @@ pub fn (mut bs BoundScope) try_declare_var(var &symbols.VariableSymbol) bool {
 		return false
 	}
 	bs.vars[var.name] = var
+	return true
+}
+pub fn (bs &BoundScope) lookup_fn(name string) ?symbols.FunctionSymbol {
+	var := bs.funcs[name] or {
+		if bs.parent > 0 {
+			return bs.parent.lookup_fn(name)
+		}
+		return none
+	}
+	return var
+}
+
+pub fn (mut bs BoundScope) try_declare_fn(var symbols.FunctionSymbol) bool {
+	if var.name in bs.funcs {
+		return false
+	}
+	bs.funcs[var.name] = var
 	return true
 }
 
