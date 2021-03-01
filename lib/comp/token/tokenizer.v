@@ -207,7 +207,7 @@ pub fn (mut t Tokenizer) next_token() Token {
 	mut text := token_str[t.kind] or {
 		panic('compiler error, tokenkind: $t.kind not found in tokenlist')
 	}
-	if text == '' {
+	if text.len == 0 {
 		// variable token lenght
 		text = t.source.str_range(t.start, t.pos)
 	}

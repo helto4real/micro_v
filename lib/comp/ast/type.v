@@ -7,8 +7,8 @@ import lib.comp.util
 pub type Stmt = BlockStmt | ExprStmt | ForRangeStmt | ForStmt | IfStmt | VarDeclStmt
 
 // Sumtype expressions
-pub type Expr = AssignExpr | BinaryExpr | CompNode | IfExpr | LiteralExpr | NameExpr |
-	ParaExpr | RangeExpr | UnaryExpr
+pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | IfExpr | LiteralExpr |
+	NameExpr | ParaExpr | RangeExpr | UnaryExpr
 
 // Nodes in syntax tree
 pub type AstNode = Expr | Stmt | token.Token
@@ -56,6 +56,7 @@ pub fn (e &Expr) kind() SyntaxKind {
 		CompNode { return e.kind }
 		IfExpr { return e.kind }
 		RangeExpr { return e.kind }
+		CallExpr { return e.kind }
 	}
 }
 
@@ -70,6 +71,7 @@ pub fn (ex &Expr) node_str() string {
 		CompNode { return ex.node_str() }
 		IfExpr { return ex.node_str() }
 		RangeExpr { return ex.node_str() }
+		CallExpr { return ex.node_str() }
 	}
 }
 
@@ -84,13 +86,14 @@ pub fn (ex &Expr) child_nodes() []AstNode {
 		CompNode { return ex.child_nodes }
 		IfExpr { return ex.child_nodes }
 		RangeExpr { return ex.child_nodes }
+		CallExpr { return ex.child_nodes }
 	}
 }
 
 pub fn (ex &Expr) pos() util.Pos {
 	match ex {
 		LiteralExpr, BinaryExpr, UnaryExpr, ParaExpr, NameExpr, AssignExpr, CompNode, IfExpr,
-		RangeExpr {
+		RangeExpr, CallExpr {
 			return ex.pos
 		}
 	}
@@ -125,4 +128,3 @@ pub fn (ex &Stmt) pos() util.Pos {
 		}
 	}
 }
-

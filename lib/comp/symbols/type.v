@@ -1,14 +1,8 @@
 module symbols
-pub const (
-	int_symbol = new_type_symbol('int')
-	bool_symbol = new_type_symbol('bool')
-	string_symbol = new_type_symbol('string')
-	error_symbol = new_type_symbol('?')
-	undefined_symbol = new_type_symbol('undefined')
-)
+
 pub struct TypeSymbol {
 pub:
-	name   string
+	name string = 'undefined'
 }
 
 pub fn (ts TypeSymbol) == (rts TypeSymbol) bool {
@@ -20,7 +14,7 @@ pub fn (ts TypeSymbol) str() string {
 }
 
 pub fn new_type_symbol(name string) TypeSymbol {
-	return TypeSymbol {
+	return TypeSymbol{
 		name: name
 	}
 }

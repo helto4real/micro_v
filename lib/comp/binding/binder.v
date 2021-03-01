@@ -147,8 +147,48 @@ pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 		ast.AssignExpr { return b.bind_assign_expr(expr) }
 		ast.IfExpr { return b.bind_if_expr(expr) }
 		ast.RangeExpr { return b.bind_range_expr(expr) }
+		ast.CallExpr { return b.bind_call_expr(expr) }
 		else { panic('unexpected bound expression $expr') }
 	}
+}
+pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
+	mut args := []BoundExpr{}
+
+	for i := 0; i<expr.params.len(); i++ {
+		param_expr := expr.params.at(i) as ast.Expr 
+		arg_expr := b.bind_expr(param_expr)
+		args << arg_expr
+	}
+
+	
+	// TODO: Check for built-in functions here
+	// - If exist
+	// - if nr of arguments is same
+	// - check type
+	func_name := expr.ident.lit
+	func := symbols.lookup_built_in_function(func_name) or {
+		b.log.error_undefinded_function(func_name, expr.ident.pos)
+		return new_bound_error_expr()
+	}
+
+	if expr.params.len() != func.params.len {
+		b.log.error_wrong_argument_count(func_name, func.params.len, expr.pos)
+		return new_bound_error_expr()	
+	}
+
+	for i := 0; i<expr.params.len(); i++ {
+		bound_arg := args[i]
+		param := func.params[i]
+		
+		if bound_arg.typ() != param.typ {
+			
+			b.log.error_wrong_argument_type(param.name, param.typ.name, bound_arg.typ().name, expr.pos)
+			return new_bound_error_expr()	
+		}
+
+	}
+
+	return new_bound_call_expr(func, args)
 }
 pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 	from_expr := b.bind_expr(range_expr.from)

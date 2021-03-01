@@ -23,6 +23,7 @@ mut:
 	show_tree     bool
 	show_btree    bool
 	show_ltree    bool
+	output        []string
 	tui           &tui.Context = 0
 	ed            &Buffer      = 0
 	viewport      int
@@ -67,6 +68,10 @@ fn (mut a App) colorize() {
 			.key_true, .key_false, .number {
 				start := pos.pos - line.start + 1
 				a.tui.draw_text(start, line_nr, term.rgb(200, 200, 200, '$tok.lit'))
+			}
+			.string {
+				start := pos.pos - line.start + 1
+				a.tui.draw_text(start, line_nr, term.bright_green('$tok.lit'))
 			}
 			else {
 				kind_str := tok.kind.str()
@@ -144,7 +149,6 @@ fn (mut a App) visit_tree(node ast.Node, last_child bool, indent string) ?string
 	node_str := node.node_str()
 
 	if node_str[0] == `&` {
-		// b.write_string(term.gray(node_str[5..]))
 		b.writeln(term.gray(node_str[5..]))
 	} else {
 		b.write_string(term.gray('Token '))
@@ -152,7 +156,6 @@ fn (mut a App) visit_tree(node ast.Node, last_child bool, indent string) ?string
 	}
 
 	a.tree << b.str()
-	// a.tree << '${node.node_str()} ($last_child)'
 	return new_ident
 }
 
@@ -202,6 +205,15 @@ fn (mut a App) visit_btree(node binding.BoundNode, last_child bool, indent strin
 	return new_ident
 }
 
+fn print_fn(text string, nl bool, ref voidptr) {
+	mut a := &App(ref)
+	if nl {
+		a.output << '$text\n'
+	} else {
+		a.output << text
+	}
+}
+
 fn event(e &tui.Event, x voidptr) {
 	mut app := &App(x)
 	mut buffer := app.ed
@@ -220,6 +232,7 @@ fn event(e &tui.Event, x voidptr) {
 						} else {
 							app.prev_comp.continue_with(syntax_tree)
 						}
+						comp.register_print_callback(print_fn, voidptr(app))
 						res := comp.evaluate(app.vars)
 						if res.result.len == 0 {
 							app.prev_comp = comp
@@ -229,7 +242,7 @@ fn event(e &tui.Event, x voidptr) {
 							app.error_msg = ''
 
 							if app.show_tree {
-								walker.walk_tree(app, syntax_tree.root)
+								bwalker.walk_tree(app, syntax_tree.root)
 							} else if app.show_btree {
 								bwalker.walk_tree(app, comp.global_scope.stmt)
 							} else if app.show_ltree {
@@ -354,8 +367,16 @@ fn frame(x voidptr) {
 	view := ed.view(a.viewport, scroll_limit + a.viewport)
 	a.tui.draw_text(0, 0, term.rgb(120, 120, 120, view.raw))
 	a.message()
+
 	a.footer()
 	a.colorize()
+	mut b := strings.new_builder(0)
+	if a.output.len > 0 {
+		for ln in a.output {
+			b.write_string(ln)
+		}
+	}
+	a.tui.draw_text(0, ed.lines.len + 2, term.gray(b.str()))
 	a.tui.set_cursor_position(view.cursor.pos_x + 1, ed.cursor.pos_y + 1 - a.viewport)
 	a.tui.flush()
 }
@@ -366,9 +387,8 @@ fn init(x voidptr) {
 	a.ed = &Buffer{}
 	a.vars = binding.new_eval_variables()
 	a.prev_comp = &comp.Compilation(0)
-
+	a.output = []string{}
 	a.tui.clear()
-	a.tui.write(term.bright_blue('INIT\n\n'))
 	a.tui.flush()
 }
 
@@ -382,6 +402,7 @@ fn imin(x int, y int) int {
 
 pub fn run() ? {
 	mut app := &App{}
+
 	app.tui = tui.init(
 		user_data: app
 		event_fn: event

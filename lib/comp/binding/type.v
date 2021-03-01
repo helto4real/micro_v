@@ -2,11 +2,11 @@ module binding
 
 import lib.comp.symbols
 
-pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundIfExpr | BoundLiteralExpr |
-	BoundRangeExpr | BoundUnaryExpr | BoundVariableExpr | BoundErrorExpr
+pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundErrorExpr |
+	BoundIfExpr | BoundLiteralExpr | BoundRangeExpr | BoundUnaryExpr | BoundVariableExpr
 
-pub type BoundStmt = BoundBlockStmt | BoundExprStmt | BoundForRangeStmt | BoundForStmt |
-	BoundIfStmt | BoundVarDeclStmt | BoundGotoStmt | BoundLabelStmt | BoundCondGotoStmt
+pub type BoundStmt = BoundBlockStmt | BoundCondGotoStmt | BoundExprStmt | BoundForRangeStmt |
+	BoundForStmt | BoundGotoStmt | BoundIfStmt | BoundLabelStmt | BoundVarDeclStmt
 
 pub type BoundNode = BoundExpr | BoundStmt
 
@@ -19,6 +19,7 @@ pub enum BoundNodeKind {
 	assign_expr
 	if_expr
 	range_expr
+	call_expr
 	error_expr
 	// Stmts
 	block_stmt
@@ -56,6 +57,7 @@ pub fn (be BoundExpr) typ() symbols.TypeSymbol {
 		BoundIfExpr { return be.typ }
 		BoundRangeExpr { return be.typ }
 		BoundErrorExpr { return be.typ }
+		BoundCallExpr { return be.typ }
 	}
 }
 
@@ -69,6 +71,7 @@ pub fn (be BoundExpr) typ_str() string {
 		BoundIfExpr { return be.typ.name }
 		BoundRangeExpr { return be.typ.name }
 		BoundErrorExpr { return be.typ.name }
+		BoundCallExpr { return be.typ.name }
 	}
 }
 pub fn (be BoundExpr) node_str() string {
@@ -81,6 +84,7 @@ pub fn (be BoundExpr) node_str() string {
 		BoundIfExpr { return be.node_str() }
 		BoundRangeExpr { return be.node_str() }
 		BoundErrorExpr { return be.node_str() }
+		BoundCallExpr { return be.node_str() }
 	}
 }
 
@@ -94,6 +98,7 @@ pub fn (be BoundExpr) kind() BoundNodeKind {
 		BoundIfExpr { return be.kind }
 		BoundRangeExpr { return be.kind }
 		BoundErrorExpr { return be.kind }
+		BoundCallExpr { return be.kind }
 	}
 }
 
@@ -107,6 +112,7 @@ pub fn (be BoundExpr) child_nodes() []BoundNode {
 		BoundIfExpr { return be.child_nodes }
 		BoundRangeExpr { return be.child_nodes }
 		BoundErrorExpr { return be.child_nodes }
+		BoundCallExpr { return be.child_nodes }
 	}
 }
 

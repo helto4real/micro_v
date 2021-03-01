@@ -1,21 +1,38 @@
 module comp
 
-// import strings
+import os
 import lib.comp.binding
 import lib.comp.types
+import lib.comp.symbols
+
+pub fn print_fn(text string, nl bool, ref voidptr) {
+	if nl {
+		println(text)
+	} else {
+		print(text)
+	}
+}
 
 pub struct Evaluator {
 	root binding.BoundStmt
 mut:
-	vars     &binding.EvalVariables
-	last_val types.LitVal = int(0)
+	vars      &binding.EvalVariables
+	last_val  types.LitVal = int(0)
+	print_ref voidptr
+	print_fn  PrintFunc
 }
 
 pub fn new_evaluator(root binding.BoundStmt, vars &binding.EvalVariables) Evaluator {
 	return Evaluator{
 		root: root
 		vars: vars
+		print_fn: print_fn
 	}
+}
+
+pub fn (mut e Evaluator) register_print_callback(print_fn PrintFunc, ref voidptr) {
+	e.print_ref = ref
+	e.print_fn = print_fn
 }
 
 pub fn (mut e Evaluator) evaluate() ?types.LitVal {
@@ -101,9 +118,9 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 		binding.BoundAssignExpr {
 			return e.eval_bound_assign_expr(node)
 		}
-		// binding.BoundIfExpr {
-		// 	return e.eval_bound_if_expr(node)
-		// }
+		binding.BoundCallExpr {
+			return e.eval_bound_call_expr(node)
+		}
 		binding.BoundRangeExpr {
 			return e.eval_bound_range_expr(node)
 		}
@@ -111,6 +128,19 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 			panic('unexpected eval expr $node')
 		}
 	}
+}
+
+fn (mut e Evaluator) eval_bound_call_expr(node binding.BoundCallExpr) ?types.LitVal {
+	if node.func == symbols.input_symbol {
+		return os.get_line()
+	} else if node.func == symbols.print_symbol {
+		msg := e.eval_expr(node.params[0]) or { panic('unexpected error eval expression') }
+		e.print_fn(msg.str(), false, voidptr(e.print_ref))
+	} else if node.func == symbols.println_symbol {
+		msg := e.eval_expr(node.params[0]) or { panic('unexpected error eval expression') }
+		e.print_fn(msg.str(), true, voidptr(e.print_ref))
+	}
+	return e.last_val
 }
 
 fn (mut e Evaluator) eval_bound_range_expr(node binding.BoundRangeExpr) ?types.LitVal {

@@ -308,15 +308,15 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 			return p.parse_string_literal()
 		}
 		else {
-			return p.parse_name_expr()
+			return p.parse_name_or_call_expr()
 		}
 	}
 }
 
 fn (mut p Parser) parse_string_literal() ast.Expr {
 	string_token := p.match_token(.string)
-	
-	return ast.new_literal_expr(string_token, string_token.lit[1..string_token.lit.len-1])
+
+	return ast.new_literal_expr(string_token, string_token.lit[1..string_token.lit.len - 1])
 }
 
 fn (mut p Parser) parse_number_literal() ast.Expr {
@@ -341,7 +341,34 @@ fn (mut p Parser) parse_bool_literal() ast.Expr {
 	val := key_tok.kind == .key_true
 	return ast.new_literal_expr(key_tok, val)
 }
+fn (mut p Parser) parse_call_expr() ast.Expr {
+	ident := p.match_token(.name)
+	lpar_tok := p.match_token(.lpar)
+	args := p.parse_args()
+	rpar_tok := p.match_token(.rpar)
+	return ast.new_call_expr(ident, lpar_tok, args, rpar_tok)
+}
 
+fn (mut p Parser) parse_args() ast.SeparatedSyntaxList {
+	mut sep_and_nodes := []ast.AstNode{}
+	for p.current_token().kind != .eof && p.current_token().kind != .rpar {
+		expr := p.parse_expr()
+		sep_and_nodes << expr
+		if p.current_token().kind != .rpar && p.current_token().kind != .eof {
+			comma := p.match_token(.comma)
+			sep_and_nodes << comma
+		}
+	}
+	return ast.new_separated_syntax_list(sep_and_nodes)
+}
+
+fn (mut p Parser) parse_name_or_call_expr() ast.Expr {
+	if p.current_token().kind == .name && p.peek_token(1).kind == .lpar {
+		return p.parse_call_expr()
+	} else {
+		return p.parse_name_expr()
+	}
+}
 fn (mut p Parser) parse_name_expr() ast.Expr {
 	ident := p.match_token(.name)
 	return ast.new_name_expr(ident)

@@ -46,8 +46,13 @@ pub fn (mut l Lowerer) rewrite_expr(expr binding.BoundExpr) binding.BoundExpr {
 		binding.BoundRangeExpr { return l.rewrite_range_expr(expr) }
 		binding.BoundVariableExpr { return l.rewrite_variable_expr(expr) }
 		binding.BoundErrorExpr { return l.rewrite_error_expr(expr) }
+		binding.BoundCallExpr { return l.rewrite_call_expr(expr) }
 		// else { panic('unexpected bound expression $expr') }
 	}
+}
+
+pub fn (mut l Lowerer) rewrite_call_expr(expr binding.BoundCallExpr) binding.BoundExpr {
+	return expr
 }
 
 pub fn (mut l Lowerer) rewrite_error_expr(expr binding.BoundErrorExpr) binding.BoundExpr {
@@ -62,7 +67,7 @@ pub fn (mut l Lowerer) rewrite_literal_expr(expr binding.BoundLiteralExpr) bindi
 }
 pub fn (mut l Lowerer) rewrite_unary_expr(expr binding.BoundUnaryExpr) binding.BoundExpr {
 	operand := l.rewrite_expr(expr.operand)
-	return binding.new_bound_unary_expr(expr.op , operand ) 
+	return binding.new_bound_unary_expr(expr.op, operand)
 }
 pub fn (mut l Lowerer) rewrite_binary_expr(expr binding.BoundBinaryExpr) binding.BoundExpr {
 	left := l.rewrite_expr(expr.left)

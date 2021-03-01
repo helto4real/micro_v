@@ -1,5 +1,6 @@
 // comp module implements the compiler and evaluator 
 module comp
+
 import term
 import lib.comp.parser
 import lib.comp.binding
@@ -7,13 +8,17 @@ import lib.comp.types
 import lib.comp.util
 import lib.comp.lowering
 
+pub type PrintFunc = fn (text string, nl bool, ref voidptr)
+
 [heap]
 pub struct Compilation {
 mut:
-	previous     &Compilation
+	previous &Compilation
 pub mut:
 	global_scope &binding.BoundGlobalScope
-	syntax parser.SyntaxTree
+	syntax       parser.SyntaxTree
+	print_fn     PrintFunc
+	print_ref    voidptr
 }
 
 pub fn new_compilation(syntax_tree parser.SyntaxTree) &Compilation {
@@ -32,11 +37,15 @@ fn new_compilation_with_previous(previous &Compilation, syntax_tree parser.Synta
 	}
 }
 
+pub fn (mut c Compilation) register_print_callback(print_fn PrintFunc, ref voidptr) {
+	c.print_fn = print_fn
+	c.print_ref = ref
+}
+
 pub fn (mut c Compilation) get_statement() binding.BoundBlockStmt {
 	result := c.get_bound_global_scope().stmt
 	lower := lowering.lower(result)
 	return lower
-
 }
 
 pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
@@ -66,6 +75,7 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	}
 	stmt := c.get_statement()
 	mut evaluator := new_evaluator(stmt, vars)
+	evaluator.register_print_callback(c.print_fn, c.print_ref)
 	val := evaluator.evaluate() or {
 		println(term.fail_message('Error in eval: $err'))
 		0

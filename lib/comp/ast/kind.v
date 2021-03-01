@@ -12,6 +12,7 @@ enum SyntaxKind {
 	assign_expr
 	range_expr
 	if_expr
+	call_expr
 	// nodes
 	operator_node
 	else_node

@@ -80,3 +80,16 @@ pub fn (mut d Diagnostics) error_expected_correct_type_expr(expeced_type string,
 pub fn (mut d Diagnostics) error_expected_same_type_in_range_expr(typ string, pos Pos) {
 	d.error('expected same type <$typ> in range_expr expression', pos)
 }
+
+pub fn (mut d Diagnostics) error_undefinded_function(name string, pos Pos) {
+	d.error('undefinded function <$name>.', pos)
+}
+
+pub fn (mut d Diagnostics) error_wrong_argument_count(name string, arg_count int, pos Pos) {
+	d.error('wrong number of arguments in function <$name>. Expected $arg_count', pos)
+}
+
+pub fn (mut d Diagnostics) error_wrong_argument_type(name string, param_typ string, arg_typ string, pos Pos) {
+	d.error('wrong argument type <$arg_typ> for argument <$name>. Expected type $param_typ',
+		pos)
+}
