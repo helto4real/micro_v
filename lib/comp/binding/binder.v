@@ -49,7 +49,7 @@ fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
 		}
 		mut scope := new_bound_scope(parent)
 		for var in prev.vars {
-			scope.try_declare(var)
+			scope.try_declare_var(var)
 		}
 		parent = scope
 	}
@@ -84,7 +84,7 @@ pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, i
 	name := ident.lit
 	variable := symbols.new_variable_symbol(name, typ, is_mut)
 
-	if !b.scope.try_declare(variable) {
+	if !b.scope.try_declare_var(variable) {
 		b.log.error_name_already_defined(name, ident.pos)
 	}
 	return variable
@@ -233,7 +233,7 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 	bound_expr := b.bind_expr(syntax.expr)
 
 	// check is varable exist in scope
-	mut var := b.scope.lookup(name) or {
+	mut var := b.scope.lookup_var(name) or {
 		// var have to be declared with := to be able to set a value
 		b.log.error_var_not_exists(name, syntax.ident.pos)
 		return bound_expr
@@ -263,7 +263,7 @@ fn (mut b Binder) bind_name_expr(syntax ast.NameExpr) BoundExpr {
 		// correct error so just return an error expression
 		return new_bound_error_expr()
 	}
-	variable := b.scope.lookup(name) or {
+	variable := b.scope.lookup_var(name) or {
 		b.log.error_var_not_exists(name, syntax.ident.pos)
 		return new_bound_error_expr()
 	}

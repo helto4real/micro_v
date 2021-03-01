@@ -6,19 +6,19 @@ fn test_single_scope() {
 	mut scope := binding.new_bound_scope(&binding.BoundScope(0))
 
 	var := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol, false)
-	assert scope.try_declare(var) == true
+	assert scope.try_declare_var(var) == true
 
 	// again should result in false
 	var_another := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol,
 		false)
-	assert scope.try_declare(var_another) == false
+	assert scope.try_declare_var(var_another) == false
 
-	lookup_var := scope.lookup('in_scope_var') or {
+	lookup_var := scope.lookup_var('in_scope_var') or {
 		assert false
 		return
 	}
 	assert lookup_var.name == 'in_scope_var'
-	lookup_not_exist := scope.lookup('not_exist') or { &symbols.VariableSymbol{} }
+	lookup_not_exist := scope.lookup_var('not_exist') or { &symbols.VariableSymbol{} }
 
 	assert lookup_not_exist.name == ''
 }
@@ -28,19 +28,19 @@ fn test_parent_scope() {
 	mut scope := binding.new_bound_scope(parent_scope)
 
 	var := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol, false)
-	assert parent_scope.try_declare(var) == true
+	assert parent_scope.try_declare_var(var) == true
 
 	// again should result in false
 	var_another := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol,
 		false)
-	assert parent_scope.try_declare(var_another) == false
+	assert parent_scope.try_declare_var(var_another) == false
 
-	lookup_var := scope.lookup('in_scope_var') or {
+	lookup_var := scope.lookup_var('in_scope_var') or {
 		assert false
 		return
 	}
 	assert lookup_var.name == 'in_scope_var'
-	lookup_not_exist := scope.lookup('not_exist') or { &symbols.VariableSymbol{} }
+	lookup_not_exist := scope.lookup_var('not_exist') or { &symbols.VariableSymbol{} }
 
 	assert lookup_not_exist.name == ''
 }

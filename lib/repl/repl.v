@@ -242,7 +242,7 @@ fn event(e &tui.Event, x voidptr) {
 							app.error_msg = ''
 
 							if app.show_tree {
-								bwalker.walk_tree(app, syntax_tree.root)
+								walker.walk_tree(app, syntax_tree.root)
 							} else if app.show_btree {
 								bwalker.walk_tree(app, comp.global_scope.stmt)
 							} else if app.show_ltree {
