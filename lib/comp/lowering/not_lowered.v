@@ -47,12 +47,24 @@ pub fn (mut l Lowerer) rewrite_expr(expr binding.BoundExpr) binding.BoundExpr {
 		binding.BoundVariableExpr { return l.rewrite_variable_expr(expr) }
 		binding.BoundErrorExpr { return l.rewrite_error_expr(expr) }
 		binding.BoundCallExpr { return l.rewrite_call_expr(expr) }
+		binding.BoundConvExpr { return l.rewrite_conv_expr(expr) }
 		// else { panic('unexpected bound expression $expr') }
 	}
 }
 
+pub fn (mut l Lowerer) rewrite_conv_expr(expr binding.BoundConvExpr) binding.BoundExpr {
+	rewritten_expr := l.rewrite_expr(expr.expr)
+	return binding.new_bound_conv_expr(expr.typ, rewritten_expr)
+}
+
 pub fn (mut l Lowerer) rewrite_call_expr(expr binding.BoundCallExpr) binding.BoundExpr {
-	return expr
+	mut rewritten_args := []binding.BoundExpr{}
+
+	for arg in expr.params {
+		rewritten_args << l.rewrite_expr(arg)
+	}
+
+	return binding.new_bound_call_expr(expr.func, rewritten_args)
 }
 
 pub fn (mut l Lowerer) rewrite_error_expr(expr binding.BoundErrorExpr) binding.BoundExpr {

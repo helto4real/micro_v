@@ -1,3 +1,7 @@
+// lowering module handles all conversions from the AST node to lower constructs
+// that can be handled by later stages.
+// TODO: optimize the lowering so when expressions and statements are not lowered
+//		 no new BoundNode is created
 module lowering
 
 import lib.comp.binding
@@ -130,8 +134,6 @@ fn (mut l Lowerer) rewrite_for_stmt(stmt binding.BoundForStmt) binding.BoundStmt
 	} else {
 		panic('unexpected empty condition')
 	}
-
-
 	return stmt
 }
 

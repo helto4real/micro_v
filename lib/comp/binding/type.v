@@ -2,8 +2,9 @@ module binding
 
 import lib.comp.symbols
 
-pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundErrorExpr |
-	BoundIfExpr | BoundLiteralExpr | BoundRangeExpr | BoundUnaryExpr | BoundVariableExpr
+pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundConvExpr |
+	BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundRangeExpr | BoundUnaryExpr |
+	BoundVariableExpr
 
 pub type BoundStmt = BoundBlockStmt | BoundCondGotoStmt | BoundExprStmt | BoundForRangeStmt |
 	BoundForStmt | BoundGotoStmt | BoundIfStmt | BoundLabelStmt | BoundVarDeclStmt
@@ -20,6 +21,7 @@ pub enum BoundNodeKind {
 	if_expr
 	range_expr
 	call_expr
+	conv_expr
 	error_expr
 	// Stmts
 	block_stmt
@@ -58,6 +60,7 @@ pub fn (be BoundExpr) typ() symbols.TypeSymbol {
 		BoundRangeExpr { return be.typ }
 		BoundErrorExpr { return be.typ }
 		BoundCallExpr { return be.typ }
+		BoundConvExpr { return be.typ }
 	}
 }
 
@@ -72,6 +75,7 @@ pub fn (be BoundExpr) typ_str() string {
 		BoundRangeExpr { return be.typ.name }
 		BoundErrorExpr { return be.typ.name }
 		BoundCallExpr { return be.typ.name }
+		BoundConvExpr { return be.typ.name }
 	}
 }
 pub fn (be BoundExpr) node_str() string {
@@ -85,6 +89,7 @@ pub fn (be BoundExpr) node_str() string {
 		BoundRangeExpr { return be.node_str() }
 		BoundErrorExpr { return be.node_str() }
 		BoundCallExpr { return be.node_str() }
+		BoundConvExpr { return be.node_str() }
 	}
 }
 
@@ -99,6 +104,7 @@ pub fn (be BoundExpr) kind() BoundNodeKind {
 		BoundRangeExpr { return be.kind }
 		BoundErrorExpr { return be.kind }
 		BoundCallExpr { return be.kind }
+		BoundConvExpr { return be.kind }
 	}
 }
 
@@ -113,6 +119,7 @@ pub fn (be BoundExpr) child_nodes() []BoundNode {
 		BoundRangeExpr { return be.child_nodes }
 		BoundErrorExpr { return be.child_nodes }
 		BoundCallExpr { return be.child_nodes }
+		BoundConvExpr { return be.child_nodes }
 	}
 }
 

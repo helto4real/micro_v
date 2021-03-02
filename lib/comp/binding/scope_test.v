@@ -1,5 +1,4 @@
 import lib.comp.binding
-import lib.comp.types
 import lib.comp.symbols
 
 fn test_single_scope() {
@@ -9,8 +8,7 @@ fn test_single_scope() {
 	assert scope.try_declare_var(var) == true
 
 	// again should result in false
-	var_another := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol,
-		false)
+	var_another := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol, false)
 	assert scope.try_declare_var(var_another) == false
 
 	lookup_var := scope.lookup_var('in_scope_var') or {
@@ -31,8 +29,7 @@ fn test_parent_scope() {
 	assert parent_scope.try_declare_var(var) == true
 
 	// again should result in false
-	var_another := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol,
-		false)
+	var_another := symbols.new_variable_symbol('in_scope_var', symbols.int_symbol, false)
 	assert parent_scope.try_declare_var(var_another) == false
 
 	lookup_var := scope.lookup_var('in_scope_var') or {

@@ -89,6 +89,10 @@ pub fn (mut d Diagnostics) error_wrong_argument_count(name string, arg_count int
 	d.error('wrong number of arguments in function <$name>. Expected $arg_count', pos)
 }
 
+pub fn (mut d Diagnostics) error_cannot_convert_type(from_typ string, to_typ string, pos Pos) {
+	d.error('cannot convert from type <$from_typ> to <$to_typ>', pos)
+}
+
 pub fn (mut d Diagnostics) error_wrong_argument_type(name string, param_typ string, arg_typ string, pos Pos) {
 	d.error('wrong argument type <$arg_typ> for argument <$name>. Expected type $param_typ',
 		pos)

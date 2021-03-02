@@ -5,6 +5,7 @@ import lib.comp.ast
 import lib.comp.token
 import lib.comp.util
 import lib.comp.symbols
+import lib.comp.binding.convertion
 
 [heap]
 pub struct Binder {
@@ -159,7 +160,39 @@ pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 		else { panic('unexpected bound expression $expr') }
 	}
 }
+
+fn lookup_type(name string) symbols.TypeSymbol {
+	match name {
+		'bool' { return symbols.bool_symbol }
+		'int' { return symbols.int_symbol }
+		'string' { return symbols.string_symbol }
+		else { return symbols.none_symbol }
+	}
+}
+
+pub fn (mut b Binder) bind_convertion(typ symbols.TypeSymbol, expr ast.Expr) BoundExpr {
+	bound_expr := b.bind_expr(expr)
+	conv := convertion.classify(bound_expr.typ(), typ)
+
+	if !conv.exists {
+		// convertion does not exist
+		b.log.error_cannot_convert_type(bound_expr.typ().str(), typ.str(), expr.pos())
+		return new_bound_error_expr()
+	}
+	return new_bound_conv_expr(typ, bound_expr)
+}
+
 pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
+	func_name := expr.ident.lit
+
+	// handle convertions as special functions
+	if expr.params.len() == 1 {
+		typ := lookup_type(func_name)
+		if typ != symbols.none_symbol {
+			return b.bind_convertion(typ, (expr.params.at(0) as ast.Expr))
+		}
+	}
+
 	mut args := []BoundExpr{}
 
 	for i := 0; i < expr.params.len(); i++ {
@@ -168,7 +201,6 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 		args << arg_expr
 	}
 
-	func_name := expr.ident.lit
 	func := b.scope.lookup_fn(func_name) or {
 		b.log.error_undefinded_function(func_name, expr.ident.pos)
 		return new_bound_error_expr()

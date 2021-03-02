@@ -124,10 +124,37 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 		binding.BoundRangeExpr {
 			return e.eval_bound_range_expr(node)
 		}
+		binding.BoundConvExpr {
+			return e.eval_bound_conv_expr(node)
+		}
 		else {
 			panic('unexpected eval expr $node')
 		}
 	}
+}
+
+fn (mut e Evaluator) eval_bound_conv_expr(node binding.BoundConvExpr) ?types.LitVal {
+	val := e.eval_expr(node.expr) or { panic('unexpected error evaluate expression') }
+	if node.typ == symbols.string_symbol {
+		if val is int {
+			return val.str()
+		} else if val is bool {
+			return val.str()
+		}
+	} else if node.typ == symbols.int_symbol {
+		if val is string {
+			return val.int()
+		} else if val is bool {
+			return if val { 1 } else { 0 }
+		}
+	} else if node.typ == symbols.bool_symbol {
+		if val is string {
+			return val == 'true'
+		} else if val is int {
+			return val != 0
+		}
+	}
+	panic('unexpected allowed conversion')
 }
 
 fn (mut e Evaluator) eval_bound_call_expr(node binding.BoundCallExpr) ?types.LitVal {
