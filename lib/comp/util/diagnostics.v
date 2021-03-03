@@ -97,3 +97,7 @@ pub fn (mut d Diagnostics) error_wrong_argument_type(name string, param_typ stri
 	d.error('wrong argument type <$arg_typ> for argument <$name>. Expected type <$param_typ>',
 		pos)
 }
+pub fn (mut d Diagnostics) error_empty_block_not_allowed(pos Pos) {
+	d.error('empty block is not allowed',
+		pos)
+}

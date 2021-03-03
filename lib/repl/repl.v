@@ -10,6 +10,7 @@ import lib.comp.types
 import lib.comp.token
 import lib.comp.lowering
 import lib.comp.util
+import lib.comp.symbols
 import lib.comp
 import lib.comp.ast.walker
 import lib.comp.binding.walker as bwalker
@@ -87,7 +88,8 @@ fn (mut a App) colorize() {
 fn (mut a App) message() {
 	mut b := a.ed
 
-	if a.status == '' {
+	if a.status == '' && a.val.typ() != symbols.none_symbol {
+		a.output.clear()
 		a.tui.draw_text(2, b.lines.len + 1, term.yellow('$a.val'))
 	} else if a.error_msg.len > 0 {
 		a.tui.draw_text(2, b.lines.len + 1, a.error_msg)

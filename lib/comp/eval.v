@@ -14,7 +14,7 @@ pub fn print_fn(text string, nl bool, ref voidptr) {
 }
 
 pub struct Evaluator {
-	root binding.BoundStmt
+	root binding.BoundBlockStmt
 mut:
 	vars      &binding.EvalVariables
 	last_val  types.LitVal = int(0)
@@ -22,7 +22,7 @@ mut:
 	print_fn  PrintFunc
 }
 
-pub fn new_evaluator(root binding.BoundStmt, vars &binding.EvalVariables) Evaluator {
+pub fn new_evaluator(root binding.BoundBlockStmt, vars &binding.EvalVariables) Evaluator {
 	return Evaluator{
 		root: root
 		vars: vars
@@ -36,8 +36,14 @@ pub fn (mut e Evaluator) register_print_callback(print_fn PrintFunc, ref voidptr
 }
 
 pub fn (mut e Evaluator) evaluate() ?types.LitVal {
+	return e.evaluate_stmt(e.root) 
+}
+pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?types.LitVal {
+	
+	e.last_val = types.None{}
+
 	mut label_to_index := map[string]int{}
-	for i, s in e.root.child_nodes() {
+	for i, s in block.child_nodes {
 		if s is binding.BoundStmt {
 			if s is binding.BoundLabelStmt {
 				label_to_index[s.name] = i + 1
@@ -45,8 +51,8 @@ pub fn (mut e Evaluator) evaluate() ?types.LitVal {
 		}
 	}
 	mut index := 0
-	for index < e.root.child_nodes().len {
-		stmt := e.root.child_nodes()[index]
+	for index < block.child_nodes.len {
+		stmt := block.child_nodes[index]
 		match stmt {
 			binding.BoundStmt {
 				match stmt {
@@ -121,6 +127,9 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 		binding.BoundCallExpr {
 			return e.eval_bound_call_expr(node)
 		}
+		binding.BoundIfExpr {
+			return e.eval_bound_if_expr(node)
+		}
 		binding.BoundRangeExpr {
 			return e.eval_bound_range_expr(node)
 		}
@@ -130,6 +139,16 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 		else {
 			panic('unexpected eval expr $node')
 		}
+	}
+}
+
+fn (mut e Evaluator) eval_bound_if_expr(node binding.BoundIfExpr) ?types.LitVal {
+	cond_expr := e.eval_expr(node.cond_expr) ?
+	cond := cond_expr as bool
+	if cond {
+		return e.evaluate_stmt((node.then_stmt as binding.BoundBlockStmt)) 
+	} else {
+		return e.evaluate_stmt((node.else_stmt as binding.BoundBlockStmt))
 	}
 }
 

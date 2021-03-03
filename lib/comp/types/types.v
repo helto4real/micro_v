@@ -8,8 +8,10 @@ import symbols
 // 	return types.built_in_types[int(t)]
 // }
 
-pub struct None {}
-pub type LitVal = bool | int | string
+pub struct NoneStruct {}
+pub type None = NoneStruct
+
+pub type LitVal = bool | int | string | None
 
 pub fn (l LitVal) eq(r LitVal) bool {
 	if l.type_name() != r.type_name() {
@@ -24,6 +26,9 @@ pub fn (l LitVal) eq(r LitVal) bool {
 		}
 		bool {
 			l == (r as bool)
+		}
+		None {
+			l == (r as None)
 		}
 	}
 }
@@ -99,22 +104,28 @@ pub fn (l LitVal) typ() symbols.TypeSymbol {
 		bool {
 			symbols.bool_symbol
 		}
+		None {
+			symbols.none_symbol
+		}
 	}
 }
 
-pub fn (l LitVal) typ_str() string {
-	return match l {
-		string {
-			types.built_in_types[int(TypeKind.string_lit)]
-		}
-		int {
-			types.built_in_types[int(TypeKind.int_lit)]
-		}
-		bool {
-			types.built_in_types[int(TypeKind.bool_lit)]
-		}
-	}
-}
+// pub fn (l LitVal) typ_str() string {
+// 	return match l {
+// 		string {
+// 			types.built_in_types[int(TypeKind.string_lit)]
+// 		}
+// 		int {
+// 			types.built_in_types[int(TypeKind.int_lit)]
+// 		}
+// 		bool {
+// 			types.built_in_types[int(TypeKind.bool_lit)]
+// 		}
+// 		None {
+// 			types.built_in_types[int(TypeKind.bool_lit)]
+// 		}
+// 	}
+// }
 
 pub fn (l LitVal) str() string {
 	return match l {
@@ -127,6 +138,9 @@ pub fn (l LitVal) str() string {
 		bool {
 			l.str()
 		}
+		None {
+			l.str()
+		}
 	}
 }
 
@@ -135,16 +149,4 @@ enum TypeKind {
 	string_lit = 1
 	int_lit = 2
 	bool_lit = 3
-}
-
-pub const (
-	built_in_types = add_built_in_types()
-)
-
-fn add_built_in_types() map[int]string {
-	mut types := map[int]string{}
-	types[int(TypeKind.int_lit)] = 'int'
-	types[int(TypeKind.string_lit)] = 'string'
-	types[int(TypeKind.bool_lit)] = 'bool'
-	return types
 }

@@ -13,10 +13,14 @@ pub:
 }
 
 pub fn new_if_else_expr(cond_expr BoundExpr, then_stmt BoundStmt, else_stmt BoundStmt) BoundExpr {
+	// get last expression
+	block := then_stmt as BoundBlockStmt
+	last_expr := (block.child_nodes.last() as BoundStmt) as BoundExprStmt
+	expr_typ := last_expr.bound_expr.typ()
 	return BoundIfExpr{
 		child_nodes: [BoundNode(cond_expr), then_stmt, else_stmt]
 		cond_expr: cond_expr
-		typ: cond_expr.typ()
+		typ: expr_typ
 		then_stmt: then_stmt
 		else_stmt: else_stmt
 	}

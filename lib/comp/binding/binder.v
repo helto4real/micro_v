@@ -239,15 +239,18 @@ pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 	cond_expr := b.bind_expr(if_expr.cond_expr)
 
-	// if cond_expr.typ() == symbols.error_symbol {
-	// 	// We expect the condition to be a boolean expression
-	// 	return new_bound_error_expr()
-	// }
-
 	then_stmt := if_expr.then_stmt as ast.BlockStmt
-	bound_then_stmt := b.bind_block_stmt(then_stmt)
-
 	else_stmt := if_expr.else_stmt as ast.BlockStmt
+	if then_stmt.stmts.len == 0 {
+		b.log.error_empty_block_not_allowed(then_stmt.pos)
+		return new_bound_error_expr()
+	}
+	if else_stmt.stmts.len == 0 {
+		b.log.error_empty_block_not_allowed(else_stmt.pos)
+		return new_bound_error_expr()
+	}
+
+	bound_then_stmt := b.bind_block_stmt(then_stmt)
 	bound_else_stmt := b.bind_block_stmt(else_stmt)
 	
 	conv_expre := b.bind_convertion_diag(if_expr.cond_expr.pos(), cond_expr, symbols.bool_symbol)
