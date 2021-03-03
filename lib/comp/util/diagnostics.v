@@ -94,6 +94,6 @@ pub fn (mut d Diagnostics) error_cannot_convert_type(from_typ string, to_typ str
 }
 
 pub fn (mut d Diagnostics) error_wrong_argument_type(name string, param_typ string, arg_typ string, pos Pos) {
-	d.error('wrong argument type <$arg_typ> for argument <$name>. Expected type $param_typ',
+	d.error('wrong argument type <$arg_typ> for argument <$name>. Expected type <$param_typ>',
 		pos)
 }

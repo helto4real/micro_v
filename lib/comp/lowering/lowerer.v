@@ -98,6 +98,50 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt binding.BoundIfStmt) binding.BoundStmt {
 	}
 }
 
+pub fn (mut l Lowerer) rewrite_if_expr(expr binding.BoundIfExpr) binding.BoundExpr {
+	cond_expr := l.rewrite_expr(expr.cond_expr)
+	then_stmt := l.rewrite_stmt(expr.then_stmt)
+	else_stmt := l.rewrite_stmt(expr.else_stmt)
+
+	return binding.new_if_else_expr(cond_expr, then_stmt, else_stmt)
+}
+
+// fn (mut l Lowerer) rewrite_if_expr(expr binding.BoundIfExpr) binding.BoundStmt {
+
+// 	// if <condition>
+// 	//      <then>
+// 	// else
+// 	//      <else>
+// 	//
+// 	// ---->
+// 	//
+// 	// gotoFalse <condition> else
+// 	// <then>
+// 	// goto end
+// 	// else:
+// 	// <else>
+// 	// end:
+// 	// else_label_name := l.gen_label()
+// 	// end_label_name := l.gen_label()
+
+// 	else_label := l.gen_label()
+// 	end_label := l.gen_label()
+
+// 	res := block_expr(
+// 		goto_false(else_label, expr.cond_expr), 
+// 		expr.then_stmt, 
+// 		goto_label(end_label),
+// 		label(else_label), 
+// 		expr.else_stmt, 
+// 		label(end_label)
+// 		)
+	
+// 	if l.shallow {
+// 		return res
+// 	}
+// 	return l.rewrite_stmt(res)
+// }
+
 fn (mut l Lowerer) rewrite_for_stmt(stmt binding.BoundForStmt) binding.BoundStmt {
 
 	if stmt.has_cond {
@@ -179,14 +223,6 @@ fn (mut l Lowerer) rewrite_for_range_stmt(stmt binding.BoundForRangeStmt) bindin
 		}
 	return l.rewrite_stmt(res)
 
-}
-
-pub fn (mut l Lowerer) rewrite_if_expr(expr binding.BoundIfExpr) binding.BoundExpr {
-	cond_expr := l.rewrite_expr(expr.cond_expr)
-	then_stmt := l.rewrite_stmt(expr.then_stmt)
-	else_stmt := l.rewrite_stmt(expr.else_stmt)
-
-	return binding.new_if_else_expr(cond_expr, then_stmt, else_stmt)
 }
 
 pub fn flatten(stmt binding.BoundStmt) binding.BoundBlockStmt {

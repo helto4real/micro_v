@@ -216,7 +216,7 @@ fn test_error_delcarations_assign_different_types_error() {
 			x=[true]
 		}
 	'
-	error := 'cannot convert type <bool> to <int>'
+	error := 'cannot convert from type <bool> to <int>'
 	assert_has_diagostics(code, error)
 }
 
@@ -253,7 +253,7 @@ fn test_error_if_has_expr_wrong_type_report_errors() {
 			if [x] {10}
 		}
 	'
-	error := 'expected type <bool> in expression, got <int>'
+	error := 'cannot convert from type <int> to <bool>' //
 	assert_has_diagostics(code, error)
 }
 

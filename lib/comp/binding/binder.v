@@ -136,14 +136,7 @@ pub fn (mut b Binder) bind_expr_stmt(expr_stmt ast.ExprStmt) BoundStmt {
 }
 
 pub fn (mut b Binder) bind_expr_type(expr ast.Expr, typ symbols.TypeSymbol) BoundExpr {
-	bound_expr := b.bind_expr(expr)
-
-	if typ != symbols.error_symbol && bound_expr.typ() != symbols.error_symbol
-		&& typ != bound_expr.typ() {
-		// We expect the condition to be a boolean expression
-		b.log.error_expected_correct_type_expr(typ.name, bound_expr.typ().name, expr.pos())
-	}
-	return bound_expr
+	return b.bind_convertion(typ, expr)
 }
 
 pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
@@ -170,17 +163,26 @@ fn lookup_type(name string) symbols.TypeSymbol {
 	}
 }
 
-pub fn (mut b Binder) bind_convertion(typ symbols.TypeSymbol, expr ast.Expr) BoundExpr {
-	bound_expr := b.bind_expr(expr)
-	conv := convertion.classify(bound_expr.typ(), typ)
-
+pub fn (mut b Binder) bind_convertion_diag(diag_pos util.Pos, expr BoundExpr, typ symbols.TypeSymbol) BoundExpr {
+    
+	conv := convertion.classify(expr.typ(), typ)
 	if !conv.exists {
 		// convertion does not exist
-		b.log.error_cannot_convert_type(bound_expr.typ().str(), typ.str(), expr.pos())
+		if expr.typ() != symbols.error_symbol && typ != symbols.error_symbol {
+			b.log.error_cannot_convert_type(expr.typ().str(), typ.str(), diag_pos)
+		}
 		return new_bound_error_expr()
 	}
-	return new_bound_conv_expr(typ, bound_expr)
+	
+	if conv.is_identity {
+		return expr
+	}
+	return new_bound_conv_expr(typ, expr)
 }
+pub fn (mut b Binder) bind_convertion(typ symbols.TypeSymbol, expr ast.Expr) BoundExpr {
+	bound_expr := b.bind_expr(expr)
+	return b.bind_convertion_diag(expr.pos(), bound_expr, typ)
+}	
 
 pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	func_name := expr.ident.lit
@@ -236,17 +238,20 @@ pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 
 pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 	cond_expr := b.bind_expr(if_expr.cond_expr)
-	if cond_expr.typ() != symbols.int_symbol {
-		// We expect the condition to be a boolean expression
-		b.log.error_expected_bool_expr(if_expr.cond_expr.pos())
-	}
+
+	// if cond_expr.typ() == symbols.error_symbol {
+	// 	// We expect the condition to be a boolean expression
+	// 	return new_bound_error_expr()
+	// }
 
 	then_stmt := if_expr.then_stmt as ast.BlockStmt
 	bound_then_stmt := b.bind_block_stmt(then_stmt)
 
 	else_stmt := if_expr.else_stmt as ast.BlockStmt
 	bound_else_stmt := b.bind_block_stmt(else_stmt)
-	return new_if_else_expr(cond_expr, bound_then_stmt, bound_else_stmt)
+	
+	conv_expre := b.bind_convertion_diag(if_expr.cond_expr.pos(), cond_expr, symbols.bool_symbol)
+	return new_if_else_expr(conv_expre, bound_then_stmt, bound_else_stmt)
 }
 
 pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
@@ -278,12 +283,9 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 		b.log.error_assign_non_mutable_variable(name, syntax.eq_tok.pos)
 	}
 
-	if bound_expr.typ() != var.typ {
-		b.log.error_cannot_convert_variable_type(bound_expr.typ().name, var.typ.name,
-			syntax.expr.pos())
-		return bound_expr
-	}
-	return new_bound_assign_expr(var, bound_expr)
+	conv_expr := b.bind_convertion_diag(syntax.pos, bound_expr, var.typ)
+
+	return new_bound_assign_expr(var, conv_expr)
 }
 
 fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {

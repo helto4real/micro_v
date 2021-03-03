@@ -16,6 +16,7 @@ fn (mut l Lowerer) rewrite_block_stmt(stmt binding.BoundBlockStmt) binding.Bound
 	}
 	return binding.new_bound_block_stmt(ret_block_stmt)
 }
+
 fn (mut l Lowerer) rewrite_expr_stmt(stmt binding.BoundExprStmt) binding.BoundStmt {
 	new_expr := l.rewrite_expr(stmt.bound_expr)
 	return binding.new_bound_expr_stmt(new_expr)

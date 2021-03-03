@@ -4,7 +4,7 @@ import lib.comp.symbols
 
 pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundConvExpr |
 	BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundRangeExpr | BoundUnaryExpr |
-	BoundVariableExpr
+	BoundVariableExpr 
 
 pub type BoundStmt = BoundBlockStmt | BoundCondGotoStmt | BoundExprStmt | BoundForRangeStmt |
 	BoundForStmt | BoundGotoStmt | BoundIfStmt | BoundLabelStmt | BoundVarDeclStmt
