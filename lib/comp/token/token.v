@@ -2,6 +2,13 @@ module token
 
 import lib.comp.util
 
+pub const (
+	tok_void = Token{
+		kind: .void
+		lit: 'void'
+	}
+)
+
 pub struct Token {
 pub:
 	kind Kind     // the token number/enum; for quick comparisons
@@ -54,6 +61,7 @@ pub enum Kind {
 	pipe_pipe // '||'
 	amp_amp // '&&'
 	eof // end of file
+	void // used to non existin token
 	// Keywords
 	keyword_beg // start of keywords
 	key_fn // 'fn'

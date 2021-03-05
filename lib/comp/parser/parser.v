@@ -14,11 +14,6 @@ pub mut:
 	log &util.Diagnostics // errors when parsing
 }
 
-// pub fn parse_syntax_tree(text string) SyntaxTree {
-// 	mut parser := new_parser_from_text(text)
-// 	return parser.parse()
-// }
-
 // new_parser_from_text, instance a parser from a text input
 fn new_parser_from_text(text string) &Parser {
 	source := util.new_source_text(text)
@@ -35,10 +30,113 @@ fn new_parser_from_text(text string) &Parser {
 }
 
 pub fn (mut p Parser) parse_comp_node() ast.CompNode {
-	stmt := p.parse_stmt()
+	members := p.parse_members()
 	eof := p.match_token(.eof)
-	node := ast.new_comp_expr(stmt, eof)
+	node := ast.new_comp_expr(members, eof)
 	return node
+}
+pub fn (mut p Parser) parse_members() []ast.MemberNode {
+	mut members :=  []ast.MemberNode{}
+
+	for p.peek_token(0).kind != .eof {
+		start_tok := p.current_token()
+		member := p.parse_member()
+		members << member
+		// if parse member did not consume any tokens 
+		// let's skip it and continue
+		if p.current_token() == start_tok {
+			// makes sure we not in infinite loop
+			p.next_token()
+		}
+	}
+	return members
+}
+
+pub fn (mut p Parser) parse_member() ast.MemberNode {
+	if p.peek_fn_decl(0){
+		return p.parse_function()
+	} else {
+		return p.parse_global_stmt()
+	}
+}
+pub fn (mut p Parser) parse_global_stmt() ast.MemberNode {
+	stmt := p.parse_stmt()
+	return ast.new_glob_stmt(stmt)
+}
+
+pub fn (mut p Parser) parse_function() ast.FnDeclNode {
+	// mut is_pub := false
+	// if p.current_token().kind == .key_pub {
+	// 	is_pub = true
+	// 	p.next_token()
+	// }
+	fn_key := p.match_token(.key_fn)
+	ident := p.match_token(.name)
+	lpar_tok := p.match_token(.lpar)
+	params := p.parse_fn_params()
+	rpar_tok := p.match_token(.rpar)
+	ret_type := p.parse_return_type_node()
+	fn_block := p.parse_block_stmt() 
+	return ast.new_fn_decl_node(fn_key, ident, lpar_tok,
+					params, rpar_tok, ret_type, (fn_block as ast.BlockStmt))
+}
+
+fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
+	mut sep_and_nodes := []ast.AstNode{}
+
+	for p.current_token().kind != .eof && p.current_token().kind != .rpar {
+		start_tok := p.current_token()
+		param := p.parse_param_node()
+		// if parse parse_fn_params did not consume any tokens 
+		// let's skip it and continue
+		if p.current_token() == start_tok {
+			// makes sure we not in infinite loop
+			p.next_token()
+		} 
+		sep_and_nodes << param
+		if p.current_token().kind != .rpar && p.current_token().kind != .eof {
+			comma := p.match_token(.comma)
+			sep_and_nodes << comma
+		}
+	}
+	return ast.new_separated_syntax_list(sep_and_nodes)
+}
+
+fn (mut p Parser) parse_return_type_node() ast.TypeNode {
+	if p.current_token().kind == .lcbr {
+		// this is a procedure without return type
+		return ast.new_type_node(token.tok_void, false, true)
+	}
+	mut is_ref := false
+	if p.current_token().kind == .amp {
+		is_ref = true
+		p.next_token()
+	}
+	name := p.match_token(.name) 
+	
+	return ast.new_type_node(name, is_ref, false)
+}
+
+fn (mut p Parser) parse_param_node() ast.ParamNode {
+	mut is_mut := false
+	if p.current_token().kind == .key_mut {
+		is_mut = true
+		p.next_token()
+	}
+	name := p.match_token(.name)
+	typ := p.parse_type_node()
+	return ast.new_param_node(name, typ, is_mut)
+}
+
+fn (mut p Parser) parse_type_node() ast.TypeNode {
+	mut is_ref := false
+	if p.current_token().kind == .amp {
+		is_ref = true
+		p.next_token()
+	}
+	name := p.match_token(.name) 
+
+	return ast.new_type_node(name, is_ref, false)
 }
 
 // peek, returns a token at offset from current postion
@@ -82,7 +180,7 @@ fn (mut p Parser) match_token(kind token.Kind) token.Token {
 }
 
 fn (mut p Parser) parse_stmt() ast.Stmt {
-	match p.peek_token(0).kind {
+	match p.current_token().kind {
 		.lcbr {
 			return p.parse_block_stmt()
 		}
@@ -173,7 +271,6 @@ fn (mut p Parser) parse_block_stmt() ast.Stmt {
 	mut stmts := p.parse_multi_stmt()
 
 	close_brace_token := p.match_token(.rcbr)
-
 	return ast.new_block_stmt(open_brace_token, stmts, close_brace_token)
 }
 

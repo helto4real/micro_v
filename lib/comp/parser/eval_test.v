@@ -205,7 +205,7 @@ fn test_error_delcarations_unary_operator_undefined() {
 
 fn test_error_range_type_error() {
 	code := '1..[a]'
-	error := 'unexpected token: <name>,  expected <number>\nunexpected token: <name>,  expected <eof>'
+	error := 'unexpected token: <name>,  expected <number>\nvariable <a> does not exist'
 	assert_has_diagostics(code, error)
 }
 

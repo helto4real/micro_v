@@ -29,7 +29,10 @@ pub enum BoundNodeKind {
 	var_decl_stmt
 	if_stmt
 	for_stmt
+	label_stmt
 	for_range_stmt
+	cond_goto_stmt
+	goto_stmt
 }
 
 pub fn (bn &BoundNode) child_nodes() []BoundNode {

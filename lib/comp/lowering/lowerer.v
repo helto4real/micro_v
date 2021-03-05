@@ -88,8 +88,13 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt binding.BoundIfStmt) binding.BoundStmt {
 		else_label := l.gen_label()
 		end_label := l.gen_label()
 
-		res := block(goto_false(else_label, stmt.cond_expr), stmt.block_stmt, goto_label(end_label),
-			label(else_label), stmt.else_clause, label(end_label))
+		res := block(
+			goto_false(else_label, stmt.cond_expr), 
+			stmt.block_stmt, 
+			goto_label(end_label),
+			label(else_label), 
+			stmt.else_clause, 
+			label(end_label))
 		
 		if l.shallow {
 			return res
@@ -226,12 +231,13 @@ fn (mut l Lowerer) rewrite_for_range_stmt(stmt binding.BoundForRangeStmt) bindin
 }
 
 pub fn flatten(stmt binding.BoundStmt) binding.BoundBlockStmt {
-	mut stack := []binding.BoundStmt{cap: 100}
+	// mut stack := []binding.BoundStmt{cap: 100}
+	mut stack := BoundStmtStack{}
 	mut flattened_stmts := []binding.BoundStmt{cap: 100}
 	stack.push(stmt)
 
-	for stack.len > 0 {
-		current := stack.pop()
+	for !stack.is_empty() {
+		current := stack.pop() or {panic('as')}
 		if current is binding.BoundBlockStmt {
 			rev_stmts := current.bound_stmts.reverse()
 			for s in rev_stmts {

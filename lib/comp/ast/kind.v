@@ -18,6 +18,11 @@ enum SyntaxKind {
 	else_node
 	else_expr_node
 	comp_node
+	syntax_type
+	node_param
+	node_type
+	node_fn_decl
+	global_stmt
 	// statements
 	block_stmt
 	expr_stmt
@@ -25,5 +30,7 @@ enum SyntaxKind {
 	if_stmt
 	for_stmt
 	for_range_stmt
+
 	empty
+	// syntax_helpers
 }

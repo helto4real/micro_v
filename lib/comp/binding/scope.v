@@ -31,10 +31,10 @@ pub fn (bs &BoundScope) lookup_var(name string) ?&symbols.VariableSymbol {
 }
 
 pub fn (mut bs BoundScope) try_declare_var(var &symbols.VariableSymbol) bool {
-	if var.name in bs.vars {
+	if var.name() in bs.vars {
 		return false
 	}
-	bs.vars[var.name] = var
+	bs.vars[var.name()] = var
 	return true
 }
 pub fn (bs &BoundScope) lookup_fn(name string) ?symbols.FunctionSymbol {
@@ -85,11 +85,7 @@ fn (bs &BoundScope) str_indent(level int) string {
 	for i, _ in bs.vars {
 		var := bs.vars[i]
 		b.writeln('  ${var.str_ident(level)}')
-		// b.write(', ')
 	}
-	// if bs.vars.len > 0 {
-	// 	b.go_back(2)
-	// }
 	if bs.parent != 0 {
 		b.writeln('$ident  parent : {')
 		b.write_string(bs.parent.str_indent(level + 1))
@@ -102,16 +98,18 @@ pub struct BoundGlobalScope {
 pub mut:
 	log  &util.Diagnostics // errors when parsing
 	vars []&symbols.VariableSymbol
+	funcs []symbols.FunctionSymbol
 pub:
 	previous &BoundGlobalScope
 	stmt     BoundStmt
 }
 
-pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagnostics, vars []&symbols.VariableSymbol, stmt BoundStmt) &BoundGlobalScope {
+pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagnostics, funcs []symbols.FunctionSymbol,  vars []&symbols.VariableSymbol, stmt BoundStmt) &BoundGlobalScope {
 	return &BoundGlobalScope{
 		previous: previous
 		log: diagostics
 		vars: vars
+		funcs: funcs
 		stmt: stmt
 	}
 }

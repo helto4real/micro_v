@@ -24,13 +24,29 @@ pub fn new_binder(parent &BoundScope) &Binder {
 pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.CompNode) &BoundGlobalScope {
 	parent_scope := create_parent_scope(previous)
 	mut binder := new_binder(parent_scope)
-	stmt := binder.bind_stmt(comp_node.stmt)
+	// first bind the functions to make them visible 
+	for node in comp_node.members {
+		if node is ast.FnDeclNode {
+			binder.bind_fn_decl(node)
+		}
+	}
+	// then bind the global statements
+	mut glob_stmts := []BoundStmt{}
+	for node in comp_node.members {
+		if node is ast.GlobStmt {
+			s := binder.bind_stmt(node.stmt)
+			glob_stmts << s
+		}
+	}
+	stmt := new_bound_block_stmt(glob_stmts)
+	fns  := binder.scope.funcs()
 	vars := binder.scope.vars()
+
 	mut diagnostics := binder.log.all
 	if previous != 0 && previous.log.all.len > 0 {
 		diagnostics.prepend(previous.log.all)
 	}
-	return new_bound_global_scope(previous, binder.log, vars, stmt)
+	return new_bound_global_scope(previous, binder.log, fns, vars, stmt)
 }
 
 fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
@@ -49,6 +65,9 @@ fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
 			panic('unexpected return from stack')
 		}
 		mut scope := new_bound_scope(parent)
+		for glob_fn in prev.funcs {
+			scope.try_declare_fn(glob_fn)
+		}
 		for var in prev.vars {
 			scope.try_declare_var(var)
 		}
@@ -66,6 +85,38 @@ fn create_root_scope() &BoundScope {
 	return result
 }
 
+pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
+	mut params := []symbols.ParamSymbol{}
+	mut seen_param_names := []string{}
+	for i:=0; i< fn_decl.params.len(); i++ {
+		param_node := fn_decl.params.at(i) as ast.ParamNode
+		name := param_node.ident.lit
+		param_typ := b.bind_type(param_node.typ)
+		if name in seen_param_names {
+			b.log.error_param_allready_declared(name, param_node.ident.pos)
+		} else {
+			param_symbol := symbols.new_param_symbol(name, param_typ, param_node.is_mut)
+			params << param_symbol
+			seen_param_names << name
+		}
+	}
+	
+	typ := if !fn_decl.typ_node.is_void {
+		b.bind_type(fn_decl.typ_node)
+	} else {
+		symbols.void_symbol
+	}
+
+	if typ != symbols.void_symbol {
+		b.log.error_functions_not_supported(fn_decl.ident.lit, fn_decl.pos)
+	}
+
+	func := symbols.new_function_symbol(fn_decl.ident.lit, params, typ)
+	
+	if !b.scope.try_declare_fn(func) {
+		b.log.error_function_allready_declared(fn_decl.ident.lit, fn_decl.ident.pos)
+	}
+}
 pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 	match stmt {
 		ast.BlockStmt { return b.bind_block_stmt(stmt) }
@@ -236,6 +287,14 @@ pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 	return new_range_expr(from_expr, to_expr)
 }
 
+fn bind_block_type(block BoundBlockStmt) ?symbols.TypeSymbol {
+	
+	last_block_node := block.bound_stmts.last()
+	if last_block_node is BoundExprStmt {
+		return last_block_node.bound_expr.typ()
+	}
+	return none
+}
 pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 	cond_expr := b.bind_expr(if_expr.cond_expr)
 
@@ -249,16 +308,44 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 		b.log.error_empty_block_not_allowed(else_stmt.pos)
 		return new_bound_error_expr()
 	}
+	
+	bound_then_stmt := b.bind_block_stmt(then_stmt) as BoundBlockStmt
+	bound_else_stmt := b.bind_block_stmt(else_stmt) as BoundBlockStmt
+	
+	// check that the last statment is expression
+	then_stmt_typ := bind_block_type(bound_then_stmt) or  {
+		b.log.error_expected_block_end_with_expression(then_stmt.pos)	
+		return new_bound_error_expr()
+	}
+	else_stmt_typ := bind_block_type(bound_else_stmt) or  {
+		b.log.error_expected_block_end_with_expression(else_stmt.pos)	
+		return new_bound_error_expr()
+	}
+	if then_stmt_typ == symbols.error_symbol ||  else_stmt_typ == symbols.error_symbol {
+		return new_bound_error_expr()
+	}
+	if then_stmt_typ != else_stmt_typ {
+		b.log.error_return_type_differ_expect_type(then_stmt_typ.name, else_stmt_typ.name,  else_stmt.pos)	
+		return new_bound_error_expr()
+	}
 
-	bound_then_stmt := b.bind_block_stmt(then_stmt)
-	bound_else_stmt := b.bind_block_stmt(else_stmt)
 	
 	conv_expre := b.bind_convertion_diag(if_expr.cond_expr.pos(), cond_expr, symbols.bool_symbol)
 	return new_if_else_expr(conv_expre, bound_then_stmt, bound_else_stmt)
 }
 
+pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
+	
+	bound_typ := lookup_type(typ.ident.lit)
+	if bound_typ == symbols.none_symbol {
+		b.log.error_undefined_type(typ.ident.lit, typ.pos)
+	}
+	return bound_typ
+}
+
 pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 	bound_expr := b.bind_expr(syntax.expr)
+	
 	var := b.bind_variable(syntax.ident, bound_expr.typ(), syntax.is_mut)
 
 	return new_var_decl_stmt(var, bound_expr, syntax.is_mut)
@@ -267,26 +354,25 @@ pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 	name := syntax.ident.lit
 
-	if name.len == 0 {
-		// This means it was inserted by the parser and error
-		// is already reporterd, just return error expression
-		return new_bound_literal_expr(0)
-	}
 	bound_expr := b.bind_expr(syntax.expr)
 
+	if bound_expr.typ() == symbols.error_symbol {
+		return bound_expr
+	}
 	// check is varable exist in scope
 	mut var := b.scope.lookup_var(name) or {
 		// var have to be declared with := to be able to set a value
 		b.log.error_var_not_exists(name, syntax.ident.pos)
-		return bound_expr
+		return new_bound_error_expr()
 	}
 
-	if !var.is_mut {
+	if !var.is_mut() {
 		// trying to assign a nom a mutable var
 		b.log.error_assign_non_mutable_variable(name, syntax.eq_tok.pos)
+		return new_bound_error_expr()
 	}
 
-	conv_expr := b.bind_convertion_diag(syntax.pos, bound_expr, var.typ)
+	conv_expr := b.bind_convertion_diag(syntax.expr.pos(), bound_expr, var.typ())
 
 	return new_bound_assign_expr(var, conv_expr)
 }

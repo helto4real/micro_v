@@ -8,16 +8,18 @@ pub:
 	kind        SyntaxKind = .comp_node
 	eof_tok     token.Token
 	pos         util.Pos
-	stmt        Stmt
+	members     []MemberNode
 	child_nodes []AstNode
 }
 
-pub fn new_comp_expr(stmt Stmt, eof_tok token.Token) CompNode {
+// TODO: fix child_nodes and pos
+pub fn new_comp_expr(members []MemberNode, eof_tok token.Token) CompNode {
+	first := members.first()
 	return CompNode{
-		pos: stmt.pos()
-		stmt: stmt
+		pos: util.new_pos_from_pos_bounds(first.pos(), eof_tok.pos)
+		members: members
 		eof_tok: eof_tok
-		child_nodes: [AstNode(stmt)]
+		child_nodes: members.map(AstNode(it))
 	}
 }
 pub fn (cn &CompNode) child_nodes() []AstNode {

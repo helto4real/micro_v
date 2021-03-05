@@ -13,7 +13,7 @@ pub:
 pub fn new_bound_variable_expr(var &symbols.VariableSymbol) BoundExpr {
 	return BoundVariableExpr{
 		var: var
-		typ: var.typ
+		typ: var.typ()
 	}
 }
 

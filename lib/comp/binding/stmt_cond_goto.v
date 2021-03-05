@@ -4,7 +4,7 @@ import lib.comp.symbols
 
 pub struct BoundCondGotoStmt {
 pub:
-	kind        BoundNodeKind = .for_range_stmt
+	kind        BoundNodeKind = .cond_goto_stmt
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	label		string
