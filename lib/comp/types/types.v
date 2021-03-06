@@ -111,23 +111,6 @@ pub fn (l LitVal) typ() symbols.TypeSymbol {
 	}
 }
 
-// pub fn (l LitVal) typ_str() string {
-// 	return match l {
-// 		string {
-// 			types.built_in_types[int(TypeKind.string_lit)]
-// 		}
-// 		int {
-// 			types.built_in_types[int(TypeKind.int_lit)]
-// 		}
-// 		bool {
-// 			types.built_in_types[int(TypeKind.bool_lit)]
-// 		}
-// 		None {
-// 			types.built_in_types[int(TypeKind.bool_lit)]
-// 		}
-// 	}
-// }
-
 pub fn (l LitVal) str() string {
 	return match l {
 		string {

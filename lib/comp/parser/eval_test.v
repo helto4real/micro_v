@@ -122,6 +122,8 @@ fn test_eval_basic_exprs() {
 	assert c.eval_bool('true == true') == true
 	assert c.eval_bool('false == false') == true
 	assert c.eval_bool('false != true') == true
+	assert c.eval_bool("'hello' == 'hello'") == true
+	assert c.eval_bool("'Hello' == 'hello'") == false
 
 	// test combo operators
 	assert c.eval_bool('1==1 && 5==5') == true

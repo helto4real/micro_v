@@ -103,6 +103,10 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 
 	// strings
 	operators << new_bound_binary_op(.plus, .str_concat, symbols.string_symbol)
+	operators << new_bound_binary_op_with_res(.eq_eq, .equals, symbols.string_symbol,
+		symbols.bool_symbol)
+	operators << new_bound_binary_op_with_res(.exl_mark_eq, .not_equals, symbols.string_symbol,
+		symbols.bool_symbol)
 
 	// accept int but returns bool
 	operators << new_bound_binary_op_with_res(.eq_eq, .equals, symbols.int_symbol, symbols.bool_symbol)
