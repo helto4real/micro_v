@@ -19,7 +19,10 @@ pub:
 
 	block BlockStmt
 }
-
+pub fn new_empty_fn_decl_node() FnDeclNode {
+	return FnDeclNode{
+	}
+}
 pub fn new_fn_decl_node(fn_key token.Token, ident token.Token, lpar_tok token.Token,
 					params SeparatedSyntaxList, rpar_tok token.Token, typ_node TypeNode, block BlockStmt) FnDeclNode {
 	mut child_nodes := [AstNode(fn_key), ident, lpar_tok]

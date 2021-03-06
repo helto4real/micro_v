@@ -9,10 +9,10 @@ pub:
 	child_nodes []BoundNode
 	is_mut      bool
 	expr        BoundExpr
-	var         &symbols.VariableSymbol
+	var         symbols.VariableSymbol
 }
 
-pub fn new_var_decl_stmt(var &symbols.VariableSymbol, expr BoundExpr, is_mut bool) BoundStmt {
+pub fn new_var_decl_stmt(var symbols.VariableSymbol, expr BoundExpr, is_mut bool) BoundStmt {
 	return BoundVarDeclStmt{
 		var: var
 		is_mut: is_mut

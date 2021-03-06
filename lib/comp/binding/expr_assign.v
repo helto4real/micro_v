@@ -8,10 +8,10 @@ pub:
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	expr        BoundExpr
-	var         &symbols.VariableSymbol
+	var         symbols.VariableSymbol
 }
 
-pub fn new_bound_assign_expr(var &symbols.VariableSymbol, expr BoundExpr) BoundExpr {
+pub fn new_bound_assign_expr(var symbols.VariableSymbol, expr BoundExpr) BoundExpr {
 	return BoundAssignExpr{
 		child_nodes: [BoundNode(expr)]
 		var: var

@@ -1,14 +1,19 @@
 module symbols
+import rand
 
+pub const(
+	undefined_fn = FunctionSymbol{} 
+)
 pub struct FunctionSymbol {
 pub:
-	name   string
-	typ    TypeSymbol
-	params []ParamSymbol
+	name         string
+	typ          TypeSymbol
+	params       []ParamSymbol
+	id	   string
 }
 
 pub fn (ts FunctionSymbol) == (rts FunctionSymbol) bool {
-	return ts.name == rts.name
+	return ts.id == rts.id
 }
 
 pub fn (ts FunctionSymbol) str() string {
@@ -20,6 +25,7 @@ pub fn new_function_symbol(name string, params []ParamSymbol, typ TypeSymbol) Fu
 		name: name
 		params: params
 		typ: typ
+		id: rand.uuid_v4()
 	}
 }
 

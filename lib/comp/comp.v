@@ -6,7 +6,6 @@ import lib.comp.parser
 import lib.comp.binding
 import lib.comp.types
 import lib.comp.util
-import lib.comp.lowering
 
 pub type PrintFunc = fn (text string, nl bool, ref voidptr)
 
@@ -42,11 +41,11 @@ pub fn (mut c Compilation) register_print_callback(print_fn PrintFunc, ref voidp
 	c.print_ref = ref
 }
 
-pub fn (mut c Compilation) get_statement() binding.BoundBlockStmt {
-	result := c.get_bound_global_scope().stmt
-	lower := lowering.lower(result)
-	return lower
-}
+// pub fn (mut c Compilation) get_statement() binding.BoundBlockStmt {
+// 	result := c.get_bound_global_scope().stmt
+// 	lower := lowering.lower(result)
+// 	return lower
+// }
 
 pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 	// TODO: Make this thread safe
@@ -73,8 +72,13 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	if result.len > 0 {
 		return new_evaluation_result(result, 0)
 	}
-	stmt := c.get_statement()
-	mut evaluator := new_evaluator(stmt, vars)
+	program := binding.bind_program(global_scope)
+	if program.log.all.len > 0 {
+
+		return new_evaluation_result(program.log.all, 0)
+	}
+	// stmt := c.get_statement()
+	mut evaluator := new_evaluator(program, vars)
 	evaluator.register_print_callback(c.print_fn, c.print_ref)
 	val := evaluator.evaluate() or {
 		println(term.fail_message('Error in eval: $err'))

@@ -81,8 +81,8 @@ pub fn (mut d Diagnostics) error_expected_same_type_in_range_expr(typ string, po
 	d.error('expected same type <$typ> in range_expr expression', pos)
 }
 
-pub fn (mut d Diagnostics) error_undefinded_function(name string, pos Pos) {
-	d.error('undefinded function <$name>.', pos)
+pub fn (mut d Diagnostics) error_undefined_function(name string, pos Pos) {
+	d.error('undefined function <$name>.', pos)
 }
 
 pub fn (mut d Diagnostics) error_wrong_argument_count(name string, arg_count int, pos Pos) {

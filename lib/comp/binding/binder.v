@@ -10,20 +10,42 @@ import lib.comp.binding.convertion
 [heap]
 pub struct Binder {
 pub mut:
-	scope &BoundScope
+	scope &BoundScope = 0
+	func  symbols.FunctionSymbol
 	log   &util.Diagnostics // errors when parsing
 }
 
-pub fn new_binder(parent &BoundScope) &Binder {
-	return &Binder{
-		scope: new_bound_scope(parent)
+pub fn new_binder(parent &BoundScope, func symbols.FunctionSymbol) &Binder {
+	mut scope := new_bound_scope(parent)
+	new_binder := &Binder{
+		scope: scope
 		log: util.new_diagonistics()
+		func: func
 	}
+	for param in func.params {
+		scope.try_declare_var(param)
+	}
+	return new_binder
+}
+
+pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
+	parent_scope := create_parent_scope(global_scope)
+	mut func_bodies := map[string]BoundBlockStmt
+	mut log := util.new_diagonistics()
+	for func in global_scope.funcs {
+		mut binder := new_binder(parent_scope, func)
+		fn_decl := binder.scope.lookup_fn_decl(func.name) or {panic('unexpected missing fn_decl in scope')}
+		body := binder.bind_stmt(fn_decl.block) 
+		func_bodies[func.id] = (body as BoundBlockStmt)
+		log.all << binder.log.all
+	}
+	bound_program := new_bound_program(log, global_scope.stmt , func_bodies)
+	return bound_program
 }
 
 pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.CompNode) &BoundGlobalScope {
 	parent_scope := create_parent_scope(previous)
-	mut binder := new_binder(parent_scope)
+	mut binder := new_binder(parent_scope, symbols.undefined_fn)
 	// first bind the functions to make them visible 
 	for node in comp_node.members {
 		if node is ast.FnDeclNode {
@@ -40,13 +62,14 @@ pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.CompNode) &B
 	}
 	stmt := new_bound_block_stmt(glob_stmts)
 	fns  := binder.scope.funcs()
+	fn_decls  := binder.scope.func_decls()
 	vars := binder.scope.vars()
 
 	mut diagnostics := binder.log.all
 	if previous != 0 && previous.log.all.len > 0 {
 		diagnostics.prepend(previous.log.all)
 	}
-	return new_bound_global_scope(previous, binder.log, fns, vars, stmt)
+	return new_bound_global_scope(previous, binder.log, fns, fn_decls, vars, stmt)
 }
 
 fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
@@ -65,8 +88,9 @@ fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
 			panic('unexpected return from stack')
 		}
 		mut scope := new_bound_scope(parent)
-		for glob_fn in prev.funcs {
-			scope.try_declare_fn(glob_fn)
+		for i, glob_fn in prev.funcs {
+			fn_decl := prev.fn_decls[i]
+			scope.try_declare_fn(glob_fn, fn_decl)
 		}
 		for var in prev.vars {
 			scope.try_declare_var(var)
@@ -80,7 +104,7 @@ fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
 fn create_root_scope() &BoundScope {
 	mut result := new_bound_scope(&BoundScope(0))
 	for f in symbols.built_in_functions {
-		result.try_declare_fn(f)
+		result.try_declare_glob_fn(f)
 	}
 	return result
 }
@@ -113,7 +137,9 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 
 	func := symbols.new_function_symbol(fn_decl.ident.lit, params, typ)
 	
-	if !b.scope.try_declare_fn(func) {
+	// TODO: refactor this. Due to V bug the func could not
+	//		 include the decl
+	if !b.scope.try_declare_fn(func, fn_decl) {
 		b.log.error_function_allready_declared(fn_decl.ident.lit, fn_decl.ident.pos)
 	}
 }
@@ -140,9 +166,15 @@ pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 	return new_for_stmt(cond_expr, body_stmt, for_stmt.has_cond)
 }
 
-pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, is_mut bool) &symbols.VariableSymbol {
+pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, is_mut bool) symbols.VariableSymbol {
 	name := ident.lit
-	variable := symbols.new_variable_symbol(name, typ, is_mut)
+
+	variable := if b.func == symbols.undefined_fn {
+		// We are in global scope
+		symbols.VariableSymbol(symbols.new_global_variable_symbol(name, typ, is_mut))
+	} else {
+		symbols.VariableSymbol(symbols.new_local_variable_symbol(name, typ, is_mut))
+	}
 
 	if !b.scope.try_declare_var(variable) {
 		b.log.error_name_already_defined(name, ident.pos)
@@ -255,7 +287,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	}
 
 	func := b.scope.lookup_fn(func_name) or {
-		b.log.error_undefinded_function(func_name, expr.ident.pos)
+		b.log.error_undefined_function(func_name, expr.ident.pos)
 		return new_bound_error_expr()
 	}
 

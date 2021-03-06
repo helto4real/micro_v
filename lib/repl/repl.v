@@ -99,12 +99,10 @@ fn (mut a App) message() {
 		for i, s in a.tree {
 			a.tui.draw_text(0, i + 5, s)
 		}
-		// a.tree.clear()
 	} else if a.btree.len > 0 {
 		for i, bs in a.btree {
 			a.tui.draw_text(0, i + 5, bs)
 		}
-		// a.btree.clear()
 	}
 }
 fn (mut a App) footer() {

@@ -1,10 +1,13 @@
 module symbols
 
+import rand 
+
 pub struct ParamSymbol {
 pub:
 	name   string
 	typ    TypeSymbol
 	is_mut bool
+	id string
 }
 
 pub fn (ts ParamSymbol) == (rts ParamSymbol) bool {
@@ -23,9 +26,9 @@ pub fn (ts ParamSymbol) str_ident(level int) string {
 
 pub fn new_param_symbol(name string, typ TypeSymbol, is_mut bool) ParamSymbol {
 	return ParamSymbol{
-
 		name: name
 		typ: typ
 		is_mut: is_mut
+		id: rand.uuid_v4()
 	}
 }

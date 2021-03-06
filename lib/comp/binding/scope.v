@@ -1,13 +1,15 @@
 module binding
 
 import strings
+import lib.comp.ast
 import lib.comp.util
 import lib.comp.symbols
 
 pub struct BoundScope {
 mut:
-	vars  map[string]&symbols.VariableSymbol
+	vars  map[string]symbols.VariableSymbol
 	funcs map[string]symbols.FunctionSymbol
+	fn_decls map[string]ast.FnDeclNode
 pub:
 	parent &BoundScope
 }
@@ -15,12 +17,12 @@ pub:
 pub fn new_bound_scope(parent &BoundScope) &BoundScope {
 	return &BoundScope{
 		parent: parent
-		vars: map[string]&symbols.VariableSymbol{}
+		vars: map[string]symbols.VariableSymbol{}
 		funcs: map[string]symbols.FunctionSymbol{}
 	}
 }
 
-pub fn (bs &BoundScope) lookup_var(name string) ?&symbols.VariableSymbol {
+pub fn (bs &BoundScope) lookup_var(name string) ?symbols.VariableSymbol {
 	var := bs.vars[name] or {
 		if bs.parent > 0 {
 			return bs.parent.lookup_var(name)
@@ -30,7 +32,7 @@ pub fn (bs &BoundScope) lookup_var(name string) ?&symbols.VariableSymbol {
 	return var
 }
 
-pub fn (mut bs BoundScope) try_declare_var(var &symbols.VariableSymbol) bool {
+pub fn (mut bs BoundScope) try_declare_var(var symbols.VariableSymbol) bool {
 	if var.name() in bs.vars {
 		return false
 	}
@@ -47,16 +49,35 @@ pub fn (bs &BoundScope) lookup_fn(name string) ?symbols.FunctionSymbol {
 	return var
 }
 
-pub fn (mut bs BoundScope) try_declare_fn(var symbols.FunctionSymbol) bool {
-	if var.name in bs.funcs {
+pub fn (bs &BoundScope) lookup_fn_decl(name string) ?ast.FnDeclNode {
+	var := bs.fn_decls[name] or {
+		if bs.parent > 0 {
+			return bs.parent.lookup_fn_decl(name)
+		}
+		return none
+	}
+	return var
+}
+
+pub fn (mut bs BoundScope) try_declare_fn(func symbols.FunctionSymbol, fn_decl ast.FnDeclNode) bool {
+	if func.name in bs.funcs {
 		return false
 	}
-	bs.funcs[var.name] = var
+	bs.funcs[func.name] = func
+	bs.fn_decls[func.name] = fn_decl
 	return true
 }
 
-pub fn (bs &BoundScope) vars() []&symbols.VariableSymbol {
-	mut res := []&symbols.VariableSymbol{}
+pub fn (mut bs BoundScope) try_declare_glob_fn(func symbols.FunctionSymbol) bool {
+	if func.name in bs.funcs {
+		return false
+	}
+	bs.funcs[func.name] = func
+	return true
+}
+
+pub fn (bs &BoundScope) vars() []symbols.VariableSymbol {
+	mut res := []symbols.VariableSymbol{}
 	for i, _ in bs.vars {
 		v := bs.vars[i]
 		res << v
@@ -68,6 +89,15 @@ pub fn (bs &BoundScope) funcs() []symbols.FunctionSymbol {
 	mut res := []symbols.FunctionSymbol{}
 	for i, _ in bs.funcs {
 		v := bs.funcs[i]
+		res << v
+	}
+	return res
+}
+
+pub fn (bs &BoundScope) func_decls() []ast.FnDeclNode {
+	mut res := []ast.FnDeclNode{}
+	for i, _ in bs.fn_decls {
+		v := bs.fn_decls[i]
 		res << v
 	}
 	return res
@@ -97,19 +127,21 @@ fn (bs &BoundScope) str_indent(level int) string {
 pub struct BoundGlobalScope {
 pub mut:
 	log  &util.Diagnostics // errors when parsing
-	vars []&symbols.VariableSymbol
+	vars []symbols.VariableSymbol
 	funcs []symbols.FunctionSymbol
+	fn_decls []ast.FnDeclNode
 pub:
 	previous &BoundGlobalScope
 	stmt     BoundStmt
 }
 
-pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagnostics, funcs []symbols.FunctionSymbol,  vars []&symbols.VariableSymbol, stmt BoundStmt) &BoundGlobalScope {
+pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagnostics, funcs []symbols.FunctionSymbol, fn_decls []ast.FnDeclNode, vars []symbols.VariableSymbol, stmt BoundStmt) &BoundGlobalScope {
 	return &BoundGlobalScope{
 		previous: previous
 		log: diagostics
 		vars: vars
 		funcs: funcs
+		fn_decls: fn_decls 
 		stmt: stmt
 	}
 }

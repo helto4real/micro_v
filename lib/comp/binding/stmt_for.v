@@ -7,12 +7,12 @@ pub:
 	kind        BoundNodeKind = .for_range_stmt
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	ident       &symbols.VariableSymbol
+	ident       symbols.VariableSymbol
 	range_expr  BoundExpr
 	body_stmt   BoundStmt
 }
 
-fn new_for_range_stmt(ident &symbols.VariableSymbol, range_expr BoundExpr, body_stmt BoundStmt) BoundStmt {
+fn new_for_range_stmt(ident symbols.VariableSymbol, range_expr BoundExpr, body_stmt BoundStmt) BoundStmt {
 	return BoundForRangeStmt{
 		ident: ident
 		range_expr: range_expr

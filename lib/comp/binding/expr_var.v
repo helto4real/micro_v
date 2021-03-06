@@ -7,10 +7,10 @@ pub:
 	kind        BoundNodeKind = .variable_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	var         &symbols.VariableSymbol
+	var         symbols.VariableSymbol
 }
 
-pub fn new_bound_variable_expr(var &symbols.VariableSymbol) BoundExpr {
+pub fn new_bound_variable_expr(var symbols.VariableSymbol) BoundExpr {
 	return BoundVariableExpr{
 		var: var
 		typ: var.typ()

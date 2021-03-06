@@ -4,6 +4,7 @@ import os
 import lib.comp.binding
 import lib.comp.types
 import lib.comp.symbols
+import lib.comp.lowering
 
 pub fn print_fn(text string, nl bool, ref voidptr) {
 	if nl {
@@ -15,6 +16,7 @@ pub fn print_fn(text string, nl bool, ref voidptr) {
 
 pub struct Evaluator {
 	root binding.BoundBlockStmt
+	fn_stmts map[string]binding.BoundBlockStmt
 mut:
 	glob_vars &binding.EvalVariables
 	locals	  binding.EvalVarsStack
@@ -23,9 +25,17 @@ mut:
 	print_fn  PrintFunc
 }
 
-pub fn new_evaluator(root binding.BoundBlockStmt, glob_vars &binding.EvalVariables) Evaluator {
+pub fn new_evaluator(program binding.BoundProgram, glob_vars &binding.EvalVariables) Evaluator {
+	lowered_stmt := lowering.lower(program.stmt)
+	mut lowered_fn_stmts :=  map[string]binding.BoundBlockStmt
+	
+	for id, func_body in program.func_bodies {
+		lowered_body := lowering.lower(func_body)
+		lowered_fn_stmts[id] = lowered_body
+	}
 	return Evaluator{
-		root: root
+		root: lowered_stmt
+		fn_stmts: lowered_fn_stmts
 		glob_vars: glob_vars
 		print_fn: print_fn
 	}
@@ -98,6 +108,17 @@ pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?types.LitV
 
 fn (mut e Evaluator) eval_bound_var_decl_stmt(node binding.BoundVarDeclStmt) {
 	val := e.eval_expr(node.expr) or { panic('unexpected compiler error') }
+	
+	var_symbol := node.var
+	match var_symbol {
+		symbols.LocalVariableSymbol {
+			mut local_symb := e.locals.peek() or {panic('unexpected empty stack')}
+			local_symb.assign_variable_value(node.var, val)
+	
+		}
+		else{}
+	}
+
 	e.glob_vars.assign_variable_value(node.var, val)
 	e.last_val = val
 }
@@ -187,12 +208,16 @@ fn (mut e Evaluator) eval_bound_call_expr(node binding.BoundCallExpr) ?types.Lit
 		msg := e.eval_expr(node.params[0]) or { panic('unexpected error eval expression') }
 		e.print_fn(msg.str(), true, voidptr(e.print_ref))
 	} else {
-		// mut locals := binding.new_eval_variables()
-		// for i, param in node.params {
-		// 	param_val := e.eval_expr(param) or {panic('expecting value')}
-		// 	param_fn := node.func.params[i]
-		// 	locals.assign_variable_value(param_fn., param_val)
-		// }
+		mut locals := binding.new_eval_variables()
+		for i, param in node.params {
+			param_val := e.eval_expr(param) or {panic('expecting value')}
+			param_fn := node.func.params[i]
+			locals.assign_variable_value(param_fn, param_val)
+		}
+		e.locals.push(locals)
+
+		stmt := e.fn_stmts[node.func.id]
+		return e.evaluate_stmt(stmt)
 	}
 	return e.last_val
 }
@@ -207,21 +232,33 @@ fn (mut e Evaluator) eval_bound_literal_expr(root binding.BoundLiteralExpr) ?typ
 	return root.val
 }
 
-fn (mut e Evaluator) eval_bound_variable_expr(root binding.BoundVariableExpr) ?types.LitVal {
-	
-	if !e.locals.is_empty() {
-		mut local_symb := e.locals.peek() or {panic('unexpected empty stack')}
-		local_var := local_symb.lookup(root.var) or {panic('expected local variable existing')}
-		return local_var
+fn (mut e Evaluator) eval_bound_variable_expr(bound_var binding.BoundVariableExpr) ?types.LitVal {
+	var_symbol := bound_var.var
+	match var_symbol {
+		symbols.LocalVariableSymbol, symbols.ParamSymbol{
+			mut local_symb := e.locals.peek() or {panic('unexpected empty stack')}
+			local_var := local_symb.lookup(bound_var.var) or {panic('expected local variable existing $local_symb in bound_var vars: $bound_var.var')}
+			return local_var
+		}
+		else{}
 	}
-	var := e.glob_vars.lookup(root.var) or { panic('expected variable existing') }
+
+	var := e.glob_vars.lookup(bound_var.var) or { panic('expected variable existing') }
 	return var
 }
 
 fn (mut e Evaluator) eval_bound_assign_expr(node binding.BoundAssignExpr) ?types.LitVal {
 	
-	// Todo: store locals in stackframe not globals
 	val := e.eval_expr(node.expr) ?
+	var_symbol := node.var
+	match var_symbol {
+		symbols.LocalVariableSymbol {
+			mut local_symb := e.locals.peek() or {panic('unexpected empty stack')}
+			local_symb.assign_variable_value(node.var, val)
+	
+		}
+		else{}
+	}
 	e.glob_vars.assign_variable_value(node.var, val)
 	return val
 }
