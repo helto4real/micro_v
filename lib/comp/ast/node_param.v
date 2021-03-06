@@ -16,7 +16,7 @@ pub:
 	child_nodes []AstNode
 	// child nodes
 	ident  token.Token
-	typ TypeNode
+	typ    TypeNode
 	is_mut bool
 }
 
@@ -25,10 +25,11 @@ pub fn new_param_node(ident token.Token, typ TypeNode, is_mut bool) ParamNode {
 		pos: util.new_pos_from_pos_bounds(ident.pos, typ.ident.pos)
 		child_nodes: [AstNode(ident), typ]
 		ident: ident
-		typ:typ
+		typ: typ
 		is_mut: is_mut
 	}
 }
+
 pub fn (e &ParamNode) child_nodes() []AstNode {
 	return e.child_nodes
 }

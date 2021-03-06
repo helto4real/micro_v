@@ -28,6 +28,7 @@ pub fn new_for_range_stmt(key_for token.Token, ident token.Token, key_in token.T
 		body_stmt: body_stmt
 	}
 }
+
 pub fn (e &ForRangeStmt) child_nodes() []AstNode {
 	return e.child_nodes
 }

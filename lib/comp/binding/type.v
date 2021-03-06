@@ -4,7 +4,7 @@ import lib.comp.symbols
 
 pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundConvExpr |
 	BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundRangeExpr | BoundUnaryExpr |
-	BoundVariableExpr 
+	BoundVariableExpr
 
 pub type BoundStmt = BoundBlockStmt | BoundCondGotoStmt | BoundExprStmt | BoundForRangeStmt |
 	BoundForStmt | BoundGotoStmt | BoundIfStmt | BoundLabelStmt | BoundVarDeclStmt
@@ -41,6 +41,7 @@ pub fn (bn &BoundNode) child_nodes() []BoundNode {
 		BoundStmt { return bn.child_nodes() }
 	}
 }
+
 pub fn (bn &BoundNode) node_str() string {
 	match bn {
 		BoundExpr {
@@ -81,6 +82,7 @@ pub fn (be BoundExpr) typ_str() string {
 		BoundConvExpr { return be.typ.name }
 	}
 }
+
 pub fn (be BoundExpr) node_str() string {
 	match be {
 		BoundLiteralExpr { return be.node_str() }
@@ -139,6 +141,7 @@ pub fn (bs BoundStmt) child_nodes() []BoundNode {
 		BoundLabelStmt { return bs.child_nodes }
 	}
 }
+
 pub fn (bs BoundStmt) node_str() string {
 	match bs {
 		BoundBlockStmt { return bs.node_str() }

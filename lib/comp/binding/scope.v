@@ -7,8 +7,8 @@ import lib.comp.symbols
 
 pub struct BoundScope {
 mut:
-	vars  map[string]symbols.VariableSymbol
-	funcs map[string]symbols.FunctionSymbol
+	vars     map[string]symbols.VariableSymbol
+	funcs    map[string]symbols.FunctionSymbol
 	fn_decls map[string]ast.FnDeclNode
 pub:
 	parent &BoundScope
@@ -39,6 +39,7 @@ pub fn (mut bs BoundScope) try_declare_var(var symbols.VariableSymbol) bool {
 	bs.vars[var.name()] = var
 	return true
 }
+
 pub fn (bs &BoundScope) lookup_fn(name string) ?symbols.FunctionSymbol {
 	var := bs.funcs[name] or {
 		if bs.parent > 0 {
@@ -126,9 +127,9 @@ fn (bs &BoundScope) str_indent(level int) string {
 
 pub struct BoundGlobalScope {
 pub mut:
-	log  &util.Diagnostics // errors when parsing
-	vars []symbols.VariableSymbol
-	funcs []symbols.FunctionSymbol
+	log      &util.Diagnostics // errors when parsing
+	vars     []symbols.VariableSymbol
+	funcs    []symbols.FunctionSymbol
 	fn_decls []ast.FnDeclNode
 pub:
 	previous &BoundGlobalScope
@@ -141,7 +142,7 @@ pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagn
 		log: diagostics
 		vars: vars
 		funcs: funcs
-		fn_decls: fn_decls 
+		fn_decls: fn_decls
 		stmt: stmt
 	}
 }

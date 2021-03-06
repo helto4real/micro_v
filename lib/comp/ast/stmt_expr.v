@@ -19,6 +19,7 @@ pub fn new_expr_stmt(expr Expr) ExprStmt {
 		expr: expr
 	}
 }
+
 pub fn (e &ExprStmt) child_nodes() []AstNode {
 	return e.child_nodes
 }

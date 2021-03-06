@@ -74,7 +74,6 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	}
 	program := binding.bind_program(global_scope)
 	if program.log.all.len > 0 {
-
 		return new_evaluation_result(program.log.all, 0)
 	}
 	// stmt := c.get_statement()

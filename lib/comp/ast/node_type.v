@@ -14,8 +14,8 @@ pub:
 	pos         util.Pos
 	child_nodes []AstNode
 	// child nodes
-	ident  token.Token
-	is_ref bool
+	ident   token.Token
+	is_ref  bool
 	is_void bool
 }
 
@@ -28,6 +28,7 @@ pub fn new_type_node(ident token.Token, is_ref bool, is_void bool) TypeNode {
 		is_void: is_void
 	}
 }
+
 pub fn (e &TypeNode) child_nodes() []AstNode {
 	return e.child_nodes
 }

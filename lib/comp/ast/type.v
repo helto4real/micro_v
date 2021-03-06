@@ -11,10 +11,10 @@ pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | IfExpr | Literal
 	NameExpr | ParaExpr | RangeExpr | UnaryExpr
 
 // Nodes in syntax tree
-pub type AstNode = Expr | Stmt | token.Token | TypeNode | ParamNode | MemberNode
+pub type AstNode = Expr | MemberNode | ParamNode | Stmt | TypeNode | token.Token
 
 // top level members like top level statements or function declarations
-pub type MemberNode = GlobStmt | FnDeclNode
+pub type MemberNode = FnDeclNode | GlobStmt
 
 pub interface Node {
 	child_nodes() []AstNode
@@ -23,12 +23,12 @@ pub interface Node {
 
 pub fn (ex &AstNode) pos() util.Pos {
 	match ex {
-		Stmt {return ex.pos()}
-		Expr {return ex.pos()}
-		token.Token {return ex.pos}
-		TypeNode {return ex.pos	}
-		ParamNode {return ex.pos }
-		MemberNode { return ex.pos()}
+		Stmt { return ex.pos() }
+		Expr { return ex.pos() }
+		token.Token { return ex.pos }
+		TypeNode { return ex.pos }
+		ParamNode { return ex.pos }
+		MemberNode { return ex.pos() }
 	}
 }
 
@@ -37,9 +37,9 @@ pub fn (ex &AstNode) child_nodes() []AstNode {
 		Expr { return ex.child_nodes() }
 		Stmt { return ex.child_nodes() }
 		token.Token { return []AstNode{} }
-		TypeNode {return ex.child_nodes()	}
-		ParamNode {return ex.child_nodes() }
-		MemberNode { return ex.child_nodes()}
+		TypeNode { return ex.child_nodes() }
+		ParamNode { return ex.child_nodes() }
+		MemberNode { return ex.child_nodes() }
 	}
 }
 
@@ -50,7 +50,7 @@ pub fn (ex &AstNode) node_str() string {
 		token.Token { return ex.lit }
 		TypeNode { return ex.node_str() }
 		ParamNode { return ex.node_str() }
-		MemberNode { return ex.node_str()}
+		MemberNode { return ex.node_str() }
 	}
 }
 
@@ -138,14 +138,15 @@ pub fn (ex &Stmt) child_nodes() []AstNode {
 
 pub fn (ex &Stmt) pos() util.Pos {
 	match ex {
-		BlockStmt {return ex.pos}
-		ExprStmt  {return ex.pos}
-		VarDeclStmt {return ex.pos}
-		IfStmt {return ex.pos}
-		ForRangeStmt {return ex.pos}
-		ForStmt {return ex.pos}
+		BlockStmt { return ex.pos }
+		ExprStmt { return ex.pos }
+		VarDeclStmt { return ex.pos }
+		IfStmt { return ex.pos }
+		ForRangeStmt { return ex.pos }
+		ForStmt { return ex.pos }
 	}
 }
+
 pub fn (ex &MemberNode) node_str() string {
 	match ex {
 		GlobStmt { return ex.node_str() }
@@ -162,9 +163,7 @@ pub fn (ex &MemberNode) child_nodes() []AstNode {
 
 pub fn (ex &MemberNode) pos() util.Pos {
 	match ex {
-		GlobStmt {return ex.pos} 
-		FnDeclNode { return ex.pos}
+		GlobStmt { return ex.pos }
+		FnDeclNode { return ex.pos }
 	}
 }
-
-

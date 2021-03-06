@@ -30,16 +30,18 @@ pub fn new_binder(parent &BoundScope, func symbols.FunctionSymbol) &Binder {
 
 pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
 	parent_scope := create_parent_scope(global_scope)
-	mut func_bodies := map[string]BoundBlockStmt
+	mut func_bodies := map[string]BoundBlockStmt{}
 	mut log := util.new_diagonistics()
 	for func in global_scope.funcs {
 		mut binder := new_binder(parent_scope, func)
-		fn_decl := binder.scope.lookup_fn_decl(func.name) or {panic('unexpected missing fn_decl in scope')}
-		body := binder.bind_stmt(fn_decl.block) 
+		fn_decl := binder.scope.lookup_fn_decl(func.name) or {
+			panic('unexpected missing fn_decl in scope')
+		}
+		body := binder.bind_stmt(fn_decl.block)
 		func_bodies[func.id] = (body as BoundBlockStmt)
 		log.all << binder.log.all
 	}
-	bound_program := new_bound_program(log, global_scope.stmt , func_bodies)
+	bound_program := new_bound_program(log, global_scope.stmt, func_bodies)
 	return bound_program
 }
 
@@ -61,8 +63,8 @@ pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.CompNode) &B
 		}
 	}
 	stmt := new_bound_block_stmt(glob_stmts)
-	fns  := binder.scope.funcs()
-	fn_decls  := binder.scope.func_decls()
+	fns := binder.scope.funcs()
+	fn_decls := binder.scope.func_decls()
 	vars := binder.scope.vars()
 
 	mut diagnostics := binder.log.all
@@ -112,7 +114,7 @@ fn create_root_scope() &BoundScope {
 pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 	mut params := []symbols.ParamSymbol{}
 	mut seen_param_names := []string{}
-	for i:=0; i< fn_decl.params.len(); i++ {
+	for i := 0; i < fn_decl.params.len(); i++ {
 		param_node := fn_decl.params.at(i) as ast.ParamNode
 		name := param_node.ident.lit
 		param_typ := b.bind_type(param_node.typ)
@@ -124,7 +126,7 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 			seen_param_names << name
 		}
 	}
-	
+
 	typ := if !fn_decl.typ_node.is_void {
 		b.bind_type(fn_decl.typ_node)
 	} else {
@@ -136,13 +138,14 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 	}
 
 	func := symbols.new_function_symbol(fn_decl.ident.lit, params, typ)
-	
+
 	// TODO: refactor this. Due to V bug the func could not
 	//		 include the decl
 	if !b.scope.try_declare_fn(func, fn_decl) {
 		b.log.error_function_allready_declared(fn_decl.ident.lit, fn_decl.ident.pos)
 	}
 }
+
 pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 	match stmt {
 		ast.BlockStmt { return b.bind_block_stmt(stmt) }
@@ -189,6 +192,7 @@ pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) Bound
 
 	return new_for_range_stmt(ident, range_expr, body_stmt)
 }
+
 pub fn (mut b Binder) bind_if_stmt(if_stmt ast.IfStmt) BoundStmt {
 	cond_expr := b.bind_expr_type(if_stmt.cond_expr, symbols.bool_symbol)
 
@@ -247,7 +251,6 @@ fn lookup_type(name string) symbols.TypeSymbol {
 }
 
 pub fn (mut b Binder) bind_convertion_diag(diag_pos util.Pos, expr BoundExpr, typ symbols.TypeSymbol) BoundExpr {
-    
 	conv := convertion.classify(expr.typ(), typ)
 	if !conv.exists {
 		// convertion does not exist
@@ -256,16 +259,17 @@ pub fn (mut b Binder) bind_convertion_diag(diag_pos util.Pos, expr BoundExpr, ty
 		}
 		return new_bound_error_expr()
 	}
-	
+
 	if conv.is_identity {
 		return expr
 	}
 	return new_bound_conv_expr(typ, expr)
 }
+
 pub fn (mut b Binder) bind_convertion(typ symbols.TypeSymbol, expr ast.Expr) BoundExpr {
 	bound_expr := b.bind_expr(expr)
 	return b.bind_convertion_diag(expr.pos(), bound_expr, typ)
-}	
+}
 
 pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	func_name := expr.ident.lit
@@ -309,6 +313,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 
 	return new_bound_call_expr(func, args)
 }
+
 pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 	from_expr := b.bind_expr(range_expr.from)
 	to_expr := b.bind_expr(range_expr.to)
@@ -320,13 +325,13 @@ pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 }
 
 fn bind_block_type(block BoundBlockStmt) ?symbols.TypeSymbol {
-	
 	last_block_node := block.bound_stmts.last()
 	if last_block_node is BoundExprStmt {
 		return last_block_node.bound_expr.typ()
 	}
 	return none
 }
+
 pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 	cond_expr := b.bind_expr(if_expr.cond_expr)
 
@@ -340,34 +345,33 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 		b.log.error_empty_block_not_allowed(else_stmt.pos)
 		return new_bound_error_expr()
 	}
-	
+
 	bound_then_stmt := b.bind_block_stmt(then_stmt) as BoundBlockStmt
 	bound_else_stmt := b.bind_block_stmt(else_stmt) as BoundBlockStmt
-	
+
 	// check that the last statment is expression
-	then_stmt_typ := bind_block_type(bound_then_stmt) or  {
-		b.log.error_expected_block_end_with_expression(then_stmt.pos)	
+	then_stmt_typ := bind_block_type(bound_then_stmt) or {
+		b.log.error_expected_block_end_with_expression(then_stmt.pos)
 		return new_bound_error_expr()
 	}
-	else_stmt_typ := bind_block_type(bound_else_stmt) or  {
-		b.log.error_expected_block_end_with_expression(else_stmt.pos)	
+	else_stmt_typ := bind_block_type(bound_else_stmt) or {
+		b.log.error_expected_block_end_with_expression(else_stmt.pos)
 		return new_bound_error_expr()
 	}
-	if then_stmt_typ == symbols.error_symbol ||  else_stmt_typ == symbols.error_symbol {
+	if then_stmt_typ == symbols.error_symbol || else_stmt_typ == symbols.error_symbol {
 		return new_bound_error_expr()
 	}
 	if then_stmt_typ != else_stmt_typ {
-		b.log.error_return_type_differ_expect_type(then_stmt_typ.name, else_stmt_typ.name,  else_stmt.pos)	
+		b.log.error_return_type_differ_expect_type(then_stmt_typ.name, else_stmt_typ.name,
+			else_stmt.pos)
 		return new_bound_error_expr()
 	}
 
-	
 	conv_expre := b.bind_convertion_diag(if_expr.cond_expr.pos(), cond_expr, symbols.bool_symbol)
 	return new_if_else_expr(conv_expre, bound_then_stmt, bound_else_stmt)
 }
 
 pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
-	
 	bound_typ := lookup_type(typ.ident.lit)
 	if bound_typ == symbols.none_symbol {
 		b.log.error_undefined_type(typ.ident.lit, typ.pos)
@@ -377,7 +381,7 @@ pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
 
 pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 	bound_expr := b.bind_expr(syntax.expr)
-	
+
 	var := b.bind_variable(syntax.ident, bound_expr.typ(), syntax.is_mut)
 
 	return new_var_decl_stmt(var, bound_expr, syntax.is_mut)

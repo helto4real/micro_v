@@ -138,26 +138,24 @@ fn test_call_parser() {
 }
 
 fn test_type_node_parser() {
-	mut p := new_parser_from_text("test")
+	mut p := new_parser_from_text('test')
 	non_ref_typ := p.parse_type_node()
 	assert p.log.all.len == 0
 
 	assert non_ref_typ.is_ref == false
 	assert non_ref_typ.ident.lit == 'test'
 
-	p = new_parser_from_text("&test")
+	p = new_parser_from_text('&test')
 	ref_typ := p.parse_type_node()
 	assert p.log.all.len == 0
 
 	assert ref_typ.is_ref == true
 	assert ref_typ.ident.lit == 'test'
-
-
 }
-fn test_param_node_parser() {
 
+fn test_param_node_parser() {
 	// parse parameter that are immutable
-	mut p := new_parser_from_text("ident type")
+	mut p := new_parser_from_text('ident type')
 	imut_param := p.parse_param_node()
 	assert p.log.all.len == 0
 
@@ -166,7 +164,7 @@ fn test_param_node_parser() {
 	assert imut_param.typ.ident.lit == 'type'
 
 	// parse parameter that are mutable
-	p = new_parser_from_text("mut ident type")
+	p = new_parser_from_text('mut ident type')
 	mut_param := p.parse_param_node()
 	assert p.log.all.len == 0
 
@@ -176,19 +174,18 @@ fn test_param_node_parser() {
 	assert mut_param.typ.is_ref == false
 
 	// parse parameter with reference type
-	p = new_parser_from_text("ident &type")
+	p = new_parser_from_text('ident &type')
 	ref_param := p.parse_param_node()
 	assert p.log.all.len == 0
-	
+
 	assert ref_param.ident.lit == 'ident'
 	assert ref_param.is_mut == false
 	assert ref_param.typ.ident.lit == 'type'
 	assert ref_param.typ.is_ref == true
-
 }
 
 fn test_fn_node_parser() {
-	mut p := new_parser_from_text("fn test() string {10}")
+	mut p := new_parser_from_text('fn test() string {10}')
 	mut fn_p := p.parse_function()
 	assert p.log.all.len == 0
 	assert fn_p.fn_key.kind == .key_fn
@@ -197,12 +194,12 @@ fn test_fn_node_parser() {
 	assert fn_p.typ_node.ident.lit == 'string'
 	assert fn_p.typ_node.is_void == false
 
-	p = new_parser_from_text("fn test() {}")
+	p = new_parser_from_text('fn test() {}')
 	fn_p = p.parse_function()
 	assert p.log.all.len == 0
 	assert fn_p.typ_node.is_void == true
 
-	p = new_parser_from_text("fn test(param string) int {}")
+	p = new_parser_from_text('fn test(param string) int {}')
 	fn_p = p.parse_function()
 	assert p.log.all.len == 0
 	assert fn_p.typ_node.is_void == false
@@ -213,7 +210,7 @@ fn test_fn_node_parser() {
 	assert param.typ.ident.lit == 'string'
 	assert param.typ.is_ref == false
 
-	p = new_parser_from_text("fn test(param &RefStruct) int {}")
+	p = new_parser_from_text('fn test(param &RefStruct) int {}')
 	fn_p = p.parse_function()
 	assert p.log.all.len == 0
 	assert fn_p.typ_node.is_void == false
@@ -226,13 +223,11 @@ fn test_fn_node_parser() {
 }
 
 /*
-
-		fn_key: fn_key
+fn_key: fn_key
 		ident:ident
 		lpar_tok: lpar_tok
 		params: params
 		rpar_tok: rpar_tok
 		typ_node:typ_node
 		block: block
-
 */

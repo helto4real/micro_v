@@ -1,15 +1,17 @@
 module symbols
+
 import rand
 
-pub const(
-	undefined_fn = FunctionSymbol{} 
+pub const (
+	undefined_fn = FunctionSymbol{}
 )
+
 pub struct FunctionSymbol {
 pub:
-	name         string
-	typ          TypeSymbol
-	params       []ParamSymbol
-	id	   string
+	name   string
+	typ    TypeSymbol
+	params []ParamSymbol
+	id     string
 }
 
 pub fn (ts FunctionSymbol) == (rts FunctionSymbol) bool {

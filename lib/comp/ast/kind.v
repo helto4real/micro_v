@@ -30,7 +30,6 @@ enum SyntaxKind {
 	if_stmt
 	for_stmt
 	for_range_stmt
-
 	empty
 	// syntax_helpers
 }

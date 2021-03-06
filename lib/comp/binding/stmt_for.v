@@ -24,6 +24,7 @@ fn new_for_range_stmt(ident symbols.VariableSymbol, range_expr BoundExpr, body_s
 pub fn (ex &BoundForRangeStmt) node_str() string {
 	return typeof(ex).name
 }
+
 pub struct BoundForStmt {
 pub:
 	kind        BoundNodeKind = .for_stmt
@@ -43,6 +44,7 @@ pub fn new_for_stmt(cond_expr BoundExpr, body_stmt BoundStmt, has_cond bool) Bou
 		child_nodes: [BoundNode(cond_expr), body_stmt]
 	}
 }
+
 pub fn (ex &BoundForStmt) node_str() string {
 	return typeof(ex).name
 }

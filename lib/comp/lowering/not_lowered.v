@@ -26,12 +26,15 @@ fn (mut l Lowerer) rewrite_var_decl_stmt(stmt binding.BoundVarDeclStmt) binding.
 	new_expr := l.rewrite_expr(stmt.expr)
 	return binding.new_var_decl_stmt(stmt.var, new_expr, stmt.is_mut)
 }
+
 fn (mut l Lowerer) rewrite_label_stmt(stmt binding.BoundLabelStmt) binding.BoundStmt {
 	return stmt
 }
+
 fn (mut l Lowerer) rewrite_goto_stmt(stmt binding.BoundGotoStmt) binding.BoundStmt {
 	return stmt
 }
+
 fn (mut l Lowerer) rewrite_cond_goto_stmt(stmt binding.BoundCondGotoStmt) binding.BoundStmt {
 	cond := l.rewrite_expr(stmt.cond)
 	return binding.new_bound_cond_goto_stmt(stmt.label, cond, stmt.jump_if_true)
@@ -71,6 +74,7 @@ pub fn (mut l Lowerer) rewrite_call_expr(expr binding.BoundCallExpr) binding.Bou
 pub fn (mut l Lowerer) rewrite_error_expr(expr binding.BoundErrorExpr) binding.BoundExpr {
 	return expr
 }
+
 pub fn (mut l Lowerer) rewrite_variable_expr(expr binding.BoundVariableExpr) binding.BoundExpr {
 	return expr
 }
@@ -78,15 +82,18 @@ pub fn (mut l Lowerer) rewrite_variable_expr(expr binding.BoundVariableExpr) bin
 pub fn (mut l Lowerer) rewrite_literal_expr(expr binding.BoundLiteralExpr) binding.BoundExpr {
 	return expr
 }
+
 pub fn (mut l Lowerer) rewrite_unary_expr(expr binding.BoundUnaryExpr) binding.BoundExpr {
 	operand := l.rewrite_expr(expr.operand)
 	return binding.new_bound_unary_expr(expr.op, operand)
 }
+
 pub fn (mut l Lowerer) rewrite_binary_expr(expr binding.BoundBinaryExpr) binding.BoundExpr {
 	left := l.rewrite_expr(expr.left)
 	right := l.rewrite_expr(expr.right)
 	return binding.new_bound_binary_expr(left, expr.op, right)
 }
+
 pub fn (mut l Lowerer) rewrite_assign_expr(expr binding.BoundAssignExpr) binding.BoundExpr {
 	rewritten_expr := l.rewrite_expr(expr.expr)
 	return binding.new_bound_assign_expr(expr.var, rewritten_expr)

@@ -190,6 +190,7 @@ fn test_if_else_stmt() {
 		b
 	}') == 2
 }
+
 fn test_error_delcarations_binar_operator_type() {
 	code := 'true[||]2'
 	error := ' binary operator || is not defined for types bool and int.'
@@ -201,7 +202,6 @@ fn test_error_delcarations_unary_operator_undefined() {
 	error := ' unary operator + is not defined for type bool.'
 	assert_has_diagostics(code, error)
 }
-
 
 fn test_error_range_type_error() {
 	code := '1..[a]'
@@ -321,6 +321,7 @@ fn assert_has_multi_diagostics(text string, diagnostic_text string, nr_of_err_ms
 fn assert_err_info(input_rule string, expected_message string, actual_message string) {
 	assert_err_info_diag(input_rule, expected_message, actual_message, []&util.Diagnostic{})
 }
+
 fn assert_err_info_diag(input_rule string, expected_message string, actual_message string, actual_diagnostics []&util.Diagnostic) {
 	// make sure we print info so we can find the method that is faulty	
 	eprintln('input rule:')

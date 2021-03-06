@@ -7,7 +7,7 @@ pub:
 	kind        BoundNodeKind = .goto_stmt
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	label		string
+	label       string
 }
 
 pub fn new_bound_goto_stmt(label string) BoundStmt {

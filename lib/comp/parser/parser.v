@@ -35,8 +35,9 @@ pub fn (mut p Parser) parse_comp_node() ast.CompNode {
 	node := ast.new_comp_expr(members, eof)
 	return node
 }
+
 pub fn (mut p Parser) parse_members() []ast.MemberNode {
-	mut members :=  []ast.MemberNode{}
+	mut members := []ast.MemberNode{}
 
 	for p.peek_token(0).kind != .eof {
 		start_tok := p.current_token()
@@ -53,12 +54,13 @@ pub fn (mut p Parser) parse_members() []ast.MemberNode {
 }
 
 pub fn (mut p Parser) parse_member() ast.MemberNode {
-	if p.peek_fn_decl(0){
+	if p.peek_fn_decl(0) {
 		return p.parse_function()
 	} else {
 		return p.parse_global_stmt()
 	}
 }
+
 pub fn (mut p Parser) parse_global_stmt() ast.MemberNode {
 	stmt := p.parse_stmt()
 	return ast.new_glob_stmt(stmt)
@@ -76,9 +78,8 @@ pub fn (mut p Parser) parse_function() ast.FnDeclNode {
 	params := p.parse_fn_params()
 	rpar_tok := p.match_token(.rpar)
 	ret_type := p.parse_return_type_node()
-	fn_block := p.parse_block_stmt() 
-	return ast.new_fn_decl_node(fn_key, ident, lpar_tok,
-					params, rpar_tok, ret_type, (fn_block as ast.BlockStmt))
+	fn_block := p.parse_block_stmt()
+	return ast.new_fn_decl_node(fn_key, ident, lpar_tok, params, rpar_tok, ret_type, (fn_block as ast.BlockStmt))
 }
 
 fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
@@ -92,7 +93,7 @@ fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
 		if p.current_token() == start_tok {
 			// makes sure we not in infinite loop
 			p.next_token()
-		} 
+		}
 		sep_and_nodes << param
 		if p.current_token().kind != .rpar && p.current_token().kind != .eof {
 			comma := p.match_token(.comma)
@@ -112,8 +113,8 @@ fn (mut p Parser) parse_return_type_node() ast.TypeNode {
 		is_ref = true
 		p.next_token()
 	}
-	name := p.match_token(.name) 
-	
+	name := p.match_token(.name)
+
 	return ast.new_type_node(name, is_ref, false)
 }
 
@@ -134,7 +135,7 @@ fn (mut p Parser) parse_type_node() ast.TypeNode {
 		is_ref = true
 		p.next_token()
 	}
-	name := p.match_token(.name) 
+	name := p.match_token(.name)
 
 	return ast.new_type_node(name, is_ref, false)
 }
@@ -438,6 +439,7 @@ fn (mut p Parser) parse_bool_literal() ast.Expr {
 	val := key_tok.kind == .key_true
 	return ast.new_literal_expr(key_tok, val)
 }
+
 fn (mut p Parser) parse_call_expr() ast.Expr {
 	ident := p.match_token(.name)
 	lpar_tok := p.match_token(.lpar)
@@ -466,6 +468,7 @@ fn (mut p Parser) parse_name_or_call_expr() ast.Expr {
 		return p.parse_name_expr()
 	}
 }
+
 fn (mut p Parser) parse_name_expr() ast.Expr {
 	ident := p.match_token(.name)
 	return ast.new_name_expr(ident)

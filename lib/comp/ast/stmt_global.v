@@ -19,6 +19,7 @@ pub fn new_glob_stmt(stmt Stmt) GlobStmt {
 		stmt: stmt
 	}
 }
+
 pub fn (e &GlobStmt) child_nodes() []AstNode {
 	return e.child_nodes
 }

@@ -39,13 +39,15 @@ pub fn walk(visitor Visitor, node binding.BoundNode) {
 		walk(visitor, &child_node)
 	}
 }
+
 fn walk_tree_recursive(visitor VisitorTree, node binding.BoundNode, last_child bool, tree_info string) {
 	t_info := visitor.visit_btree(node, last_child, tree_info) or { return }
 	children := node.child_nodes()
 	for i, child_node in children {
-		walk_tree_recursive(visitor, &child_node, i == children.len-1, t_info)
+		walk_tree_recursive(visitor, &child_node, i == children.len - 1, t_info)
 	}
 }
-pub fn walk_tree(visitor VisitorTree, node binding.BoundNode)  {
+
+pub fn walk_tree(visitor VisitorTree, node binding.BoundNode) {
 	walk_tree_recursive(visitor, node, true, '')
 }

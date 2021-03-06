@@ -31,7 +31,6 @@ pub fn (ssl SeparatedSyntaxList) sep_at(index int) AstNode {
 	return ssl.sep_and_nodes[index * 2 + 1]
 }
 
-
 // pub struct SeparatedList<T> {
 // mut:
 // 	sep_and_nodes []T

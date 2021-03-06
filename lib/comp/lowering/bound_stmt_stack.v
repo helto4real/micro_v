@@ -1,5 +1,5 @@
-
 module lowering
+
 import lib.comp.binding
 
 struct BoundStmtStack {

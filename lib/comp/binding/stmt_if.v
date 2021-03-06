@@ -21,6 +21,7 @@ fn new_if_stmt(cond_expr BoundExpr, block_stmt BoundStmt) BoundStmt {
 		child_nodes: [BoundNode(cond_expr), block_stmt]
 	}
 }
+
 fn new_if_else_stmt(cond_expr BoundExpr, block_stmt BoundStmt, else_clause BoundStmt) BoundStmt {
 	return BoundIfStmt{
 		cond_expr: cond_expr

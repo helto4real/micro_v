@@ -10,7 +10,7 @@ fn block(stmts ...binding.BoundStmt) binding.BoundStmt {
 }
 
 fn goto_false(label string, expr binding.BoundExpr) binding.BoundStmt {
-	return binding.new_bound_cond_goto_stmt(label, expr, false) 
+	return binding.new_bound_cond_goto_stmt(label, expr, false)
 }
 
 fn goto_true(label string, expr binding.BoundExpr) binding.BoundStmt {
@@ -20,6 +20,7 @@ fn goto_true(label string, expr binding.BoundExpr) binding.BoundStmt {
 fn goto_label(label string) binding.BoundStmt {
 	return binding.new_bound_goto_stmt(label)
 }
+
 fn label(label string) binding.BoundStmt {
 	return binding.new_bound_label_stmt(label)
 }
@@ -29,11 +30,13 @@ fn var_decl(var symbols.VariableSymbol, expr binding.BoundExpr, is_mut bool) bin
 	// new_local_variable_symbol
 	return binding.new_var_decl_stmt(var, expr, is_mut) as binding.BoundVarDeclStmt
 }
+
 fn var_decl_local(name string, typ symbols.TypeSymbol, expr binding.BoundExpr, is_mut bool) binding.BoundVarDeclStmt {
-	var := symbols.new_local_variable_symbol(name, typ , is_mut)
+	var := symbols.new_local_variable_symbol(name, typ, is_mut)
 	return binding.new_var_decl_stmt(var, expr, is_mut) as binding.BoundVarDeclStmt
 }
-//new_for_stmt(cond_expr BoundExpr, body_stmt BoundStmt, has_cond bool) BoundStmt
+
+// new_for_stmt(cond_expr BoundExpr, body_stmt BoundStmt, has_cond bool) BoundStmt
 fn for_stmt(cond_expr binding.BoundExpr, body_stmt binding.BoundStmt) binding.BoundStmt {
 	return binding.new_for_stmt(cond_expr, body_stmt, true)
 }
@@ -48,14 +51,15 @@ fn variable(var_decl binding.BoundVarDeclStmt) binding.BoundVariableExpr {
 
 fn binary(left binding.BoundExpr, kind token.Kind, right binding.BoundExpr) binding.BoundExpr {
 	// todo: fix error handling
-	op := binding.bind_binary_operator(kind, left.typ(), right.typ()) or {panic(err.msg)}
-	
-	return binding.new_bound_binary_expr(left , op, right ) 
+	op := binding.bind_binary_operator(kind, left.typ(), right.typ()) or { panic(err.msg) }
+
+	return binding.new_bound_binary_expr(left, op, right)
 }
 
 fn less_than(left binding.BoundExpr, right binding.BoundExpr) binding.BoundExpr {
 	return binary(left, .lt, right)
 }
+
 fn add(left binding.BoundExpr, right binding.BoundExpr) binding.BoundExpr {
 	return binary(left, .plus, right)
 }
@@ -65,7 +69,7 @@ fn literal(val types.LitVal) binding.BoundExpr {
 }
 
 fn increment(var_expr binding.BoundVariableExpr) binding.BoundStmt {
-	incr := add(var_expr, literal(1)) 
-	incr_assign := binding.new_bound_assign_expr(var_expr.var, incr ) 
-	return binding.new_bound_expr_stmt(incr_assign) 
+	incr := add(var_expr, literal(1))
+	incr_assign := binding.new_bound_assign_expr(var_expr.var, incr)
+	return binding.new_bound_expr_stmt(incr_assign)
 }

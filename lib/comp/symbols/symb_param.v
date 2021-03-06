@@ -1,13 +1,13 @@
 module symbols
 
-import rand 
+import rand
 
 pub struct ParamSymbol {
 pub:
 	name   string
 	typ    TypeSymbol
 	is_mut bool
-	id string
+	id     string
 }
 
 pub fn (ts ParamSymbol) == (rts ParamSymbol) bool {

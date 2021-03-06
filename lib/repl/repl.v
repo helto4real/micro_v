@@ -105,6 +105,7 @@ fn (mut a App) message() {
 		}
 	}
 }
+
 fn (mut a App) footer() {
 	w, h := a.tui.window_width, a.tui.window_height
 	mut b := a.ed
@@ -182,7 +183,7 @@ fn (mut a App) visit_btree(node binding.BoundNode, last_child bool, indent strin
 				var := node.var
 				name := var.name()
 				typ := var.typ()
-				b.writeln(term.bright_cyan(' $name (${typ.name})'))
+				b.writeln(term.bright_cyan(' $name ($typ.name)'))
 			} else if node is binding.BoundUnaryExpr {
 				b.writeln(term.bright_cyan(' $node.op.kind'))
 			} else {
@@ -200,7 +201,7 @@ fn (mut a App) visit_btree(node binding.BoundNode, last_child bool, indent strin
 				var := node.var
 				name := var.name()
 				typ := var.typ()
-				b.writeln(term.bright_cyan(' $name (${typ.name})'))
+				b.writeln(term.bright_cyan(' $name ($typ.name)'))
 			} else {
 				b.writeln('')
 			}

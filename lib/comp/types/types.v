@@ -1,6 +1,6 @@
 module types
-import symbols
 
+import lib.comp.symbols
 
 // pub type Type = int
 
@@ -9,9 +9,10 @@ import symbols
 // }
 
 pub struct NoneStruct {}
+
 pub type None = NoneStruct
 
-pub type LitVal = bool | int | string | None
+pub type LitVal = None | bool | int | string
 
 pub fn (l LitVal) eq(r LitVal) bool {
 	if l.type_name() != r.type_name() {

@@ -29,6 +29,7 @@ pub fn new_bound_unary_op_with_ret(kind token.Kind, op_kind BoundUnaryOperatorKi
 		res_typ: res_typ
 	}
 }
+
 pub fn (ex &BoundUnaryOperator) node_str() string {
 	return typeof(ex).name
 }
@@ -104,8 +105,7 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 	operators << new_bound_binary_op(.plus, .str_concat, symbols.string_symbol)
 
 	// accept int but returns bool
-	operators << new_bound_binary_op_with_res(.eq_eq, .equals, symbols.int_symbol,
-		symbols.bool_symbol)
+	operators << new_bound_binary_op_with_res(.eq_eq, .equals, symbols.int_symbol, symbols.bool_symbol)
 	operators << new_bound_binary_op_with_res(.exl_mark_eq, .not_equals, symbols.int_symbol,
 		symbols.bool_symbol)
 
@@ -114,10 +114,8 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 	operators << new_bound_binary_op(.eq_eq, .equals, symbols.bool_symbol)
 	operators << new_bound_binary_op(.exl_mark_eq, .not_equals, symbols.bool_symbol)
 
-	operators << new_bound_binary_op_with_res(.lt, .less, symbols.int_symbol,
-		symbols.bool_symbol)
-	operators << new_bound_binary_op_with_res(.gt, .greater, symbols.int_symbol,
-		symbols.bool_symbol)
+	operators << new_bound_binary_op_with_res(.lt, .less, symbols.int_symbol, symbols.bool_symbol)
+	operators << new_bound_binary_op_with_res(.gt, .greater, symbols.int_symbol, symbols.bool_symbol)
 	operators << new_bound_binary_op_with_res(.lt_eq, .less_or_equals, symbols.int_symbol,
 		symbols.bool_symbol)
 	operators << new_bound_binary_op_with_res(.gt_eq, .greater_or_equals, symbols.int_symbol,
@@ -184,10 +182,9 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 	}
 
 	bound_op := bind_binary_operator(syntax.op.kind, bound_left.typ(), bound_right.typ()) or {
-		b.log.error('binary operator $syntax.op.lit is not defined for types ${bound_left.typ().name} and ${bound_right.typ().name}.',
+		b.log.error('binary operator $syntax.op.lit is not defined for types $bound_left.typ().name and ${bound_right.typ().name}.',
 			syntax.op.pos)
 		return new_bound_error_expr()
 	}
 	return new_bound_binary_expr(bound_left, bound_op, bound_right)
 }
-

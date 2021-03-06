@@ -97,17 +97,18 @@ pub fn (mut d Diagnostics) error_wrong_argument_type(name string, param_typ stri
 	d.error('wrong argument type <$arg_typ> for argument <$name>. Expected type <$param_typ>',
 		pos)
 }
+
 pub fn (mut d Diagnostics) error_empty_block_not_allowed(pos Pos) {
-	d.error('empty block is not allowed',
-		pos)
+	d.error('empty block is not allowed', pos)
 }
+
 pub fn (mut d Diagnostics) error_expected_block_end_with_expression(pos Pos) {
-	d.error('expected block to end with expression',
-		pos)
+	d.error('expected block to end with expression', pos)
 }
 
 pub fn (mut d Diagnostics) error_return_type_differ_expect_type(then_typ string, else_typ string, pos Pos) {
-	d.error('values returned in expression is different in `if`and `else` block. expected type: <$then_typ> got:<$else_typ>', pos)
+	d.error('values returned in expression is different in `if`and `else` block. expected type: <$then_typ> got:<$else_typ>',
+		pos)
 }
 
 pub fn (mut d Diagnostics) error_undefined_type(ident string, pos Pos) {

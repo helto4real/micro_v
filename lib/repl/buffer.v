@@ -136,6 +136,7 @@ fn (b Buffer) cursor_index() int {
 	}
 	return i
 }
+
 fn (mut b Buffer) put(s string) {
 	has_line_ending := s.contains('\n')
 	x, y := b.cursor.xy()

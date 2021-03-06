@@ -18,6 +18,7 @@ pub fn new_bound_literal_expr(val types.LitVal) BoundExpr {
 		val: val
 	}
 }
+
 pub fn (ex &BoundLiteralExpr) node_str() string {
 	return typeof(ex).name
 }

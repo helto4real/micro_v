@@ -1,4 +1,5 @@
 module binding
+
 import lib.comp.types
 import lib.comp.symbols
 
@@ -20,7 +21,6 @@ pub fn (mut ev EvalVariables) lookup(var symbols.VariableSymbol) ?types.LitVal {
 	val := ev.vars[var.id()] or { return none }
 	return val
 }
-
 
 struct EvalVarsStack {
 mut:

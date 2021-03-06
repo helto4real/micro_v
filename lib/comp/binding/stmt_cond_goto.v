@@ -4,11 +4,11 @@ import lib.comp.symbols
 
 pub struct BoundCondGotoStmt {
 pub:
-	kind        BoundNodeKind = .cond_goto_stmt
-	typ         symbols.TypeSymbol
-	child_nodes []BoundNode
-	label		string
-	cond	    BoundExpr
+	kind         BoundNodeKind = .cond_goto_stmt
+	typ          symbols.TypeSymbol
+	child_nodes  []BoundNode
+	label        string
+	cond         BoundExpr
 	jump_if_true bool
 }
 

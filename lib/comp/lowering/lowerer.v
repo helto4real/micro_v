@@ -9,12 +9,14 @@ import lib.comp.symbols
 
 pub struct Lowerer {
 mut:
-	shallow bool 
+	shallow     bool
 	label_count int
 }
 
 pub fn new_lowerer(shallow bool) Lowerer {
-	return Lowerer{shallow:shallow}
+	return Lowerer{
+		shallow: shallow
+	}
 }
 
 pub fn lower(stmt binding.BoundStmt) binding.BoundBlockStmt {
@@ -62,8 +64,12 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt binding.BoundIfStmt) binding.BoundStmt {
 		// end:		
 
 		end_label_name := l.gen_label()
-		res := block(goto_false(end_label_name, stmt.cond_expr), stmt.block_stmt, label(end_label_name))
-		
+		res := block(
+			goto_false(end_label_name, stmt.cond_expr), 
+			stmt.block_stmt, 
+			label(end_label_name)
+		)
+
 		if l.shallow {
 			return res
 		}
@@ -94,8 +100,9 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt binding.BoundIfStmt) binding.BoundStmt {
 			goto_label(end_label),
 			label(else_label), 
 			stmt.else_clause, 
-			label(end_label))
-		
+			label(end_label)
+		)
+
 		if l.shallow {
 			return res
 		}
@@ -140,7 +147,7 @@ pub fn (mut l Lowerer) rewrite_if_expr(expr binding.BoundIfExpr) binding.BoundEx
 // 		expr.else_stmt, 
 // 		label(end_label)
 // 		)
-	
+
 // 	if l.shallow {
 // 		return res
 // 	}
@@ -148,10 +155,9 @@ pub fn (mut l Lowerer) rewrite_if_expr(expr binding.BoundIfExpr) binding.BoundEx
 // }
 
 fn (mut l Lowerer) rewrite_for_stmt(stmt binding.BoundForStmt) binding.BoundStmt {
-
 	if stmt.has_cond {
 		// this is a 'for expr {}'
-		
+
 		// this is a 'for {}' i.e. a while loop
 
 		// for <condition>
@@ -168,18 +174,16 @@ fn (mut l Lowerer) rewrite_for_stmt(stmt binding.BoundForStmt) binding.BoundStmt
 		continue_label := l.gen_label()
 		body_label := l.gen_label()
 		// end_label := l.gen_label()
-		res := block (
-			goto_label(continue_label),
-			label(body_label),
-			stmt.body_stmt,
+		res := block(
+			goto_label(continue_label), 
+			label(body_label), 
+			stmt.body_stmt, 
 			label(continue_label),
-			goto_true(body_label, stmt.cond_expr)
-		)
+			goto_true(body_label, stmt.cond_expr))
 		if l.shallow {
 			return res
 		}
 		return l.rewrite_stmt(res)
-
 	} else {
 		panic('unexpected empty condition')
 	}
@@ -205,29 +209,25 @@ fn (mut l Lowerer) rewrite_for_range_stmt(stmt binding.BoundForRangeStmt) bindin
 	// }	
 	range := stmt.range_expr as binding.BoundRangeExpr
 	// mut var := lower
-	lower_decl := var_decl(stmt.ident, range.from_exp , true)
-	upper_decl := var_decl_local('upper', symbols.int_symbol, range.to_exp , false)
+	lower_decl := var_decl(stmt.ident, range.from_exp, true)
+	upper_decl := var_decl_local('upper', symbols.int_symbol, range.to_exp, false)
 	res := block(
-		lower_decl,
-		upper_decl,
-		for_stmt(
-			less_than(
-				variable(lower_decl),
-				variable(upper_decl)
-			),
-			block(
-				stmt.body_stmt,
-				increment(
-					variable(lower_decl)
+			lower_decl, 
+			upper_decl, 
+			for_stmt(
+				less_than(
+					variable(lower_decl), 
+					variable(upper_decl)
+				),
+				block(stmt.body_stmt, 
+					increment(variable(lower_decl))
 				)
 			)
-		),
-	)
+		)
 	if l.shallow {
-			return res
-		}
+		return res
+	}
 	return l.rewrite_stmt(res)
-
 }
 
 pub fn flatten(stmt binding.BoundStmt) binding.BoundBlockStmt {
@@ -237,7 +237,7 @@ pub fn flatten(stmt binding.BoundStmt) binding.BoundBlockStmt {
 	stack.push(stmt)
 
 	for !stack.is_empty() {
-		current := stack.pop() or {panic('as')}
+		current := stack.pop() or { panic('as') }
 		if current is binding.BoundBlockStmt {
 			rev_stmts := current.bound_stmts.reverse()
 			for s in rev_stmts {

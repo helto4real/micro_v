@@ -22,6 +22,7 @@ pub fn new_comp_expr(members []MemberNode, eof_tok token.Token) CompNode {
 		child_nodes: members.map(AstNode(it))
 	}
 }
+
 pub fn (cn &CompNode) child_nodes() []AstNode {
 	return cn.child_nodes
 }

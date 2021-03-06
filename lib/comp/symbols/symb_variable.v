@@ -1,13 +1,14 @@
 module symbols
+
 import rand
 import lib.comp.symbols
 
 pub struct LocalVariableSymbol {
 pub:
 	name   string
-	typ    symbols.TypeSymbol
+	typ    TypeSymbol
 	is_mut bool
-	id	   string
+	id     string
 }
 
 pub fn (vs &LocalVariableSymbol) str() string {
@@ -21,8 +22,8 @@ pub fn (vs &LocalVariableSymbol) str_ident(level int) string {
 	return '${ident}var: $mut_str <$vs.name> ($vs.typ.name)'
 }
 
-pub fn new_local_variable_symbol(name string, typ symbols.TypeSymbol, is_mut bool) LocalVariableSymbol {
-	return LocalVariableSymbol{
+pub fn new_local_variable_symbol(name string, typ TypeSymbol, is_mut bool) LocalVariableSymbol {
+	return symbols.LocalVariableSymbol{
 		name: name
 		typ: typ
 		is_mut: is_mut
@@ -33,9 +34,9 @@ pub fn new_local_variable_symbol(name string, typ symbols.TypeSymbol, is_mut boo
 pub struct GlobalVariableSymbol {
 pub:
 	name   string
-	typ    symbols.TypeSymbol
+	typ    TypeSymbol
 	is_mut bool
-	id	   string
+	id     string
 }
 
 pub fn (vs &GlobalVariableSymbol) str() string {
@@ -49,8 +50,8 @@ pub fn (vs &GlobalVariableSymbol) str_ident(level int) string {
 	return '${ident}var: $mut_str <$vs.name> ($vs.typ.name)'
 }
 
-pub fn new_global_variable_symbol(name string, typ symbols.TypeSymbol, is_mut bool) GlobalVariableSymbol {
-	return GlobalVariableSymbol{
+pub fn new_global_variable_symbol(name string, typ TypeSymbol, is_mut bool) GlobalVariableSymbol {
+	return symbols.GlobalVariableSymbol{
 		name: name
 		typ: typ
 		is_mut: is_mut

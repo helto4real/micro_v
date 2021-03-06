@@ -1,4 +1,5 @@
 module walker
+
 import strings
 import term
 import lib.comp.binding
@@ -9,11 +10,14 @@ pub struct BoundNodePrinter {
 mut:
 	tree []string
 }
+
 pub fn node_str(node binding.BoundNode) string {
 	p := BoundNodePrinter{}
-	walker.walk_tree(p, node)
+	walk_tree(p, node)
 	mut b := strings.new_builder(0)
-	for s in p.tree {b.write_string(s)}
+	for s in p.tree {
+		b.write_string(s)
+	}
 	return b.str()
 }
 
@@ -25,6 +29,7 @@ pub fn print_block(block binding.BoundBlockStmt, shallow bool) string {
 	}
 	return b.str()
 }
+
 pub fn print_expression(expr string, shallow bool) string {
 	// vars := binding.new_eval_variables()
 	syntax_tree := parser.parse_syntax_tree(expr)
@@ -32,7 +37,7 @@ pub fn print_expression(expr string, shallow bool) string {
 		return 'syntax error'
 	}
 	scope := binding.bind_global_scope(&binding.BoundGlobalScope(0), syntax_tree.root)
-	lower := if !shallow { lowering.lower(scope.stmt)} else {lowering.lower_shallow(scope.stmt)}
+	lower := if !shallow { lowering.lower(scope.stmt) } else { lowering.lower_shallow(scope.stmt) }
 	// mut comp := comp.new_compilation(syntax_tree)
 	// res := comp.evaluate(vars)
 	if scope.log.all.len > 0 {
@@ -45,6 +50,7 @@ pub fn print_expression(expr string, shallow bool) string {
 	}
 	return b.str()
 }
+
 fn (mut p BoundNodePrinter) visit_btree(node binding.BoundNode, last_child bool, indent string) ?string {
 	mut b := strings.new_builder(0)
 
