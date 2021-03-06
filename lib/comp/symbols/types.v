@@ -1,6 +1,6 @@
 module symbols
 
-type VariableSymbol = GlobalVariableSymbol | LocalVariableSymbol | ParamSymbol
+pub type VariableSymbol = GlobalVariableSymbol | LocalVariableSymbol | ParamSymbol
 
 pub fn (vs &VariableSymbol) is_mut() bool {
 	match vs {

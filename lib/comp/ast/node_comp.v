@@ -14,6 +14,7 @@ pub:
 
 // TODO: fix child_nodes and pos
 pub fn new_comp_expr(members []MemberNode, eof_tok token.Token) CompNode {
+	if members.len == 0 {return CompNode{}}
 	first := members.first()
 	return CompNode{
 		pos: util.new_pos_from_pos_bounds(first.pos(), eof_tok.pos)

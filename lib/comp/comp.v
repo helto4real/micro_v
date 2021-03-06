@@ -51,7 +51,6 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 	// TODO: Make this thread safe
 	mut prev_glob_scope := &binding.BoundGlobalScope(0)
 	if c.global_scope == 0 {
-		// println('${voidptr(c.previous)}')
 		if c.previous != 0 {
 			prev_glob_scope = c.previous.global_scope
 		}
@@ -76,7 +75,6 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	if program.log.all.len > 0 {
 		return new_evaluation_result(program.log.all, 0)
 	}
-	// stmt := c.get_statement()
 	mut evaluator := new_evaluator(program, vars)
 	evaluator.register_print_callback(c.print_fn, c.print_ref)
 	val := evaluator.evaluate() or {

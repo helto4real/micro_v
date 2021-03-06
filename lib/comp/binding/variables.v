@@ -37,6 +37,11 @@ pub fn (stack EvalVarsStack) is_empty() bool {
 	return stack.size <= 0
 }
 
+[inline]
+pub fn (stack EvalVarsStack) len() int {
+	return stack.elements.len
+}
+
 pub fn (stack EvalVarsStack) peek() ?EvalVariables {
 	if !stack.is_empty() {
 		return stack.elements[stack.size - 1]

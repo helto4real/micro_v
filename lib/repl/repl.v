@@ -89,7 +89,7 @@ fn (mut a App) message() {
 	mut b := a.ed
 
 	if a.status == '' && a.val.typ() != symbols.none_symbol {
-		a.output.clear()
+		// a.output.clear()
 		a.tui.draw_text(2, b.lines.len + 1, term.yellow('$a.val'))
 	} else if a.error_msg.len > 0 {
 		a.tui.draw_text(2, b.lines.len + 1, a.error_msg)
@@ -228,6 +228,7 @@ fn event(e &tui.Event, x voidptr) {
 	if e.typ == .key_down {
 		match e.code {
 			.enter {
+				app.output.clear()
 				// if last line, lets evaluate
 				if buffer.cursor.pos_y == buffer.lines.len - 1 {
 					app.tui.draw_text(4, buffer.cursor.pos_y + 4, term.yellow('y: $buffer.cursor.pos_y len: $buffer.lines.len'))
@@ -319,6 +320,12 @@ fn event(e &tui.Event, x voidptr) {
 			.right {
 				buffer.move_cursor(1, .right)
 			}
+			.home {
+				buffer.move_cursor(1, .home)
+			}
+			.end {
+				buffer.move_cursor(1, .end)
+			}
 			48...57, 97...122 {
 				if e.modifiers == .ctrl {
 					if e.code == .s {
@@ -347,16 +354,27 @@ fn event(e &tui.Event, x voidptr) {
 			.tab {
 				buffer.put('  ')
 			}
+			.escape {
+				// ignore
+			}
 			else {
-				buffer.put(e.utf8.bytes().bytestr())
+				b := e.utf8.bytes()
+				buffer.put(b.bytestr())
 			}
 		}
 	}
 
 	if e.typ == .key_down && e.code == .escape {
-		app.tui.clear()
-		app.tui.flush()
-		exit(0)
+		if buffer.raw().len > 0 {
+			buffer.cursor.set(0,0)
+			buffer.lines = []string{}
+			app.tui.clear()
+			app.tui.flush()
+		} else {
+			app.tui.clear()
+			app.tui.flush()
+			exit(0)
+		}
 	}
 }
 
@@ -383,7 +401,7 @@ fn frame(x voidptr) {
 			b.write_string(ln)
 		}
 	}
-	a.tui.draw_text(0, ed.lines.len + 2, term.gray(b.str()))
+	a.tui.draw_text(0, ed.lines.len + 3, term.gray(b.str()))
 	a.tui.set_cursor_position(view.cursor.pos_x + 1, ed.cursor.pos_y + 1 - a.viewport)
 	a.tui.flush()
 }

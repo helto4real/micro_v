@@ -158,6 +158,7 @@ pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 }
 
 pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
+	b.scope = new_bound_scope(b.scope)
 	cond_expr := if for_stmt.has_cond {
 		b.bind_expr_type(for_stmt.cond_expr, symbols.bool_symbol)
 	} else {
@@ -165,7 +166,7 @@ pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 	}
 
 	body_stmt := b.bind_stmt(for_stmt.body_stmt)
-
+	b.scope = b.scope.parent
 	return new_for_stmt(cond_expr, body_stmt, for_stmt.has_cond)
 }
 
@@ -187,9 +188,10 @@ pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, i
 
 pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) BoundStmt {
 	range_expr := b.bind_expr(for_range_stmt.range_expr)
+	b.scope = new_bound_scope(b.scope)
 	ident := b.bind_variable(for_range_stmt.ident, range_expr.typ(), false)
 	body_stmt := b.bind_stmt(for_range_stmt.body_stmt)
-
+	b.scope = b.scope.parent
 	return new_for_range_stmt(ident, range_expr, body_stmt)
 }
 
