@@ -84,20 +84,17 @@ pub fn (mut p Parser) parse_function() ast.FnDeclNode {
 
 fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
 	mut sep_and_nodes := []ast.AstNode{}
-
-	for p.current_token().kind != .eof && p.current_token().kind != .rpar {
-		start_tok := p.current_token()
+	mut parse_next_parameter := true
+	for parse_next_parameter && p.current_token().kind != .eof && p.current_token().kind != .rpar {
 		param := p.parse_param_node()
-		// if parse parse_fn_params did not consume any tokens 
-		// let's skip it and continue
-		if p.current_token() == start_tok {
-			// makes sure we not in infinite loop
-			p.next_token()
-		}
+
 		sep_and_nodes << param
-		if p.current_token().kind != .rpar && p.current_token().kind != .eof {
+
+		if p.current_token().kind == .comma {
 			comma := p.match_token(.comma)
 			sep_and_nodes << comma
+		} else {
+			parse_next_parameter = false
 		}
 	}
 	return ast.new_separated_syntax_list(sep_and_nodes)
@@ -450,12 +447,16 @@ fn (mut p Parser) parse_call_expr() ast.Expr {
 
 fn (mut p Parser) parse_args() ast.SeparatedSyntaxList {
 	mut sep_and_nodes := []ast.AstNode{}
-	for p.current_token().kind != .eof && p.current_token().kind != .rpar {
+	mut parse_next_argument := true
+	for parse_next_argument && p.current_token().kind != .eof && p.current_token().kind != .rpar {
 		expr := p.parse_expr()
 		sep_and_nodes << expr
-		if p.current_token().kind != .rpar && p.current_token().kind != .eof {
+
+		if p.current_token().kind == .comma {
 			comma := p.match_token(.comma)
 			sep_and_nodes << comma
+		} else {
+			parse_next_argument = false
 		}
 	}
 	return ast.new_separated_syntax_list(sep_and_nodes)

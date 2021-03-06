@@ -306,7 +306,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 
 		if bound_arg.typ() != param.typ {
 			b.log.error_wrong_argument_type(param.name, param.typ.name, bound_arg.typ().name,
-				expr.pos)
+				expr.params.at(i).pos())
 			return new_bound_error_expr()
 		}
 	}

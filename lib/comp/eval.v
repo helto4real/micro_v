@@ -208,6 +208,7 @@ fn (mut e Evaluator) eval_bound_call_expr(node binding.BoundCallExpr) ?types.Lit
 		msg := e.eval_expr(node.params[0]) or { panic('unexpected error eval expression') }
 		e.print_fn(msg.str(), true, voidptr(e.print_ref))
 	} else {
+		// add a local variable scope
 		mut locals := binding.new_eval_variables()
 		for i, param in node.params {
 			param_val := e.eval_expr(param) or { panic('expecting value') }
@@ -216,8 +217,13 @@ fn (mut e Evaluator) eval_bound_call_expr(node binding.BoundCallExpr) ?types.Lit
 		}
 		e.locals.push(locals)
 
+		// evaluate the function body
 		stmt := e.fn_stmts[node.func.id]
-		return e.evaluate_stmt(stmt)
+		res := e.evaluate_stmt(stmt) ?
+
+		// remove the local function body scope
+		e.locals.pop() or { }
+		return res
 	}
 	return e.last_val
 }
