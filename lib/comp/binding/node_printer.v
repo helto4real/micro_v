@@ -180,6 +180,15 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			write_expr(writer, node.expr)
 			writer.writeln('')
 		}
+
+		BoundBreakStmt {
+			writer.write_keyword('break')
+			writer.writeln('')
+		}
+		BoundContinueStmt {
+			writer.write_keyword('continue')
+			writer.writeln('')
+		}
 	}
 }
 

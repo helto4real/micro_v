@@ -201,6 +201,12 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 				return p.parse_for_stmt(true)
 			}
 		}
+		.key_continue {
+			return p.parse_continue_stmt()
+		}
+		.key_break {
+			return p.parse_break_stmt()
+		}
 		.name {
 			if p.peek_var_decl(0) {
 				return p.parse_var_decl_stmt()
@@ -213,8 +219,16 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 	return p.parse_expression_stmt()
 }
 
-// parse_for_range_stmt, parse for x in 1..10 {}
-//		we only allow blocks
+fn (mut p Parser) parse_continue_stmt() ast.Stmt {
+	cont_tok := p.match_token(.key_continue)
+	return ast.new_continue_stmt(cont_tok)
+}
+
+fn (mut p Parser) parse_break_stmt() ast.Stmt {
+	cont_tok := p.match_token(.key_break)
+	return ast.new_break_stmt(cont_tok)
+}
+
 fn (mut p Parser) parse_for_stmt(has_cond bool) ast.Stmt {
 	for_key := p.match_token(.key_for)
 	mut cond_expr := if has_cond { p.parse_expr() } else { ast.Expr{} }

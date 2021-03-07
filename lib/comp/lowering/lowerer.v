@@ -9,8 +9,9 @@ import lib.comp.symbols
 
 pub struct Lowerer {
 mut:
-	shallow     bool
-	label_count int
+	shallow          bool
+	label_count      int
+	break_cont_stack BreakAndContinueLabelStack
 }
 
 pub fn new_lowerer(shallow bool) Lowerer {
@@ -37,6 +38,16 @@ pub fn (mut l Lowerer) gen_label() string {
 	return 'Label_$l.label_count'
 }
 
+pub fn (mut l Lowerer) gen_break_label() string {
+	l.label_count++
+	return 'Break_$l.label_count'
+}
+
+pub fn (mut l Lowerer) gen_continue_label() string {
+	l.label_count++
+	return 'Continue_$l.label_count'
+}
+
 pub fn (mut l Lowerer) rewrite_stmt(stmt binding.BoundStmt) binding.BoundStmt {
 	match stmt {
 		binding.BoundBlockStmt { return l.rewrite_block_stmt(stmt) }
@@ -48,7 +59,19 @@ pub fn (mut l Lowerer) rewrite_stmt(stmt binding.BoundStmt) binding.BoundStmt {
 		binding.BoundLabelStmt { return l.rewrite_label_stmt(stmt) }
 		binding.BoundGotoStmt { return l.rewrite_goto_stmt(stmt) }
 		binding.BoundCondGotoStmt { return l.rewrite_cond_goto_stmt(stmt) }
+		binding.BoundBreakStmt { return l.rewrite_break_stmt(stmt) }
+		binding.BoundContinueStmt { return l.rewrite_continue_stmt(stmt) }
 	}
+}
+
+fn (mut l Lowerer) rewrite_break_stmt(stmt binding.BoundBreakStmt) binding.BoundStmt {
+	bc_labels := l.break_cont_stack.peek() or {panic('unexpected empty stack')}
+	return l.rewrite_stmt(binding.new_bound_goto_stmt(bc_labels.break_label))
+}
+
+fn (mut l Lowerer) rewrite_continue_stmt(stmt binding.BoundContinueStmt) binding.BoundStmt {
+	bc_labels := l.break_cont_stack.peek() or {panic('unexpected empty stack')}
+	return l.rewrite_stmt(binding.new_bound_goto_stmt(bc_labels.continue_label))
 }
 
 fn (mut l Lowerer) rewrite_if_stmt(stmt binding.BoundIfStmt) binding.BoundStmt {
@@ -64,11 +87,7 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt binding.BoundIfStmt) binding.BoundStmt {
 		// end:		
 
 		end_label_name := l.gen_label()
-		res := block(
-			goto_false(end_label_name, stmt.cond_expr), 
-			stmt.block_stmt, 
-			label(end_label_name)
-		)
+		res := block(goto_false(end_label_name, stmt.cond_expr), stmt.block_stmt, label(end_label_name))
 
 		if l.shallow {
 			return res
@@ -94,14 +113,8 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt binding.BoundIfStmt) binding.BoundStmt {
 		else_label := l.gen_label()
 		end_label := l.gen_label()
 
-		res := block(
-			goto_false(else_label, stmt.cond_expr), 
-			stmt.block_stmt, 
-			goto_label(end_label),
-			label(else_label), 
-			stmt.else_clause, 
-			label(end_label)
-		)
+		res := block(goto_false(else_label, stmt.cond_expr), stmt.block_stmt, goto_label(end_label),
+			label(else_label), stmt.else_clause, label(end_label))
 
 		if l.shallow {
 			return res
@@ -171,19 +184,24 @@ fn (mut l Lowerer) rewrite_for_stmt(stmt binding.BoundForStmt) binding.BoundStmt
 		// continue:
 		// gotoTrue <condition> body
 		// break:
-		continue_label := l.gen_label()
+		continue_label := l.gen_continue_label()
 		body_label := l.gen_label()
+		break_label := l.gen_break_label()
 		// end_label := l.gen_label()
 		res := block(
 			goto_label(continue_label), 
 			label(body_label), 
 			stmt.body_stmt, 
 			label(continue_label),
-			goto_true(body_label, stmt.cond_expr))
+			goto_true(body_label, stmt.cond_expr),
+			label(break_label))
 		if l.shallow {
 			return res
 		}
-		return l.rewrite_stmt(res)
+		l.break_cont_stack.push(new_break_and_cont_labels(break_label, continue_label))
+		body := l.rewrite_stmt(res)
+		l.break_cont_stack.pop() or {panic('unexepected empty stack')}
+		return body
 	} else {
 		panic('unexpected empty condition')
 	}
@@ -201,33 +219,53 @@ fn (mut l Lowerer) rewrite_for_range_stmt(stmt binding.BoundForRangeStmt) bindin
 	// {
 	//   mut var := <lower>
 	//   upper := <upper>
-	//   for <var> < upper {
-	//      <body>
-	//      continue: //todo: add continue and break to loops
-	//      <var> = <var> + 1
-	//   }
-	// }	
+	//   goto cond
+	//   body:
+	//   <body>
+	//   continue:
+	//   <var> = <var> + 1
+	//   cond:
+	//   gotoTrue <var> < upper body
+	//   break:
+	// }
+	
+	
 	range := stmt.range_expr as binding.BoundRangeExpr
 	// mut var := lower
 	lower_decl := var_decl(stmt.ident, range.from_exp, true)
 	upper_decl := var_decl_local('upper', symbols.int_symbol, range.to_exp, false)
+	
+	continue_label := l.gen_continue_label()
+	body_label := l.gen_label()
+	break_label := l.gen_break_label()
+	cond_label := l.gen_label()
+	
 	res := block(
 			lower_decl, 
-			upper_decl, 
-			for_stmt(
+			upper_decl,
+			goto_label(cond_label),  
+			label(body_label),
+			stmt.body_stmt, 
+			label(continue_label),
+			increment(variable(lower_decl)),
+			label(cond_label),
+			goto_true(
+				body_label, 	
 				less_than(
 					variable(lower_decl), 
 					variable(upper_decl)
-				),
-				block(stmt.body_stmt, 
-					increment(variable(lower_decl))
 				)
-			)
+			),
+			label(break_label)
 		)
 	if l.shallow {
 		return res
 	}
-	return l.rewrite_stmt(res)
+
+	l.break_cont_stack.push(new_break_and_cont_labels(break_label, continue_label))
+	body := l.rewrite_stmt(res)
+	l.break_cont_stack.pop() or {panic('unexepected empty stack')}
+	return body
 }
 
 pub fn flatten(stmt binding.BoundStmt) binding.BoundBlockStmt {

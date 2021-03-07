@@ -25,6 +25,8 @@ enum SyntaxKind {
 	global_stmt
 	// statements
 	block_stmt
+	break_stmt
+	cont_stmt
 	expr_stmt
 	var_decl_stmt
 	if_stmt

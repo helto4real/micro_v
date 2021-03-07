@@ -6,8 +6,9 @@ pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundCo
 	BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundRangeExpr | BoundUnaryExpr |
 	BoundVariableExpr
 
-pub type BoundStmt = BoundBlockStmt | BoundCondGotoStmt | BoundExprStmt | BoundForRangeStmt |
-	BoundForStmt | BoundGotoStmt | BoundIfStmt | BoundLabelStmt | BoundVarDeclStmt
+pub type BoundStmt = BoundBlockStmt | BoundBreakStmt | BoundCondGotoStmt | BoundContinueStmt |
+	BoundExprStmt | BoundForRangeStmt | BoundForStmt | BoundGotoStmt | BoundIfStmt | BoundLabelStmt |
+	BoundVarDeclStmt
 
 pub type BoundNode = BoundExpr | BoundStmt
 
@@ -30,6 +31,8 @@ pub enum BoundNodeKind {
 	if_stmt
 	for_stmt
 	label_stmt
+	break_stmt
+	cont_stmt
 	for_range_stmt
 	cond_goto_stmt
 	goto_stmt
@@ -139,6 +142,8 @@ pub fn (bs BoundStmt) child_nodes() []BoundNode {
 		BoundGotoStmt { return bs.child_nodes }
 		BoundCondGotoStmt { return bs.child_nodes }
 		BoundLabelStmt { return bs.child_nodes }
+		BoundBreakStmt { return bs.child_nodes }
+		BoundContinueStmt { return bs.child_nodes }
 	}
 }
 
@@ -153,5 +158,7 @@ pub fn (bs BoundStmt) node_str() string {
 		BoundGotoStmt { return bs.node_str() }
 		BoundCondGotoStmt { return bs.node_str() }
 		BoundLabelStmt { return bs.node_str() }
+		BoundBreakStmt { return bs.node_str() }
+		BoundContinueStmt { return bs.node_str() }
 	}
 }

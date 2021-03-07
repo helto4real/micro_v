@@ -13,6 +13,7 @@ pub mut:
 	scope &BoundScope = 0
 	func  symbols.FunctionSymbol
 	log   &util.Diagnostics // errors when parsing
+	is_loop bool
 }
 
 pub fn new_binder(parent &BoundScope, func symbols.FunctionSymbol) &Binder {
@@ -154,7 +155,22 @@ pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 		ast.IfStmt { return b.bind_if_stmt(stmt) }
 		ast.ForRangeStmt { return b.bind_for_range_stmt(stmt) }
 		ast.ForStmt { return b.bind_for_stmt(stmt) }
+		ast.ContinueStmt { return b.bind_continue_stmt(stmt) }
+		ast.BreakStmt { return b.bind_break_stmt(stmt) }
 	}
+}
+
+pub fn (mut b Binder) bind_continue_stmt(cont_stmt ast.ContinueStmt) BoundStmt {
+	if b.is_loop == false {
+		b.log.error_keyword_are_only_allowed_inside_a_loop('continue', cont_stmt.pos)
+	}
+	return new_bound_continue_stmt()
+}
+pub fn (mut b Binder) bind_break_stmt(break_stmt ast.BreakStmt) BoundStmt {
+	if b.is_loop == false {
+		b.log.error_keyword_are_only_allowed_inside_a_loop('break', break_stmt.pos)
+	}
+	return new_bound_break_stmt()
 }
 
 pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
@@ -165,7 +181,7 @@ pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 		BoundExpr{}
 	}
 
-	body_stmt := b.bind_stmt(for_stmt.body_stmt)
+	body_stmt := b.bind_loop_block_stmt(for_stmt.body_stmt as ast.BlockStmt)
 	b.scope = b.scope.parent
 	return new_for_stmt(cond_expr, body_stmt, for_stmt.has_cond)
 }
@@ -190,7 +206,7 @@ pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) Bound
 	range_expr := b.bind_expr(for_range_stmt.range_expr)
 	b.scope = new_bound_scope(b.scope)
 	ident := b.bind_variable(for_range_stmt.ident, range_expr.typ(), false)
-	body_stmt := b.bind_stmt(for_range_stmt.body_stmt)
+	body_stmt := b.bind_loop_block_stmt(for_range_stmt.body_stmt as ast.BlockStmt)
 	b.scope = b.scope.parent
 	return new_for_range_stmt(ident, range_expr, body_stmt)
 }
@@ -207,6 +223,13 @@ pub fn (mut b Binder) bind_if_stmt(if_stmt ast.IfStmt) BoundStmt {
 		return new_if_else_stmt(cond_expr, bound_then_stmt, bound_else_stmt)
 	}
 	return new_if_stmt(cond_expr, bound_then_stmt)
+}
+
+pub fn (mut b Binder) bind_loop_block_stmt(block_stmt ast.BlockStmt) BoundStmt {
+	b.is_loop = true
+	body_stmt := b.bind_stmt(block_stmt)
+	b.is_loop = false
+	return body_stmt
 }
 
 pub fn (mut b Binder) bind_block_stmt(block_stmt ast.BlockStmt) BoundStmt {
