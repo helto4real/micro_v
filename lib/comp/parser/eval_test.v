@@ -167,6 +167,19 @@ fn test_loops() {
 
 	assert c.eval_int('{mut a:= 0 for b in 0..10 {a = a + b if b == 5 {break}} a}') == 15
 	assert c.eval_int('{mut a:= 0 for b in 0..10 {if b == 5 {continue} a = a + b } a}') == 40
+	assert c.eval_int('
+		{
+			mut a:= 0 
+			mut b:= 0
+			for {
+				a=a+1
+				if a == 5 {
+					b=a+1
+					break
+				}
+			} 
+		   b
+		}') == 6
 }
 
 fn test_string_expressions() {

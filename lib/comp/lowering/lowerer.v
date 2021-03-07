@@ -171,8 +171,6 @@ fn (mut l Lowerer) rewrite_for_stmt(stmt binding.BoundForStmt) binding.BoundStmt
 	if stmt.has_cond {
 		// this is a 'for expr {}'
 
-		// this is a 'for {}' i.e. a while loop
-
 		// for <condition>
 		//      <body>
 		//
@@ -203,7 +201,35 @@ fn (mut l Lowerer) rewrite_for_stmt(stmt binding.BoundForStmt) binding.BoundStmt
 		l.break_cont_stack.pop() or {panic('unexepected empty stack')}
 		return body
 	} else {
-		panic('unexpected empty condition')
+		// this is a 'for {}' i.e. a while loop
+
+		// for <condition>
+		//      <body>
+		//
+		// ----->
+		//
+		// body:
+		// <body>
+		// continue:
+		// goto body
+		// break:
+		continue_label := l.gen_continue_label()
+		body_label := l.gen_label()
+		break_label := l.gen_break_label()
+		// end_label := l.gen_label()
+		res := block(
+			label(body_label), 
+			stmt.body_stmt, 
+			label(continue_label),
+			goto_label(body_label),
+			label(break_label))
+		if l.shallow {
+			return res
+		}
+		l.break_cont_stack.push(new_break_and_cont_labels(break_label, continue_label))
+		body := l.rewrite_stmt(res)
+		l.break_cont_stack.pop() or {panic('unexepected empty stack')}
+		return body
 	}
 	return stmt
 }
