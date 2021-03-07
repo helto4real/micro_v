@@ -6,10 +6,10 @@ pub struct BoundProgram {
 pub:
 	log         &util.Diagnostics
 	func_bodies map[string]BoundBlockStmt
-	stmt        BoundStmt
+	stmt        BoundBlockStmt
 }
 
-pub fn new_bound_program(log &util.Diagnostics, stmt BoundStmt, func_bodies map[string]BoundBlockStmt) BoundProgram {
+pub fn new_bound_program(log &util.Diagnostics, stmt BoundBlockStmt, func_bodies map[string]BoundBlockStmt) BoundProgram {
 	return BoundProgram{
 		log: log
 		stmt: stmt

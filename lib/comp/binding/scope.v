@@ -133,10 +133,10 @@ pub mut:
 	fn_decls []ast.FnDeclNode
 pub:
 	previous &BoundGlobalScope
-	stmt     BoundStmt
+	stmt     BoundBlockStmt
 }
 
-pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagnostics, funcs []symbols.FunctionSymbol, fn_decls []ast.FnDeclNode, vars []symbols.VariableSymbol, stmt BoundStmt) &BoundGlobalScope {
+pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagnostics, funcs []symbols.FunctionSymbol, fn_decls []ast.FnDeclNode, vars []symbols.VariableSymbol, stmt BoundBlockStmt) &BoundGlobalScope {
 	return &BoundGlobalScope{
 		previous: previous
 		log: diagostics

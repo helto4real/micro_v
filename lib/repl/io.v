@@ -17,6 +17,10 @@ pub fn get_bound_node_string(node binding.BoundNode) string {
 	return iw.builder.str()
 }
 
+fn (mut i IdentWriter) str() string {
+	return i.builder.str()
+}
+
 fn (mut i IdentWriter) indent() int {
 	return i.current_indent
 }
