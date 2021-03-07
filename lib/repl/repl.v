@@ -8,7 +8,6 @@ import lib.comp.binding
 import lib.comp.parser
 import lib.comp.types
 import lib.comp.token
-import lib.comp.lowering
 import lib.comp.util
 import lib.comp.symbols
 import lib.comp
@@ -182,25 +181,23 @@ fn event(e &tui.Event, x voidptr) {
 
 					syntax_tree := parser.parse_syntax_tree(buffer.raw())
 					if syntax_tree.log.all.len == 0 {
-						
-						if app.show_tree {
-								walker.walk_tree(app, syntax_tree.root)
-						} else if app.show_btree {
-							global_scope := binding.bind_global_scope(&binding.BoundGlobalScope(0), syntax_tree.root)
-							program := binding.bind_program(global_scope)
-							app.btree_string = get_bound_node_string(program.stmt)
-						} else if app.show_ltree {
-							global_scope := binding.bind_global_scope(&binding.BoundGlobalScope(0), syntax_tree.root)
-							program := binding.bind_program(global_scope)
-							lowered_tree := lowering.lower(program.stmt)
-							app.ltree_string = get_bound_node_string(binding.BoundStmt(lowered_tree))
+						mut comp := if app.prev_comp == 0 {
+							comp.new_compilation(syntax_tree)
 						} else {
-							mut comp := if app.prev_comp == 0 {
-									comp.new_compilation(syntax_tree)
-								} else {
-									app.prev_comp.continue_with(syntax_tree)
-							}
-							comp.register_print_callback(print_fn, voidptr(app))
+							app.prev_comp.continue_with(syntax_tree)
+						}
+						comp.register_print_callback(print_fn, voidptr(app))
+						if app.show_tree {
+							walker.walk_tree(app, syntax_tree.root)
+						} else if app.show_btree {
+							mut iw := IdentWriter{}
+							comp.emit_tree(iw, false)
+							app.btree_string = iw.str()
+						} else if app.show_ltree {
+							mut iw := IdentWriter{}
+							comp.emit_tree(iw, true)
+							app.ltree_string = iw.str()
+						} else {
 							res := comp.evaluate(app.vars)
 							if res.result.len == 0 {
 								app.prev_comp = comp
@@ -209,7 +206,6 @@ fn event(e &tui.Event, x voidptr) {
 								app.status = ''
 								app.error_msg = ''
 
-								
 								// walker.inspect(syntax_tree.root)
 								// fn (node ast.Node, data voidptr)
 							} else {

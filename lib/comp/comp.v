@@ -4,8 +4,11 @@ module comp
 import term
 import lib.comp.parser
 import lib.comp.binding
+import lib.comp.lowering
 import lib.comp.types
 import lib.comp.util
+import lib.comp.io
+import lib.comp.symbols
 
 pub type PrintFunc = fn (text string, nl bool, ref voidptr)
 
@@ -82,6 +85,40 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 		0
 	}
 	return new_evaluation_result(result, val)
+}
+
+pub fn (mut c Compilation) emit_tree(writer io.TermTextWriter, lower bool) {
+	mut global_scope := c.get_bound_global_scope()
+	program := binding.bind_program(global_scope)
+	if lower {
+		if program.stmt.bound_stmts.len > 0 {
+			lowered_stmt := lowering.lower(program.stmt)
+			binding.write_node(writer, binding.BoundStmt(lowered_stmt))
+		} else {
+			for key, fbody in program.func_bodies {
+				func := global_scope.funcs.filter(it.id == key)
+				if func.len == 0 {
+					continue
+				}
+				symbols.write_symbol(writer, func[0])
+				lowered_stmt := lowering.lower(fbody)
+				binding.write_node(writer, binding.BoundStmt(lowered_stmt))
+			}
+		}
+	} else {
+		if program.stmt.bound_stmts.len > 0 {
+			binding.write_node(writer, binding.BoundStmt(program.stmt))
+		} else {
+			for key, fbody in program.func_bodies {
+				func := global_scope.funcs.filter(it.id == key)
+				if func.len == 0 {
+					continue
+				}
+				symbols.write_symbol(writer, func[0])
+				binding.write_node(writer, binding.BoundStmt(fbody))
+			}
+		}
+	}
 }
 
 pub struct EvaluationResult {

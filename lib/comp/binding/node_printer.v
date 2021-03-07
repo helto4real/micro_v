@@ -1,6 +1,6 @@
 module binding
 
-import lib.io
+import lib.comp.io
 import lib.comp.types
 import lib.comp.ast
 import lib.comp.token
@@ -180,7 +180,6 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			write_expr(writer, node.expr)
 			writer.writeln('')
 		}
-
 		BoundBreakStmt {
 			writer.write_keyword('break')
 			writer.writeln('')
