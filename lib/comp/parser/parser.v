@@ -364,7 +364,7 @@ fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.Expr {
 	mut left := ast.Expr{}
 	mut tok := p.current_token()
 
-	unary_op_prec := unary_operator_precedence(tok.kind)
+	unary_op_prec := ast.unary_operator_precedence(tok.kind)
 
 	if unary_op_prec != 0 && unary_op_prec >= parent_precedence {
 		op_token := p.next_token()
@@ -376,7 +376,7 @@ fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.Expr {
 
 	for {
 		tok = p.current_token()
-		precedence := binary_operator_precedence(tok.kind)
+		precedence := ast.binary_operator_precedence(tok.kind)
 		if precedence == 0 || precedence <= parent_precedence {
 			break
 		}

@@ -3,10 +3,13 @@ module token
 import lib.comp.util
 
 pub const (
-	tok_void = Token{
+	tok_void  = Token{
 		kind: .void
 		lit: 'void'
 	}
+	nr_tokens = int(Kind._end_)
+	token_str = build_token_str()
+	keywords  = build_keys()
 )
 
 pub struct Token {
@@ -78,12 +81,6 @@ pub enum Kind {
 	_end_ // end of enum
 }
 
-pub const (
-	nr_tokens = int(Kind._end_)
-	token_str = build_token_str()
-	keywords  = build_keys()
-)
-
 pub fn build_keys() map[string]Kind {
 	mut res := map[string]Kind{}
 	for t in int(Kind.keyword_beg) + 1 .. int(Kind.keyword_end) {
@@ -110,7 +107,7 @@ fn build_token_str() []string {
 	s[Kind.gt_eq] = '>='
 	s[Kind.exl_mark_eq] = '!='
 	s[Kind.plus] = '+'
-	s[Kind.div] = '-'
+	s[Kind.minus] = '-'
 	s[Kind.mul] = '*'
 	s[Kind.div] = '/'
 	s[Kind.amp] = '&'

@@ -13,27 +13,29 @@ import lib.comp.util
 import lib.comp.symbols
 import lib.comp
 import lib.comp.ast.walker
-import lib.comp.binding.walker as bwalker
 import lib.comp.ast
 
 struct App {
 mut:
-	tree          []string
-	btree         []string
-	ltree         []string
-	show_tree     bool
-	show_btree    bool
-	show_ltree    bool
-	output        []string
-	tui           &tui.Context = 0
-	ed            &Buffer      = 0
-	viewport      int
-	footer_height int = 2
-	t             int
-	status        string
-	error_msg     string
-	has_val       bool
-	val           types.LitVal = ' '
+	tree           []string
+	btree          []string
+	ltree          []string
+	btree_string   string
+	ltree_string   string
+	current_indent int
+	show_tree      bool
+	show_btree     bool
+	show_ltree     bool
+	output         []string
+	tui            &tui.Context = 0
+	ed             &Buffer      = 0
+	viewport       int
+	footer_height  int = 2
+	t              int
+	status         string
+	error_msg      string
+	has_val        bool
+	val            types.LitVal = ' '
 	// is multi line editing
 	is_ml bool
 
@@ -95,14 +97,11 @@ fn (mut a App) message() {
 		a.tui.draw_text(2, b.lines.len + 1, a.error_msg)
 	}
 
-	if a.tree.len > 0 {
-		for i, s in a.tree {
-			a.tui.draw_text(0, i + 5, s)
-		}
-	} else if a.btree.len > 0 {
-		for i, bs in a.btree {
-			a.tui.draw_text(0, i + 5, bs)
-		}
+	if a.show_ltree {
+		a.tui.draw_text(0, 7, a.ltree_string)
+	}
+	if a.show_btree {
+		a.tui.draw_text(0, 7, a.btree_string)
 	}
 }
 
@@ -160,58 +159,6 @@ fn (mut a App) visit_tree(node ast.Node, last_child bool, indent string) ?string
 	return new_ident
 }
 
-fn (mut a App) visit_btree(node binding.BoundNode, last_child bool, indent string) ?string {
-	mut b := strings.new_builder(0)
-
-	marker := if last_child { '└──' } else { '├──' }
-
-	b.write_string(term.gray(indent))
-	if indent.len > 0 {
-		b.write_string(term.gray(marker))
-	}
-	new_ident := indent + if last_child { '   ' } else { '│  ' }
-	node_str := node.node_str()
-
-	b.write_string(term.gray(node_str[9..]))
-	match node {
-		binding.BoundExpr {
-			if node is binding.BoundLiteralExpr {
-				b.writeln(term.bright_cyan(' $node.val'))
-			} else if node is binding.BoundBinaryExpr {
-				b.writeln(term.bright_cyan(' $node.op.kind'))
-			} else if node is binding.BoundVariableExpr {
-				var := node.var
-				name := var.name()
-				typ := var.typ()
-				b.writeln(term.bright_cyan(' $name ($typ.name)'))
-			} else if node is binding.BoundUnaryExpr {
-				b.writeln(term.bright_cyan(' $node.op.kind'))
-			} else {
-				b.writeln('')
-			}
-		}
-		binding.BoundStmt {
-			if node is binding.BoundLabelStmt {
-				b.writeln(term.bright_cyan(' $node.name'))
-			} else if node is binding.BoundCondGotoStmt {
-				b.writeln(term.bright_cyan(' $node.jump_if_true -> $node.label'))
-			} else if node is binding.BoundGotoStmt {
-				b.writeln(term.bright_cyan(' $node.label'))
-			} else if node is binding.BoundVarDeclStmt {
-				var := node.var
-				name := var.name()
-				typ := var.typ()
-				b.writeln(term.bright_cyan(' $name ($typ.name)'))
-			} else {
-				b.writeln('')
-			}
-		}
-	}
-
-	a.btree << b.str()
-	return new_ident
-}
-
 fn print_fn(text string, nl bool, ref voidptr) {
 	mut a := &App(ref)
 	if nl {
@@ -252,10 +199,11 @@ fn event(e &tui.Event, x voidptr) {
 							if app.show_tree {
 								walker.walk_tree(app, syntax_tree.root)
 							} else if app.show_btree {
-								bwalker.walk_tree(app, comp.global_scope.stmt)
+								app.btree_string = get_bound_node_string(comp.global_scope.stmt)
+								// bwalker.walk_tree(app, comp.global_scope.stmt)
 							} else if app.show_ltree {
 								lowered_tree := lowering.lower(comp.global_scope.stmt)
-								bwalker.walk_tree(app, binding.BoundStmt(lowered_tree))
+								app.ltree_string = get_bound_node_string(binding.BoundStmt(lowered_tree))
 							}
 							// walker.inspect(syntax_tree.root)
 							// fn (node ast.Node, data voidptr)
@@ -366,7 +314,7 @@ fn event(e &tui.Event, x voidptr) {
 
 	if e.typ == .key_down && e.code == .escape {
 		if buffer.raw().len > 0 {
-			buffer.cursor.set(0,0)
+			buffer.cursor.set(0, 0)
 			buffer.lines = []string{}
 			app.tui.clear()
 			app.tui.flush()

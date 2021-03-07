@@ -4,7 +4,7 @@ import lib.comp.ast
 import lib.comp.symbols
 import lib.comp.token
 
-const (
+pub const (
 	bound_unary_operators  = build_bound_unary_operators()
 	bound_binary_operators = build_bound_binary_operators()
 )

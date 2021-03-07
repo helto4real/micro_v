@@ -1,9 +1,9 @@
-module parser
+module ast
 
 import lib.comp.token
 
 // binary_operator_precedence returns the precedence of operator
-fn binary_operator_precedence(kind token.Kind) int {
+pub fn binary_operator_precedence(kind token.Kind) int {
 	// the precedence of binary operators in order
 	return match kind {
 		.div, .mul { 5 }
@@ -16,7 +16,7 @@ fn binary_operator_precedence(kind token.Kind) int {
 }
 
 // binary_operator_precedence returns the precedence of operator
-fn unary_operator_precedence(kind token.Kind) int {
+pub fn unary_operator_precedence(kind token.Kind) int {
 	// the precedence of binary operators in order
 	return match kind {
 		.plus, .minus, .exl_mark, .tilde { 6 }
