@@ -182,63 +182,69 @@ fn event(e &tui.Event, x voidptr) {
 
 					syntax_tree := parser.parse_syntax_tree(buffer.raw())
 					if syntax_tree.log.all.len == 0 {
-						mut comp := if app.prev_comp == 0 {
-							comp.new_compilation(syntax_tree)
-						} else {
-							app.prev_comp.continue_with(syntax_tree)
-						}
-						comp.register_print_callback(print_fn, voidptr(app))
-						res := comp.evaluate(app.vars)
-						if res.result.len == 0 {
-							app.prev_comp = comp
-							app.has_val = true
-							app.val = res.val
-							app.status = ''
-							app.error_msg = ''
-
-							if app.show_tree {
+						
+						if app.show_tree {
 								walker.walk_tree(app, syntax_tree.root)
-							} else if app.show_btree {
-								app.btree_string = get_bound_node_string(comp.global_scope.stmt)
-								// bwalker.walk_tree(app, comp.global_scope.stmt)
-							} else if app.show_ltree {
-								lowered_tree := lowering.lower(comp.global_scope.stmt)
-								app.ltree_string = get_bound_node_string(binding.BoundStmt(lowered_tree))
-							}
-							// walker.inspect(syntax_tree.root)
-							// fn (node ast.Node, data voidptr)
+						} else if app.show_btree {
+							global_scope := binding.bind_global_scope(&binding.BoundGlobalScope(0), syntax_tree.root)
+							program := binding.bind_program(global_scope)
+							app.btree_string = get_bound_node_string(program.stmt)
+						} else if app.show_ltree {
+							global_scope := binding.bind_global_scope(&binding.BoundGlobalScope(0), syntax_tree.root)
+							program := binding.bind_program(global_scope)
+							lowered_tree := lowering.lower(program.stmt)
+							app.ltree_string = get_bound_node_string(binding.BoundStmt(lowered_tree))
 						} else {
-							mut b := strings.new_builder(0)
-							text := buffer.raw() // syntax_tree.source.str()
-							for err in res.result {
-								line_nr := syntax_tree.source.line_nr(err.pos.pos)
-								prefix := text[0..err.pos.pos]
-								mut err_end_pos := err.pos.pos + err.pos.len
-								if err_end_pos > text.len {
-									err_end_pos = text.len
-								}
-								error := text[err.pos.pos..err_end_pos]
-
-								postfix := if err_end_pos + err.pos.len < text.len {
-									text[err.pos.pos + err.pos.len..]
+							mut comp := if app.prev_comp == 0 {
+									comp.new_compilation(syntax_tree)
 								} else {
-									''
+									app.prev_comp.continue_with(syntax_tree)
+							}
+							comp.register_print_callback(print_fn, voidptr(app))
+							res := comp.evaluate(app.vars)
+							if res.result.len == 0 {
+								app.prev_comp = comp
+								app.has_val = true
+								app.val = res.val
+								app.status = ''
+								app.error_msg = ''
+
+								
+								// walker.inspect(syntax_tree.root)
+								// fn (node ast.Node, data voidptr)
+							} else {
+								mut b := strings.new_builder(0)
+								text := buffer.raw() // syntax_tree.source.str()
+								for err in res.result {
+									line_nr := syntax_tree.source.line_nr(err.pos.pos)
+									prefix := text[0..err.pos.pos]
+									mut err_end_pos := err.pos.pos + err.pos.len
+									if err_end_pos > text.len {
+										err_end_pos = text.len
+									}
+									error := text[err.pos.pos..err_end_pos]
+
+									postfix := if err_end_pos + err.pos.len < text.len {
+										text[err.pos.pos + err.pos.len..]
+									} else {
+										''
+									}
+
+									b.writeln(term.red(err.text))
+									b.writeln('')
+									b.write_string('$line_nr| ')
+									b.write_string(prefix.trim('\r\n'))
+									b.write_string(term.red(error))
+									b.writeln(postfix)
+									b.writeln('')
 								}
 
-								b.writeln(term.red(err.text))
-								b.writeln('')
-								b.write_string('$line_nr| ')
-								b.write_string(prefix.trim('\r\n'))
-								b.write_string(term.red(error))
-								b.writeln(postfix)
-								b.writeln('')
+								app.has_val = false
+								app.status = res.result[0].text
+								app.t = 3
+								app.error_msg = b.str()
+								// os.write_file('errors.txt', '$res') or { }
 							}
-
-							app.has_val = false
-							app.status = res.result[0].text
-							app.t = 3
-							app.error_msg = b.str()
-							// os.write_file('errors.txt', '$res') or { }
 						}
 					} else {
 						app.error_msg = ''

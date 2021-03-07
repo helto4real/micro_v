@@ -126,3 +126,7 @@ pub fn (mut d Diagnostics) error_function_allready_declared(ident string, pos Po
 pub fn (mut d Diagnostics) error_functions_not_supported(ident string, pos Pos) {
 	d.error('functions <$ident> not supported', pos)
 }
+
+pub fn (mut d Diagnostics) error_keyword_are_only_allowed_inside_a_loop(keyword string, pos Pos) {
+	d.error('statment <$keyword> are only allowed inside a loop', pos)
+}

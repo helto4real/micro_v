@@ -153,6 +153,16 @@ fn test_type_node_parser() {
 	assert ref_typ.ident.lit == 'test'
 }
 
+fn test_keywords_parser() {
+	mut p := new_parser_from_text('break')
+	mut keyword := p.parse_stmt()
+	assert keyword is ast.BreakStmt
+
+	p = new_parser_from_text('continue')
+	keyword = p.parse_stmt()
+	assert keyword is ast.ContinueStmt
+}
+
 fn test_param_node_parser() {
 	// parse parameter that are immutable
 	mut p := new_parser_from_text('ident type')
