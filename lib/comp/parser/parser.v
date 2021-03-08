@@ -207,6 +207,9 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.key_break {
 			return p.parse_break_stmt()
 		}
+		.key_return {
+			return p.parse_return_stmt()
+		}
 		.name {
 			if p.peek_var_decl(0) {
 				return p.parse_var_decl_stmt()
@@ -217,6 +220,22 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		}
 	}
 	return p.parse_expression_stmt()
+}
+
+fn (mut p Parser) parse_return_stmt() ast.Stmt {
+	return_tok := p.match_token(.key_return)
+	keyword_line_nr := p.source.line_nr(return_tok.pos.pos)
+	current_line_nr := p.source.line_nr(p.current_token().pos.pos)
+	is_eof := p.current_token().kind == .eof
+	same_line := !is_eof && keyword_line_nr == current_line_nr
+	if same_line {
+		// assume that it is an expression if it
+		// starts at the same line as return key word
+		expr := p.parse_expr()
+		return ast.new_return_with_expr_stmt(return_tok, expr)
+	}
+	// assume it is am empty return
+	return ast.new_return_stmt(return_tok, ast.Expr{})
 }
 
 fn (mut p Parser) parse_continue_stmt() ast.Stmt {

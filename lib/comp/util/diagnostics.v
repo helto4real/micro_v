@@ -123,10 +123,19 @@ pub fn (mut d Diagnostics) error_function_allready_declared(ident string, pos Po
 	d.error('function <$ident> already declared', pos)
 }
 
-pub fn (mut d Diagnostics) error_functions_not_supported(ident string, pos Pos) {
-	d.error('functions <$ident> not supported', pos)
-}
-
 pub fn (mut d Diagnostics) error_keyword_are_only_allowed_inside_a_loop(keyword string, pos Pos) {
 	d.error('statment <$keyword> are only allowed inside a loop', pos)
+}
+
+pub fn (mut d Diagnostics) error_invalid_return_expr(fn_name string, pos Pos) {
+	d.error('function <$fn_name> does not return a value, return cannot return an expression',
+		pos)
+}
+
+pub fn (mut d Diagnostics) error_expected_return_value(typ_name string, pos Pos) {
+	d.error('return value of type <$typ_name> expected', pos)
+}
+
+pub fn (mut d Diagnostics) error_invalid_return(pos Pos) {
+	d.error("the 'return' keyword cannot be used outside a function", pos)
 }

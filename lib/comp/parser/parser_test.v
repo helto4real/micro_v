@@ -2,7 +2,6 @@ module parser
 
 import lib.comp.token
 import lib.comp.ast
-import lib.comp.ast.walker
 
 fn test_current() {
 	// some hard combinations to parse with or whithout whitespace
@@ -161,6 +160,10 @@ fn test_keywords_parser() {
 	p = new_parser_from_text('continue')
 	keyword = p.parse_stmt()
 	assert keyword is ast.ContinueStmt
+
+	p = new_parser_from_text('return')
+	keyword = p.parse_stmt()
+	assert keyword is ast.ReturnStmt
 }
 
 fn test_param_node_parser() {

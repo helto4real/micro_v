@@ -101,6 +101,16 @@ pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?types.LitV
 					binding.BoundLabelStmt {
 						index++
 					}
+					binding.BoundReturnStmt {
+						if stmt.has_expr {
+							e.last_val = e.eval_expr(stmt.expr) or {
+								'unexpected error evaluate expression'
+							}
+							return e.last_val
+						} else {
+							return types.None{}
+						}
+					}
 					else {
 						panic('unexpected stmt typ: $stmt.node_str()')
 					} // Will never happen
@@ -219,7 +229,7 @@ fn (mut e Evaluator) eval_bound_call_expr(node binding.BoundCallExpr) ?types.Lit
 		res := e.evaluate_stmt(stmt) ?
 
 		// remove the local function body scope
-		e.locals.pop() or { }
+		e.locals.pop() or {}
 		return res
 	}
 	return e.last_val
