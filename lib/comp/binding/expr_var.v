@@ -20,3 +20,7 @@ pub fn new_bound_variable_expr(var symbols.VariableSymbol) BoundExpr {
 pub fn (ex &BoundVariableExpr) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex &BoundVariableExpr) str() string {
+	return '${ex.var.name()}'
+}

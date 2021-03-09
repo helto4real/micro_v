@@ -29,3 +29,7 @@ pub fn new_if_else_expr(cond_expr BoundExpr, then_stmt BoundStmt, else_stmt Boun
 pub fn (ex &BoundIfExpr) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex &BoundIfExpr) str() string {
+	return 'if ${ex.cond_expr} { ${ex.then_stmt} } else { ${ex.else_stmt} }'
+}

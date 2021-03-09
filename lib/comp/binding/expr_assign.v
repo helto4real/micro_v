@@ -23,3 +23,7 @@ pub fn new_bound_assign_expr(var symbols.VariableSymbol, expr BoundExpr) BoundEx
 pub fn (ex &BoundAssignExpr) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex &BoundAssignExpr) str() string {
+	return '${ex.var.name()} = $ex.expr'
+}

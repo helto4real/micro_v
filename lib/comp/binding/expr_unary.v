@@ -1,6 +1,7 @@
 module binding
 
 import lib.comp.symbols
+import lib.comp.token
 
 pub struct BoundUnaryExpr {
 pub:
@@ -23,4 +24,8 @@ pub fn new_bound_unary_expr(op BoundUnaryOperator, operand BoundExpr) BoundExpr 
 
 pub fn (ex &BoundUnaryExpr) node_str() string {
 	return typeof(ex).name
+}
+
+pub fn (ex &BoundUnaryExpr) str() string {
+	return '${token.token_str[ex.op.kind]}${ex.operand}'
 }

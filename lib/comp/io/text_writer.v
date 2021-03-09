@@ -12,3 +12,8 @@ pub interface TermTextWriter {
 	indent_add(n int)
 	indent() int
 }
+
+pub interface TextWriter {
+	writeln(s string) ?int
+	write_string(s string) ?int
+}

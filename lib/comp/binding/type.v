@@ -102,6 +102,21 @@ pub fn (be BoundExpr) node_str() string {
 	}
 }
 
+pub fn (be BoundExpr) str() string {
+	match be {
+		BoundLiteralExpr { return be.str() }
+		BoundUnaryExpr { return be.str() }
+		BoundBinaryExpr { return be.str() }
+		BoundVariableExpr { return be.str() }
+		BoundAssignExpr { return be.str() }
+		BoundIfExpr { return be.str() }
+		BoundRangeExpr { return be.str() }
+		BoundErrorExpr { return be.str() }
+		BoundCallExpr { return be.str() }
+		BoundConvExpr { return be.str() }
+	}
+}
+
 pub fn (be BoundExpr) kind() BoundNodeKind {
 	match be {
 		BoundUnaryExpr { return be.kind }
