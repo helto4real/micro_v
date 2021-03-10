@@ -1,6 +1,7 @@
 module binding
 
 import lib.comp.symbols
+import lib.comp.token
 
 pub struct BoundBinaryExpr {
 pub:
@@ -25,4 +26,8 @@ pub fn new_bound_binary_expr(left BoundExpr, op BoundBinaryOperator, right Bound
 
 pub fn (ex &BoundBinaryExpr) node_str() string {
 	return typeof(ex).name
+}
+
+pub fn (ex &BoundBinaryExpr) str() string {
+	return '$ex.left ${token.token_str[ex.op.kind]} $ex.right'
 }

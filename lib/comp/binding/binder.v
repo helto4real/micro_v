@@ -10,9 +10,9 @@ import lib.comp.binding.convertion
 [heap]
 pub struct Binder {
 pub mut:
-	scope &BoundScope = 0
-	func  symbols.FunctionSymbol
-	log   &util.Diagnostics // errors when parsing
+	scope   &BoundScope = 0
+	func    symbols.FunctionSymbol
+	log     &util.Diagnostics // errors when parsing
 	is_loop bool
 }
 
@@ -38,8 +38,11 @@ pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
 		fn_decl := binder.scope.lookup_fn_decl(func.name) or {
 			panic('unexpected missing fn_decl in scope')
 		}
-		body := binder.bind_stmt(fn_decl.block)
-		func_bodies[func.id] = (body as BoundBlockStmt)
+		body := binder.bind_stmt(fn_decl.block) as BoundBlockStmt
+		if func.typ != symbols.void_symbol && !all_path_return_in_body(body) {
+			binder.log.error_all_paths_must_return(fn_decl.ident.pos)
+		}
+		func_bodies[func.id] = body
 		log.all << binder.log.all
 	}
 	bound_program := new_bound_program(log, global_scope.stmt, func_bodies)
@@ -134,10 +137,6 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 		symbols.void_symbol
 	}
 
-	if typ != symbols.void_symbol {
-		b.log.error_functions_not_supported(fn_decl.ident.lit, fn_decl.pos)
-	}
-
 	func := symbols.new_function_symbol(fn_decl.ident.lit, params, typ)
 
 	// TODO: refactor this. Due to V bug the func could not
@@ -157,6 +156,31 @@ pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 		ast.ForStmt { return b.bind_for_stmt(stmt) }
 		ast.ContinueStmt { return b.bind_continue_stmt(stmt) }
 		ast.BreakStmt { return b.bind_break_stmt(stmt) }
+		ast.ReturnStmt { return b.bind_return_stmt(stmt) }
+	}
+}
+
+pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
+	// does the function have return typ
+	// does the return type match?
+	if b.func == symbols.undefined_fn {
+		b.log.error_invalid_return(return_stmt.return_tok.pos)
+	} else {
+		if return_stmt.has_expr {
+			mut expr := b.bind_expr(return_stmt.expr)
+			if b.func.typ == symbols.void_symbol {
+				// it is a subroutine
+				b.log.error_invalid_return_expr(b.func.name, return_stmt.expr.pos())
+			} else {
+				expr = b.bind_convertion_diag(return_stmt.expr.pos(), expr, b.func.typ)
+			}
+			return new_bound_return_with_expr_stmt(expr)
+		} else {
+			if b.func.typ != symbols.void_symbol {
+				b.log.error_expected_return_value(b.func.typ.name, return_stmt.return_tok.pos)
+			}
+			return new_bound_return_stmt()
+		}
 	}
 }
 
@@ -166,6 +190,7 @@ pub fn (mut b Binder) bind_continue_stmt(cont_stmt ast.ContinueStmt) BoundStmt {
 	}
 	return new_bound_continue_stmt()
 }
+
 pub fn (mut b Binder) bind_break_stmt(break_stmt ast.BreakStmt) BoundStmt {
 	if b.is_loop == false {
 		b.log.error_keyword_are_only_allowed_inside_a_loop('break', break_stmt.pos)

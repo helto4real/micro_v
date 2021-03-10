@@ -1,0 +1,18 @@
+digraph G {
+    N1 [label = "<start>" shape = box]
+    N3 [label = "i := 10\lres := 0\l" shape = box]
+    N4 [label = "Label_2:\lgoto Label_4 unless i == 0\l" shape = box]
+    N5 [label = "goto Break_3\l" shape = box]
+    N7 [label = "Label_4:\lres = res + 1\li = i - 1\l" shape = box]
+    N8 [label = "Continue_1:\lgoto Label_2\l" shape = box]
+    N10 [label = "Break_3:\lres\l" shape = box]
+    N2 [label = "<end>" shape = box]
+    N1 -> N3 [label = ""]
+    N3 -> N4 [label = ""]
+    N4 -> N7 [label = "!i == 0"]
+    N4 -> N5 [label = "i == 0"]
+    N5 -> N10 [label = ""]
+    N7 -> N8 [label = ""]
+    N8 -> N4 [label = ""]
+    N10 -> N2 [label = ""]
+}

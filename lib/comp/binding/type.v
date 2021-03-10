@@ -8,7 +8,7 @@ pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundCo
 
 pub type BoundStmt = BoundBlockStmt | BoundBreakStmt | BoundCondGotoStmt | BoundContinueStmt |
 	BoundExprStmt | BoundForRangeStmt | BoundForStmt | BoundGotoStmt | BoundIfStmt | BoundLabelStmt |
-	BoundVarDeclStmt
+	BoundReturnStmt | BoundVarDeclStmt
 
 pub type BoundNode = BoundExpr | BoundStmt
 
@@ -33,6 +33,7 @@ pub enum BoundNodeKind {
 	label_stmt
 	break_stmt
 	cont_stmt
+	return_stmt
 	for_range_stmt
 	cond_goto_stmt
 	goto_stmt
@@ -101,6 +102,21 @@ pub fn (be BoundExpr) node_str() string {
 	}
 }
 
+pub fn (be BoundExpr) str() string {
+	match be {
+		BoundLiteralExpr { return be.str() }
+		BoundUnaryExpr { return be.str() }
+		BoundBinaryExpr { return be.str() }
+		BoundVariableExpr { return be.str() }
+		BoundAssignExpr { return be.str() }
+		BoundIfExpr { return be.str() }
+		BoundRangeExpr { return be.str() }
+		BoundErrorExpr { return be.str() }
+		BoundCallExpr { return be.str() }
+		BoundConvExpr { return be.str() }
+	}
+}
+
 pub fn (be BoundExpr) kind() BoundNodeKind {
 	match be {
 		BoundUnaryExpr { return be.kind }
@@ -144,6 +160,7 @@ pub fn (bs BoundStmt) child_nodes() []BoundNode {
 		BoundLabelStmt { return bs.child_nodes }
 		BoundBreakStmt { return bs.child_nodes }
 		BoundContinueStmt { return bs.child_nodes }
+		BoundReturnStmt { return bs.child_nodes }
 	}
 }
 
@@ -160,5 +177,6 @@ pub fn (bs BoundStmt) node_str() string {
 		BoundLabelStmt { return bs.node_str() }
 		BoundBreakStmt { return bs.node_str() }
 		BoundContinueStmt { return bs.node_str() }
+		BoundReturnStmt { return bs.node_str() }
 	}
 }

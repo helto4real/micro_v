@@ -280,7 +280,7 @@ fn event(e &tui.Event, x voidptr) {
 				if e.modifiers == .ctrl {
 					if e.code == .s {
 						// save current raw text
-						os.write_file('output.txt', buffer.raw()) or { }
+						os.write_file('output.txt', buffer.raw()) or {}
 					} else if e.code == .t {
 						// tree mode
 						app.show_tree = !app.show_tree

@@ -188,6 +188,14 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			writer.write_keyword('continue')
 			writer.writeln('')
 		}
+		BoundReturnStmt {
+			writer.write_keyword('return')
+			if node.has_expr {
+				writer.write_space()
+				write_expr(writer, node.expr)
+			}
+			writer.writeln('')
+		}
 	}
 }
 
