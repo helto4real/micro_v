@@ -24,5 +24,5 @@ pub fn (ex &BoundLiteralExpr) node_str() string {
 }
 
 pub fn (ex &BoundLiteralExpr) str() string {
-	return '${ex.val}'
+	return '$ex.val'
 }

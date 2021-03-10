@@ -31,5 +31,5 @@ pub fn (ex &BoundIfExpr) node_str() string {
 }
 
 pub fn (ex &BoundIfExpr) str() string {
-	return 'if ${ex.cond_expr} { ${ex.then_stmt} } else { ${ex.else_stmt} }'
+	return 'if $ex.cond_expr { $ex.then_stmt } else { $ex.else_stmt }'
 }

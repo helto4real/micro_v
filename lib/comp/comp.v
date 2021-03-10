@@ -78,7 +78,7 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	if program.log.all.len > 0 {
 		return new_evaluation_result(program.log.all, 0)
 	}
-	
+
 	mut evaluator := new_evaluator(program, vars)
 	evaluator.register_print_callback(c.print_fn, c.print_ref)
 	val := evaluator.evaluate() or {

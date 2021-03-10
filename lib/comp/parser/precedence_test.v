@@ -1,4 +1,5 @@
 module parser
+
 import lib.comp.ast
 
 fn test_binary_operator_precedence() {

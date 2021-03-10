@@ -299,9 +299,8 @@ pub fn flatten(stmt BoundStmt) BoundBlockStmt {
 }
 
 /*
-	Not lowered
+Not lowered
 */
-
 
 fn (mut l Lowerer) rewrite_block_stmt(stmt BoundBlockStmt) BoundStmt {
 	mut ret_block_stmt := []BoundStmt{}

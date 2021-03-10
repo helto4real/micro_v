@@ -27,5 +27,5 @@ pub fn (ex &BoundUnaryExpr) node_str() string {
 }
 
 pub fn (ex &BoundUnaryExpr) str() string {
-	return '${token.token_str[ex.op.kind]}${ex.operand}'
+	return '${token.token_str[ex.op.kind]}$ex.operand'
 }

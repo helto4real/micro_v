@@ -391,8 +391,7 @@ pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) &ControlFlowG
 		}
 	}
 
-	scan_again: 
-		for i, block in blocks {
+	scan_again: for i, block in blocks {
 		if block.incoming.len == 0 {
 			// remove block that are unreachable
 			for b in block.incoming {
@@ -410,7 +409,7 @@ pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) &ControlFlowG
 						// to override eq operator
 						gb.branches.delete(b_idx)
 					}
-				}				
+				}
 			}
 			for b in block.outgoing {
 				mut branch := b
@@ -445,7 +444,7 @@ pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) &ControlFlowG
 
 pub fn all_path_return_in_body(body BoundBlockStmt) bool {
 	lowered_body := lower(body)
-	mut graph := create_control_flow_graph(lowered_body)	
+	mut graph := create_control_flow_graph(lowered_body)
 	for branch in graph.end.incoming {
 		last_stmt := branch.from.stmts.last()
 		if last_stmt !is BoundReturnStmt {

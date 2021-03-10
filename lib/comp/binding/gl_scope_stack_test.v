@@ -8,8 +8,7 @@ fn test_bound_global_scope_stack_basic() {
 	mut stack := new_bound_global_scope_stack()
 
 	scope := new_bound_global_scope(&BoundGlobalScope(0), &util.Diagnostics(0), []symbols.FunctionSymbol{},
-		[]ast.FnDeclNode, []symbols.VariableSymbol{}, BoundBlockStmt{})
-
+		[]ast.FnDeclNode{}, []symbols.VariableSymbol{}, BoundBlockStmt{})
 
 	stack.push(scope)
 

@@ -25,5 +25,5 @@ pub fn (ex &BoundRangeExpr) node_str() string {
 }
 
 pub fn (ex &BoundRangeExpr) str() string {
-	return '${ex.from_exp}..${ex.to_exp}'
+	return '${ex.from_exp}..$ex.to_exp'
 }

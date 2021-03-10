@@ -22,5 +22,5 @@ pub fn (ex &BoundVariableExpr) node_str() string {
 }
 
 pub fn (ex &BoundVariableExpr) str() string {
-	return '${ex.var.name()}'
+	return '$ex.var.name()'
 }
