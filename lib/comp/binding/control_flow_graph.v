@@ -68,14 +68,6 @@ pub fn (ex &BasicBlock) str() string {
 	return b.str()
 }
 
-// pub fn (b &BasicBlock) str() string {
-// 	if b.is_start {return '<start>'}
-// 	if b.is_end {return '<end>'}
-// 	// mut writer := io.new_string_writer()
-// 	// for stmt in b.stmts {
-
-// 	// }
-// }
 [heap]
 struct BasicBlockBranch {
 	has_expr bool

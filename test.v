@@ -3,10 +3,10 @@ fn sum(n int) int {
 	mut res := 0
 	for {
 		if i == 0 {
-			return res
+			break
 		}
 		res = res + i
 		i = i - 1
 	}
-	x := 100
+	
 }
