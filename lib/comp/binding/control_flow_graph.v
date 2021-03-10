@@ -10,8 +10,8 @@ struct BasicBlock {
 	id       int
 mut:
 	stmts    []BoundStmt
-	incoming []&BasicBlockBranch
-	outgoing []&BasicBlockBranch
+	incoming []BasicBlockBranch
+	outgoing []BasicBlockBranch
 }
 
 pub fn new_basic_block(id int) &BasicBlock {
@@ -36,20 +36,20 @@ pub fn new_basic_end_block(id int) &BasicBlock {
 	}
 }
 
-pub fn (mut bb BasicBlock) free() {
-	for mut b in bb.incoming {
-		b.free()
-	}
-	for mut b in bb.outgoing {
-		b.free()
-	}
-}
+// pub fn (mut bb BasicBlock) free() {
+// 	for mut b in bb.incoming {
+// 		b.free()
+// 	}
+// 	for mut b in bb.outgoing {
+// 		b.free()
+// 	}
+// }
 
-pub fn (mut bb BasicBlock) add_outgoing(branch &BasicBlockBranch) {
+pub fn (mut bb BasicBlock) add_outgoing(branch BasicBlockBranch) {
 	bb.outgoing << branch
 }
 
-pub fn (mut bb BasicBlock) add_incoming(branch &BasicBlockBranch) {
+pub fn (mut bb BasicBlock) add_incoming(branch BasicBlockBranch) {
 	bb.incoming << branch
 }
 
@@ -68,7 +68,6 @@ pub fn (ex &BasicBlock) str() string {
 	return b.str()
 }
 
-[heap]
 struct BasicBlockBranch {
 	has_expr bool
 	cond     BoundExpr
@@ -77,14 +76,7 @@ mut:
 	to   &BasicBlock
 }
 
-pub fn (mut bbb BasicBlockBranch) free() {
-	unsafe {
-		free(bbb.from)
-		free(bbb.to)
-	}
-}
-
-pub fn (bb_left &BasicBlockBranch) == (bb_right &BasicBlockBranch) bool {
+pub fn (bb_left BasicBlockBranch) == (bb_right BasicBlockBranch) bool {
 	if bb_left.from.id != bb_right.from.id {
 		return false
 	}
@@ -94,15 +86,15 @@ pub fn (bb_left &BasicBlockBranch) == (bb_right &BasicBlockBranch) bool {
 	return true
 }
 
-pub fn (bbb &BasicBlockBranch) str() string {
+pub fn (bbb BasicBlockBranch) str() string {
 	if bbb.has_expr == false {
 		return ''
 	}
 	return bbb.cond.str()
 }
 
-pub fn new_branch_with_cond_block(from &BasicBlock, to &BasicBlock, cond BoundExpr) &BasicBlockBranch {
-	return &BasicBlockBranch{
+pub fn new_branch_with_cond_block(from &BasicBlock, to &BasicBlock, cond BoundExpr) BasicBlockBranch {
+	return BasicBlockBranch{
 		to: to
 		from: from
 		cond: cond
@@ -110,8 +102,8 @@ pub fn new_branch_with_cond_block(from &BasicBlock, to &BasicBlock, cond BoundEx
 	}
 }
 
-pub fn new_branch_block(from &BasicBlock, to &BasicBlock) &BasicBlockBranch {
-	return &BasicBlockBranch{
+pub fn new_branch_block(from &BasicBlock, to &BasicBlock) BasicBlockBranch {
+	return BasicBlockBranch{
 		to: to
 		from: from
 		has_expr: false
@@ -125,11 +117,11 @@ mut:
 	stmts    []BoundStmt
 }
 
-pub fn (mut bbb BasicBlockBuilder) free() {
-	for mut block in bbb.blocks {
-		block.free()
-	}
-}
+// pub fn (mut bbb BasicBlockBuilder) free() {
+// 	for mut block in bbb.blocks {
+// 		block.free()
+// 	}
+// }
 
 pub fn new_basic_block_builder() &BasicBlockBuilder {
 	return &BasicBlockBuilder{}
@@ -201,21 +193,10 @@ mut:
 	start    &BasicBlock
 	end      &BasicBlock
 	blocks   []&BasicBlock
-	branches []&BasicBlockBranch
+	branches []BasicBlockBranch
 }
 
-pub fn (mut cfg ControlFlowGraph) free() {
-	cfg.start.free()
-	cfg.end.free()
-	for mut block in cfg.blocks {
-		block.free()
-	}
-	for mut branch in cfg.branches {
-		branch.free()
-	}
-}
-
-pub fn create_control_flow_graph(body BoundBlockStmt) &ControlFlowGraph {
+pub fn create_control_flow_graph(body BoundBlockStmt) ControlFlowGraph {
 	mut basic_block_builder := new_basic_block_builder()
 	mut blocks := basic_block_builder.build(body)
 
@@ -226,8 +207,8 @@ pub fn create_control_flow_graph(body BoundBlockStmt) &ControlFlowGraph {
 	return res
 }
 
-fn new_control_flow_graph(start &BasicBlock, end &BasicBlock, blocks []&BasicBlock, branches []&BasicBlockBranch) &ControlFlowGraph {
-	return &ControlFlowGraph{
+fn new_control_flow_graph(start &BasicBlock, end &BasicBlock, blocks []&BasicBlock, branches []BasicBlockBranch) ControlFlowGraph {
+	return ControlFlowGraph{
 		start: start
 		end: end
 		blocks: blocks
@@ -240,7 +221,7 @@ fn quote(s string) string {
 }
 
 // write the graph
-pub fn (cfg &ControlFlowGraph) write_to(writer io.TextWriter) ? {
+pub fn (cfg ControlFlowGraph) write_to(writer io.TextWriter) ? {
 	writer.writeln('digraph G {') ?
 
 	mut block_ids := map[int]string{}
@@ -266,7 +247,7 @@ pub fn (cfg &ControlFlowGraph) write_to(writer io.TextWriter) ? {
 
 struct GraphBuilder {
 mut:
-	branches []&BasicBlockBranch
+	branches []BasicBlockBranch
 	start    &BasicBlock = new_basic_start_block(1)
 	end      &BasicBlock = new_basic_end_block(2)
 
@@ -322,7 +303,7 @@ pub fn (mut gb GraphBuilder) negate(expr BoundExpr) BoundExpr {
 	}
 }
 
-pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) &ControlFlowGraph {
+pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) ControlFlowGraph {
 	if blocks.len == 0 {
 		gb.connect(mut gb.start, mut gb.end)
 	} else {
