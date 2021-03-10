@@ -36,6 +36,15 @@ pub fn new_basic_end_block(id int) &BasicBlock {
 	}
 }
 
+pub fn (mut bb BasicBlock) free() {
+	for mut b in bb.incoming {
+		b.free()
+	}
+	for mut b in bb.outgoing {
+		b.free()
+	}
+}
+
 pub fn (mut bb BasicBlock) add_outgoing(branch &BasicBlockBranch) {
 	bb.outgoing << branch
 }
@@ -69,11 +78,28 @@ pub fn (ex &BasicBlock) str() string {
 // }
 [heap]
 struct BasicBlockBranch {
-	from     &BasicBlock
-	to       &BasicBlock
 	has_expr bool
 	cond     BoundExpr
-	// id int = 0
+mut:
+	from &BasicBlock
+	to   &BasicBlock
+}
+
+pub fn (mut bbb BasicBlockBranch) free() {
+	unsafe {
+		free(bbb.from)
+		free(bbb.to)
+	}
+}
+
+pub fn (bb_left &BasicBlockBranch) == (bb_right &BasicBlockBranch) bool {
+	if bb_left.from.id != bb_right.from.id {
+		return false
+	}
+	if bb_left.from.id != bb_right.to.id {
+		return false
+	}
+	return true
 }
 
 pub fn (bbb &BasicBlockBranch) str() string {
@@ -105,6 +131,12 @@ mut:
 	block_id int = 2
 	blocks   []&BasicBlock
 	stmts    []BoundStmt
+}
+
+pub fn (mut bbb BasicBlockBuilder) free() {
+	for mut block in bbb.blocks {
+		block.free()
+	}
 }
 
 pub fn new_basic_block_builder() &BasicBlockBuilder {
@@ -173,10 +205,22 @@ pub fn (mut bbb BasicBlockBuilder) new_end_block() &BasicBlock {
 }
 
 struct ControlFlowGraph {
+mut:
 	start    &BasicBlock
 	end      &BasicBlock
 	blocks   []&BasicBlock
 	branches []&BasicBlockBranch
+}
+
+pub fn (mut cfg ControlFlowGraph) free() {
+	cfg.start.free()
+	cfg.end.free()
+	for mut block in cfg.blocks {
+		block.free()
+	}
+	for mut branch in cfg.branches {
+		branch.free()
+	}
 }
 
 pub fn create_control_flow_graph(body BoundBlockStmt) &ControlFlowGraph {
@@ -184,7 +228,10 @@ pub fn create_control_flow_graph(body BoundBlockStmt) &ControlFlowGraph {
 	mut blocks := basic_block_builder.build(body)
 
 	mut graph_builder := new_graph_builder()
-	return graph_builder.build_graph(mut blocks)
+	res := graph_builder.build_graph(mut blocks)
+	// graph_builder.free()
+	// for mut block in blocks {block.free()}
+	return res
 }
 
 fn new_control_flow_graph(start &BasicBlock, end &BasicBlock, blocks []&BasicBlock, branches []&BasicBlockBranch) &ControlFlowGraph {
@@ -231,7 +278,7 @@ mut:
 	start    &BasicBlock = new_basic_start_block(1)
 	end      &BasicBlock = new_basic_end_block(2)
 
-	block_from_stmt map[voidptr]&BasicBlock
+	block_from_stmt  map[voidptr]&BasicBlock
 	block_from_label map[string]&BasicBlock
 }
 
@@ -268,46 +315,25 @@ pub fn (mut gb GraphBuilder) connect_cond(mut from BasicBlock, mut to BasicBlock
 	gb.branches << branch
 }
 
-// pub fn (mut gb GraphBuilder) walk_var_decl_stmt(stmt BoundStmt, next BasicBlock, is_last_stmt bool) {
-// }
-
-// pub fn (mut gb GraphBuilder) walk_expr_stmt(stmt BoundStmt, next BasicBlock, is_last_stmt bool) {
-// }
-
-// pub fn (mut gb GraphBuilder) walk_label_stmt(stmt BoundStmt, next BasicBlock, is_last_stmt bool) {
-// }
-
-// pub fn (mut gb GraphBuilder) walk_cond_goto_stmt(stmt BoundStmt, next BasicBlock, is_last_stmt bool) {
-// }
-
-// pub fn (mut gb GraphBuilder) walk_goto_stmt(stmt BoundStmt, next BasicBlock, is_last_stmt bool) {
-// }
-
-// pub fn (mut gb GraphBuilder) walk_return_stmt(stmt BoundStmt, next BasicBlock, is_last_stmt bool) {
-// }
-
 pub fn (mut gb GraphBuilder) negate(expr BoundExpr) BoundExpr {
-	
 	match expr {
 		BoundLiteralExpr {
 			val := expr.val as bool
 			return new_bound_literal_expr(-val)
 		}
 		else {
-			unary_op := bind_unary_operator(.exl_mark, symbols.bool_symbol) or {panic('unexpected error')}
+			unary_op := bind_unary_operator(.exl_mark, symbols.bool_symbol) or {
+				panic('unexpected error')
+			}
 			return new_bound_unary_expr(unary_op, expr)
 		}
 	}
 }
-pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) &ControlFlowGraph {
-	// mut basic_block_builder := new_basic_block_builder()
-	// mut start := basic_block_builder.new_start_block()
-	// mut end := basic_block_builder.new_end_block()
 
+pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) &ControlFlowGraph {
 	if blocks.len == 0 {
 		gb.connect(mut gb.start, mut gb.end)
 	} else {
-		// panic('asdasd $blocks')
 		gb.connect(mut gb.start, mut blocks[0])
 	}
 
@@ -320,12 +346,11 @@ pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) &ControlFlowG
 		}
 	}
 
-	for i:=0; i< blocks.len; i++ {
+	for i := 0; i < blocks.len; i++ {
 		mut current := blocks[i]
-		mut next := if i< blocks.len -1 {blocks[i+1]} else {gb.end}
+		mut next := if i < blocks.len - 1 { blocks[i + 1] } else { gb.end }
 		for i_stmt, stmt in current.stmts {
-			// last_stmt := current.stmts.last()
-			is_last_stmt := i_stmt == current.stmts.len-1
+			is_last_stmt := i_stmt == current.stmts.len - 1
 
 			match stmt {
 				BoundVarDeclStmt {
@@ -341,16 +366,16 @@ pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) &ControlFlowG
 				BoundLabelStmt {
 					if is_last_stmt {
 						gb.connect(mut current, mut next)
-					}	
+					}
 				}
 				BoundCondGotoStmt {
 					mut then_block := gb.block_from_label[stmt.label]
 					negated_cond := gb.negate(stmt.cond)
-					then_cond := if stmt.jump_if_true {stmt.cond} else {negated_cond}
-					else_cond := if stmt.jump_if_true {negated_cond} else {stmt.cond}
+					then_cond := if stmt.jump_if_true { stmt.cond } else { negated_cond }
+					else_cond := if stmt.jump_if_true { negated_cond } else { stmt.cond }
 					mut else_block := next
-					gb.connect_cond(mut current, mut then_block, then_cond)			
-					gb.connect_cond(mut current, mut else_block, else_cond)			
+					gb.connect_cond(mut current, mut then_block, then_cond)
+					gb.connect_cond(mut current, mut else_block, else_cond)
 				}
 				BoundGotoStmt {
 					mut to_block := gb.block_from_label[stmt.label]
@@ -366,10 +391,67 @@ pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) &ControlFlowG
 		}
 	}
 
+	scan_again: 
+		for i, block in blocks {
+		if block.incoming.len == 0 {
+			// remove block that are unreachable
+			for b in block.incoming {
+				mut branch := b
+				for out_idx, out_branch in branch.from.outgoing {
+					if branch.from.id == out_branch.from.id && branch.to.id == out_branch.to.id {
+						// Exist in list , v bug made it impossible
+						// to override eq operator
+						branch.from.outgoing.delete(out_idx)
+					}
+				}
+				for b_idx, br in gb.branches {
+					if branch.from.id == br.from.id && branch.to.id == br.to.id {
+						// Exist in list , v bug made it impossible
+						// to override eq operator
+						gb.branches.delete(b_idx)
+					}
+				}				
+			}
+			for b in block.outgoing {
+				mut branch := b
+				for in_idx, in_branch in branch.to.incoming {
+					if branch.from.id == in_branch.from.id && branch.to.id == in_branch.to.id {
+						// Exist in list , v bug made it impossible
+						// to override eq operator
+						branch.to.incoming.delete(in_idx)
+					}
+				}
+				for b_idx, br in gb.branches {
+					if branch.from.id == br.from.id && branch.to.id == br.to.id {
+						// Exist in list , v bug made it impossible
+						// to override eq operator
+						gb.branches.delete(b_idx)
+					}
+				}
+			}
+			blocks.delete(i)
+			unsafe {
+				goto scan_again
+			}
+		}
+	}
+
 	mut new_blocks := []&BasicBlock{cap: blocks.len + 2}
 	new_blocks << gb.start
 	new_blocks << blocks
 	new_blocks << gb.end
-	// panic('branches: $gb.branches')
 	return new_control_flow_graph(gb.start, gb.end, new_blocks, gb.branches)
+}
+
+pub fn all_path_return_in_body(body BoundBlockStmt) bool {
+	lowered_body := lower(body)
+	mut graph := create_control_flow_graph(lowered_body)	
+	for branch in graph.end.incoming {
+		last_stmt := branch.from.stmts.last()
+		if last_stmt !is BoundReturnStmt {
+			return false
+		}
+	}
+
+	return true
 }

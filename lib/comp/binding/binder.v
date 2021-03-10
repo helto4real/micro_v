@@ -38,8 +38,11 @@ pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
 		fn_decl := binder.scope.lookup_fn_decl(func.name) or {
 			panic('unexpected missing fn_decl in scope')
 		}
-		body := binder.bind_stmt(fn_decl.block)
-		func_bodies[func.id] = (body as BoundBlockStmt)
+		body := binder.bind_stmt(fn_decl.block) as BoundBlockStmt
+		if func.typ != symbols.void_symbol && !all_path_return_in_body(body) {
+			binder.log.error_all_paths_must_return(fn_decl.ident.pos)
+		}
+		func_bodies[func.id] = body
 		log.all << binder.log.all
 	}
 	bound_program := new_bound_program(log, global_scope.stmt, func_bodies)

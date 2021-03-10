@@ -1,11 +1,9 @@
-module lowering
-
-import lib.comp.binding
+module binding
 
 struct BoundStmtStack {
 mut:
 	size     int
-	elements []binding.BoundStmt
+	elements []BoundStmt
 }
 
 pub fn new_stack() BoundStmtStack {
@@ -17,7 +15,7 @@ pub fn (stack BoundStmtStack) is_empty() bool {
 	return stack.size <= 0
 }
 
-pub fn (stack BoundStmtStack) peek() ?binding.BoundStmt {
+pub fn (stack BoundStmtStack) peek() ?BoundStmt {
 	if !stack.is_empty() {
 		return stack.elements[stack.size - 1]
 	} else {
@@ -25,7 +23,7 @@ pub fn (stack BoundStmtStack) peek() ?binding.BoundStmt {
 	}
 }
 
-pub fn (mut stack BoundStmtStack) pop() ?binding.BoundStmt {
+pub fn (mut stack BoundStmtStack) pop() ?BoundStmt {
 	if !stack.is_empty() {
 		val := stack.elements[stack.size - 1]
 		stack.size--
@@ -34,7 +32,7 @@ pub fn (mut stack BoundStmtStack) pop() ?binding.BoundStmt {
 	return none
 }
 
-pub fn (mut stack BoundStmtStack) push(item binding.BoundStmt) {
+pub fn (mut stack BoundStmtStack) push(item BoundStmt) {
 	if stack.elements.len > stack.size {
 		stack.elements[stack.size] = item
 	} else {

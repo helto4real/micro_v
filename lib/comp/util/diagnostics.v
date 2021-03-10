@@ -139,3 +139,7 @@ pub fn (mut d Diagnostics) error_expected_return_value(typ_name string, pos Pos)
 pub fn (mut d Diagnostics) error_invalid_return(pos Pos) {
 	d.error("the 'return' keyword cannot be used outside a function", pos)
 }
+
+pub fn (mut d Diagnostics) error_all_paths_must_return(pos Pos) {
+	d.error("all code paths must 'return' in function", pos)
+}

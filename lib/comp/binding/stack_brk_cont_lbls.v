@@ -1,4 +1,4 @@
-module lowering
+module binding
 
 struct BreakAndContinueLabels {
 pub:
@@ -19,7 +19,7 @@ mut:
 	elements []BreakAndContinueLabels
 }
 
-pub fn new_eval_vars_stack() BreakAndContinueLabelStack {
+pub fn new_break_and_continue_stack() BreakAndContinueLabelStack {
 	return BreakAndContinueLabelStack{}
 }
 
