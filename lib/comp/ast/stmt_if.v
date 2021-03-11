@@ -7,7 +7,7 @@ pub struct IfStmt {
 pub:
 	kind         SyntaxKind = .if_stmt
 	pos          util.Pos
-	child_nodes        []AstNode
+	child_nodes  []AstNode
 	has_else     bool
 	key_if_tok   token.Token
 	key_else_tok token.Token

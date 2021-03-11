@@ -8,8 +8,8 @@ pub type Stmt = BlockStmt | BreakStmt | ContinueStmt | ExprStmt | ForRangeStmt |
 	IfStmt | ReturnStmt | VarDeclStmt
 
 // Sumtype expressions
-pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | IfExpr | LiteralExpr |
-	NameExpr | ParaExpr | RangeExpr | UnaryExpr | EmptyExpr
+pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | EmptyExpr | IfExpr | LiteralExpr |
+	NameExpr | ParaExpr | RangeExpr | UnaryExpr
 
 // Nodes in syntax tree
 pub type AstNode = Expr | MemberNode | ParamNode | Stmt | TypeNode | token.Token

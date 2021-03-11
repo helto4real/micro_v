@@ -1,8 +1,8 @@
 module binding
 
 pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundConvExpr |
-	BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundRangeExpr | BoundUnaryExpr |
-	BoundVariableExpr | BoundEmptyExpr
+	BoundEmptyExpr | BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundRangeExpr |
+	BoundUnaryExpr | BoundVariableExpr
 
 pub type BoundStmt = BoundBlockStmt | BoundBreakStmt | BoundCondGotoStmt | BoundContinueStmt |
 	BoundExprStmt | BoundForRangeStmt | BoundForStmt | BoundGotoStmt | BoundIfStmt | BoundLabelStmt |

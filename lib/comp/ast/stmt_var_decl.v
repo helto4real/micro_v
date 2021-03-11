@@ -5,9 +5,9 @@ import lib.comp.util
 
 pub struct VarDeclStmt {
 pub:
-	kind   SyntaxKind = .var_decl_stmt
-	child_nodes  []AstNode
-	is_mut bool
+	kind        SyntaxKind = .var_decl_stmt
+	child_nodes []AstNode
+	is_mut      bool
 
 	ident token.Token
 	eq    token.Token
