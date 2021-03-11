@@ -352,7 +352,7 @@ pub fn (mut l Lowerer) rewrite_expr(expr BoundExpr) BoundExpr {
 		BoundErrorExpr { return l.rewrite_error_expr(expr) }
 		BoundCallExpr { return l.rewrite_call_expr(expr) }
 		BoundConvExpr { return l.rewrite_conv_expr(expr) }
-		// else { panic('unexpected bound expression $expr') }
+		BoundEmptyExpr { return expr }
 	}
 }
 

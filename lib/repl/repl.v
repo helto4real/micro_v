@@ -95,7 +95,11 @@ fn (mut a App) message() {
 	} else if a.error_msg.len > 0 {
 		a.tui.draw_text(2, b.lines.len + 1, a.error_msg)
 	}
-
+	if a.tree.len > 0 {
+		for i, s in a.tree {
+			a.tui.draw_text(0, i + 7, s)
+		}
+	}
 	if a.show_ltree {
 		a.tui.draw_text(0, 7, a.ltree_string)
 	}
@@ -188,6 +192,7 @@ fn event(e &tui.Event, x voidptr) {
 						}
 						comp.register_print_callback(print_fn, voidptr(app))
 						if app.show_tree {
+							app.tree.clear()
 							walker.walk_tree(app, syntax_tree.root)
 						} else if app.show_btree {
 							mut iw := IdentWriter{}
@@ -293,7 +298,7 @@ fn event(e &tui.Event, x voidptr) {
 						app.show_ltree = false
 					} else if e.code == .l {
 						// tree mode
-						app.show_ltree = !app.show_btree
+						app.show_ltree = !app.show_ltree
 						app.show_tree = false
 						app.show_btree = false
 					}

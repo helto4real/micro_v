@@ -203,7 +203,7 @@ pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 	cond_expr := if for_stmt.has_cond {
 		b.bind_expr_type(for_stmt.cond_expr, symbols.bool_symbol)
 	} else {
-		BoundExpr{}
+		new_bound_emtpy_expr()
 	}
 
 	body_stmt := b.bind_loop_block_stmt(for_stmt.body_stmt as ast.BlockStmt)
