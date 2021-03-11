@@ -210,6 +210,9 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.key_return {
 			return p.parse_return_stmt()
 		}
+		.comment {
+			return ast.new_comment_stmt(p.current_token())
+		}
 		.name {
 			if p.peek_var_decl(0) {
 				return p.parse_var_decl_stmt()

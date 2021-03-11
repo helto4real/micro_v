@@ -19,6 +19,10 @@ pub fn (mut w NodeStringWriter) write_keyword(s string) {
 	w.b.write_string(s)
 }
 
+pub fn (mut w NodeStringWriter) write_comment(s string) {
+	w.b.write_string(s)
+}
+
 pub fn (mut w NodeStringWriter) write_string(s string) {
 	w.b.write_string(s)
 }

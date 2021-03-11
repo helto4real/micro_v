@@ -67,6 +67,10 @@ fn (mut a App) colorize() {
 				start := pos.pos - line.start + 1
 				a.tui.draw_text(start, line_nr, term.bright_blue('$tok.lit'))
 			}
+			.comment {
+				start := pos.pos - line.start + 1
+				a.tui.draw_text(start, line_nr, term.green('$tok.lit'))
+			}
 			.key_true, .key_false, .number {
 				start := pos.pos - line.start + 1
 				a.tui.draw_text(start, line_nr, term.rgb(200, 200, 200, '$tok.lit'))

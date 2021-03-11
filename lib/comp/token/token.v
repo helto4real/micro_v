@@ -65,6 +65,7 @@ pub enum Kind {
 	amp_amp // '&&'
 	eof // end of file
 	void // used to non existin token
+	comment // a code comment block
 	// Keywords
 	keyword_beg // start of keywords
 	key_fn // 'fn'
@@ -128,6 +129,7 @@ fn build_token_str() []string {
 	s[Kind.pipe_pipe] = '||'
 	s[Kind.amp_amp] = '&&'
 	s[Kind.exl_mark] = '!'
+	s[Kind.comment] = '' // no default value
 	s[Kind.key_mut] = 'mut'
 	s[Kind.key_true] = 'true'
 	s[Kind.key_false] = 'false'

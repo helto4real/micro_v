@@ -188,7 +188,11 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			writer.writeln('')
 		}
 		BoundContinueStmt {
-			writer.write_keyword('continue')
+			writer.write_comment('continue')
+			writer.writeln('')
+		}
+		BoundCommentStmt {
+			writer.write_comment(node.comment)
 			writer.writeln('')
 		}
 		BoundReturnStmt {

@@ -153,6 +153,9 @@ pub fn (mut bbb BasicBlockBuilder) build(block BoundBlockStmt) []&BasicBlock {
 				bbb.stmts << stmt
 				bbb.start_block()
 			}
+			BoundCommentStmt {
+				// NOOP
+			}
 			else {
 				panic('unexpected stmt type $stmt')
 			}

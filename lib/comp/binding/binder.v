@@ -157,6 +157,7 @@ pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 		ast.ContinueStmt { return b.bind_continue_stmt(stmt) }
 		ast.BreakStmt { return b.bind_break_stmt(stmt) }
 		ast.ReturnStmt { return b.bind_return_stmt(stmt) }
+		ast.CommentStmt { return new_bound_comment_stmt(stmt.comment_tok) }
 	}
 }
 

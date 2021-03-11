@@ -122,14 +122,18 @@ pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?types.LitV
 							return types.None{}
 						}
 					}
+					binding.BoundCommentStmt {
+						// NOOP
+						index++
+					}
 					else {
 						panic('unexpected stmt typ: $stmt.node_str()')
-					} // Will never happen
+					} // will never happen
 				}
 			}
 			else {
 				panic('unexpected stmt typ: $stmt.node_str()')
-			} // Will never happen
+			} // will never happen
 		}
 	}
 	return e.last_val
