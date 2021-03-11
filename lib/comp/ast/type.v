@@ -5,7 +5,7 @@ import lib.comp.util
 
 // Sumtype statements
 pub type Stmt = BlockStmt | BreakStmt | ContinueStmt | ExprStmt | ForRangeStmt | ForStmt |
-	IfStmt | ReturnStmt | VarDeclStmt | CommentStmt
+	IfStmt | ReturnStmt | VarDeclStmt | CommentStmt | ModuleStmt
 
 // Sumtype expressions
 pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | EmptyExpr | IfExpr | LiteralExpr |
@@ -100,6 +100,7 @@ pub fn (ex &Stmt) node_str() string {
 		BreakStmt { return ex.node_str() }
 		ReturnStmt { return ex.node_str() }
 		CommentStmt { return ex.node_str() }
+		ModuleStmt { return ex.node_str() }
 	}
 }
 

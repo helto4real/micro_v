@@ -150,6 +150,12 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			writer.write_identifier(node.label)
 			writer.writeln('')
 		}
+		BoundModuleStmt {
+			writer.write_keyword('module')
+			writer.write_space()
+			writer.write_identifier(node.name)
+			writer.writeln('')
+		}
 		BoundIfStmt {
 			writer.write_keyword('if')
 			writer.write_space()
