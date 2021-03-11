@@ -267,9 +267,24 @@ fn (mut l Lowerer) rewrite_for_range_stmt(stmt BoundForRangeStmt) BoundStmt {
 	break_label := l.gen_break_label()
 	cond_label := l.gen_label()
 
-	res := block(lower_decl, upper_decl, goto_label(cond_label), label(body_label), stmt.body_stmt,
-		label(continue_label), increment(variable(lower_decl)), label(cond_label), goto_true(body_label,
-		less_than(variable(lower_decl), variable(upper_decl))), label(break_label))
+	res := block(
+		lower_decl, 
+		upper_decl, 
+		goto_label(cond_label), 
+		label(body_label), 
+		stmt.body_stmt,
+		label(continue_label), 
+		increment(
+			variable(lower_decl)
+		), 
+		label(cond_label), 
+		goto_true(body_label,
+			less_than(
+				variable(lower_decl), 
+				variable(upper_decl)
+			)
+		), 
+		label(break_label))
 	if l.shallow {
 		return res
 	}

@@ -11,6 +11,14 @@ import lib.comp.symbols
 
 pub type PrintFunc = fn (text string, nl bool, ref voidptr)
 
+pub fn print_fn(text string, nl bool, ref voidptr) {
+	if nl {
+		println(text)
+	} else {
+		print(text)
+	}
+}
+
 [heap]
 pub struct Compilation {
 mut:
@@ -18,7 +26,7 @@ mut:
 pub mut:
 	global_scope &binding.BoundGlobalScope
 	syntax       parser.SyntaxTree
-	print_fn     PrintFunc
+	print_fn     PrintFunc = print_fn // Defaults to stdout
 	print_ref    voidptr
 }
 

@@ -4,7 +4,7 @@ import term
 import strings
 import lib.comp.binding
 
-struct IdentWriter {
+pub struct IdentWriter {
 mut:
 	current_indent int
 	builder        strings.Builder = strings.new_builder(0)
@@ -17,7 +17,7 @@ pub fn get_bound_node_string(node binding.BoundNode) string {
 	return iw.builder.str()
 }
 
-fn (mut i IdentWriter) str() string {
+pub fn (mut i IdentWriter) str() string {
 	return i.builder.str()
 }
 
