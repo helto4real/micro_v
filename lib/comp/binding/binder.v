@@ -230,7 +230,7 @@ pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, i
 pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) BoundStmt {
 	range_expr := b.bind_expr(for_range_stmt.range_expr)
 	b.scope = new_bound_scope(b.scope)
-	ident := b.bind_variable(for_range_stmt.ident, range_expr.typ(), false)
+	ident := b.bind_variable(for_range_stmt.ident, range_expr.typ, false)
 	body_stmt := b.bind_loop_block_stmt(for_range_stmt.body_stmt as ast.BlockStmt)
 	b.scope = b.scope.parent
 	return new_for_range_stmt(ident, range_expr, body_stmt)
@@ -301,11 +301,11 @@ fn lookup_type(name string) symbols.TypeSymbol {
 }
 
 pub fn (mut b Binder) bind_convertion_diag(diag_pos util.Pos, expr BoundExpr, typ symbols.TypeSymbol) BoundExpr {
-	conv := convertion.classify(expr.typ(), typ)
+	conv := convertion.classify(expr.typ, typ)
 	if !conv.exists {
 		// convertion does not exist
-		if expr.typ() != symbols.error_symbol && typ != symbols.error_symbol {
-			b.log.error_cannot_convert_type(expr.typ().str(), typ.str(), diag_pos)
+		if expr.typ != symbols.error_symbol && typ != symbols.error_symbol {
+			b.log.error_cannot_convert_type(expr.typ.str(), typ.str(), diag_pos)
 		}
 		return new_bound_error_expr()
 	}
@@ -354,8 +354,8 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 		bound_arg := args[i]
 		param := func.params[i]
 
-		if bound_arg.typ() != param.typ {
-			b.log.error_wrong_argument_type(param.name, param.typ.name, bound_arg.typ().name,
+		if bound_arg.typ != param.typ {
+			b.log.error_wrong_argument_type(param.name, param.typ.name, bound_arg.typ.name,
 				expr.params.at(i).pos())
 			return new_bound_error_expr()
 		}
@@ -368,8 +368,8 @@ pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 	from_expr := b.bind_expr(range_expr.from)
 	to_expr := b.bind_expr(range_expr.to)
 
-	if from_expr.typ() != to_expr.typ() {
-		b.log.error_expected_same_type_in_range_expr(from_expr.typ().name, range_expr.to.pos())
+	if from_expr.typ != to_expr.typ {
+		b.log.error_expected_same_type_in_range_expr(from_expr.typ.name, range_expr.to.pos())
 	}
 	return new_range_expr(from_expr, to_expr)
 }
@@ -377,7 +377,7 @@ pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 fn bind_block_type(block BoundBlockStmt) ?symbols.TypeSymbol {
 	last_block_node := block.bound_stmts.last()
 	if last_block_node is BoundExprStmt {
-		return last_block_node.bound_expr.typ()
+		return last_block_node.bound_expr.typ
 	}
 	return none
 }
@@ -432,7 +432,7 @@ pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
 pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 	bound_expr := b.bind_expr(syntax.expr)
 
-	var := b.bind_variable(syntax.ident, bound_expr.typ(), syntax.is_mut)
+	var := b.bind_variable(syntax.ident, bound_expr.typ, syntax.is_mut)
 
 	return new_var_decl_stmt(var, bound_expr, syntax.is_mut)
 }
@@ -442,7 +442,7 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 
 	bound_expr := b.bind_expr(syntax.expr)
 
-	if bound_expr.typ() == symbols.error_symbol {
+	if bound_expr.typ == symbols.error_symbol {
 		return bound_expr
 	}
 	// check is varable exist in scope
@@ -458,7 +458,7 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 		return new_bound_error_expr()
 	}
 
-	conv_expr := b.bind_convertion_diag(syntax.expr.pos(), bound_expr, var.typ())
+	conv_expr := b.bind_convertion_diag(syntax.expr.pos(), bound_expr, var.typ)
 
 	return new_bound_assign_expr(var, conv_expr)
 }

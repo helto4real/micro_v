@@ -235,7 +235,7 @@ fn (mut p Parser) parse_return_stmt() ast.Stmt {
 		return ast.new_return_with_expr_stmt(return_tok, expr)
 	}
 	// assume it is am empty return
-	return ast.new_return_stmt(return_tok, ast.Expr{})
+	return ast.new_return_stmt(return_tok)
 }
 
 fn (mut p Parser) parse_continue_stmt() ast.Stmt {

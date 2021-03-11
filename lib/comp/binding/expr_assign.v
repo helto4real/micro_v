@@ -15,7 +15,7 @@ pub fn new_bound_assign_expr(var symbols.VariableSymbol, expr BoundExpr) BoundEx
 	return BoundAssignExpr{
 		child_nodes: [BoundNode(expr)]
 		var: var
-		typ: expr.typ()
+		typ: expr.typ
 		expr: expr
 	}
 }
@@ -25,5 +25,5 @@ pub fn (ex &BoundAssignExpr) node_str() string {
 }
 
 pub fn (ex &BoundAssignExpr) str() string {
-	return '$ex.var.name() = $ex.expr'
+	return '$ex.var.name = $ex.expr'
 }

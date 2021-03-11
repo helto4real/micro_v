@@ -25,12 +25,11 @@ pub fn new_return_with_expr_stmt(return_tok token.Token, expr Expr) ReturnStmt {
 	}
 }
 
-pub fn new_return_stmt(return_tok token.Token, expr Expr) ReturnStmt {
+pub fn new_return_stmt(return_tok token.Token) ReturnStmt {
 	return ReturnStmt{
 		pos: return_tok.pos
-		child_nodes: [AstNode(return_tok), expr]
+		child_nodes: [AstNode(return_tok)]
 		return_tok: return_tok
-		expr: expr
 		has_expr: false
 	}
 }

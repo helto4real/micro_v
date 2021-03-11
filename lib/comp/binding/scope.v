@@ -33,10 +33,10 @@ pub fn (bs &BoundScope) lookup_var(name string) ?symbols.VariableSymbol {
 }
 
 pub fn (mut bs BoundScope) try_declare_var(var symbols.VariableSymbol) bool {
-	if var.name() in bs.vars {
+	if var.name in bs.vars {
 		return false
 	}
-	bs.vars[var.name()] = var
+	bs.vars[var.name] = var
 	return true
 }
 

@@ -166,11 +166,11 @@ pub enum BoundBinaryOperatorKind {
 
 fn (mut b Binder) bind_unary_expr(syntax ast.UnaryExpr) BoundExpr {
 	bound_operand := b.bind_expr(syntax.operand)
-	if bound_operand.typ() == symbols.error_symbol {
+	if bound_operand.typ == symbols.error_symbol {
 		return new_bound_error_expr()
 	}
-	bound_op := bind_unary_operator(syntax.op.kind, bound_operand.typ()) or {
-		b.log.error('unary operator $syntax.op.lit is not defined for type ${bound_operand.typ().name}.',
+	bound_op := bind_unary_operator(syntax.op.kind, bound_operand.typ) or {
+		b.log.error('unary operator $syntax.op.lit is not defined for type ${bound_operand.typ.name}.',
 			syntax.op.pos)
 		return new_bound_error_expr()
 	}
@@ -181,12 +181,12 @@ fn (mut b Binder) bind_binary_expr(syntax ast.BinaryExpr) BoundExpr {
 	bound_left := b.bind_expr(syntax.left)
 	bound_right := b.bind_expr(syntax.right)
 
-	if bound_left.typ() == symbols.error_symbol || bound_right.typ() == symbols.error_symbol {
+	if bound_left.typ == symbols.error_symbol || bound_right.typ == symbols.error_symbol {
 		return new_bound_error_expr()
 	}
 
-	bound_op := bind_binary_operator(syntax.op.kind, bound_left.typ(), bound_right.typ()) or {
-		b.log.error('binary operator $syntax.op.lit is not defined for types $bound_left.typ().name and ${bound_right.typ().name}.',
+	bound_op := bind_binary_operator(syntax.op.kind, bound_left.typ, bound_right.typ) or {
+		b.log.error('binary operator $syntax.op.lit is not defined for types $bound_left.typ.name and ${bound_right.typ.name}.',
 			syntax.op.pos)
 		return new_bound_error_expr()
 	}

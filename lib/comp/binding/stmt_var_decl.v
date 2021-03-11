@@ -16,7 +16,7 @@ pub fn new_var_decl_stmt(var symbols.VariableSymbol, expr BoundExpr, is_mut bool
 	return BoundVarDeclStmt{
 		var: var
 		is_mut: is_mut
-		typ: expr.typ()
+		typ: expr.typ
 		expr: expr
 		child_nodes: [BoundNode(expr)]
 	}

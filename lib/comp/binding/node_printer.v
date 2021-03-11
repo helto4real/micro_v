@@ -15,7 +15,7 @@ pub fn write_node(writer io.TermTextWriter, node BoundNode) {
 fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 	match node {
 		BoundAssignExpr {
-			writer.write_identifier(node.var.name())
+			writer.write_identifier(node.var.name)
 			writer.write_space()
 			writer.write_punctuation('=')
 			writer.write_space()
@@ -88,7 +88,7 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 			write_nested_expr(writer, prec, node.operand)
 		}
 		BoundVariableExpr {
-			writer.write_identifier(node.var.name())
+			writer.write_identifier(node.var.name)
 		}
 	}
 }
@@ -124,7 +124,7 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 		BoundForRangeStmt {
 			writer.write_keyword('for')
 			writer.write_space()
-			writer.write_identifier(node.ident.name())
+			writer.write_identifier(node.ident.name)
 			writer.write_space()
 			writer.write_keyword('in')
 			writer.write_space()
@@ -173,7 +173,7 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			}
 		}
 		BoundVarDeclStmt {
-			writer.write_identifier(node.var.name())
+			writer.write_identifier(node.var.name)
 			writer.write_space()
 			writer.write_punctuation(':=')
 			writer.write_space()

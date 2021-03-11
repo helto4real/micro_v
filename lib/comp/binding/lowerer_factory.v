@@ -50,7 +50,7 @@ fn variable(var_decl BoundVarDeclStmt) BoundVariableExpr {
 
 fn binary(left BoundExpr, kind token.Kind, right BoundExpr) BoundExpr {
 	// todo: fix error handling
-	op := bind_binary_operator(kind, left.typ(), right.typ()) or { panic(err.msg) }
+	op := bind_binary_operator(kind, left.typ, right.typ) or { panic(err.msg) }
 
 	return new_bound_binary_expr(left, op, right)
 }
