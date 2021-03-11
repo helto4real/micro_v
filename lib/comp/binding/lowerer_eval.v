@@ -62,6 +62,7 @@ pub fn (mut l Lowerer) rewrite_stmt(stmt BoundStmt) BoundStmt {
 		BoundContinueStmt { return l.rewrite_continue_stmt(stmt) }
 		BoundReturnStmt { return l.rewrite_return_stmt(stmt) }
 		BoundCommentStmt { return stmt }
+		BoundModuleStmt { return stmt }
 	}
 }
 

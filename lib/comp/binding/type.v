@@ -6,7 +6,7 @@ pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundCo
 
 pub type BoundStmt = BoundBlockStmt | BoundBreakStmt | BoundCondGotoStmt | BoundContinueStmt |
 	BoundExprStmt | BoundForRangeStmt | BoundForStmt | BoundGotoStmt | BoundIfStmt | BoundLabelStmt |
-	BoundReturnStmt | BoundVarDeclStmt | BoundCommentStmt
+	BoundReturnStmt | BoundVarDeclStmt | BoundCommentStmt | BoundModuleStmt
 
 pub type BoundNode = BoundExpr | BoundStmt
 
@@ -36,6 +36,7 @@ pub enum BoundNodeKind {
 	cond_goto_stmt
 	goto_stmt
 	comment_stmt
+	module_stmt
 }
 
 pub fn (bn &BoundNode) child_nodes() []BoundNode {
@@ -108,5 +109,6 @@ pub fn (bs BoundStmt) node_str() string {
 		BoundContinueStmt { return bs.node_str() }
 		BoundReturnStmt { return bs.node_str() }
 		BoundCommentStmt { return bs.node_str() }
+		BoundModuleStmt { return bs.node_str() }
 	}
 }

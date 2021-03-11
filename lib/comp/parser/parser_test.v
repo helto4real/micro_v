@@ -164,6 +164,10 @@ fn test_keywords_parser() {
 	p = new_parser_from_text('return')
 	keyword = p.parse_stmt()
 	assert keyword is ast.ReturnStmt
+
+	p = new_parser_from_text('module main')
+	keyword = p.parse_stmt()
+	assert keyword is ast.ModuleStmt
 }
 
 fn test_param_node_parser() {

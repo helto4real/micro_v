@@ -13,6 +13,7 @@ pub mut:
 	scope   &BoundScope = 0
 	func    symbols.FunctionSymbol
 	log     &util.Diagnostics // errors when parsing
+	mod		string
 	is_loop bool
 }
 
@@ -158,7 +159,12 @@ pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 		ast.BreakStmt { return b.bind_break_stmt(stmt) }
 		ast.ReturnStmt { return b.bind_return_stmt(stmt) }
 		ast.CommentStmt { return new_bound_comment_stmt(stmt.comment_tok) }
+		ast.ModuleStmt { return b.bind_module_stmt(stmt) }
 	}
+}
+
+pub fn (mut b Binder) bind_module_stmt(module_stmt ast.ModuleStmt) BoundStmt {
+	return new_bound_module_stmt(module_stmt.tok_name)
 }
 
 pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {

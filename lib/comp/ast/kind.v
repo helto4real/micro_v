@@ -24,6 +24,7 @@ enum SyntaxKind {
 	node_fn_decl
 	global_stmt
 	comment_stmt
+	module_stmt
 	// statements
 	block_stmt
 	break_stmt

@@ -126,6 +126,10 @@ pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?types.LitV
 						// NOOP
 						index++
 					}
+					binding.BoundModuleStmt {
+						// NOOP
+						index++
+					}
 					else {
 						panic('unexpected stmt typ: $stmt.node_str()')
 					} // will never happen

@@ -210,6 +210,9 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.key_return {
 			return p.parse_return_stmt()
 		}
+		.key_module {
+			return p.parse_module_stmt()
+		}
 		.comment {
 			return ast.new_comment_stmt(p.current_token())
 		}
@@ -225,6 +228,12 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 	return p.parse_expression_stmt()
 }
 
+fn (mut p Parser) parse_module_stmt() ast.Stmt {
+	module_tok := p.match_token(.key_module)
+	module_name := p.match_token(.name)
+
+	return ast.new_module_stmt(module_tok, module_name)
+}
 fn (mut p Parser) parse_return_stmt() ast.Stmt {
 	return_tok := p.match_token(.key_return)
 	keyword_line_nr := p.source.line_nr(return_tok.pos.pos)
