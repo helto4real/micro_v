@@ -23,6 +23,7 @@ enum SyntaxKind {
 	node_type
 	node_fn_decl
 	global_stmt
+	comment_stmt
 	// statements
 	block_stmt
 	break_stmt

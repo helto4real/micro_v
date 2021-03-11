@@ -13,7 +13,7 @@ pub:
 pub fn new_bound_variable_expr(var symbols.VariableSymbol) BoundExpr {
 	return BoundVariableExpr{
 		var: var
-		typ: var.typ()
+		typ: var.typ
 	}
 }
 
@@ -22,5 +22,5 @@ pub fn (ex &BoundVariableExpr) node_str() string {
 }
 
 pub fn (ex &BoundVariableExpr) str() string {
-	return '$ex.var.name()'
+	return '$ex.var.name'
 }

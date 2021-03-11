@@ -90,8 +90,18 @@ pub fn (mut t Tokenizer) next_token() Token {
 			t.incr_pos()
 		}
 		`/` {
-			t.kind = .div
 			t.incr_pos()
+			if t.ch == `/` {
+				// panic('here')
+				// line comment
+				t.read_comment(true)
+			} else if t.ch == `*` {
+				// block comment
+				t.read_comment(false)
+			} else {
+				t.kind = .div
+				
+			}
 		}
 		token.single_quote, token.double_quote {
 			t.read_string_literal()
@@ -283,6 +293,25 @@ fn (mut t Tokenizer) read_identifier_or_keyword() {
 	} else {
 		t.kind = kind
 	}
+}
+
+// name, gets the name token
+fn (mut t Tokenizer) read_comment(is_line bool) {
+	t.incr_pos()
+	if is_line {
+		for t.ch != `\0` && !is_newline(t.ch) {
+			t.incr_pos()
+		}
+	} else {
+		for t.ch != `\0` && !(t.ch != `*` && t.peek_pos(1) != `\\`) {
+			t.incr_pos()
+		}	
+		// move past '*/' too
+		t.incr_pos()
+		t.incr_pos()	
+	}
+
+	t.kind = .comment
 }
 
 // pos, returns current position

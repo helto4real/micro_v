@@ -17,5 +17,4 @@ fn test_bound_global_scope_stack_basic() {
 	pop_val := stack.pop() or { &BoundGlobalScope(0) }
 
 	assert pop_val != 0
-	// assert pop_val.val == 100
 }

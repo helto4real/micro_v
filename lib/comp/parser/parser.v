@@ -210,6 +210,9 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.key_return {
 			return p.parse_return_stmt()
 		}
+		.comment {
+			return ast.new_comment_stmt(p.current_token())
+		}
 		.name {
 			if p.peek_var_decl(0) {
 				return p.parse_var_decl_stmt()
@@ -235,7 +238,7 @@ fn (mut p Parser) parse_return_stmt() ast.Stmt {
 		return ast.new_return_with_expr_stmt(return_tok, expr)
 	}
 	// assume it is am empty return
-	return ast.new_return_stmt(return_tok, ast.Expr{})
+	return ast.new_return_stmt(return_tok)
 }
 
 fn (mut p Parser) parse_continue_stmt() ast.Stmt {

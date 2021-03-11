@@ -16,10 +16,10 @@ fn test_single_scope() {
 		assert false
 		return
 	}
-	assert lookup_var.name() == 'in_scope_var'
-	lookup_not_exist := scope.lookup_var('not_exist') or { symbols.VariableSymbol{} }
+	assert lookup_var.name == 'in_scope_var'
+	lookup_not_exist := scope.lookup_var('not_exist') or { return }
 
-	assert lookup_not_exist.name() == ''
+	assert false
 }
 
 fn test_parent_scope() {
@@ -38,8 +38,8 @@ fn test_parent_scope() {
 		assert false
 		return
 	}
-	assert lookup_var.name() == 'in_scope_var'
-	lookup_not_exist := scope.lookup_var('not_exist') or { symbols.VariableSymbol{} }
+	assert lookup_var.name == 'in_scope_var'
+	lookup_not_exist := scope.lookup_var('not_exist') or { return }
 
-	assert lookup_not_exist.name() == ''
+	assert false
 }

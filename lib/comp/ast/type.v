@@ -5,10 +5,10 @@ import lib.comp.util
 
 // Sumtype statements
 pub type Stmt = BlockStmt | BreakStmt | ContinueStmt | ExprStmt | ForRangeStmt | ForStmt |
-	IfStmt | ReturnStmt | VarDeclStmt
+	IfStmt | ReturnStmt | VarDeclStmt | CommentStmt
 
 // Sumtype expressions
-pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | IfExpr | LiteralExpr |
+pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | EmptyExpr | IfExpr | LiteralExpr |
 	NameExpr | ParaExpr | RangeExpr | UnaryExpr
 
 // Nodes in syntax tree
@@ -23,24 +23,17 @@ pub interface Node {
 }
 
 pub fn (ex &AstNode) pos() util.Pos {
-	match ex {
-		Stmt { return ex.pos() }
-		Expr { return ex.pos() }
-		token.Token { return ex.pos }
-		TypeNode { return ex.pos }
-		ParamNode { return ex.pos }
-		MemberNode { return ex.pos() }
-	}
+	return ex.pos
 }
 
 pub fn (ex &AstNode) child_nodes() []AstNode {
 	match ex {
-		Expr { return ex.child_nodes() }
-		Stmt { return ex.child_nodes() }
+		Expr { return ex.child_nodes }
+		Stmt { return ex.child_nodes }
 		token.Token { return []AstNode{} }
-		TypeNode { return ex.child_nodes() }
-		ParamNode { return ex.child_nodes() }
-		MemberNode { return ex.child_nodes() }
+		TypeNode { return ex.child_nodes }
+		ParamNode { return ex.child_nodes }
+		MemberNode { return ex.child_nodes }
 	}
 }
 
@@ -56,18 +49,19 @@ pub fn (ex &AstNode) node_str() string {
 }
 
 pub fn (e &Expr) kind() SyntaxKind {
-	match e {
-		LiteralExpr { return e.kind }
-		BinaryExpr { return e.kind }
-		UnaryExpr { return e.kind }
-		ParaExpr { return e.kind }
-		NameExpr { return e.kind }
-		AssignExpr { return e.kind }
-		CompNode { return e.kind }
-		IfExpr { return e.kind }
-		RangeExpr { return e.kind }
-		CallExpr { return e.kind }
-	}
+	return e.kind
+	// match e {
+	// 	LiteralExpr { return e.kind }
+	// 	BinaryExpr { return e.kind }
+	// 	UnaryExpr { return e.kind }
+	// 	ParaExpr { return e.kind }
+	// 	NameExpr { return e.kind }
+	// 	AssignExpr { return e.kind }
+	// 	CompNode { return e.kind }
+	// 	IfExpr { return e.kind }
+	// 	RangeExpr { return e.kind }
+	// 	CallExpr { return e.kind }
+	// }
 }
 
 pub fn (ex &Expr) node_str() string {
@@ -82,37 +76,16 @@ pub fn (ex &Expr) node_str() string {
 		IfExpr { return ex.node_str() }
 		RangeExpr { return ex.node_str() }
 		CallExpr { return ex.node_str() }
+		EmptyExpr { return ex.node_str() }
 	}
 }
 
 pub fn (ex &Expr) child_nodes() []AstNode {
-	match ex {
-		LiteralExpr { return ex.child_nodes }
-		BinaryExpr { return ex.child_nodes }
-		UnaryExpr { return ex.child_nodes }
-		ParaExpr { return ex.child_nodes }
-		NameExpr { return ex.child_nodes }
-		AssignExpr { return ex.child_nodes }
-		CompNode { return ex.child_nodes }
-		IfExpr { return ex.child_nodes }
-		RangeExpr { return ex.child_nodes }
-		CallExpr { return ex.child_nodes }
-	}
+	return ex.child_nodes
 }
 
 pub fn (ex &Expr) pos() util.Pos {
-	match ex {
-		LiteralExpr { return ex.pos }
-		BinaryExpr { return ex.pos }
-		UnaryExpr { return ex.pos }
-		ParaExpr { return ex.pos }
-		NameExpr { return ex.pos }
-		AssignExpr { return ex.pos }
-		CompNode { return ex.pos }
-		IfExpr { return ex.pos }
-		RangeExpr { return ex.pos }
-		CallExpr { return ex.pos }
-	}
+	return ex.pos
 }
 
 pub fn (ex &Stmt) node_str() string {
@@ -126,35 +99,16 @@ pub fn (ex &Stmt) node_str() string {
 		ContinueStmt { return ex.node_str() }
 		BreakStmt { return ex.node_str() }
 		ReturnStmt { return ex.node_str() }
+		CommentStmt { return ex.node_str() }
 	}
 }
 
 pub fn (ex &Stmt) child_nodes() []AstNode {
-	match ex {
-		BlockStmt { return ex.child_nodes() }
-		ExprStmt { return ex.child_nodes() }
-		VarDeclStmt { return ex.child_nodes() }
-		IfStmt { return ex.child_nodes() }
-		ForRangeStmt { return ex.child_nodes() }
-		ForStmt { return ex.child_nodes() }
-		ContinueStmt { return ex.child_nodes() }
-		BreakStmt { return ex.child_nodes() }
-		ReturnStmt { return ex.child_nodes() }
-	}
+	return ex.child_nodes
 }
 
 pub fn (ex &Stmt) pos() util.Pos {
-	match ex {
-		BlockStmt { return ex.pos }
-		ExprStmt { return ex.pos }
-		VarDeclStmt { return ex.pos }
-		IfStmt { return ex.pos }
-		ForRangeStmt { return ex.pos }
-		ForStmt { return ex.pos }
-		ContinueStmt { return ex.pos }
-		BreakStmt { return ex.pos }
-		ReturnStmt { return ex.pos }
-	}
+	return ex.pos
 }
 
 pub fn (ex &MemberNode) node_str() string {
@@ -165,15 +119,9 @@ pub fn (ex &MemberNode) node_str() string {
 }
 
 pub fn (ex &MemberNode) child_nodes() []AstNode {
-	match ex {
-		GlobStmt { return ex.child_nodes() }
-		FnDeclNode { return ex.child_nodes() }
-	}
+	return ex.child_nodes
 }
 
 pub fn (ex &MemberNode) pos() util.Pos {
-	match ex {
-		GlobStmt { return ex.pos }
-		FnDeclNode { return ex.pos }
-	}
+	return ex.pos
 }

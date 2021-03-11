@@ -28,22 +28,6 @@ pub fn (vs &VariableSymbol) id() string {
 	}
 }
 
-pub fn (vs &VariableSymbol) typ() TypeSymbol {
-	match vs {
-		LocalVariableSymbol { return vs.typ }
-		GlobalVariableSymbol { return vs.typ }
-		ParamSymbol { return vs.typ }
-	}
-}
-
-pub fn (vs &VariableSymbol) name() string {
-	match vs {
-		LocalVariableSymbol { return vs.name }
-		GlobalVariableSymbol { return vs.name }
-		ParamSymbol { return vs.name }
-	}
-}
-
 pub fn (vs &VariableSymbol) str_ident(level int) string {
 	match vs {
 		LocalVariableSymbol { return vs.str_ident(level) }

@@ -30,6 +30,11 @@ fn (mut i IdentWriter) write_keyword(s string) {
 	i.builder.write_string(term.magenta(s))
 }
 
+fn (mut i IdentWriter) write_comment(s string) {
+	i.write_indent()
+	i.builder.write_string(term.green(s))
+}
+
 fn (mut i IdentWriter) write_string(s string) {
 	i.write_indent()
 	i.builder.write_string(term.bright_green(s))

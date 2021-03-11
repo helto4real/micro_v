@@ -61,6 +61,7 @@ pub fn (mut l Lowerer) rewrite_stmt(stmt BoundStmt) BoundStmt {
 		BoundBreakStmt { return l.rewrite_break_stmt(stmt) }
 		BoundContinueStmt { return l.rewrite_continue_stmt(stmt) }
 		BoundReturnStmt { return l.rewrite_return_stmt(stmt) }
+		BoundCommentStmt { return stmt }
 	}
 }
 
@@ -352,7 +353,7 @@ pub fn (mut l Lowerer) rewrite_expr(expr BoundExpr) BoundExpr {
 		BoundErrorExpr { return l.rewrite_error_expr(expr) }
 		BoundCallExpr { return l.rewrite_call_expr(expr) }
 		BoundConvExpr { return l.rewrite_conv_expr(expr) }
-		// else { panic('unexpected bound expression $expr') }
+		BoundEmptyExpr { return expr }
 	}
 }
 

@@ -8,5 +8,5 @@ fn sum(n int) int {
 		res = res + i
 		i = i - 1
 	}
-	
+	// return 0
 }
