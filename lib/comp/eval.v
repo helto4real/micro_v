@@ -37,7 +37,6 @@ pub fn new_evaluator(program binding.BoundProgram, glob_vars &binding.EvalVariab
 	// mut f := os.open_file(exe_path,'w+', 0o666) or {panic(err)}
 	// defer {f.close()}
 	// cfg.write_to(f) or {panic('unexpected error $err writing to file')}
-
 	mut eval := Evaluator{
 		root: lowered_stmt
 		fn_stmts: lowered_fn_stmts

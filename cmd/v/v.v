@@ -13,6 +13,10 @@ fn main() {
 		repl.run() ?
 		exit(0)
 	}
+	if args[0]=='help' {
+		display_help_message(args)
+		exit(0)
+	}
 	mut file := ''
 	mut display_bound_stmts := false
 	mut display_lowered_stmts := false
@@ -68,7 +72,17 @@ fn main() {
 	}
 	println(iw.str())
 }
-
+fn display_help_message(args []string) {
+	println('
+Mini V (mv) is a minimal implmentation of V lang
+Usage:
+	mv help                     Displays this message
+	mv hello.v                  Compiles the hello.v file
+	mv -display_stmts hello.v   Diplay ast statements
+	mv -display_lower hello.v   Diplay ast statements (lowered)
+	mv                          Starts the repl	
+	')
+}
 pub fn write_diagnostics(diagnostics []&util.Diagnostic, syntax_tree parser.SyntaxTree) {
 	mut sorted_diagnosics := []&util.Diagnostic{cap: diagnostics.len}
 	sorted_diagnosics << diagnostics
@@ -77,6 +91,9 @@ pub fn write_diagnostics(diagnostics []&util.Diagnostic, syntax_tree parser.Synt
 	for err in sorted_diagnosics {
 		src := syntax_tree.source.str()
 		line_nr := syntax_tree.source.line_nr(err.pos.pos)
+		line := syntax_tree.source.lines[line_nr-1]
+		col := err.pos.pos - line.start
+		// line_index := syntax_tree.source.line_index(err.pos.pos)
 		prefix := src[0..err.pos.pos]
 		mut err_end_pos := err.pos.pos + err.pos.len
 		if err_end_pos > src.len {
@@ -90,9 +107,8 @@ pub fn write_diagnostics(diagnostics []&util.Diagnostic, syntax_tree parser.Synt
 			''
 		}
 
-		iw.writeln(term.red(err.text))
+		iw.writeln(term.red('($line_nr, $col) $err.text'))
 		iw.writeln('')
-		iw.write('$line_nr| ')
 		iw.write(prefix.trim('\r\n'))
 		iw.write(term.red(error))
 		iw.writeln(postfix)

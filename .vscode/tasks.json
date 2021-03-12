@@ -10,6 +10,31 @@
             "presentation": {
                 "reveal": "silent"
             }
+        },
+        {
+            "label": "mv",
+            "type": "process",
+            "command": "cmd/v/v",
+            "args": [
+                "${file}"
+            ],
+            "presentation": {
+                "reveal": "silent"
+            }
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "v",
+            "args": [
+                "-g",
+                "-keepc",
+                "cmd/v/v.v"
+            ],
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$go"
         }
     ]
 }
