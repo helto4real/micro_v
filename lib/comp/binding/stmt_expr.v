@@ -17,3 +17,6 @@ pub fn new_bound_expr_stmt(bound_expr BoundExpr) BoundExprStmt {
 pub fn (ex &BoundExprStmt) node_str() string {
 	return typeof(ex).name
 }
+pub fn (ex &BoundExprStmt) str() string {
+	return '$ex.bound_expr'
+}

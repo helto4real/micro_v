@@ -19,7 +19,7 @@ pub fn new_comp_expr(members []MemberNode, eof_tok token.Token) CompNode {
 	}
 	first := members.first()
 	return CompNode{
-		pos: util.new_pos_from_pos_bounds(first.pos(), eof_tok.pos)
+		pos: util.new_pos_from_pos_bounds(first.pos, eof_tok.pos)
 		members: members
 		eof_tok: eof_tok
 		child_nodes: members.map(AstNode(it))

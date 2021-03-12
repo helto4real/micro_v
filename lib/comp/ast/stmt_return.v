@@ -6,7 +6,7 @@ import lib.comp.token
 pub struct ReturnStmt {
 pub:
 	// general ast node
-	kind        SyntaxKind = .cont_stmt
+	kind        SyntaxKind = .return_stmt
 	pos         util.Pos
 	child_nodes []AstNode
 	// child nodes

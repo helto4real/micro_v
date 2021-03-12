@@ -2,6 +2,7 @@ module ast
 
 import lib.comp.token
 import lib.comp.util
+import strings
 
 pub struct BlockStmt {
 pub:
@@ -34,4 +35,14 @@ pub fn (bs &BlockStmt) child_nodes() []AstNode {
 
 pub fn (ex &BlockStmt) node_str() string {
 	return typeof(ex).name
+}
+
+pub fn (ex BlockStmt) str() string {
+	mut b := strings.new_builder(0)
+	b.writeln('{')
+	for stmt in ex.stmts {
+		b.writeln('  $stmt')
+	}
+	b.writeln('}')
+	return b.str()
 }

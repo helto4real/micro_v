@@ -29,7 +29,7 @@ pub fn new_binary_expr(left Expr, op token.Token, right Expr) BinaryExpr {
 		left: left
 		op: op
 		right: right
-		pos: util.new_pos_from_pos_bounds(left.pos(), right.pos())
+		pos: util.new_pos_from_pos_bounds(left.pos, right.pos)
 		child_nodes: [AstNode(left), op, right]
 	}
 }
@@ -40,6 +40,10 @@ pub fn (be &BinaryExpr) child_nodes() []AstNode {
 
 pub fn (ex &BinaryExpr) node_str() string {
 	return typeof(ex).name
+}
+
+pub fn (ex BinaryExpr) str() string {
+	return '${ex.left} ${ex.op.lit} ${ex.right}'
 }
 
 pub struct UnaryExpr {
@@ -60,7 +64,7 @@ pub fn new_unary_expr(op token.Token, operand Expr) UnaryExpr {
 	return UnaryExpr{
 		op: op
 		operand: operand
-		pos: util.new_pos_from_pos_bounds(op.pos, operand.pos())
+		pos: util.new_pos_from_pos_bounds(op.pos, operand.pos)
 		child_nodes: [AstNode(op), operand]
 	}
 }
@@ -71,6 +75,10 @@ pub fn (be &UnaryExpr) child_nodes() []AstNode {
 
 pub fn (ex &UnaryExpr) node_str() string {
 	return typeof(ex).name
+}
+
+pub fn (ex UnaryExpr) str() string {
+	return '${ex.op.lit}$ex.operand'
 }
 
 pub struct ParaExpr {
@@ -99,4 +107,8 @@ pub fn (pe &ParaExpr) child_nodes() []AstNode {
 
 pub fn (ex &ParaExpr) node_str() string {
 	return typeof(ex).name
+}
+
+pub fn (ex ParaExpr) str() string {
+	return '($ex.expr)'
 }

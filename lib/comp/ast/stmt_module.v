@@ -6,7 +6,7 @@ import lib.comp.token
 pub struct ModuleStmt {
 pub:
 	// general ast node
-	kind        SyntaxKind = .comment_stmt
+	kind        SyntaxKind = .module_stmt
 	pos         util.Pos
 	child_nodes []AstNode
 	// child nodes

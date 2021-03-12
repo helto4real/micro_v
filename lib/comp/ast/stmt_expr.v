@@ -14,7 +14,7 @@ pub:
 
 pub fn new_expr_stmt(expr Expr) ExprStmt {
 	return ExprStmt{
-		pos: expr.pos()
+		pos: expr.pos
 		child_nodes: [AstNode(expr)]
 		expr: expr
 	}
@@ -26,4 +26,8 @@ pub fn (e &ExprStmt) child_nodes() []AstNode {
 
 pub fn (ex &ExprStmt) node_str() string {
 	return typeof(ex).name
+}
+
+pub fn (ex ExprStmt) str() string {
+	return '$ex.expr'
 }

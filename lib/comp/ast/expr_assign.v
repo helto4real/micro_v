@@ -19,7 +19,7 @@ pub fn new_assign_expr(ident token.Token, eq_tok token.Token, expr Expr) AssignE
 		ident: ident
 		expr: expr
 		eq_tok: eq_tok
-		pos: util.new_pos_from_pos_bounds(ident.pos, expr.pos())
+		pos: util.new_pos_from_pos_bounds(ident.pos, expr.pos)
 		child_nodes: [AstNode(ident), eq_tok, expr]
 	}
 }

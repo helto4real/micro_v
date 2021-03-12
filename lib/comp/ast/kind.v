@@ -33,6 +33,7 @@ enum SyntaxKind {
 	var_decl_stmt
 	if_stmt
 	for_stmt
+	return_stmt
 	for_range_stmt
 	empty
 	// syntax_helpers

@@ -33,6 +33,10 @@ pub fn (ex &LiteralExpr) node_str() string {
 	return typeof(ex).name
 }
 
+pub fn (ex LiteralExpr) str() string {
+	return '$ex.val'
+}
+
 pub struct NameExpr {
 pub:
 	kind        SyntaxKind = .name_expr
@@ -55,4 +59,7 @@ pub fn (ne &NameExpr) child_nodes() []AstNode {
 
 pub fn (ex &NameExpr) node_str() string {
 	return typeof(ex).name
+}
+pub fn (ex NameExpr) str() string {
+	return '$ex.ident.lit'
 }

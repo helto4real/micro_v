@@ -40,3 +40,14 @@ pub fn (le &CallExpr) child_nodes() []AstNode {
 pub fn (ex &CallExpr) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex CallExpr) str() string {
+	mut ret := '${ex.ident.lit}('
+	for i:=0; i< ex.params.len(); i++ {
+		param := ex.params.at(i)
+		if i != 0 {ret = ret + ', '}
+		ret = ret + '${param}'
+	}
+	ret = ret + ')'
+	return ret
+}

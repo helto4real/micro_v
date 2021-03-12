@@ -14,7 +14,7 @@ pub:
 
 pub fn new_glob_stmt(stmt Stmt) GlobStmt {
 	return GlobStmt{
-		pos: stmt.pos()
+		pos: stmt.pos
 		child_nodes: [AstNode(stmt)]
 		stmt: stmt
 	}

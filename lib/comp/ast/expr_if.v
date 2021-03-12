@@ -25,7 +25,7 @@ pub fn new_if_expr(key_if token.Token, cond_expr Expr, then_stmt Stmt, key_else 
 		cond_expr: cond_expr
 		then_stmt: then_stmt
 		else_stmt: else_stmt
-		pos: util.new_pos_from_pos_bounds(key_if.pos, else_stmt.pos())
+		pos: util.new_pos_from_pos_bounds(key_if.pos, else_stmt.pos)
 		child_nodes: [AstNode(key_if), cond_expr, then_stmt, key_else, else_stmt]
 	}
 }

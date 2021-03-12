@@ -35,17 +35,17 @@ pub fn (s SourceText) line_nr(pos int) int {
 	return lower
 }
 
-pub fn (s SourceText) str() string {
+pub fn (s &SourceText) str() string {
 	return s.text
 }
 
 [inline]
-pub fn (s SourceText) str_range(start int, end int) string {
+pub fn (s &SourceText) str_range(start int, end int) string {
 	return s.text[start..end]
 }
 
 [inline]
-pub fn (s SourceText) str_pos(pos Pos) string {
+pub fn (s &SourceText) str_pos(pos Pos) string {
 	return s.text[pos.pos..pos.pos + pos.len]
 }
 

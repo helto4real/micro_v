@@ -17,3 +17,7 @@ pub fn new_bound_module_stmt(tok_name token.Token) BoundStmt {
 pub fn (ex &BoundModuleStmt) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex &BoundModuleStmt) str() string {
+	return 'module $ex.name'
+}

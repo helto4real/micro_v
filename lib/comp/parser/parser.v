@@ -57,7 +57,8 @@ pub fn (mut p Parser) parse_member() ast.MemberNode {
 	if p.peek_fn_decl(0) {
 		return p.parse_function()
 	} else {
-		return p.parse_global_stmt()
+		global_stmt := p.parse_global_stmt()
+		return global_stmt
 	}
 }
 
@@ -330,6 +331,7 @@ fn (mut p Parser) parse_multi_stmt() []ast.Stmt {
 			// makes sure we not in infinite loop
 			p.next_token()
 		}
+
 	}
 	return stmts
 }
@@ -483,6 +485,7 @@ fn (mut p Parser) parse_bool_literal() ast.Expr {
 }
 
 fn (mut p Parser) parse_call_expr() ast.Expr {
+	
 	ident := p.match_token(.name)
 	lpar_tok := p.match_token(.lpar)
 	args := p.parse_args()

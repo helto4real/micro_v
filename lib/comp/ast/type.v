@@ -1,7 +1,6 @@
 module ast
 
 import lib.comp.token
-import lib.comp.util
 
 // Sumtype statements
 pub type Stmt = BlockStmt | BreakStmt | ContinueStmt | ExprStmt | ForRangeStmt | ForStmt |
@@ -22,9 +21,9 @@ pub interface Node {
 	node_str() string
 }
 
-pub fn (ex &AstNode) pos() util.Pos {
-	return ex.pos
-}
+// pub fn (ex &AstNode) pos() util.Pos {
+// 	return ex.pos
+// }
 
 pub fn (ex &AstNode) child_nodes() []AstNode {
 	match ex {
@@ -48,20 +47,19 @@ pub fn (ex &AstNode) node_str() string {
 	}
 }
 
+pub fn (ex AstNode) str() string {
+	match ex {
+		Expr { return ex.str() }
+		Stmt { return ex.str() }
+		token.Token { return ex.lit }
+		TypeNode { return ex.str() }
+		ParamNode { return ex.str() }
+		MemberNode { return ex.str() }
+	}
+}
+
 pub fn (e &Expr) kind() SyntaxKind {
 	return e.kind
-	// match e {
-	// 	LiteralExpr { return e.kind }
-	// 	BinaryExpr { return e.kind }
-	// 	UnaryExpr { return e.kind }
-	// 	ParaExpr { return e.kind }
-	// 	NameExpr { return e.kind }
-	// 	AssignExpr { return e.kind }
-	// 	CompNode { return e.kind }
-	// 	IfExpr { return e.kind }
-	// 	RangeExpr { return e.kind }
-	// 	CallExpr { return e.kind }
-	// }
 }
 
 pub fn (ex &Expr) node_str() string {
@@ -80,12 +78,24 @@ pub fn (ex &Expr) node_str() string {
 	}
 }
 
-pub fn (ex &Expr) child_nodes() []AstNode {
-	return ex.child_nodes
+pub fn (ex Expr) str() string {
+	match ex {
+		LiteralExpr { return ex.str() }
+		BinaryExpr { return ex.str() }
+		UnaryExpr { return ex.str() }
+		ParaExpr { return ex.str() }
+		NameExpr { return ex.str() }
+		AssignExpr { return ex.str() }
+		CompNode { return ex.str() }
+		IfExpr { return ex.str() }
+		RangeExpr { return ex.str() }
+		CallExpr { return ex.str() }
+		EmptyExpr { return ex.str() }
+	}
 }
 
-pub fn (ex &Expr) pos() util.Pos {
-	return ex.pos
+pub fn (ex &Expr) child_nodes() []AstNode {
+	return ex.child_nodes
 }
 
 pub fn (ex &Stmt) node_str() string {
@@ -104,12 +114,24 @@ pub fn (ex &Stmt) node_str() string {
 	}
 }
 
-pub fn (ex &Stmt) child_nodes() []AstNode {
-	return ex.child_nodes
+pub fn (ex Stmt) str() string {
+	match ex {
+		BlockStmt { return ex.str() }
+		ExprStmt { return ex.str() }
+		VarDeclStmt { return ex.str() }
+		IfStmt { return ex.str() }
+		ForRangeStmt { return ex.str() }
+		ForStmt { return ex.str() }
+		ContinueStmt { return ex.str() }
+		BreakStmt { return ex.str() }
+		ReturnStmt { return ex.str() }
+		CommentStmt { return ex.str() }
+		ModuleStmt { return ex.str() }
+	}
 }
 
-pub fn (ex &Stmt) pos() util.Pos {
-	return ex.pos
+pub fn (ex &Stmt) child_nodes() []AstNode {
+	return ex.child_nodes
 }
 
 pub fn (ex &MemberNode) node_str() string {
@@ -123,6 +145,3 @@ pub fn (ex &MemberNode) child_nodes() []AstNode {
 	return ex.child_nodes
 }
 
-pub fn (ex &MemberNode) pos() util.Pos {
-	return ex.pos
-}

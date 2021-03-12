@@ -21,7 +21,7 @@ pub fn new_var_decl_stmt(ident token.Token, eq token.Token, expr Expr, is_mut bo
 		expr: expr
 		eq: eq
 		is_mut: is_mut
-		pos: util.new_pos_from_pos_bounds(ident.pos, expr.pos())
+		pos: util.new_pos_from_pos_bounds(ident.pos, expr.pos)
 		child_nodes: [AstNode(ident), eq, expr]
 	}
 }

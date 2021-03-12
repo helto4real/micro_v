@@ -21,7 +21,7 @@ pub fn new_range_expr(from Expr, range token.Token, to Expr) RangeExpr {
 		range: range
 		from: from
 		to: to
-		pos: util.new_pos_from_pos_bounds(range.pos, to.pos())
+		pos: util.new_pos_from_pos_bounds(range.pos, to.pos)
 		child_nodes: [AstNode(from), range, to]
 	}
 }
@@ -32,4 +32,8 @@ pub fn (iss &RangeExpr) child_nodes() []AstNode {
 
 pub fn (ex &RangeExpr) node_str() string {
 	return typeof(ex).name
+}
+
+pub fn (ex RangeExpr) str() string {
+	return '${ex.from}..${ex.to}'
 }
