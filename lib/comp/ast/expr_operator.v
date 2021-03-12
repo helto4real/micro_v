@@ -43,7 +43,7 @@ pub fn (ex &BinaryExpr) node_str() string {
 }
 
 pub fn (ex BinaryExpr) str() string {
-	return '${ex.left} ${ex.op.lit} ${ex.right}'
+	return '$ex.left $ex.op.lit $ex.right'
 }
 
 pub struct UnaryExpr {
@@ -78,7 +78,7 @@ pub fn (ex &UnaryExpr) node_str() string {
 }
 
 pub fn (ex UnaryExpr) str() string {
-	return '${ex.op.lit}$ex.operand'
+	return '$ex.op.lit$ex.operand'
 }
 
 pub struct ParaExpr {

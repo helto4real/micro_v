@@ -18,7 +18,6 @@ fn main() {
 	mut display_lowered_stmts := false
 	for arg in args {
 		match arg {
-
 			'-display_stmts' {
 				display_bound_stmts = true
 			}
@@ -36,7 +35,7 @@ fn main() {
 	}
 	if file.len == 0 {
 		eprintln(term.red('no file specified'))
-		exit(-1)	
+		exit(-1)
 	}
 	// it is a file 
 	src := os.read_file(file) ?
@@ -47,7 +46,7 @@ fn main() {
 		exit(-1)
 	}
 	mut comp := comp.new_compilation(syntax_tree)
-	
+
 	if !(display_bound_stmts || display_lowered_stmts) {
 		vars := binding.new_eval_variables()
 		res := comp.evaluate(vars)
@@ -70,7 +69,7 @@ fn main() {
 	println(iw.str())
 }
 
-pub fn write_diagnostics(diagnostics []&util.Diagnostic, syntax_tree parser.SyntaxTree)  {
+pub fn write_diagnostics(diagnostics []&util.Diagnostic, syntax_tree parser.SyntaxTree) {
 	mut sorted_diagnosics := []&util.Diagnostic{cap: diagnostics.len}
 	sorted_diagnosics << diagnostics
 	sorted_diagnosics.sort(a.pos.pos < b.pos.pos)

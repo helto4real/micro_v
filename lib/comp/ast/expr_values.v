@@ -60,6 +60,7 @@ pub fn (ne &NameExpr) child_nodes() []AstNode {
 pub fn (ex &NameExpr) node_str() string {
 	return typeof(ex).name
 }
+
 pub fn (ex NameExpr) str() string {
 	return '$ex.ident.lit'
 }

@@ -35,5 +35,5 @@ pub fn (ex &RangeExpr) node_str() string {
 }
 
 pub fn (ex RangeExpr) str() string {
-	return '${ex.from}..${ex.to}'
+	return '${ex.from}..$ex.to'
 }

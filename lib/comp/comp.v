@@ -82,7 +82,7 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 		return new_evaluation_result(result, 0)
 	}
 	program := binding.bind_program(global_scope)
-	
+
 	if program.log.all.len > 0 {
 		return new_evaluation_result(program.log.all, 0)
 	}

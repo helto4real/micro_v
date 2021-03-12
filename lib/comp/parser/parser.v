@@ -235,6 +235,7 @@ fn (mut p Parser) parse_module_stmt() ast.Stmt {
 
 	return ast.new_module_stmt(module_tok, module_name)
 }
+
 fn (mut p Parser) parse_return_stmt() ast.Stmt {
 	return_tok := p.match_token(.key_return)
 	keyword_line_nr := p.source.line_nr(return_tok.pos.pos)
@@ -331,7 +332,6 @@ fn (mut p Parser) parse_multi_stmt() []ast.Stmt {
 			// makes sure we not in infinite loop
 			p.next_token()
 		}
-
 	}
 	return stmts
 }
@@ -485,7 +485,6 @@ fn (mut p Parser) parse_bool_literal() ast.Expr {
 }
 
 fn (mut p Parser) parse_call_expr() ast.Expr {
-	
 	ident := p.match_token(.name)
 	lpar_tok := p.match_token(.lpar)
 	args := p.parse_args()

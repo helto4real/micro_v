@@ -62,7 +62,6 @@ pub fn (mut stack EvalVarsStack) pop() ?&EvalVariables {
 }
 
 pub fn (mut stack EvalVarsStack) push(item &EvalVariables) {
-	
 	if stack.elements.len > stack.size {
 		stack.elements[stack.size] = item
 	} else {

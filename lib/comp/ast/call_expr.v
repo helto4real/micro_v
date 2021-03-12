@@ -43,10 +43,12 @@ pub fn (ex &CallExpr) node_str() string {
 
 pub fn (ex CallExpr) str() string {
 	mut ret := '${ex.ident.lit}('
-	for i:=0; i< ex.params.len(); i++ {
+	for i := 0; i < ex.params.len(); i++ {
 		param := ex.params.at(i)
-		if i != 0 {ret = ret + ', '}
-		ret = ret + '${param}'
+		if i != 0 {
+			ret = ret + ', '
+		}
+		ret = ret + '$param'
 	}
 	ret = ret + ')'
 	return ret

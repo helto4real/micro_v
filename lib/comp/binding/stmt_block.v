@@ -1,4 +1,5 @@
 module binding
+
 import strings
 
 pub struct BoundBlockStmt {
@@ -18,6 +19,7 @@ pub fn new_bound_block_stmt(bound_stmts []BoundStmt) BoundBlockStmt {
 pub fn (ex &BoundBlockStmt) node_str() string {
 	return typeof(ex).name
 }
+
 pub fn (ex &BoundBlockStmt) str() string {
 	mut b := strings.new_builder(0)
 	b.writeln('{')

@@ -44,7 +44,7 @@ pub fn (mut d Diagnostics) error(text string, pos Pos) {
 pub fn (mut d Diagnostics) error_ex(text string) {
 	d.all << &Diagnostic{
 		text: text
-		pos: util.Pos{}
+		pos: Pos{}
 	}
 }
 

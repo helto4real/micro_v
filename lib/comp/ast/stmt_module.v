@@ -11,13 +11,13 @@ pub:
 	child_nodes []AstNode
 	// child nodes
 	tok_module token.Token
-	tok_name token.Token
+	tok_name   token.Token
 }
 
 pub fn new_module_stmt(tok_module token.Token, tok_name token.Token) ModuleStmt {
 	return ModuleStmt{
 		pos: tok_module.pos
-		child_nodes: [AstNode(tok_module), ]
+		child_nodes: [AstNode(tok_module)]
 		tok_module: tok_module
 		tok_name: tok_name
 	}

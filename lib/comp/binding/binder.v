@@ -13,7 +13,7 @@ pub mut:
 	scope   &BoundScope = 0
 	func    symbols.FunctionSymbol
 	log     &util.Diagnostics // errors when parsing
-	mod		string
+	mod     string
 	is_loop bool
 }
 
@@ -39,7 +39,7 @@ pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
 		fn_decl := binder.scope.lookup_fn_decl(func.name) or {
 			panic('unexpected missing fn_decl in scope')
 		}
-		body := binder.bind_stmt(fn_decl.block) 
+		body := binder.bind_stmt(fn_decl.block)
 		if func.typ != symbols.void_symbol && !all_path_return_in_body(body as BoundBlockStmt) {
 			binder.log.error_all_paths_must_return(fn_decl.ident.pos)
 		}
@@ -61,7 +61,7 @@ pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.CompNode) &B
 	}
 	// then bind the global statements
 	mut glob_stmts := []BoundStmt{}
-	
+
 	for node in comp_node.members {
 		if node is ast.GlobStmt {
 			s := binder.bind_stmt(node.stmt)
@@ -161,7 +161,7 @@ pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 		.return_stmt { return b.bind_return_stmt(stmt as ast.ReturnStmt) }
 		.comment_stmt { return new_bound_comment_stmt((stmt as ast.CommentStmt).comment_tok) }
 		.module_stmt { return b.bind_module_stmt(stmt as ast.ModuleStmt) }
-		else{panic('unexpected stmt kind: $stmt.kind')}
+		else { panic('unexpected stmt kind: $stmt.kind') }
 	}
 }
 
@@ -346,7 +346,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	for i := 0; i < expr.params.len(); i++ {
 		param_expr := expr.params.at(i) as ast.Expr
 		arg_expr := b.bind_expr(param_expr)
-		
+
 		if arg_expr.typ == symbols.error_symbol {
 			return new_bound_error_expr()
 		}

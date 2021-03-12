@@ -3,8 +3,8 @@ module ast
 import lib.comp.token
 
 // Sumtype statements
-pub type Stmt = BlockStmt | BreakStmt | ContinueStmt | ExprStmt | ForRangeStmt | ForStmt |
-	IfStmt | ReturnStmt | VarDeclStmt | CommentStmt | ModuleStmt
+pub type Stmt = BlockStmt | BreakStmt | CommentStmt | ContinueStmt | ExprStmt | ForRangeStmt |
+	ForStmt | IfStmt | ModuleStmt | ReturnStmt | VarDeclStmt
 
 // Sumtype expressions
 pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | EmptyExpr | IfExpr | LiteralExpr |
@@ -144,4 +144,3 @@ pub fn (ex &MemberNode) node_str() string {
 pub fn (ex &MemberNode) child_nodes() []AstNode {
 	return ex.child_nodes
 }
-

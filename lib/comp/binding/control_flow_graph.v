@@ -422,7 +422,9 @@ pub fn all_path_return_in_body(body BoundBlockStmt) bool {
 	lowered_body := lower(body)
 	mut graph := create_control_flow_graph(lowered_body)
 	for branch in graph.end.incoming {
-		if branch.from.stmts.len == 0 {return false}
+		if branch.from.stmts.len == 0 {
+			return false
+		}
 		last_stmt := branch.from.stmts.last()
 		if last_stmt !is BoundReturnStmt {
 			return false

@@ -76,7 +76,7 @@ pub fn (iss &ForStmt) node_str() string {
 pub fn (iss ForStmt) str() string {
 	if iss.has_cond {
 		return 'for $iss.cond_expr $iss.body_stmt'
-	}else {
+	} else {
 		return 'for $iss.body_stmt'
 	}
 }

@@ -100,7 +100,6 @@ pub fn (mut t Tokenizer) next_token() Token {
 				t.read_comment(false)
 			} else {
 				t.kind = .div
-				
 			}
 		}
 		token.single_quote, token.double_quote {
@@ -305,10 +304,10 @@ fn (mut t Tokenizer) read_comment(is_line bool) {
 	} else {
 		for t.ch != `\0` && !(t.ch != `*` && t.peek_pos(1) != `\\`) {
 			t.incr_pos()
-		}	
+		}
 		// move past '*/' too
 		t.incr_pos()
-		t.incr_pos()	
+		t.incr_pos()
 	}
 
 	t.kind = .comment
