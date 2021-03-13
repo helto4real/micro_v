@@ -118,9 +118,11 @@ pub fn write_diagnostics(filename string, diagnostics []&source.Diagnostic, synt
 			line := syntax_tree.source.lines[i-1]
 			nr_of_zeros_to_add := nr_of_digits - i.str().len 
 			if nr_of_zeros_to_add > 0 {
-				b.write_string('0'.repeat(nr_of_zeros_to_add))
+				b.write_string(' 0'.repeat(nr_of_zeros_to_add))
+			} else {
+				b.write_string(' ')
 			}
-			b.write_string(' ${i}')
+			b.write_string('${i}')
 			b.write_string(' | ')
 			if i == error_line_nr {
 				prefix := src[line.start..err.pos.pos].replace('\t', '  ')
