@@ -1,7 +1,7 @@
 module ast
 
 import lib.comp.token
-import lib.comp.util
+import lib.comp.util.source
 
 // TypeNode represents a type identifier
 // 	parses:
@@ -11,7 +11,7 @@ pub struct TypeNode {
 pub:
 	// general ast node
 	kind        SyntaxKind = .node_type
-	pos         util.Pos
+	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
 	ident   token.Token
@@ -33,6 +33,6 @@ pub fn (e &TypeNode) child_nodes() []AstNode {
 	return e.child_nodes
 }
 
-pub fn (ex &TypeNode) node_str() string {
+pub fn (ex TypeNode) node_str() string {
 	return typeof(ex).name
 }

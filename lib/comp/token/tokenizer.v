@@ -1,6 +1,7 @@
 module token
 
 import lib.comp.util
+import lib.comp.util.source as src
 
 const (
 	single_quote = `\'`
@@ -10,7 +11,7 @@ const (
 pub struct Tokenizer {
 	text string // text tokenized
 mut:
-	source         &util.SourceText // represents source code
+	source         &src.SourceText // represents source code
 	start_line_pos int
 	pos            int  // current position in file
 	start          int  // start of the token
@@ -19,24 +20,24 @@ mut:
 	is_eof         bool
 	kind           Kind // current token kind
 pub mut:
-	log &util.Diagnostics // errors when tokenizing
+	log &src.Diagnostics // errors when tokenizing
 }
 
 // instance a tokenizer from string
 pub fn new_tokenizer_from_string(text string) &Tokenizer {
-	source := util.new_source_text(text)
+	source := src.new_source_text(text)
 	return &Tokenizer{
 		source: source
 		ch: source.at(0)
-		log: util.new_diagonistics()
+		log: src.new_diagonistics()
 	}
 }
 
-pub fn new_tokenizer_from_source(source &util.SourceText) &Tokenizer {
+pub fn new_tokenizer_from_source(source &src.SourceText) &Tokenizer {
 	return &Tokenizer{
 		source: source
 		ch: source.at(0)
-		log: util.new_diagonistics()
+		log: src.new_diagonistics()
 	}
 }
 
@@ -229,7 +230,7 @@ fn (mut t Tokenizer) token(kind Kind, pos int, lit string, len int) Token {
 	tok := Token{
 		kind: kind
 		lit: lit
-		pos: util.Pos{
+		pos: src.Pos{
 			pos: pos
 			len: len
 		}
@@ -315,8 +316,8 @@ fn (mut t Tokenizer) read_comment(is_line bool) {
 
 // pos, returns current position
 [inline]
-fn (mut t Tokenizer) token_pos() util.Pos {
-	return util.new_pos(t.pos, t.len)
+fn (mut t Tokenizer) token_pos() src.Pos {
+	return src.new_pos(t.pos, t.len)
 }
 
 // read_string_literal returns a string literal

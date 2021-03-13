@@ -1,25 +1,42 @@
 module parser
 
+import os
 import strconv
 import lib.comp.ast
 import lib.comp.token
-import lib.comp.util
+import lib.comp.util.source as src
 
 pub struct Parser {
-	source &util.SourceText
+	source &src.SourceText
 mut:
 	pos    int
 	tokens []token.Token
 pub mut:
-	log &util.Diagnostics // errors when parsing
+	log &src.Diagnostics // errors when parsing
 }
 
 // new_parser_from_text, instance a parser from a text input
 fn new_parser_from_text(text string) &Parser {
-	source := util.new_source_text(text)
+	source := src.new_source_text(text)
 	mut tnz := token.new_tokenizer_from_source(source)
 	tokens := tnz.scan_all()
-	mut diagnostics := util.new_diagonistics()
+	mut diagnostics := src.new_diagonistics()
+	diagnostics.merge(tnz.log)
+	mut parser := &Parser{
+		source: source
+		tokens: tokens
+		log: diagnostics
+	}
+	return parser
+}
+
+pub fn new_parser_from_file(filename string) ?&Parser {
+	text := os.read_file(filename) ?
+
+	source := src.new_source_text_from_file(text, filename)
+	mut tnz := token.new_tokenizer_from_source(source)
+	tokens := tnz.scan_all()
+	mut diagnostics := src.new_diagonistics()
 	diagnostics.merge(tnz.log)
 	mut parser := &Parser{
 		source: source

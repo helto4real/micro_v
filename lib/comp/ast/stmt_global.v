@@ -1,12 +1,12 @@
 module ast
 
-import lib.comp.util
+import lib.comp.util.source
 
 pub struct GlobStmt {
 pub:
 	// general ast node
 	kind        SyntaxKind = .global_stmt
-	pos         util.Pos
+	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
 	stmt Stmt
@@ -24,6 +24,6 @@ pub fn (e &GlobStmt) child_nodes() []AstNode {
 	return e.child_nodes
 }
 
-pub fn (ex &GlobStmt) node_str() string {
+pub fn (ex GlobStmt) node_str() string {
 	return typeof(ex).name
 }

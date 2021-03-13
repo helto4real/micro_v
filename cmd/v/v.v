@@ -4,7 +4,7 @@ import os
 import lib.comp.types
 import lib.comp.binding
 import lib.comp.parser
-import lib.comp.util
+import lib.comp.util.source
 import lib.comp
 
 fn main() {
@@ -41,10 +41,7 @@ fn main() {
 		eprintln(term.red('no file specified'))
 		exit(-1)
 	}
-	// it is a file 
-	src := os.read_file(file) ?
-	// println(src)
-	syntax_tree := parser.parse_syntax_tree(src)
+	syntax_tree := parser.parse_syntax_tree_from_file(file) ?
 	if syntax_tree.log.all.len > 0 {
 		// write_diagnostics(syntax_tree.log.all, syntax_tree)
 		exit(-1)
@@ -83,8 +80,8 @@ Usage:
 	mv                          Starts the repl	
 	')
 }
-pub fn write_diagnostics(diagnostics []&util.Diagnostic, syntax_tree parser.SyntaxTree) {
-	mut sorted_diagnosics := []&util.Diagnostic{cap: diagnostics.len}
+pub fn write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree parser.SyntaxTree) {
+	mut sorted_diagnosics := []&source.Diagnostic{cap: diagnostics.len}
 	sorted_diagnosics << diagnostics
 	sorted_diagnosics.sort(a.pos.pos < b.pos.pos)
 	mut iw := repl.IdentWriter{}

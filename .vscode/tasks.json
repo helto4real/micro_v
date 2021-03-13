@@ -35,6 +35,21 @@
                 "reveal": "silent"
             },
             "problemMatcher": "$go"
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "v",
+            "args": [
+                "-g",
+                "-keepc",
+                "test",
+                "."
+            ],
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$go"
         }
     ]
 }

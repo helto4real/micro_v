@@ -19,10 +19,10 @@ pub fn new_bound_literal_expr(val types.LitVal) BoundExpr {
 	}
 }
 
-pub fn (ex &BoundLiteralExpr) node_str() string {
+pub fn (ex BoundLiteralExpr) node_str() string {
 	return 'typeof(ex).name'
 }
 
-pub fn (ex &BoundLiteralExpr) str() string {
+pub fn (ex BoundLiteralExpr) str() string {
 	return '$ex.val'
 }

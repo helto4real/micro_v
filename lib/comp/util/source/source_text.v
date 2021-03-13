@@ -1,12 +1,22 @@
-module util
+module source
+
+import lib.comp.util.source
 
 // SourceCode handles the source handling features
 // 	- linenumber and columns
 //	- formatting of errors
 pub struct SourceText {
 	text string
+	filename string
 pub mut:
 	lines []TextLine
+}
+
+pub fn new_source_text_from_file(text string, filename string) &SourceText {
+	return &SourceText{
+		text: text
+		filename: filename
+	}
 }
 
 pub fn new_source_text(text string) &SourceText {
@@ -45,7 +55,7 @@ pub fn (s &SourceText) str_range(start int, end int) string {
 }
 
 [inline]
-pub fn (s &SourceText) str_pos(pos Pos) string {
+pub fn (s &SourceText) str_pos(pos source.Pos) string {
 	return s.text[pos.pos..pos.pos + pos.len]
 }
 
@@ -75,12 +85,12 @@ fn new_text_line(source_text &SourceText, start int, len int, lb_len int) TextLi
 	}
 }
 
-pub fn (tl TextLine) pos() Pos {
-	return new_pos(tl.start, tl.len)
+pub fn (tl TextLine) pos() source.Pos {
+	return source.new_pos(tl.start, tl.len)
 }
 
-pub fn (tl TextLine) pos_include_linebreak() Pos {
-	return new_pos(tl.start, tl.len + tl.lb_len)
+pub fn (tl TextLine) pos_include_linebreak() source.Pos {
+	return source.new_pos(tl.start, tl.len + tl.lb_len)
 }
 
 pub fn (tl TextLine) str() string {

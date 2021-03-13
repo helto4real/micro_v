@@ -21,11 +21,11 @@ pub fn new_bound_return_stmt() BoundStmt {
 	}
 }
 
-pub fn (ex &BoundReturnStmt) node_str() string {
+pub fn (ex BoundReturnStmt) node_str() string {
 	return typeof(ex).name
 }
 
-pub fn (ex &BoundReturnStmt) str() string {
+pub fn (ex BoundReturnStmt) str() string {
 	if ex.has_expr {
 		return 'return $ex.expr'
 	} else {

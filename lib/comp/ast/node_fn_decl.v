@@ -1,13 +1,13 @@
 module ast
 
 import lib.comp.token
-import lib.comp.util
+import lib.comp.util.source
 
 pub struct FnDeclNode {
 pub:
 	// general ast node
 	kind        SyntaxKind = .node_fn_decl
-	pos         util.Pos
+	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
 	fn_key   token.Token
@@ -33,7 +33,7 @@ pub fn new_fn_decl_node(fn_key token.Token, ident token.Token, lpar_tok token.To
 	child_nodes << typ_node
 
 	return FnDeclNode{
-		pos: util.new_pos_from_pos_bounds(fn_key.pos, block.pos)
+		pos: source.new_pos_from_pos_bounds(fn_key.pos, block.pos)
 		child_nodes: child_nodes
 		fn_key: fn_key
 		ident: ident
@@ -49,6 +49,6 @@ pub fn (e &FnDeclNode) child_nodes() []AstNode {
 	return e.child_nodes
 }
 
-pub fn (ex &FnDeclNode) node_str() string {
+pub fn (ex FnDeclNode) node_str() string {
 	return typeof(ex).name
 }

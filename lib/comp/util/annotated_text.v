@@ -2,13 +2,15 @@ module util
 
 import strings
 
+import lib.comp.util.source
+
 pub struct AnnotatedText {
 pub:
 	text  string
-	posns []Pos
+	posns []source.Pos
 }
 
-fn new_annotated_text(text string, posns []Pos) AnnotatedText {
+fn new_annotated_text(text string, posns []source.Pos) AnnotatedText {
 	return AnnotatedText{
 		text: text
 		posns: posns
@@ -18,7 +20,7 @@ fn new_annotated_text(text string, posns []Pos) AnnotatedText {
 pub fn parse_annotated_text(text string) AnnotatedText {
 	mut b := strings.new_builder(20)
 	uindent_text := unindent(text)
-	mut posns := []Pos{cap: 20}
+	mut posns := []source.Pos{cap: 20}
 	mut fake_stack := []int{cap: 20}
 
 	mut pos := 0
@@ -31,7 +33,7 @@ pub fn parse_annotated_text(text string) AnnotatedText {
 			}
 			start := fake_stack.pop()
 			end := pos
-			posns << new_pos_from_bounds(start, end)
+			posns << source.new_pos_from_bounds(start, end)
 		} else {
 			pos++
 			b.write_b(c)

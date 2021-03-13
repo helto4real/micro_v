@@ -1,7 +1,7 @@
 module ast
 
 import lib.comp.token
-import lib.comp.util
+import lib.comp.util.source
 
 pub struct VarDeclStmt {
 pub:
@@ -12,7 +12,7 @@ pub:
 	ident token.Token
 	eq    token.Token
 	expr  Expr
-	pos   util.Pos
+	pos   source.Pos
 }
 
 pub fn new_var_decl_stmt(ident token.Token, eq token.Token, expr Expr, is_mut bool) VarDeclStmt {
@@ -21,7 +21,7 @@ pub fn new_var_decl_stmt(ident token.Token, eq token.Token, expr Expr, is_mut bo
 		expr: expr
 		eq: eq
 		is_mut: is_mut
-		pos: util.new_pos_from_pos_bounds(ident.pos, expr.pos)
+		pos: source.new_pos_from_pos_bounds(ident.pos, expr.pos)
 		child_nodes: [AstNode(ident), eq, expr]
 	}
 }
@@ -30,6 +30,6 @@ pub fn (ae &VarDeclStmt) child_nodes() []AstNode {
 	return ae.child_nodes
 }
 
-pub fn (ex &VarDeclStmt) node_str() string {
+pub fn (ex VarDeclStmt) node_str() string {
 	return typeof(ex).name
 }

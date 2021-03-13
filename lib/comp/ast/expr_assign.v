@@ -1,7 +1,7 @@
 module ast
 
 import lib.comp.token
-import lib.comp.util
+import lib.comp.util.source
 
 pub struct AssignExpr {
 pub:
@@ -11,7 +11,7 @@ pub:
 	ident  token.Token
 	eq_tok token.Token
 	expr   Expr
-	pos    util.Pos
+	pos    source.Pos
 }
 
 pub fn new_assign_expr(ident token.Token, eq_tok token.Token, expr Expr) AssignExpr {
@@ -19,7 +19,7 @@ pub fn new_assign_expr(ident token.Token, eq_tok token.Token, expr Expr) AssignE
 		ident: ident
 		expr: expr
 		eq_tok: eq_tok
-		pos: util.new_pos_from_pos_bounds(ident.pos, expr.pos)
+		pos: source.new_pos_from_pos_bounds(ident.pos, expr.pos)
 		child_nodes: [AstNode(ident), eq_tok, expr]
 	}
 }
@@ -28,6 +28,6 @@ pub fn (ae &AssignExpr) child_nodes() []AstNode {
 	return ae.child_nodes
 }
 
-pub fn (ex &AssignExpr) node_str() string {
+pub fn (ex AssignExpr) node_str() string {
 	return typeof(ex).name
 }

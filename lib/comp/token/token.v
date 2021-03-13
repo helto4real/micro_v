@@ -1,6 +1,6 @@
 module token
 
-import lib.comp.util
+import lib.comp.util.source
 
 pub const (
 	tok_void  = Token{
@@ -16,7 +16,7 @@ pub struct Token {
 pub:
 	kind Kind     // the token number/enum; for quick comparisons
 	lit  string   // literal representation of the token
-	pos  util.Pos // position in the file
+	pos  source.Pos // position in the file
 }
 
 pub fn (t Token) str() string {

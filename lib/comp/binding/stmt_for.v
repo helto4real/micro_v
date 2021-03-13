@@ -21,11 +21,11 @@ fn new_for_range_stmt(ident symbols.VariableSymbol, range_expr BoundExpr, body_s
 	}
 }
 
-pub fn (ex &BoundForRangeStmt) node_str() string {
+pub fn (ex BoundForRangeStmt) node_str() string {
 	return typeof(ex).name
 }
 
-pub fn (ex &BoundForRangeStmt) str() string {
+pub fn (ex BoundForRangeStmt) str() string {
 	return 'for $ex.ident.name in $ex.range_expr $ex.body_stmt'
 }
 
@@ -49,11 +49,11 @@ pub fn new_for_stmt(cond_expr BoundExpr, body_stmt BoundStmt, has_cond bool) Bou
 	}
 }
 
-pub fn (ex &BoundForStmt) node_str() string {
+pub fn (ex BoundForStmt) node_str() string {
 	return typeof(ex).name
 }
 
-pub fn (ex &BoundForStmt) str() string {
+pub fn (ex BoundForStmt) str() string {
 	if ex.has_cond {
 		return 'for $ex.cond_expr $ex.body_stmt'
 	} else {

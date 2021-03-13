@@ -53,7 +53,7 @@ pub fn (mut bb BasicBlock) add_incoming(branch BasicBlockBranch) {
 	bb.incoming << branch
 }
 
-pub fn (ex &BasicBlock) str() string {
+pub fn (ex BasicBlock) str() string {
 	mut b := io.new_node_string_writer()
 	if ex.is_start {
 		return '<start>'

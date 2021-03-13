@@ -15,6 +15,6 @@ pub fn new_bound_comment_stmt(comment_tok token.Token) BoundStmt {
 	}
 }
 
-pub fn (ex &BoundCommentStmt) node_str() string {
+pub fn (ex BoundCommentStmt) node_str() string {
 	return typeof(ex).name
 }

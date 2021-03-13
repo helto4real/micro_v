@@ -1,7 +1,7 @@
 module ast
 
 import lib.comp.token
-import lib.comp.util
+import lib.comp.util.source
 import strings
 
 pub struct BlockStmt {
@@ -9,7 +9,7 @@ pub:
 	// Node
 	kind        SyntaxKind = .block_stmt
 	child_nodes []AstNode
-	pos         util.Pos
+	pos         source.Pos
 	open_brc    token.Token
 	stmts       []Stmt
 	close_brc   token.Token
@@ -25,7 +25,7 @@ pub fn new_block_stmt(open_brc token.Token, stmts []Stmt, close_brc token.Token)
 		stmts: stmts
 		close_brc: close_brc
 		child_nodes: child_nodes
-		pos: util.new_pos_from_pos_bounds(open_brc.pos, close_brc.pos)
+		pos: source.new_pos_from_pos_bounds(open_brc.pos, close_brc.pos)
 	}
 }
 
@@ -33,7 +33,7 @@ pub fn (bs &BlockStmt) child_nodes() []AstNode {
 	return bs.child_nodes
 }
 
-pub fn (ex &BlockStmt) node_str() string {
+pub fn (ex BlockStmt) node_str() string {
 	return typeof(ex).name
 }
 

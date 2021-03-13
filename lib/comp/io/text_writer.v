@@ -1,6 +1,6 @@
 module io
 
-// import lib.comp.util
+// import lib.comp.util.source
 // import lib.comp.parser
 
 pub interface TermTextWriter {
@@ -13,7 +13,7 @@ pub interface TermTextWriter {
 	write_space()
 	writeln(s string)
 	write(s string)
-	// write_diagnostics(diagnostics []&util.Diagnostic, syntax_tree parser.SyntaxTree) 
+	// write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree parser.SyntaxTree) 
 	indent_add(n int)
 	indent() int
 }

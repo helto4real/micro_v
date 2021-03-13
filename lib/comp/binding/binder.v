@@ -3,7 +3,7 @@ module binding
 
 import lib.comp.ast
 import lib.comp.token
-import lib.comp.util
+import lib.comp.util.source
 import lib.comp.symbols
 import lib.comp.binding.convertion
 
@@ -12,7 +12,7 @@ pub struct Binder {
 pub mut:
 	scope   &BoundScope = 0
 	func    symbols.FunctionSymbol
-	log     &util.Diagnostics // errors when parsing
+	log     &source.Diagnostics // errors when parsing
 	mod     string
 	is_loop bool
 }
@@ -21,7 +21,7 @@ pub fn new_binder(parent &BoundScope, func symbols.FunctionSymbol) &Binder {
 	mut scope := new_bound_scope(parent)
 	new_binder := &Binder{
 		scope: scope
-		log: util.new_diagonistics()
+		log: source.new_diagonistics()
 		func: func
 	}
 	for param in func.params {
@@ -33,7 +33,7 @@ pub fn new_binder(parent &BoundScope, func symbols.FunctionSymbol) &Binder {
 pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
 	parent_scope := create_parent_scope(global_scope)
 	mut func_bodies := map[string]BoundBlockStmt{}
-	mut log := util.new_diagonistics()
+	mut log := source.new_diagonistics()
 	for func in global_scope.funcs {
 		mut binder := new_binder(parent_scope, func)
 		fn_decl := binder.scope.lookup_fn_decl(func.name) or {
@@ -117,6 +117,27 @@ fn create_root_scope() &BoundScope {
 	return result
 }
 
+pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
+	match stmt.kind {
+		.block_stmt { return b.bind_block_stmt(stmt as ast.BlockStmt) }
+		.for_range_stmt { return b.bind_for_range_stmt(stmt as ast.ForRangeStmt) }
+		.if_stmt { return b.bind_if_stmt(stmt as ast.IfStmt) }
+		.expr_stmt { return b.bind_expr_stmt(stmt as ast.ExprStmt) }
+		.var_decl_stmt { return b.bind_var_decl_stmt(stmt as ast.VarDeclStmt) }
+		.for_stmt { return b.bind_for_stmt(stmt as ast.ForStmt) }
+		.cont_stmt { return b.bind_continue_stmt(stmt as ast.ContinueStmt) }
+		.break_stmt { return b.bind_break_stmt(stmt as ast.BreakStmt) }
+		.return_stmt { return b.bind_return_stmt(stmt as ast.ReturnStmt) }
+		.comment_stmt { return new_bound_comment_stmt((stmt as ast.CommentStmt).comment_tok) }
+		.module_stmt { return b.bind_module_stmt(stmt as ast.ModuleStmt) }
+		else { panic('unexpected stmt kind: $stmt.kind') }
+	}
+}
+
+pub fn (mut b Binder) bind_module_stmt(module_stmt ast.ModuleStmt) BoundStmt {
+	return new_bound_module_stmt(module_stmt.tok_name)
+}
+
 pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 	mut params := []symbols.ParamSymbol{}
 	mut seen_param_names := []string{}
@@ -146,27 +167,6 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 	if !b.scope.try_declare_fn(func, fn_decl) {
 		b.log.error_function_allready_declared(fn_decl.ident.lit, fn_decl.ident.pos)
 	}
-}
-
-pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
-	match stmt.kind {
-		.block_stmt { return b.bind_block_stmt(stmt as ast.BlockStmt) }
-		.for_range_stmt { return b.bind_for_range_stmt(stmt as ast.ForRangeStmt) }
-		.if_stmt { return b.bind_if_stmt(stmt as ast.IfStmt) }
-		.expr_stmt { return b.bind_expr_stmt(stmt as ast.ExprStmt) }
-		.var_decl_stmt { return b.bind_var_decl_stmt(stmt as ast.VarDeclStmt) }
-		.for_stmt { return b.bind_for_stmt(stmt as ast.ForStmt) }
-		.cont_stmt { return b.bind_continue_stmt(stmt as ast.ContinueStmt) }
-		.break_stmt { return b.bind_break_stmt(stmt as ast.BreakStmt) }
-		.return_stmt { return b.bind_return_stmt(stmt as ast.ReturnStmt) }
-		.comment_stmt { return new_bound_comment_stmt((stmt as ast.CommentStmt).comment_tok) }
-		.module_stmt { return b.bind_module_stmt(stmt as ast.ModuleStmt) }
-		else { panic('unexpected stmt kind: $stmt.kind') }
-	}
-}
-
-pub fn (mut b Binder) bind_module_stmt(module_stmt ast.ModuleStmt) BoundStmt {
-	return new_bound_module_stmt(module_stmt.tok_name)
 }
 
 pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
@@ -310,7 +310,7 @@ fn lookup_type(name string) symbols.TypeSymbol {
 	}
 }
 
-pub fn (mut b Binder) bind_convertion_diag(diag_pos util.Pos, expr BoundExpr, typ symbols.TypeSymbol) BoundExpr {
+pub fn (mut b Binder) bind_convertion_diag(diag_pos source.Pos, expr BoundExpr, typ symbols.TypeSymbol) BoundExpr {
 	conv := convertion.classify(expr.typ, typ)
 	if !conv.exists {
 		// convertion does not exist

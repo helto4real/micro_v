@@ -12,7 +12,7 @@ pub fn (vs &VariableSymbol) is_mut() bool {
 	}
 }
 
-pub fn (vs &VariableSymbol) str_ident(level int) string {
+pub fn (vs VariableSymbol) str_ident(level int) string {
 	match vs {
 		LocalVariableSymbol { return vs.str_ident(level) }
 		GlobalVariableSymbol { return vs.str_ident(level) }

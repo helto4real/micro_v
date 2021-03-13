@@ -8,7 +8,7 @@ import lib.comp.binding
 import lib.comp.parser
 import lib.comp.types
 import lib.comp.token
-import lib.comp.util
+import lib.comp.util.source
 import lib.comp.symbols
 import lib.comp
 import lib.comp.ast.walker
@@ -52,7 +52,7 @@ fn (mut a App) colorize() {
 	if raw_text.len == 0 {
 		return
 	}
-	source := util.new_source_text(b.raw())
+	source := source.new_source_text(b.raw())
 	mut tnz := token.new_tokenizer_from_source(source)
 	tokens := tnz.scan_all()
 	for tok in tokens {

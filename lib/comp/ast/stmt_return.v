@@ -1,13 +1,13 @@
 module ast
 
-import lib.comp.util
+import lib.comp.util.source
 import lib.comp.token
 
 pub struct ReturnStmt {
 pub:
 	// general ast node
 	kind        SyntaxKind = .return_stmt
-	pos         util.Pos
+	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
 	has_expr   bool
@@ -38,6 +38,6 @@ pub fn (e &ReturnStmt) child_nodes() []AstNode {
 	return e.child_nodes
 }
 
-pub fn (ex &ReturnStmt) node_str() string {
+pub fn (ex ReturnStmt) node_str() string {
 	return typeof(ex).name
 }

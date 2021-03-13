@@ -1,13 +1,13 @@
 module ast
 
 import lib.comp.token
-import lib.comp.util
+import lib.comp.util.source
 
 pub struct ForRangeStmt {
 pub:
 	// general ast node
 	kind        SyntaxKind = .for_range_stmt
-	pos         util.Pos
+	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
 	key_for    token.Token
@@ -19,7 +19,7 @@ pub:
 
 pub fn new_for_range_stmt(key_for token.Token, ident token.Token, key_in token.Token, range_expr Expr, body_stmt Stmt) ForRangeStmt {
 	return ForRangeStmt{
-		pos: util.new_pos_from_pos_bounds(key_for.pos, body_stmt.pos)
+		pos: source.new_pos_from_pos_bounds(key_for.pos, body_stmt.pos)
 		child_nodes: [AstNode(key_for), ident, key_in, range_expr, body_stmt]
 		key_for: key_for
 		ident: ident
@@ -33,7 +33,7 @@ pub fn (e &ForRangeStmt) child_nodes() []AstNode {
 	return e.child_nodes
 }
 
-pub fn (ex &ForRangeStmt) node_str() string {
+pub fn (ex ForRangeStmt) node_str() string {
 	return typeof(ex).name
 }
 
@@ -46,7 +46,7 @@ pub:
 	// Node
 	kind        SyntaxKind = .for_stmt
 	child_nodes []AstNode
-	pos         util.Pos
+	pos         source.Pos
 	has_cond    bool
 
 	key_for   token.Token
@@ -64,12 +64,12 @@ pub fn new_for_stmt(key_for token.Token, cond_expr Expr, body_stmt Stmt, has_con
 		cond_expr: cond_expr
 		body_stmt: body_stmt
 		has_cond: has_cond
-		pos: util.new_pos_from_pos_bounds(key_for.pos, body_stmt.pos)
+		pos: source.new_pos_from_pos_bounds(key_for.pos, body_stmt.pos)
 		child_nodes: [AstNode(key_for), cond_expr, body_stmt]
 	}
 }
 
-pub fn (iss &ForStmt) node_str() string {
+pub fn (iss ForStmt) node_str() string {
 	return typeof(iss).name
 }
 

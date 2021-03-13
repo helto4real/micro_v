@@ -30,7 +30,7 @@ pub fn new_bound_unary_op_with_ret(kind token.Kind, op_kind BoundUnaryOperatorKi
 	}
 }
 
-pub fn (ex &BoundUnaryOperator) node_str() string {
+pub fn (ex BoundUnaryOperator) node_str() string {
 	return typeof(ex).name
 }
 
@@ -76,7 +76,7 @@ pub fn new_bound_binary_op_full(kind token.Kind, op_kind BoundBinaryOperatorKind
 	}
 }
 
-pub fn (ex &BoundBinaryOperator) node_str() string {
+pub fn (ex BoundBinaryOperator) node_str() string {
 	return typeof(ex).name
 }
 

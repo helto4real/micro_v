@@ -10,6 +10,6 @@ pub fn new_bound_break_stmt() BoundStmt {
 	return BoundBreakStmt{}
 }
 
-pub fn (ex &BoundBreakStmt) node_str() string {
+pub fn (ex BoundBreakStmt) node_str() string {
 	return typeof(ex).name
 }

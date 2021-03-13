@@ -1,16 +1,16 @@
 module parser
 
 import lib.comp.ast
-import lib.comp.util
+import lib.comp.util.source
 
 pub struct SyntaxTree {
 pub:
-	source &util.SourceText // represents source code
+	source &source.SourceText // represents source code
 	root   ast.CompNode
-	log    &util.Diagnostics // errors when parsing
+	log    &source.Diagnostics // errors when parsing
 }
 
-// source &util.SourceText, log &util.Diagnostics, root ast.CompNode
+// source &source.SourceText, log &source.Diagnostics, root ast.CompNode
 fn new_syntax_tree(text string) SyntaxTree {
 	mut parser := new_parser_from_text(text)
 	root := parser.parse_comp_node()
@@ -21,6 +21,20 @@ fn new_syntax_tree(text string) SyntaxTree {
 	}
 }
 
+fn load_syntax_tree(filename string) ?SyntaxTree {
+	mut parser := new_parser_from_file(filename) ?
+	root := parser.parse_comp_node()
+	return SyntaxTree{
+		root: root
+		log: parser.log
+		source: parser.source
+	}
+}
+
 pub fn parse_syntax_tree(text string) SyntaxTree {
 	return new_syntax_tree(text)
+}
+
+pub fn parse_syntax_tree_from_file(text string) ?SyntaxTree {
+	return load_syntax_tree(text) 
 }

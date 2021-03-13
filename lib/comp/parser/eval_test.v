@@ -2,6 +2,7 @@
 import lib.comp.binding
 import lib.comp.parser
 import lib.comp
+import lib.comp.util.source
 import lib.comp.util
 
 struct TestCompilationState {
@@ -337,10 +338,10 @@ fn assert_has_multi_diagostics(text string, diagnostic_text string, nr_of_err_ms
 }
 
 fn assert_err_info(input_rule string, expected_message string, actual_message string) {
-	assert_err_info_diag(input_rule, expected_message, actual_message, []&util.Diagnostic{})
+	assert_err_info_diag(input_rule, expected_message, actual_message, []&source.Diagnostic{})
 }
 
-fn assert_err_info_diag(input_rule string, expected_message string, actual_message string, actual_diagnostics []&util.Diagnostic) {
+fn assert_err_info_diag(input_rule string, expected_message string, actual_message string, actual_diagnostics []&source.Diagnostic) {
 	// make sure we print info so we can find the method that is faulty	
 	eprintln('input rule:')
 	eprintln(input_rule)

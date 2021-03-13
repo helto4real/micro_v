@@ -1,13 +1,13 @@
 module ast
 
-import lib.comp.util
+import lib.comp.util.source
 import lib.comp.token
 
 pub struct CommentStmt {
 pub:
 	// general ast node
 	kind        SyntaxKind = .comment_stmt
-	pos         util.Pos
+	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
 	comment_tok token.Token
@@ -25,6 +25,6 @@ pub fn (e &CommentStmt) child_nodes() []AstNode {
 	return e.child_nodes
 }
 
-pub fn (ex &CommentStmt) node_str() string {
+pub fn (ex CommentStmt) node_str() string {
 	return typeof(ex).name
 }

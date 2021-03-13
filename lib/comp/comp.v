@@ -5,7 +5,7 @@ import term
 import lib.comp.parser
 import lib.comp.binding
 import lib.comp.types
-import lib.comp.util
+import lib.comp.util.source
 import lib.comp.io
 import lib.comp.symbols
 
@@ -75,7 +75,7 @@ pub fn (c &Compilation) continue_with(syntax_tree parser.SyntaxTree) &Compilatio
 
 pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&util.Diagnostic{}
+	mut result := []&source.Diagnostic{}
 	result << c.syntax.log.all
 	result << global_scope.log.all
 	if result.len > 0 {
@@ -132,11 +132,11 @@ pub fn (mut c Compilation) emit_tree(writer io.TermTextWriter, lower bool) {
 
 pub struct EvaluationResult {
 pub:
-	result []&util.Diagnostic
+	result []&source.Diagnostic
 	val    types.LitVal
 }
 
-pub fn new_evaluation_result(result []&util.Diagnostic, val types.LitVal) EvaluationResult {
+pub fn new_evaluation_result(result []&source.Diagnostic, val types.LitVal) EvaluationResult {
 	return EvaluationResult{
 		result: result
 		val: val

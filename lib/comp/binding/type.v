@@ -43,7 +43,7 @@ pub fn (bn &BoundNode) child_nodes() []BoundNode {
 	return bn.child_nodes
 }
 
-pub fn (bn &BoundNode) node_str() string {
+pub fn (bn BoundNode) node_str() string {
 	match bn {
 		BoundExpr {
 			return bn.node_str()

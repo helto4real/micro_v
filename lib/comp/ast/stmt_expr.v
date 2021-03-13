@@ -1,12 +1,12 @@
 module ast
 
-import lib.comp.util
+import lib.comp.util.source
 
 pub struct ExprStmt {
 pub:
 	// general ast node
 	kind        SyntaxKind = .expr_stmt
-	pos         util.Pos
+	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
 	expr Expr
@@ -24,7 +24,7 @@ pub fn (e &ExprStmt) child_nodes() []AstNode {
 	return e.child_nodes
 }
 
-pub fn (ex &ExprStmt) node_str() string {
+pub fn (ex ExprStmt) node_str() string {
 	return typeof(ex).name
 }
 

@@ -2,14 +2,14 @@ module ast
 
 import lib.comp.token
 import lib.comp.types
-import lib.comp.util
+import lib.comp.util.source
 
 pub struct LiteralExpr {
 	tok token.Token
 pub:
 	kind        SyntaxKind = .literal_expr
 	val         types.LitVal
-	pos         util.Pos
+	pos         source.Pos
 	child_nodes []AstNode
 }
 
@@ -29,7 +29,7 @@ pub fn (le &LiteralExpr) child_nodes() []AstNode {
 	return le.child_nodes
 }
 
-pub fn (ex &LiteralExpr) node_str() string {
+pub fn (ex LiteralExpr) node_str() string {
 	return typeof(ex).name
 }
 
@@ -41,7 +41,7 @@ pub struct NameExpr {
 pub:
 	kind        SyntaxKind = .name_expr
 	ident       token.Token
-	pos         util.Pos
+	pos         source.Pos
 	child_nodes []AstNode
 }
 
@@ -57,7 +57,7 @@ pub fn (ne &NameExpr) child_nodes() []AstNode {
 	return ne.child_nodes
 }
 
-pub fn (ex &NameExpr) node_str() string {
+pub fn (ex NameExpr) node_str() string {
 	return typeof(ex).name
 }
 

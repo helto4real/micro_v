@@ -22,10 +22,10 @@ pub fn new_var_decl_stmt(var symbols.VariableSymbol, expr BoundExpr, is_mut bool
 	}
 }
 
-pub fn (ex &BoundVarDeclStmt) node_str() string {
+pub fn (ex BoundVarDeclStmt) node_str() string {
 	return typeof(ex).name
 }
 
-pub fn (ex &BoundVarDeclStmt) str() string {
+pub fn (ex BoundVarDeclStmt) str() string {
 	return '$ex.var.name := $ex.expr'
 }

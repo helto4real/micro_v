@@ -1,7 +1,7 @@
 module ast
 
 import lib.comp.token
-import lib.comp.util
+import lib.comp.util.source
 
 // TypeNode represents a type identifier
 // 	parses:
@@ -12,7 +12,7 @@ pub struct ParamNode {
 pub:
 	// general ast node
 	kind        SyntaxKind = .node_param
-	pos         util.Pos
+	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
 	ident  token.Token
@@ -22,7 +22,7 @@ pub:
 
 pub fn new_param_node(ident token.Token, typ TypeNode, is_mut bool) ParamNode {
 	return ParamNode{
-		pos: util.new_pos_from_pos_bounds(ident.pos, typ.ident.pos)
+		pos: source.new_pos_from_pos_bounds(ident.pos, typ.ident.pos)
 		child_nodes: [AstNode(ident), typ]
 		ident: ident
 		typ: typ
@@ -34,6 +34,6 @@ pub fn (e &ParamNode) child_nodes() []AstNode {
 	return e.child_nodes
 }
 
-pub fn (ex &ParamNode) node_str() string {
+pub fn (ex ParamNode) node_str() string {
 	return typeof(ex).name
 }

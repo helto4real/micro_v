@@ -20,11 +20,11 @@ pub fn new_bound_call_expr(func symbols.FunctionSymbol, params []BoundExpr) Boun
 	}
 }
 
-pub fn (ex &BoundCallExpr) node_str() string {
+pub fn (ex BoundCallExpr) node_str() string {
 	return typeof(ex).name
 }
 
-pub fn (ex &BoundCallExpr) str() string {
+pub fn (ex BoundCallExpr) str() string {
 	// TODO: Gen parameters
 	return 'fn ${ex.func.name}()'
 }

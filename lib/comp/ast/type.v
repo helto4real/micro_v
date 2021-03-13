@@ -21,7 +21,7 @@ pub interface Node {
 	node_str() string
 }
 
-// pub fn (ex &AstNode) pos() util.Pos {
+// pub fn (ex &AstNode) pos() source.Pos {
 // 	return ex.pos
 // }
 
@@ -36,7 +36,7 @@ pub fn (ex &AstNode) child_nodes() []AstNode {
 	}
 }
 
-pub fn (ex &AstNode) node_str() string {
+pub fn (ex AstNode) node_str() string {
 	match ex {
 		Expr { return ex.node_str() }
 		Stmt { return ex.node_str() }
@@ -62,7 +62,7 @@ pub fn (e &Expr) kind() SyntaxKind {
 	return e.kind
 }
 
-pub fn (ex &Expr) node_str() string {
+pub fn (ex Expr) node_str() string {
 	match ex {
 		LiteralExpr { return ex.node_str() }
 		BinaryExpr { return ex.node_str() }
@@ -98,7 +98,7 @@ pub fn (ex &Expr) child_nodes() []AstNode {
 	return ex.child_nodes
 }
 
-pub fn (ex &Stmt) node_str() string {
+pub fn (ex Stmt) node_str() string {
 	match ex {
 		BlockStmt { return ex.node_str() }
 		ExprStmt { return ex.node_str() }
@@ -134,7 +134,7 @@ pub fn (ex &Stmt) child_nodes() []AstNode {
 	return ex.child_nodes
 }
 
-pub fn (ex &MemberNode) node_str() string {
+pub fn (ex MemberNode) node_str() string {
 	match ex {
 		GlobStmt { return ex.node_str() }
 		FnDeclNode { return ex.node_str() }
