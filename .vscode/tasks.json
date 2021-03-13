@@ -16,11 +16,12 @@
             "type": "process",
             "command": "cmd/v/v",
             "args": [
-                "${file}"
+                "${relativeFile}"
             ],
             "presentation": {
                 "reveal": "silent"
-            }
+            },
+            "problemMatcher": "$go"
         },
         {
             "label": "build",

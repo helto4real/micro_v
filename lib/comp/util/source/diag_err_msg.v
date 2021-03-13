@@ -103,3 +103,11 @@ pub fn (mut d Diagnostics) error_all_paths_must_return(pos Pos) {
 	d.error("all code paths must 'return' in function", pos)
 }
 
+pub fn (mut d Diagnostics) error_module_can_only_be_defined_once(pos Pos) {
+	d.error("a module can only be definded once", pos)
+}
+
+pub fn (mut d Diagnostics) error_module_can_only_be_defined_as_first_statement(pos Pos) {
+	d.error("a module can only be definded as first statement", pos)
+}
+

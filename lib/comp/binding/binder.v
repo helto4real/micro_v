@@ -15,6 +15,7 @@ pub mut:
 	log     &source.Diagnostics // errors when parsing
 	mod     string
 	is_loop bool
+	mod_ok_to_define bool = true // if true it is ok to define a module 
 }
 
 pub fn new_binder(parent &BoundScope, func symbols.FunctionSymbol) &Binder {
@@ -118,6 +119,9 @@ fn create_root_scope() &BoundScope {
 }
 
 pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
+	if b.mod_ok_to_define && stmt.kind != .comment_stmt && stmt.kind != .module_stmt {
+		b.mod_ok_to_define = false
+	}
 	match stmt.kind {
 		.block_stmt { return b.bind_block_stmt(stmt as ast.BlockStmt) }
 		.for_range_stmt { return b.bind_for_range_stmt(stmt as ast.ForRangeStmt) }
@@ -135,6 +139,15 @@ pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 }
 
 pub fn (mut b Binder) bind_module_stmt(module_stmt ast.ModuleStmt) BoundStmt {
+	if b.mod.len > 0 {
+		b.log.error_module_can_only_be_defined_once(module_stmt.pos)
+		return new_bound_expr_stmt(new_bound_error_expr())
+	}
+	if !b.mod_ok_to_define {
+		b.log.error_module_can_only_be_defined_as_first_statement(module_stmt.pos)
+		return new_bound_expr_stmt(new_bound_error_expr())
+	}
+	b.mod = module_stmt.tok_name.lit
 	return new_bound_module_stmt(module_stmt.tok_name)
 }
 

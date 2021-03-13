@@ -1,4 +1,5 @@
 import term
+import strings
 import lib.repl
 import os
 import lib.comp.types
@@ -58,7 +59,7 @@ fn main() {
 			println(term.cyan('OK'))
 			exit(0)
 		}
-		write_diagnostics(res.result, syntax_tree)
+		write_diagnostics(file, res.result, syntax_tree)
 		exit(-1)
 	}
 	mut iw := repl.IdentWriter{}
@@ -80,36 +81,71 @@ Usage:
 	mv                          Starts the repl	
 	')
 }
-pub fn write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree parser.SyntaxTree) {
+pub fn write_diagnostics(filename string, diagnostics []&source.Diagnostic, syntax_tree parser.SyntaxTree) {
 	mut sorted_diagnosics := []&source.Diagnostic{cap: diagnostics.len}
 	sorted_diagnosics << diagnostics
 	sorted_diagnosics.sort(a.pos.pos < b.pos.pos)
 	mut iw := repl.IdentWriter{}
 	for err in sorted_diagnosics {
 		src := syntax_tree.source.str()
-		line_nr := syntax_tree.source.line_nr(err.pos.pos)
-		line := syntax_tree.source.lines[line_nr-1]
-		col := err.pos.pos - line.start
-		// line_index := syntax_tree.source.line_index(err.pos.pos)
-		prefix := src[0..err.pos.pos]
+		error_line_nr := syntax_tree.source.line_nr(err.pos.pos)
+		error_line := syntax_tree.source.lines[error_line_nr-1]
+		error_col := err.pos.pos - error_line.start + 1
+
+		mut line_nr_start := error_line_nr-2
+		if line_nr_start < 1 {line_nr_start = 1}
+
+		error_line_nr_end := syntax_tree.source.line_nr(err.pos.pos + err.pos.len)
+		// line_end := syntax_tree.source.lines[error_line_nr_end-1]
+
+		mut line_nr_end := error_line_nr_end + 2
+		if line_nr_end > syntax_tree.source.lines.len {
+			line_nr_end = syntax_tree.source.lines.len
+		}
+
 		mut err_end_pos := err.pos.pos + err.pos.len
 		if err_end_pos > src.len {
 			err_end_pos = src.len
 		}
-		error := src[err.pos.pos..err_end_pos]
+		
+		iw.write('${filename}:${error_line_nr}:${error_col}: ')
+		iw.write(term.red('error: '))
+		iw.writeln(err.text)
 
-		postfix := if err_end_pos + err.pos.len < src.len {
-			src[err.pos.pos + err.pos.len..]
-		} else {
-			''
+		mut b:=strings.new_builder(0)
+		nr_of_digits := line_nr_end.str().len
+		for i in line_nr_start..line_nr_end {
+			line := syntax_tree.source.lines[i-1]
+			nr_of_zeros_to_add := nr_of_digits - i.str().len 
+			if nr_of_zeros_to_add > 0 {
+				b.write_string('0'.repeat(nr_of_zeros_to_add))
+			}
+			b.write_string(' ${i}')
+			b.write_string(' | ')
+			if i == error_line_nr {
+				prefix := src[line.start..err.pos.pos].replace('\t', '  ')
+				error := src[err.pos.pos..err_end_pos].replace('\t', '  ')
+				postfix := src[err.pos.pos+err.pos.len..line.start+line.len].replace('\t', '  ')
+
+				
+				b.write_string(prefix)
+				b.write_string(term.red(error))
+				b.writeln(postfix)
+				b.write_string(' '.repeat(nr_of_digits+1))
+				b.write_string(' | ')
+				b.writeln(term.red('${' '.repeat(prefix.len)}${'~'.repeat(err.pos.len)}'))
+			} else {
+				b.writeln(src[line.start..line.start+line.len].replace('\t', '  '))
+			}
 		}
+		iw.writeln(b.str())
+		iw.writeln('')
 
-		iw.writeln(term.red('($line_nr, $col) $err.text'))
-		iw.writeln('')
-		iw.write(prefix.trim('\r\n'))
-		iw.write(term.red(error))
-		iw.writeln(postfix)
-		iw.writeln('')
+		// iw.writeln('')
+		// iw.write(prefix.trim('\r\n'))
+		// iw.write(term.red(error))
+		// iw.writeln(postfix)
+		// iw.writeln('')
 	}
 	println(iw.str())
 }

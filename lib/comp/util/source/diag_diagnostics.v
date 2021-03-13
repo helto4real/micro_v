@@ -6,6 +6,10 @@ pub:
 	text string // error text
 }
 
+// fn (d &Diagnostic) < (d1 &Diagnostic) bool {
+// 	return d.pos.pos < d1.pos.pos
+// }
+
 pub struct Diagnostics {
 mut:
 	iter_pos int

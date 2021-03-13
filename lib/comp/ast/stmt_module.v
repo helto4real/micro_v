@@ -16,7 +16,7 @@ pub:
 
 pub fn new_module_stmt(tok_module token.Token, tok_name token.Token) ModuleStmt {
 	return ModuleStmt{
-		pos: tok_module.pos
+		pos: source.new_pos_from_pos_bounds(tok_module.pos, tok_name.pos)
 		child_nodes: [AstNode(tok_module)]
 		tok_module: tok_module
 		tok_name: tok_name
