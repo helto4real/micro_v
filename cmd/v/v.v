@@ -96,7 +96,6 @@ pub fn write_diagnostics(filename string, diagnostics []&source.Diagnostic, synt
 		if line_nr_start < 1 {line_nr_start = 1}
 
 		error_line_nr_end := syntax_tree.source.line_nr(err.pos.pos + err.pos.len)
-		// line_end := syntax_tree.source.lines[error_line_nr_end-1]
 
 		mut line_nr_end := error_line_nr_end + 2
 		if line_nr_end > syntax_tree.source.lines.len {

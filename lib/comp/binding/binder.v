@@ -4,6 +4,7 @@ module binding
 import lib.comp.ast
 import lib.comp.token
 import lib.comp.util.source
+import lib.comp.parser
 import lib.comp.symbols
 import lib.comp.binding.convertion
 
@@ -51,22 +52,26 @@ pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
 	return bound_program
 }
 
-pub fn bind_global_scope(previous &BoundGlobalScope, comp_node &ast.CompNode) &BoundGlobalScope {
+pub fn bind_global_scope(previous &BoundGlobalScope, syntax_trees []parser.SyntaxTree) &BoundGlobalScope {
 	parent_scope := create_parent_scope(previous)
 	mut binder := new_binder(parent_scope, symbols.undefined_fn)
 	// first bind the functions to make them visible 
-	for node in comp_node.members {
-		if node is ast.FnDeclNode {
-			binder.bind_fn_decl(node)
+	for syntax_tree in syntax_trees {
+		for node in syntax_tree.root.members {
+			if node is ast.FnDeclNode {
+				binder.bind_fn_decl(node)
+			}
 		}
 	}
+	
 	// then bind the global statements
 	mut glob_stmts := []BoundStmt{}
-
-	for node in comp_node.members {
-		if node is ast.GlobStmt {
-			s := binder.bind_stmt(node.stmt)
-			glob_stmts << s
+	for syntax_tree in syntax_trees {
+		for node in syntax_tree.root.members {
+			if node is ast.GlobStmt {
+				s := binder.bind_stmt(node.stmt)
+				glob_stmts << s
+			}
 		}
 	}
 	stmt := new_bound_block_stmt(glob_stmts)

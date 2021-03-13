@@ -5,9 +5,10 @@ import lib.comp.util.source
 
 pub struct SyntaxTree {
 pub:
-	source &source.SourceText // represents source code
-	root   ast.CompNode
-	log    &source.Diagnostics // errors when parsing
+	source   &source.SourceText // represents source code
+	root     ast.CompNode
+	log      &source.Diagnostics // errors when parsing
+	filename string
 }
 
 // source &source.SourceText, log &source.Diagnostics, root ast.CompNode
@@ -28,6 +29,7 @@ fn load_syntax_tree(filename string) ?SyntaxTree {
 		root: root
 		log: parser.log
 		source: parser.source
+		filename: filename
 	}
 }
 
@@ -36,5 +38,5 @@ pub fn parse_syntax_tree(text string) SyntaxTree {
 }
 
 pub fn parse_syntax_tree_from_file(text string) ?SyntaxTree {
-	return load_syntax_tree(text) 
+	return load_syntax_tree(text)
 }

@@ -25,22 +25,22 @@ mut:
 	previous &Compilation
 pub mut:
 	global_scope &binding.BoundGlobalScope
-	syntax       parser.SyntaxTree
+	syntax_trees []parser.SyntaxTree
 	print_fn     PrintFunc = print_fn // Defaults to stdout
 	print_ref    voidptr
 }
 
-pub fn new_compilation(syntax_tree parser.SyntaxTree) &Compilation {
+pub fn new_compilation(syntax_trees ...parser.SyntaxTree) &Compilation {
 	return &Compilation{
-		syntax: syntax_tree
+		syntax_trees: syntax_trees
 		global_scope: &binding.BoundGlobalScope(0)
 		previous: &Compilation(0)
 	}
 }
 
-fn new_compilation_with_previous(previous &Compilation, syntax_tree parser.SyntaxTree) &Compilation {
+fn new_compilation_with_previous(previous &Compilation, syntax_trees ...parser.SyntaxTree) &Compilation {
 	return &Compilation{
-		syntax: syntax_tree
+		syntax_trees: syntax_trees
 		global_scope: &binding.BoundGlobalScope(0)
 		previous: previous
 	}
@@ -64,7 +64,7 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 		if c.previous != 0 {
 			prev_glob_scope = c.previous.global_scope
 		}
-		c.global_scope = binding.bind_global_scope(prev_glob_scope, c.syntax.root)
+		c.global_scope = binding.bind_global_scope(prev_glob_scope, c.syntax_trees)
 	}
 	return c.global_scope
 }
@@ -76,7 +76,9 @@ pub fn (c &Compilation) continue_with(syntax_tree parser.SyntaxTree) &Compilatio
 pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResult {
 	mut global_scope := c.get_bound_global_scope()
 	mut result := []&source.Diagnostic{}
-	result << c.syntax.log.all
+	for syntax in c.syntax_trees {
+		result << syntax.log.all
+	}
 	result << global_scope.log.all
 	if result.len > 0 {
 		return new_evaluation_result(result, 0)
