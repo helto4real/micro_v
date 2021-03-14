@@ -326,7 +326,8 @@ fn assert_has_multi_diagostics(text string, diagnostic_text string, nr_of_err_ms
 		}
 
 		if i < ann_text.posns.len {
-			actual_pos := res.result[i].pos
+			actual_location := res.result[i].location
+			actual_pos := actual_location.pos
 			expected_pos := ann_text.posns[i]
 
 			if actual_pos != expected_pos {

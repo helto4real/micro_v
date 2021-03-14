@@ -7,6 +7,7 @@ import lib.comp.util.source
 //	ex: 1..10
 pub struct RangeExpr {
 pub:
+	tree        &SyntaxTree
 	kind        SyntaxKind = .range_expr
 	pos         source.Pos
 	child_nodes []AstNode
@@ -16,8 +17,9 @@ pub:
 	to    Expr
 }
 
-pub fn new_range_expr(from Expr, range token.Token, to Expr) RangeExpr {
+pub fn new_range_expr(tree &SyntaxTree, from Expr, range token.Token, to Expr) RangeExpr {
 	return RangeExpr{
+		tree: tree
 		range: range
 		from: from
 		to: to
@@ -28,6 +30,10 @@ pub fn new_range_expr(from Expr, range token.Token, to Expr) RangeExpr {
 
 pub fn (iss &RangeExpr) child_nodes() []AstNode {
 	return iss.child_nodes
+}
+
+pub fn (ex RangeExpr) text_location() source.TextLocation {
+	return source.new_text_location(ex.tree.source, ex.pos)
 }
 
 pub fn (ex RangeExpr) node_str() string {

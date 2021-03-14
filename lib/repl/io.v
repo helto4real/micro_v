@@ -77,7 +77,7 @@ pub fn (mut i IdentWriter) indent_add(n int) {
 	i.current_indent = i.current_indent + n
 }
 
-// pub fn (mut i IdentWriter) write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree parser.SyntaxTree)  {
+// pub fn (mut i IdentWriter) write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree ast.SyntaxTree)  {
 // 	// for err in diagnostics {
 // 	// 	src := syntax_tree.source.str()
 // 	// 	line_nr := syntax_tree.source.line_nr(err.pos.pos)

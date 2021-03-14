@@ -5,6 +5,7 @@ import lib.comp.util.source
 
 pub struct AssignExpr {
 pub:
+	tree        &SyntaxTree
 	kind        SyntaxKind = .assign_expr
 	child_nodes []AstNode
 
@@ -14,8 +15,9 @@ pub:
 	pos    source.Pos
 }
 
-pub fn new_assign_expr(ident token.Token, eq_tok token.Token, expr Expr) AssignExpr {
+pub fn new_assign_expr(tree &SyntaxTree, ident token.Token, eq_tok token.Token, expr Expr) AssignExpr {
 	return AssignExpr{
+		tree: tree
 		ident: ident
 		expr: expr
 		eq_tok: eq_tok
@@ -26,6 +28,10 @@ pub fn new_assign_expr(ident token.Token, eq_tok token.Token, expr Expr) AssignE
 
 pub fn (ae &AssignExpr) child_nodes() []AstNode {
 	return ae.child_nodes
+}
+
+pub fn (ex AssignExpr) text_location() source.TextLocation {
+	return source.new_text_location(ex.tree.source, ex.pos)
 }
 
 pub fn (ex AssignExpr) node_str() string {

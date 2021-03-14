@@ -2,7 +2,7 @@
 module comp
 
 import term
-import lib.comp.parser
+import lib.comp.ast
 import lib.comp.binding
 import lib.comp.types
 import lib.comp.util.source
@@ -25,12 +25,12 @@ mut:
 	previous &Compilation
 pub mut:
 	global_scope &binding.BoundGlobalScope
-	syntax_trees []parser.SyntaxTree
+	syntax_trees []ast.SyntaxTree
 	print_fn     PrintFunc = print_fn // Defaults to stdout
 	print_ref    voidptr
 }
 
-pub fn new_compilation(syntax_trees ...parser.SyntaxTree) &Compilation {
+pub fn new_compilation(syntax_trees ...ast.SyntaxTree) &Compilation {
 	return &Compilation{
 		syntax_trees: syntax_trees
 		global_scope: &binding.BoundGlobalScope(0)
@@ -38,7 +38,7 @@ pub fn new_compilation(syntax_trees ...parser.SyntaxTree) &Compilation {
 	}
 }
 
-fn new_compilation_with_previous(previous &Compilation, syntax_trees ...parser.SyntaxTree) &Compilation {
+fn new_compilation_with_previous(previous &Compilation, syntax_trees ...ast.SyntaxTree) &Compilation {
 	return &Compilation{
 		syntax_trees: syntax_trees
 		global_scope: &binding.BoundGlobalScope(0)
@@ -50,12 +50,6 @@ pub fn (mut c Compilation) register_print_callback(print_fn PrintFunc, ref voidp
 	c.print_fn = print_fn
 	c.print_ref = ref
 }
-
-// pub fn (mut c Compilation) get_statement() binding.BoundBlockStmt {
-// 	result := c.get_bound_global_scope().stmt
-// 	lower := lowering.lower(result)
-// 	return lower
-// }
 
 pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 	// TODO: Make this thread safe
@@ -69,7 +63,7 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 	return c.global_scope
 }
 
-pub fn (c &Compilation) continue_with(syntax_tree parser.SyntaxTree) &Compilation {
+pub fn (c &Compilation) continue_with(syntax_tree ast.SyntaxTree) &Compilation {
 	return new_compilation_with_previous(c, syntax_tree)
 }
 

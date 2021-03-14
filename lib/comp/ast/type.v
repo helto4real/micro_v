@@ -1,6 +1,7 @@
 module ast
 
 import lib.comp.token
+import lib.comp.util.source
 
 // Sumtype statements
 pub type Stmt = BlockStmt | BreakStmt | CommentStmt | ContinueStmt | ExprStmt | ForRangeStmt |
@@ -36,6 +37,17 @@ pub fn (ex &AstNode) child_nodes() []AstNode {
 	}
 }
 
+pub fn (ex AstNode) text_location() source.TextLocation {
+	match ex {
+		Expr { return ex.text_location() }
+		Stmt { return ex.text_location() }
+		token.Token { return ex.text_location() }
+		TypeNode { return ex.text_location() }
+		ParamNode { return ex.text_location() }
+		MemberNode { return ex.text_location() }
+	}
+}
+
 pub fn (ex AstNode) node_str() string {
 	match ex {
 		Expr { return ex.node_str() }
@@ -61,7 +73,21 @@ pub fn (ex AstNode) str() string {
 pub fn (e &Expr) kind() SyntaxKind {
 	return e.kind
 }
-
+pub fn (ex Expr) text_location() source.TextLocation {
+	match ex {
+		LiteralExpr { return ex.text_location() }
+		BinaryExpr { return ex.text_location() }
+		UnaryExpr { return ex.text_location() }
+		ParaExpr { return ex.text_location() }
+		NameExpr { return ex.text_location() }
+		AssignExpr { return ex.text_location() }
+		CompNode { return ex.text_location() }
+		IfExpr { return ex.text_location() }
+		RangeExpr { return ex.text_location() }
+		CallExpr { return ex.text_location() }
+		EmptyExpr { return ex.text_location() }
+	}
+}
 pub fn (ex Expr) node_str() string {
 	match ex {
 		LiteralExpr { return ex.node_str() }
@@ -96,6 +122,22 @@ pub fn (ex Expr) str() string {
 
 pub fn (ex &Expr) child_nodes() []AstNode {
 	return ex.child_nodes
+}
+
+pub fn (ex Stmt) text_location() source.TextLocation {
+	match ex {
+		BlockStmt { return ex.text_location() }
+		ExprStmt { return ex.text_location() }
+		VarDeclStmt { return ex.text_location() }
+		IfStmt { return ex.text_location() }
+		ForRangeStmt { return ex.text_location() }
+		ForStmt { return ex.text_location() }
+		ContinueStmt { return ex.text_location() }
+		BreakStmt { return ex.text_location() }
+		ReturnStmt { return ex.text_location() }
+		CommentStmt { return ex.text_location() }
+		ModuleStmt { return ex.text_location() }
+	}
 }
 
 pub fn (ex Stmt) node_str() string {
@@ -138,6 +180,13 @@ pub fn (ex MemberNode) node_str() string {
 	match ex {
 		GlobStmt { return ex.node_str() }
 		FnDeclNode { return ex.node_str() }
+	}
+}
+
+pub fn (ex MemberNode) text_location() source.TextLocation {
+	match ex {
+		GlobStmt { return ex.text_location() }
+		FnDeclNode { return ex.text_location() }
 	}
 }
 

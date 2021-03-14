@@ -186,7 +186,7 @@ fn test_string_literal_error_missing_end_quote() {
 	assert tok.kind == .string
 	assert tok.lit == "'hello world"
 	assert tkz.log.all.len == 1
-	assert tkz.log.all[0].pos.pos == 12
+	assert tkz.log.all[0].location.pos.pos == 12
 }
 
 fn test_para() {

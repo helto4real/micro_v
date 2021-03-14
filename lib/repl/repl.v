@@ -221,16 +221,16 @@ fn event(e &tui.Event, x voidptr) {
 								mut b := strings.new_builder(0)
 								text := buffer.raw() // syntax_tree.source.str()
 								for err in res.result {
-									line_nr := syntax_tree.source.line_nr(err.pos.pos)
-									prefix := text[0..err.pos.pos]
-									mut err_end_pos := err.pos.pos + err.pos.len
+									line_nr := syntax_tree.source.line_nr(err.location.pos.pos)
+									prefix := text[0..err.location.pos.pos]
+									mut err_end_pos := err.location.pos.pos + err.location.pos.len
 									if err_end_pos > text.len {
 										err_end_pos = text.len
 									}
-									error := text[err.pos.pos..err_end_pos]
+									error := text[err.location.pos.pos..err_end_pos]
 
-									postfix := if err_end_pos + err.pos.len < text.len {
-										text[err.pos.pos + err.pos.len..]
+									postfix := if err_end_pos + err.location.pos.len < text.len {
+										text[err.location.pos.pos + err.location.pos.len..]
 									} else {
 										''
 									}

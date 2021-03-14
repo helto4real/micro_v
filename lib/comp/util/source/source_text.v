@@ -7,6 +7,7 @@ import lib.comp.util.source
 //	- formatting of errors
 pub struct SourceText {
 	text string
+pub:
 	filename string
 pub mut:
 	lines []TextLine

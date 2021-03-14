@@ -2,13 +2,9 @@ module source
 
 pub struct Diagnostic {
 pub:
-	pos  Pos    // position of error
-	text string // error text
+	location TextLocation    // location of error
+	text     string 		 // error text
 }
-
-// fn (d &Diagnostic) < (d1 &Diagnostic) bool {
-// 	return d.pos.pos < d1.pos.pos
-// }
 
 pub struct Diagnostics {
 mut:
@@ -38,16 +34,17 @@ pub fn (mut d Diagnostics) next() ?&Diagnostic {
 	return none
 }
 
-pub fn (mut d Diagnostics) error(text string, pos Pos) {
+pub fn (mut d Diagnostics) error(text string, location TextLocation) {
 	d.all << &Diagnostic{
 		text: text
-		pos: pos
+		location: location
 	}
 }
 
-pub fn (mut d Diagnostics) error_ex(text string) {
-	d.all << &Diagnostic{
-		text: text
-		pos: Pos{}
-	}
-}
+// pub fn (mut d Diagnostics) error_ex(text string) {
+// 	d.all << &Diagnostic{
+// 		text: text
+// 		pos: TextLocation{}
+// 		filename: d.filename
+// 	}
+// }

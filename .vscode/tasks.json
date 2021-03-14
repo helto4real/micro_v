@@ -9,7 +9,8 @@
             "command": "v fmt -w ${file}",
             "presentation": {
                 "reveal": "silent"
-            }
+            },
+            "problemMatcher": "$go"
         },
         {
             "label": "mv",

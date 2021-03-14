@@ -33,6 +33,14 @@ pub fn new_tokenizer_from_string(text string) &Tokenizer {
 	}
 }
 
+pub fn new_tokenizer_from_source_with_diagnostics(source &src.SourceText, log &src.Diagnostics) &Tokenizer {
+	return &Tokenizer{
+		source: source
+		ch: source.at(0)
+		log: log
+	}
+}
+
 pub fn new_tokenizer_from_source(source &src.SourceText) &Tokenizer {
 	return &Tokenizer{
 		source: source
@@ -208,7 +216,7 @@ pub fn (mut t Tokenizer) next_token() Token {
 			t.read_identifier_or_keyword()
 		}
 		else {
-			t.log.error_unexpected('token', t.ch.ascii_str(), t.token_pos())
+			t.log.error_unexpected('token', t.ch.ascii_str(), t.token_loc())
 			t.incr_pos()
 		}
 	}
@@ -234,6 +242,7 @@ fn (mut t Tokenizer) token(kind Kind, pos int, lit string, len int) Token {
 			pos: pos
 			len: len
 		}
+		source: t.source
 	}
 
 	return tok
@@ -320,6 +329,11 @@ fn (mut t Tokenizer) token_pos() src.Pos {
 	return src.new_pos(t.pos, t.len)
 }
 
+[inline]
+fn (mut t Tokenizer) token_loc() src.TextLocation {
+	return src.new_text_location(t.source, t.token_pos())
+}
+
 // read_string_literal returns a string literal
 fn (mut t Tokenizer) read_string_literal() {
 	t.kind = .string
@@ -327,7 +341,7 @@ fn (mut t Tokenizer) read_string_literal() {
 	t.incr_pos()
 	for {
 		if t.ch == `\0` {
-			t.log.error('unfinished string literal', t.token_pos())
+			t.log.error('unfinished string literal', t.token_loc())
 			return
 		}
 		if t.ch == q_char {

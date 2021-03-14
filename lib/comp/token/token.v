@@ -1,11 +1,12 @@
 module token
 
-import lib.comp.util.source
+import lib.comp.util.source as src
 
 pub const (
 	tok_void  = Token{
 		kind: .void
 		lit: 'void'
+		source: src.new_source_text('')
 	}
 	nr_tokens = int(Kind._end_)
 	token_str = build_token_str()
@@ -14,14 +15,18 @@ pub const (
 
 pub struct Token {
 pub:
-	kind Kind     // the token number/enum; for quick comparisons
-	lit  string   // literal representation of the token
-	pos  source.Pos // position in the file
+	source &src.SourceText
+	kind   Kind    // the token number/enum; for quick comparisons
+	lit    string  // literal representation of the token
+	pos    src.Pos // position in the file
 }
 
 pub fn (t Token) str() string {
 	return "tok: [$t.pos.pos, ($t.pos.len) $t.kind '$t.lit'"
-	// return "tok: [$t.pos.pos, ($t.pos.ln, $t.pos.col)] $t.kind '$t.lit'"
+}
+
+pub fn (t Token) text_location() src.TextLocation {
+	return src.new_text_location(t.source, t.pos)
 }
 
 pub fn (ex Token) node_str() string {

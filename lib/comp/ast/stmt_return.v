@@ -6,6 +6,7 @@ import lib.comp.token
 pub struct ReturnStmt {
 pub:
 	// general ast node
+	tree        &SyntaxTree
 	kind        SyntaxKind = .return_stmt
 	pos         source.Pos
 	child_nodes []AstNode
@@ -15,8 +16,9 @@ pub:
 	expr       Expr
 }
 
-pub fn new_return_with_expr_stmt(return_tok token.Token, expr Expr) ReturnStmt {
+pub fn new_return_with_expr_stmt(tree &SyntaxTree, return_tok token.Token, expr Expr) ReturnStmt {
 	return ReturnStmt{
+		tree: tree
 		pos: return_tok.pos
 		child_nodes: [AstNode(return_tok), expr]
 		return_tok: return_tok
@@ -25,8 +27,9 @@ pub fn new_return_with_expr_stmt(return_tok token.Token, expr Expr) ReturnStmt {
 	}
 }
 
-pub fn new_return_stmt(return_tok token.Token) ReturnStmt {
+pub fn new_return_stmt(tree &SyntaxTree, return_tok token.Token) ReturnStmt {
 	return ReturnStmt{
+		tree: tree
 		pos: return_tok.pos
 		child_nodes: [AstNode(return_tok)]
 		return_tok: return_tok
@@ -36,6 +39,10 @@ pub fn new_return_stmt(return_tok token.Token) ReturnStmt {
 
 pub fn (e &ReturnStmt) child_nodes() []AstNode {
 	return e.child_nodes
+}
+
+pub fn (ex ReturnStmt) text_location() source.TextLocation {
+	return source.new_text_location(ex.tree.source, ex.pos)
 }
 
 pub fn (ex ReturnStmt) node_str() string {

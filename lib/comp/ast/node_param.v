@@ -11,6 +11,7 @@ import lib.comp.util.source
 pub struct ParamNode {
 pub:
 	// general ast node
+	tree        &SyntaxTree
 	kind        SyntaxKind = .node_param
 	pos         source.Pos
 	child_nodes []AstNode
@@ -20,8 +21,9 @@ pub:
 	is_mut bool
 }
 
-pub fn new_param_node(ident token.Token, typ TypeNode, is_mut bool) ParamNode {
+pub fn new_param_node(tree &SyntaxTree, ident token.Token, typ TypeNode, is_mut bool) ParamNode {
 	return ParamNode{
+		tree: tree
 		pos: source.new_pos_from_pos_bounds(ident.pos, typ.ident.pos)
 		child_nodes: [AstNode(ident), typ]
 		ident: ident
@@ -32,6 +34,10 @@ pub fn new_param_node(ident token.Token, typ TypeNode, is_mut bool) ParamNode {
 
 pub fn (e &ParamNode) child_nodes() []AstNode {
 	return e.child_nodes
+}
+
+pub fn (ex ParamNode) text_location() source.TextLocation {
+	return source.new_text_location(ex.tree.source, ex.pos)
 }
 
 pub fn (ex ParamNode) node_str() string {

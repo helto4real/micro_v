@@ -1,6 +1,5 @@
 module parser
 
-import os
 import strconv
 import lib.comp.ast
 import lib.comp.token
@@ -9,57 +8,66 @@ import lib.comp.util.source as src
 pub struct Parser {
 	source &src.SourceText
 mut:
-	pos    int
-	tokens []token.Token
+	syntax_tree &ast.SyntaxTree
+	pos         int
+	tokens      []token.Token
 pub mut:
 	log &src.Diagnostics // errors when parsing
 }
 
+fn new_parser(mut syntax_tree ast.SyntaxTree) &Parser {
+	source := syntax_tree.source
+	log := syntax_tree.log
+	mut tnz := token.new_tokenizer_from_source_with_diagnostics(source, log)
+	tokens := tnz.scan_all()
+	mut parser := &Parser{
+		syntax_tree: syntax_tree
+		source: source
+		tokens: tokens
+		log: log
+	}
+	return parser
+}
+
 // new_parser_from_text, instance a parser from a text input
 fn new_parser_from_text(text string) &Parser {
-	source := src.new_source_text(text)
-	mut tnz := token.new_tokenizer_from_source(source)
+	mut syntax_tree := ast.new_syntax_tree(text)
+	log := syntax_tree.log
+	mut tnz := token.new_tokenizer_from_source_with_diagnostics(syntax_tree.source, log)
 	tokens := tnz.scan_all()
-	mut diagnostics := src.new_diagonistics()
-	diagnostics.merge(tnz.log)
 	mut parser := &Parser{
-		source: source
+		syntax_tree: syntax_tree
+		source: syntax_tree.source
 		tokens: tokens
-		log: diagnostics
+		log: log
 	}
 	return parser
 }
 
-pub fn new_parser_from_file(filename string) ?&Parser {
-	text := os.read_file(filename) ?
-
-	source := src.new_source_text_from_file(text, filename)
-	mut tnz := token.new_tokenizer_from_source(source)
-	tokens := tnz.scan_all()
-	mut diagnostics := src.new_diagonistics()
-	diagnostics.merge(tnz.log)
-	mut parser := &Parser{
-		source: source
-		tokens: tokens
-		log: diagnostics
-	}
-	return parser
+pub fn parse_syntax_tree(text string) &ast.SyntaxTree {
+	mut syntax_tree := ast.new_syntax_tree(text)
+	mut parser := new_parser(mut syntax_tree)
+	parser.parse_comp_node()
+	return syntax_tree
 }
 
-pub fn (mut p Parser) parse_comp_node() ast.CompNode {
-	members := p.parse_members()
-	eof := p.match_token(.eof)
-	node := ast.new_comp_expr(members, eof)
-	return node
+pub fn parse_syntax_tree_from_file(filename string) ?&ast.SyntaxTree {
+	mut syntax_tree := ast.new_syntax_tree_from_file(filename) ?
+	mut parser := new_parser(mut syntax_tree)
+	parser.parse_comp_node()
+	return syntax_tree
 }
 
-pub fn (mut p Parser) parse_members() []ast.MemberNode {
-	mut members := []ast.MemberNode{}
+pub fn (mut p Parser) parse_comp_node() {
+	p.parse_members()
+	_ := p.match_token(.eof)
+}
 
+pub fn (mut p Parser) parse_members() {
 	for p.peek_token(0).kind != .eof {
 		start_tok := p.current_token()
 		member := p.parse_member()
-		members << member
+		p.syntax_tree.root.members << member
 		// if parse member did not consume any tokens 
 		// let's skip it and continue
 		if p.current_token() == start_tok {
@@ -67,7 +75,6 @@ pub fn (mut p Parser) parse_members() []ast.MemberNode {
 			p.next_token()
 		}
 	}
-	return members
 }
 
 pub fn (mut p Parser) parse_member() ast.MemberNode {
@@ -81,7 +88,7 @@ pub fn (mut p Parser) parse_member() ast.MemberNode {
 
 pub fn (mut p Parser) parse_global_stmt() ast.MemberNode {
 	stmt := p.parse_stmt()
-	return ast.new_glob_stmt(stmt)
+	return ast.new_glob_stmt(p.syntax_tree, stmt)
 }
 
 pub fn (mut p Parser) parse_function() ast.FnDeclNode {
@@ -97,7 +104,8 @@ pub fn (mut p Parser) parse_function() ast.FnDeclNode {
 	rpar_tok := p.match_token(.rpar)
 	ret_type := p.parse_return_type_node()
 	fn_block := p.parse_block_stmt()
-	return ast.new_fn_decl_node(fn_key, ident, lpar_tok, params, rpar_tok, ret_type, (fn_block as ast.BlockStmt))
+	return ast.new_fn_decl_node(p.syntax_tree, fn_key, ident, lpar_tok, params, rpar_tok,
+		ret_type, (fn_block as ast.BlockStmt))
 }
 
 fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
@@ -121,7 +129,7 @@ fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
 fn (mut p Parser) parse_return_type_node() ast.TypeNode {
 	if p.current_token().kind == .lcbr {
 		// this is a procedure without return type
-		return ast.new_type_node(token.tok_void, false, true)
+		return ast.new_type_node(p.syntax_tree, token.tok_void, false, true)
 	}
 	mut is_ref := false
 	if p.current_token().kind == .amp {
@@ -130,7 +138,7 @@ fn (mut p Parser) parse_return_type_node() ast.TypeNode {
 	}
 	name := p.match_token(.name)
 
-	return ast.new_type_node(name, is_ref, false)
+	return ast.new_type_node(p.syntax_tree, name, is_ref, false)
 }
 
 fn (mut p Parser) parse_param_node() ast.ParamNode {
@@ -141,7 +149,7 @@ fn (mut p Parser) parse_param_node() ast.ParamNode {
 	}
 	name := p.match_token(.name)
 	typ := p.parse_type_node()
-	return ast.new_param_node(name, typ, is_mut)
+	return ast.new_param_node(p.syntax_tree, name, typ, is_mut)
 }
 
 fn (mut p Parser) parse_type_node() ast.TypeNode {
@@ -152,7 +160,7 @@ fn (mut p Parser) parse_type_node() ast.TypeNode {
 	}
 	name := p.match_token(.name)
 
-	return ast.new_type_node(name, is_ref, false)
+	return ast.new_type_node(p.syntax_tree, name, is_ref, false)
 }
 
 // peek, returns a token at offset from current postion
@@ -187,11 +195,12 @@ fn (mut p Parser) match_token(kind token.Kind) token.Token {
 	if current_token.kind == kind {
 		return p.next_token()
 	}
-	p.log.error_expected('token', current_token.kind.str(), kind.str(), current_token.pos)
+	p.log.error_expected('token', current_token.kind.str(), kind.str(), current_token.text_location())
 	return token.Token{
 		kind: kind
 		pos: current_token.pos
 		lit: ''
+		source: p.syntax_tree.source
 	}
 }
 
@@ -204,7 +213,7 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 			if p.peek_var_decl(1) {
 				return p.parse_var_decl_stmt()
 			}
-			p.log.error_expected_var_decl(p.peek_token(0).pos)
+			p.log.error_expected_var_decl(p.peek_token(0).text_location())
 		}
 		.key_if {
 			return p.parse_if_stmt()
@@ -232,7 +241,7 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 			return p.parse_module_stmt()
 		}
 		.comment {
-			return ast.new_comment_stmt(p.current_token())
+			return ast.new_comment_stmt(p.syntax_tree, p.current_token())
 		}
 		.name {
 			if p.peek_var_decl(0) {
@@ -250,7 +259,7 @@ fn (mut p Parser) parse_module_stmt() ast.Stmt {
 	module_tok := p.match_token(.key_module)
 	module_name := p.match_token(.name)
 
-	return ast.new_module_stmt(module_tok, module_name)
+	return ast.new_module_stmt(p.syntax_tree, module_tok, module_name)
 }
 
 fn (mut p Parser) parse_return_stmt() ast.Stmt {
@@ -263,27 +272,27 @@ fn (mut p Parser) parse_return_stmt() ast.Stmt {
 		// assume that it is an expression if it
 		// starts at the same line as return key word
 		expr := p.parse_expr()
-		return ast.new_return_with_expr_stmt(return_tok, expr)
+		return ast.new_return_with_expr_stmt(p.syntax_tree, return_tok, expr)
 	}
 	// assume it is am empty return
-	return ast.new_return_stmt(return_tok)
+	return ast.new_return_stmt(p.syntax_tree, return_tok)
 }
 
 fn (mut p Parser) parse_continue_stmt() ast.Stmt {
 	cont_tok := p.match_token(.key_continue)
-	return ast.new_continue_stmt(cont_tok)
+	return ast.new_continue_stmt(p.syntax_tree, cont_tok)
 }
 
 fn (mut p Parser) parse_break_stmt() ast.Stmt {
 	cont_tok := p.match_token(.key_break)
-	return ast.new_break_stmt(cont_tok)
+	return ast.new_break_stmt(p.syntax_tree, cont_tok)
 }
 
 fn (mut p Parser) parse_for_stmt(has_cond bool) ast.Stmt {
 	for_key := p.match_token(.key_for)
 	mut cond_expr := if has_cond { p.parse_expr() } else { ast.Expr{} }
 	body_stmt := p.parse_block_stmt()
-	return ast.new_for_stmt(for_key, cond_expr, body_stmt, has_cond)
+	return ast.new_for_stmt(p.syntax_tree, for_key, cond_expr, body_stmt, has_cond)
 }
 
 // parse_for_range_stmt, parse for x in 1..10 {}
@@ -295,7 +304,7 @@ fn (mut p Parser) parse_for_range_stmt() ast.Stmt {
 	range_expr := p.parse_range_expr()
 	stmt := p.parse_block_stmt()
 
-	return ast.new_for_range_stmt(for_key, ident, key_in, range_expr, stmt)
+	return ast.new_for_range_stmt(p.syntax_tree, for_key, ident, key_in, range_expr, stmt)
 }
 
 fn (mut p Parser) parse_if_stmt() ast.Stmt {
@@ -306,10 +315,11 @@ fn (mut p Parser) parse_if_stmt() ast.Stmt {
 	if p.peek_token(0).kind == .key_else {
 		else_key := p.match_token(.key_else)
 		else_block := p.parse_block_stmt()
-		return ast.new_if_else_stmt(if_key, cond_expr, then_block, else_key, else_block)
+		return ast.new_if_else_stmt(p.syntax_tree, if_key, cond_expr, then_block, else_key,
+			else_block)
 	}
 
-	return ast.new_if_stmt(if_key, cond_expr, then_block)
+	return ast.new_if_stmt(p.syntax_tree, if_key, cond_expr, then_block)
 }
 
 fn (mut p Parser) parse_var_decl_stmt() ast.Stmt {
@@ -324,7 +334,7 @@ fn (mut p Parser) parse_var_decl_stmt() ast.Stmt {
 	ident := p.match_token(.name)
 	op_token := p.match_token(.colon_eq)
 	right := p.parse_assign_right_expr()
-	return ast.new_var_decl_stmt(ident, op_token, right, is_mut)
+	return ast.new_var_decl_stmt(p.syntax_tree, ident, op_token, right, is_mut)
 }
 
 fn (mut p Parser) parse_block_stmt() ast.Stmt {
@@ -333,7 +343,7 @@ fn (mut p Parser) parse_block_stmt() ast.Stmt {
 	mut stmts := p.parse_multi_stmt()
 
 	close_brace_token := p.match_token(.rcbr)
-	return ast.new_block_stmt(open_brace_token, stmts, close_brace_token)
+	return ast.new_block_stmt(p.syntax_tree, open_brace_token, stmts, close_brace_token)
 }
 
 [inline]
@@ -356,7 +366,7 @@ fn (mut p Parser) parse_multi_stmt() []ast.Stmt {
 [inline]
 fn (mut p Parser) parse_expression_stmt() ast.ExprStmt {
 	expr := p.parse_expr()
-	return ast.new_expr_stmt(expr)
+	return ast.new_expr_stmt(p.syntax_tree, expr)
 }
 
 fn (mut p Parser) parse_expr() ast.Expr {
@@ -387,7 +397,7 @@ fn (mut p Parser) parse_range_expr() ast.Expr {
 	from_num := p.parse_number_literal()
 	range_tok := p.match_token(.dot_dot)
 	to_num := p.parse_number_literal()
-	return ast.new_range_expr(from_num, range_tok, to_num)
+	return ast.new_range_expr(p.syntax_tree, from_num, range_tok, to_num)
 }
 
 fn (mut p Parser) parse_if_expr() ast.Expr {
@@ -397,7 +407,7 @@ fn (mut p Parser) parse_if_expr() ast.Expr {
 
 	else_key := p.match_token(.key_else)
 	else_block := p.parse_block_stmt()
-	return ast.new_if_expr(if_key, cond_expr, then_block, else_key, else_block)
+	return ast.new_if_expr(p.syntax_tree, if_key, cond_expr, then_block, else_key, else_block)
 }
 
 // parse_assign_expr parses an assignment expression
@@ -407,7 +417,7 @@ fn (mut p Parser) parse_assign_expr() ast.Expr {
 		ident := p.match_token(.name)
 		op_token := p.match_token(.eq)
 		right := p.parse_assign_right_expr()
-		return ast.new_assign_expr(ident, op_token, right)
+		return ast.new_assign_expr(p.syntax_tree, ident, op_token, right)
 	}
 	return p.parse_binary_expr()
 }
@@ -433,7 +443,7 @@ fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.Expr {
 	if unary_op_prec != 0 && unary_op_prec >= parent_precedence {
 		op_token := p.next_token()
 		operand := p.parse_binary_expr_prec(unary_op_prec)
-		left = ast.new_unary_expr(op_token, operand)
+		left = ast.new_unary_expr(p.syntax_tree, op_token, operand)
 	} else {
 		left = p.parse_primary_expr()
 	}
@@ -446,7 +456,7 @@ fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.Expr {
 		}
 		op_token := p.next_token()
 		right := p.parse_binary_expr_prec(precedence)
-		left = ast.new_binary_expr(left, op_token, right)
+		left = ast.new_binary_expr(p.syntax_tree, left, op_token, right)
 	}
 	return left
 }
@@ -475,7 +485,7 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 fn (mut p Parser) parse_string_literal() ast.Expr {
 	string_token := p.match_token(.string)
 
-	return ast.new_literal_expr(string_token, string_token.lit[1..string_token.lit.len - 1])
+	return ast.new_literal_expr(p.syntax_tree, string_token, string_token.lit[1..string_token.lit.len - 1])
 }
 
 fn (mut p Parser) parse_number_literal() ast.Expr {
@@ -484,21 +494,21 @@ fn (mut p Parser) parse_number_literal() ast.Expr {
 		// p.error('Failed to convert number to value <$number_token.lit>')
 		0
 	}
-	return ast.new_literal_expr(number_token, val)
+	return ast.new_literal_expr(p.syntax_tree, number_token, val)
 }
 
 fn (mut p Parser) parse_parantesize_expr() ast.Expr {
 	left := p.match_token(.lpar)
 	expr := p.parse_expr()
 	right := p.match_token(.rpar)
-	return ast.new_paranthesis_expr(left, expr, right)
+	return ast.new_paranthesis_expr(p.syntax_tree, left, expr, right)
 }
 
 fn (mut p Parser) parse_bool_literal() ast.Expr {
 	is_true := p.current_token().kind == .key_true
 	key_tok := p.match_token(if is_true { token.Kind.key_true } else { token.Kind.key_false })
 	val := key_tok.kind == .key_true
-	return ast.new_literal_expr(key_tok, val)
+	return ast.new_literal_expr(p.syntax_tree, key_tok, val)
 }
 
 fn (mut p Parser) parse_call_expr() ast.Expr {
@@ -506,7 +516,7 @@ fn (mut p Parser) parse_call_expr() ast.Expr {
 	lpar_tok := p.match_token(.lpar)
 	args := p.parse_args()
 	rpar_tok := p.match_token(.rpar)
-	return ast.new_call_expr(ident, lpar_tok, args, rpar_tok)
+	return ast.new_call_expr(p.syntax_tree, ident, lpar_tok, args, rpar_tok)
 }
 
 fn (mut p Parser) parse_args() ast.SeparatedSyntaxList {
@@ -536,5 +546,5 @@ fn (mut p Parser) parse_name_or_call_expr() ast.Expr {
 
 fn (mut p Parser) parse_name_expr() ast.Expr {
 	ident := p.match_token(.name)
-	return ast.new_name_expr(ident)
+	return ast.new_name_expr(p.syntax_tree, ident)
 }

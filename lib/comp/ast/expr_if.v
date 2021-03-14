@@ -7,6 +7,7 @@ import lib.comp.util.source
 //	x := if i < 100 {10} else {20}
 pub struct IfExpr {
 pub:
+	tree        &SyntaxTree
 	kind        SyntaxKind = .if_expr
 	pos         source.Pos
 	child_nodes []AstNode
@@ -18,8 +19,9 @@ pub:
 	else_stmt Stmt
 }
 
-pub fn new_if_expr(key_if token.Token, cond_expr Expr, then_stmt Stmt, key_else token.Token, else_stmt Stmt) IfExpr {
+pub fn new_if_expr(tree &SyntaxTree, key_if token.Token, cond_expr Expr, then_stmt Stmt, key_else token.Token, else_stmt Stmt) IfExpr {
 	return IfExpr{
+		tree: tree
 		key_if: key_if
 		key_else: key_else
 		cond_expr: cond_expr
@@ -32,6 +34,10 @@ pub fn new_if_expr(key_if token.Token, cond_expr Expr, then_stmt Stmt, key_else 
 
 pub fn (iss &IfExpr) child_nodes() []AstNode {
 	return iss.child_nodes
+}
+
+pub fn (ex IfExpr) text_location() source.TextLocation {
+	return source.new_text_location(ex.tree.source, ex.pos)
 }
 
 pub fn (ex IfExpr) node_str() string {
