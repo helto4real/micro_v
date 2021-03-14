@@ -17,7 +17,7 @@ mut:
 	is_func   bool
 }
 
-pub fn new_evaluator(program binding.BoundProgram, glob_vars &binding.EvalVariables) Evaluator {
+pub fn new_evaluator(program &binding.BoundProgram, glob_vars &binding.EvalVariables) Evaluator {
 	lowered_stmt := binding.lower(program.stmt)
 	mut lowered_fn_stmts := map[string]binding.BoundBlockStmt{}
 
@@ -25,18 +25,30 @@ pub fn new_evaluator(program binding.BoundProgram, glob_vars &binding.EvalVariab
 		lowered_body := binding.lower(func_body)
 		lowered_fn_stmts[id] = lowered_body
 	}
-
-	mut cfg_stmt := binding.BoundBlockStmt{}
-	if program.stmt.bound_stmts.len == 0 && program.func_bodies.len > 0 {
-		cfg_stmt = binding.lower(program.func_bodies[program.func_bodies.keys().last()])
-	} else {
-		cfg_stmt = lowered_stmt
+	
+	mut current_program := program 
+	for current_program != 0 {
+		for id, func_body in current_program.func_bodies {
+			lowered_body := binding.lower(func_body)
+			lowered_fn_stmts[id] = lowered_body
+		}
+		current_program = current_program.previous
 	}
+
+	// If you want to display the control flow graph, uncomment following lines
+
+	// mut cfg_stmt := binding.BoundBlockStmt{}
+	// if program.stmt.bound_stmts.len == 0 && program.func_bodies.len > 0 {
+	// 	cfg_stmt = binding.lower(program.func_bodies[program.func_bodies.keys().last()])
+	// } else {
+	// 	cfg_stmt = lowered_stmt
+	// }
 	// cfg := binding.create_control_flow_graph(cfg_stmt)
 	// exe_path := os.join_path(os.dir(os.executable()), 'text.dot')
 	// mut f := os.open_file(exe_path,'w+', 0o666) or {panic(err)}
 	// defer {f.close()}
 	// cfg.write_to(f) or {panic('unexpected error $err writing to file')}
+
 	mut eval := Evaluator{
 		root: lowered_stmt
 		fn_stmts: lowered_fn_stmts

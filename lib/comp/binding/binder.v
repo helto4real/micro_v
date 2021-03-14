@@ -31,7 +31,7 @@ pub fn new_binder(parent &BoundScope, func symbols.FunctionSymbol) &Binder {
 	return new_binder
 }
 
-pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
+pub fn bind_program(previous &BoundProgram, global_scope &BoundGlobalScope) &BoundProgram {
 	parent_scope := create_parent_scope(global_scope)
 	mut func_bodies := map[string]BoundBlockStmt{}
 	mut log := source.new_diagonistics()
@@ -47,7 +47,7 @@ pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
 		func_bodies[func.id] = body as BoundBlockStmt
 		log.all << binder.log.all
 	}
-	bound_program := new_bound_program(log, global_scope.stmt, func_bodies)
+	bound_program := new_bound_program(previous, log, global_scope.stmt, func_bodies)
 	return bound_program
 }
 

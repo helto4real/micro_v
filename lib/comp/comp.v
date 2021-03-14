@@ -77,7 +77,7 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	if result.len > 0 {
 		return new_evaluation_result(result, 0)
 	}
-	program := binding.bind_program(global_scope)
+	program := c.get_program()
 
 	if program.log.all.len > 0 {
 		return new_evaluation_result(program.log.all, 0)
@@ -92,9 +92,19 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	return new_evaluation_result(result, val)
 }
 
+fn (mut c Compilation) get_program() &binding.BoundProgram {
+	global_scope := c.get_bound_global_scope()
+	if c.previous == 0 {
+		return binding.bind_program(&binding.BoundProgram(0), global_scope)
+	} else {
+		p := c.previous.get_program()
+		return binding.bind_program(p, global_scope)
+	}
+}
+
 pub fn (mut c Compilation) emit_tree(writer io.TermTextWriter, lower bool) {
 	mut global_scope := c.get_bound_global_scope()
-	program := binding.bind_program(global_scope)
+	program := c.get_program()
 	if lower {
 		if program.stmt.bound_stmts.len > 0 {
 			lowered_stmt := binding.lower(program.stmt)
