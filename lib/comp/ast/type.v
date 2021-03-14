@@ -73,6 +73,7 @@ pub fn (ex AstNode) str() string {
 pub fn (e &Expr) kind() SyntaxKind {
 	return e.kind
 }
+
 pub fn (ex Expr) text_location() source.TextLocation {
 	match ex {
 		LiteralExpr { return ex.text_location() }
@@ -88,6 +89,7 @@ pub fn (ex Expr) text_location() source.TextLocation {
 		EmptyExpr { return ex.text_location() }
 	}
 }
+
 pub fn (ex Expr) node_str() string {
 	match ex {
 		LiteralExpr { return ex.node_str() }

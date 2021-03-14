@@ -1,7 +1,6 @@
 module util
 
 import strings
-
 import lib.comp.util.source
 
 pub struct AnnotatedText {

@@ -22,7 +22,9 @@ pub:
 }
 
 pub fn new_empty_fn_decl_node(tree &SyntaxTree) FnDeclNode {
-	return FnDeclNode{tree: tree}
+	return FnDeclNode{
+		tree: tree
+	}
 }
 
 pub fn new_fn_decl_node(tree &SyntaxTree, fn_key token.Token, ident token.Token, lpar_tok token.Token, params SeparatedSyntaxList, rpar_tok token.Token, typ_node TypeNode, block BlockStmt) FnDeclNode {

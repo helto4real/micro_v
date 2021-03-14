@@ -11,7 +11,7 @@ pub const (
 
 pub struct BinaryExpr {
 pub:
-	tree	    &SyntaxTree
+	tree        &SyntaxTree
 	left        Expr
 	op          token.Token
 	right       Expr
@@ -54,7 +54,7 @@ pub fn (ex BinaryExpr) str() string {
 
 pub struct UnaryExpr {
 pub:
-	tree	    &SyntaxTree
+	tree        &SyntaxTree
 	op          token.Token
 	operand     Expr
 	kind        SyntaxKind = .unary_expr
@@ -95,7 +95,7 @@ pub fn (ex UnaryExpr) str() string {
 
 pub struct ParaExpr {
 pub:
-	tree        &SyntaxTree
+	tree             &SyntaxTree
 	kind             SyntaxKind = .para_expr
 	open_para_token  token.Token
 	close_para_token token.Token

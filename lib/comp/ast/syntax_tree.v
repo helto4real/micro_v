@@ -6,10 +6,10 @@ import lib.comp.util.source as src
 [heap]
 pub struct SyntaxTree {
 pub:
-	source   &src.SourceText // represents source code
+	source &src.SourceText // represents source code
 pub mut:
-	log      &src.Diagnostics // errors when parsing
-	root     CompNode
+	log  &src.Diagnostics // errors when parsing
+	root CompNode
 }
 
 pub fn new_syntax_tree(text string) &SyntaxTree {

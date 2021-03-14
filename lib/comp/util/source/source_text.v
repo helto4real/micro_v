@@ -14,14 +14,14 @@ pub mut:
 }
 
 pub fn new_source_text_from_file(text string, filename string) &SourceText {
-	return &SourceText{
+	return &source.SourceText{
 		text: text
 		filename: filename
 	}
 }
 
 pub fn new_source_text(text string) &SourceText {
-	return &SourceText{
+	return &source.SourceText{
 		text: text
 	}
 }
@@ -56,7 +56,7 @@ pub fn (s &SourceText) str_range(start int, end int) string {
 }
 
 [inline]
-pub fn (s &SourceText) str_pos(pos source.Pos) string {
+pub fn (s &SourceText) str_pos(pos Pos) string {
 	return s.text[pos.pos..pos.pos + pos.len]
 }
 
@@ -78,7 +78,7 @@ pub:
 }
 
 fn new_text_line(source_text &SourceText, start int, len int, lb_len int) TextLine {
-	return TextLine{
+	return source.TextLine{
 		source: source_text
 		start: start
 		len: len
@@ -86,11 +86,11 @@ fn new_text_line(source_text &SourceText, start int, len int, lb_len int) TextLi
 	}
 }
 
-pub fn (tl TextLine) pos() source.Pos {
+pub fn (tl TextLine) pos() Pos {
 	return source.new_pos(tl.start, tl.len)
 }
 
-pub fn (tl TextLine) pos_include_linebreak() source.Pos {
+pub fn (tl TextLine) pos_include_linebreak() Pos {
 	return source.new_pos(tl.start, tl.len + tl.lb_len)
 }
 

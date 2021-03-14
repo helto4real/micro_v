@@ -10,8 +10,8 @@ pub:
 	pos         source.Pos
 	child_nodes []AstNode
 pub mut:
-	tree        &SyntaxTree
-	members     []MemberNode
+	tree    &SyntaxTree
+	members []MemberNode
 }
 
 // // TODO: fix child_nodes and pos

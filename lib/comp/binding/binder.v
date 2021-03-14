@@ -10,11 +10,11 @@ import lib.comp.binding.convertion
 [heap]
 pub struct Binder {
 pub mut:
-	scope   &BoundScope = 0
-	func    symbols.FunctionSymbol
-	log     &source.Diagnostics // errors when parsing
-	mod     string
-	is_loop bool
+	scope            &BoundScope = 0
+	func             symbols.FunctionSymbol
+	log              &source.Diagnostics // errors when parsing
+	mod              string
+	is_loop          bool
 	mod_ok_to_define bool = true // if true it is ok to define a module 
 }
 
@@ -62,7 +62,7 @@ pub fn bind_global_scope(previous &BoundGlobalScope, syntax_trees []ast.SyntaxTr
 			}
 		}
 	}
-	
+
 	// then bind the global statements
 	mut glob_stmts := []BoundStmt{}
 	for syntax_tree in syntax_trees {
@@ -198,7 +198,8 @@ pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
 				// it is a subroutine
 				b.log.error_invalid_return_expr(b.func.name, return_stmt.expr.text_location())
 			} else {
-				expr = b.bind_convertion_diag(return_stmt.expr.text_location(), expr, b.func.typ)
+				expr = b.bind_convertion_diag(return_stmt.expr.text_location(), expr,
+					b.func.typ)
 			}
 			return new_bound_return_with_expr_stmt(expr)
 		} else {
@@ -449,7 +450,8 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 		return new_bound_error_expr()
 	}
 
-	conv_expre := b.bind_convertion_diag(if_expr.cond_expr.text_location(), cond_expr, symbols.bool_symbol)
+	conv_expre := b.bind_convertion_diag(if_expr.cond_expr.text_location(), cond_expr,
+		symbols.bool_symbol)
 	return new_if_else_expr(conv_expre, bound_then_stmt, bound_else_stmt)
 }
 

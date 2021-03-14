@@ -2,8 +2,8 @@ module source
 
 pub struct Diagnostic {
 pub:
-	location TextLocation    // location of error
-	text     string 		 // error text
+	location TextLocation // location of error
+	text     string       // error text
 }
 
 pub struct Diagnostics {
@@ -40,11 +40,3 @@ pub fn (mut d Diagnostics) error(text string, location TextLocation) {
 		location: location
 	}
 }
-
-// pub fn (mut d Diagnostics) error_ex(text string) {
-// 	d.all << &Diagnostic{
-// 		text: text
-// 		pos: TextLocation{}
-// 		filename: d.filename
-// 	}
-// }

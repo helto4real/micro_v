@@ -15,7 +15,7 @@ fn main() {
 		repl.run() ?
 		exit(0)
 	}
-	if args[0]=='help' {
+	if args[0] == 'help' {
 		display_help_message(args)
 		exit(0)
 	}
@@ -71,6 +71,7 @@ fn main() {
 	}
 	println(iw.str())
 }
+
 fn display_help_message(args []string) {
 	println('
 Mini V (mv) is a minimal implmentation of V lang
@@ -82,6 +83,7 @@ Usage:
 	mv                          Starts the repl	
 	')
 }
+
 pub fn write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree ast.SyntaxTree) {
 	mut sorted_diagnosics := []&source.Diagnostic{cap: diagnostics.len}
 	sorted_diagnosics << diagnostics
@@ -90,11 +92,13 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree ast.Synta
 	for err in sorted_diagnosics {
 		src := syntax_tree.source.str()
 		error_line_nr := syntax_tree.source.line_nr(err.location.pos.pos)
-		error_line := syntax_tree.source.lines[error_line_nr-1]
+		error_line := syntax_tree.source.lines[error_line_nr - 1]
 		error_col := err.location.pos.pos - error_line.start + 1
 
-		mut line_nr_start := error_line_nr-2
-		if line_nr_start < 1 {line_nr_start = 1}
+		mut line_nr_start := error_line_nr - 2
+		if line_nr_start < 1 {
+			line_nr_start = 1
+		}
 
 		error_line_nr_end := syntax_tree.source.line_nr(err.location.pos.pos + err.location.pos.len)
 
@@ -107,37 +111,37 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree ast.Synta
 		if err_end_pos > src.len {
 			err_end_pos = src.len
 		}
-		
-		iw.write('${err.location.source.filename}:${error_line_nr}:${error_col}: ')
+
+		iw.write('$err.location.source.filename:$error_line_nr:$error_col: ')
 		iw.write(term.red('error: '))
 		iw.writeln(err.text)
 
-		mut b:=strings.new_builder(0)
+		mut b := strings.new_builder(0)
 		nr_of_digits := line_nr_end.str().len
-		for i in line_nr_start..line_nr_end {
-			line := syntax_tree.source.lines[i-1]
-			nr_of_zeros_to_add := nr_of_digits - i.str().len 
+		for i in line_nr_start .. line_nr_end {
+			line := syntax_tree.source.lines[i - 1]
+			nr_of_zeros_to_add := nr_of_digits - i.str().len
 			if nr_of_zeros_to_add > 0 {
 				b.write_string(' 0'.repeat(nr_of_zeros_to_add))
 			} else {
 				b.write_string(' ')
 			}
-			b.write_string('${i}')
+			b.write_string('$i')
 			b.write_string(' | ')
 			if i == error_line_nr {
 				prefix := src[line.start..err.location.pos.pos].replace('\t', '  ')
 				error := src[err.location.pos.pos..err_end_pos].replace('\t', '  ')
-				postfix := src[err.location.pos.pos+err.location.pos.len..line.start+line.len].replace('\t', '  ')
+				postfix := src[err.location.pos.pos + err.location.pos.len..line.start + line.len].replace('\t',
+					'  ')
 
-				
 				b.write_string(prefix)
 				b.write_string(term.red(error))
 				b.writeln(postfix)
-				b.write_string(' '.repeat(nr_of_digits+1))
+				b.write_string(' '.repeat(nr_of_digits + 1))
 				b.write_string(' | ')
 				b.writeln(term.red('${' '.repeat(prefix.len)}${'~'.repeat(err.location.pos.len)}'))
 			} else {
-				b.writeln(src[line.start..line.start+line.len].replace('\t', '  '))
+				b.writeln(src[line.start..line.start + line.len].replace('\t', '  '))
 			}
 		}
 		iw.writeln(b.str())

@@ -53,7 +53,8 @@ pub fn (mut d Diagnostics) error_cannot_convert_type(from_typ string, to_typ str
 }
 
 pub fn (mut d Diagnostics) error_wrong_argument_type(name string, param_typ string, arg_typ string, loc TextLocation) {
-	d.error('wrong argument type <$arg_typ> for argument <$name>. Expected type <$param_typ>', loc)
+	d.error('wrong argument type <$arg_typ> for argument <$name>. Expected type <$param_typ>',
+		loc)
 }
 
 pub fn (mut d Diagnostics) error_empty_block_not_allowed(loc TextLocation) {
@@ -65,7 +66,8 @@ pub fn (mut d Diagnostics) error_expected_block_end_with_expression(loc TextLoca
 }
 
 pub fn (mut d Diagnostics) error_return_type_differ_expect_type(then_typ string, else_typ string, loc TextLocation) {
-	d.error('values returned in expression is different in `if`and `else` block. expected type: <$then_typ> got:<$else_typ>', loc)
+	d.error('values returned in expression is different in `if`and `else` block. expected type: <$then_typ> got:<$else_typ>',
+		loc)
 }
 
 pub fn (mut d Diagnostics) error_undefined_type(ident string, loc TextLocation) {
@@ -85,7 +87,8 @@ pub fn (mut d Diagnostics) error_keyword_are_only_allowed_inside_a_loop(keyword 
 }
 
 pub fn (mut d Diagnostics) error_invalid_return_expr(fn_name string, loc TextLocation) {
-	d.error('function <$fn_name> does not return a value, return cannot return an expression', loc)
+	d.error('function <$fn_name> does not return a value, return cannot return an expression',
+		loc)
 }
 
 pub fn (mut d Diagnostics) error_expected_return_value(typ_name string, loc TextLocation) {
@@ -101,10 +104,9 @@ pub fn (mut d Diagnostics) error_all_paths_must_return(loc TextLocation) {
 }
 
 pub fn (mut d Diagnostics) error_module_can_only_be_defined_once(loc TextLocation) {
-	d.error("a module can only be definded once", loc)
+	d.error('a module can only be definded once', loc)
 }
 
 pub fn (mut d Diagnostics) error_module_can_only_be_defined_as_first_statement(loc TextLocation) {
-	d.error("a module can only be definded as first statement", loc)
+	d.error('a module can only be definded as first statement', loc)
 }
-

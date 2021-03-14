@@ -6,7 +6,7 @@ pub struct EmptyExpr {
 pub:
 	// general ast node
 	tree        &SyntaxTree = &SyntaxTree(0)
-	kind        SyntaxKind = .break_stmt
+	kind        SyntaxKind  = .break_stmt
 	pos         source.Pos
 	child_nodes []AstNode
 }

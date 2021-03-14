@@ -22,7 +22,7 @@ pub:
 
 pub fn new_type_node(tree &SyntaxTree, ident token.Token, is_ref bool, is_void bool) TypeNode {
 	return TypeNode{
-		tree: tree 
+		tree: tree
 		pos: ident.pos
 		child_nodes: [AstNode(ident)]
 		ident: ident
