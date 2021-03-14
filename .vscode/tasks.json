@@ -17,7 +17,7 @@
             "type": "process",
             "command": "cmd/v/v",
             "args": [
-                "${fileDirname}"
+                "${relativeFileDirname}"
             ],
             "presentation": {
                 "reveal": "silent"

@@ -108,12 +108,12 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 		}
 
 		error_line_nr_end := source.line_nr(err.location.pos.pos + err.location.pos.len)
-
 		mut line_nr_end := error_line_nr_end + 2
 		if line_nr_end > source.lines.len {
 			line_nr_end = source.lines.len
 		}
 
+		
 		mut err_end_pos := err.location.pos.pos + err.location.pos.len
 		if err_end_pos > src.len {
 			err_end_pos = src.len
@@ -125,7 +125,9 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 
 		mut b := strings.new_builder(0)
 		nr_of_digits := line_nr_end.str().len
-		for i in line_nr_start .. line_nr_end {
+		println('line ${line_nr_start}..${line_nr_end}')
+		for i in line_nr_start .. line_nr_end + 1 {
+			println('i:=$i')
 			line := source.lines[i - 1]
 			nr_of_zeros_to_add := nr_of_digits - i.str().len
 			if nr_of_zeros_to_add > 0 {
