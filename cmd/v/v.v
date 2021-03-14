@@ -125,9 +125,7 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 
 		mut b := strings.new_builder(0)
 		nr_of_digits := line_nr_end.str().len
-		println('line ${line_nr_start}..${line_nr_end}')
 		for i in line_nr_start .. line_nr_end + 1 {
-			println('i:=$i')
 			line := source.lines[i - 1]
 			nr_of_zeros_to_add := nr_of_digits - i.str().len
 			if nr_of_zeros_to_add > 0 {
