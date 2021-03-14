@@ -190,9 +190,9 @@ fn event(e &tui.Event, x voidptr) {
 					syntax_tree := parser.parse_syntax_tree(buffer.raw())
 					if syntax_tree.log.all.len == 0 {
 						mut comp := if app.prev_comp == 0 {
-							comp.new_compilation(syntax_tree)
+							comp.new_compilation([syntax_tree])
 						} else {
-							app.prev_comp.continue_with(syntax_tree)
+							app.prev_comp.continue_with([syntax_tree])
 						}
 						comp.register_print_callback(print_fn, voidptr(app))
 						if app.show_tree {

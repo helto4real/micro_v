@@ -25,12 +25,12 @@ mut:
 	previous &Compilation
 pub mut:
 	global_scope &binding.BoundGlobalScope
-	syntax_trees []ast.SyntaxTree
+	syntax_trees []&ast.SyntaxTree
 	print_fn     PrintFunc = print_fn // Defaults to stdout
 	print_ref    voidptr
 }
 
-pub fn new_compilation(syntax_trees ...ast.SyntaxTree) &Compilation {
+pub fn new_compilation(syntax_trees []&ast.SyntaxTree) &Compilation {
 	return &Compilation{
 		syntax_trees: syntax_trees
 		global_scope: &binding.BoundGlobalScope(0)
@@ -38,7 +38,7 @@ pub fn new_compilation(syntax_trees ...ast.SyntaxTree) &Compilation {
 	}
 }
 
-fn new_compilation_with_previous(previous &Compilation, syntax_trees ...ast.SyntaxTree) &Compilation {
+fn new_compilation_with_previous(previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
 	return &Compilation{
 		syntax_trees: syntax_trees
 		global_scope: &binding.BoundGlobalScope(0)
@@ -63,8 +63,8 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 	return c.global_scope
 }
 
-pub fn (c &Compilation) continue_with(syntax_tree ast.SyntaxTree) &Compilation {
-	return new_compilation_with_previous(c, syntax_tree)
+pub fn (c &Compilation) continue_with(syntax_trees []&ast.SyntaxTree) &Compilation {
+	return new_compilation_with_previous(c, syntax_trees)
 }
 
 pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResult {

@@ -27,9 +27,9 @@ fn (mut tcs TestCompilationState) evaluate(expr string) comp.EvaluationResult {
 	}
 
 	mut comp := if tcs.prev_comp == 0 {
-		comp.new_compilation(syntax_tree)
+		comp.new_compilation([syntax_tree])
 	} else {
-		tcs.prev_comp.continue_with(syntax_tree)
+		tcs.prev_comp.continue_with([syntax_tree])
 	}
 	res := comp.evaluate(tcs.vars)
 	tcs.prev_comp = comp
@@ -301,7 +301,7 @@ fn assert_has_multi_diagostics(text string, diagnostic_text string, nr_of_err_ms
 	ann_text := util.parse_annotated_text(text)
 
 	syntax_tree := parser.parse_syntax_tree(ann_text.text)
-	mut comp := comp.new_compilation(syntax_tree)
+	mut comp := comp.new_compilation([syntax_tree])
 
 	res := comp.evaluate(vars)
 

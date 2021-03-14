@@ -19,7 +19,7 @@ fn main() {
 		display_help_message(args)
 		exit(0)
 	}
-	mut file := ''
+	mut files := []string{}
 	mut display_bound_stmts := false
 	mut display_lowered_stmts := false
 	for arg in args {
@@ -31,24 +31,29 @@ fn main() {
 				display_lowered_stmts = true
 			}
 			else {
-				if file.len > 0 {
-					eprintln(term.red('you can only specify one file or folder'))
-					exit(-1)
-				}
-				file = arg
+				files << arg
 			}
 		}
 	}
-	if file.len == 0 {
+	if files.len == 0 {
 		eprintln(term.red('no file specified'))
 		exit(-1)
 	}
-	syntax_tree := parser.parse_syntax_tree_from_file(file) ?
-	if syntax_tree.log.all.len > 0 {
-		// write_diagnostics(syntax_tree.log.all, syntax_tree)
+	mut syntax_trees := []&ast.SyntaxTree{cap: files.len}
+	mut has_errors := false
+	for file in files {
+		syntax_tree := parser.parse_syntax_tree_from_file(file) ?
+		syntax_trees << syntax_tree
+		if syntax_tree.log.all.len > 0 {
+			write_diagnostics(syntax_tree.log.all)
+		}
+		has_errors = has_errors || syntax_tree.log.all.len > 0
+	}
+	
+	if has_errors {
 		exit(-1)
 	}
-	mut comp := comp.new_compilation(syntax_tree)
+	mut comp := comp.new_compilation(syntax_trees)
 
 	if !(display_bound_stmts || display_lowered_stmts) {
 		vars := binding.new_eval_variables()
@@ -60,7 +65,7 @@ fn main() {
 			println(term.cyan('OK'))
 			exit(0)
 		}
-		write_diagnostics(res.result, syntax_tree)
+		write_diagnostics(res.result)
 		exit(-1)
 	}
 	mut iw := repl.IdentWriter{}
@@ -84,15 +89,16 @@ Usage:
 	')
 }
 
-pub fn write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree ast.SyntaxTree) {
+pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 	mut sorted_diagnosics := []&source.Diagnostic{cap: diagnostics.len}
 	sorted_diagnosics << diagnostics
 	sorted_diagnosics.sort(a.location.pos.pos < b.location.pos.pos)
 	mut iw := repl.IdentWriter{}
 	for err in sorted_diagnosics {
-		src := syntax_tree.source.str()
-		error_line_nr := syntax_tree.source.line_nr(err.location.pos.pos)
-		error_line := syntax_tree.source.lines[error_line_nr - 1]
+		source := err.location.source
+		src := source.str()
+		error_line_nr := source.line_nr(err.location.pos.pos)
+		error_line := source.lines[error_line_nr - 1]
 		error_col := err.location.pos.pos - error_line.start + 1
 
 		mut line_nr_start := error_line_nr - 2
@@ -100,11 +106,11 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree ast.Synta
 			line_nr_start = 1
 		}
 
-		error_line_nr_end := syntax_tree.source.line_nr(err.location.pos.pos + err.location.pos.len)
+		error_line_nr_end := source.line_nr(err.location.pos.pos + err.location.pos.len)
 
 		mut line_nr_end := error_line_nr_end + 2
-		if line_nr_end > syntax_tree.source.lines.len {
-			line_nr_end = syntax_tree.source.lines.len
+		if line_nr_end > source.lines.len {
+			line_nr_end = source.lines.len
 		}
 
 		mut err_end_pos := err.location.pos.pos + err.location.pos.len
@@ -119,7 +125,7 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree ast.Synta
 		mut b := strings.new_builder(0)
 		nr_of_digits := line_nr_end.str().len
 		for i in line_nr_start .. line_nr_end {
-			line := syntax_tree.source.lines[i - 1]
+			line := source.lines[i - 1]
 			nr_of_zeros_to_add := nr_of_digits - i.str().len
 			if nr_of_zeros_to_add > 0 {
 				b.write_string(' 0'.repeat(nr_of_zeros_to_add))
@@ -146,76 +152,6 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic, syntax_tree ast.Synta
 		}
 		iw.writeln(b.str())
 		iw.writeln('')
-
-		// iw.writeln('')
-		// iw.write(prefix.trim('\r\n'))
-		// iw.write(term.red(error))
-		// iw.writeln(postfix)
-		// iw.writeln('')
 	}
 	println(iw.str())
 }
-
-// fn tokenizer() {
-// 	for {
-// 		print('tokens> ')
-// 		line := os.get_line()
-// 		if line == '' {
-// 			break
-// 		}
-// 		mut tnz := token.new_tokenizer_from_string(line)
-// 		mut tokens := tnz.scan_all()
-// 		for _, token in tokens {
-// 			println(token)
-// 			if token.kind == .eof {
-// 				break
-// 			}
-// 		}
-// 	}
-// }
-
-// Keeping this to debug
-
-// 	syntax_tree := parser.parse_syntax_tree(
-// 		'
-// 		    {
-// 				if true {100} else {200}
-// 			}
-// 			')
-// 	// syntax_tree := parser.parse_syntax_tree(
-// 	// 	'
-// 	// 	    {
-// 	// 			mut a := 0
-// 	// 			mut b := 0
-// 	// 			for a < 5{
-// 	// 				b = b - 1
-// 	// 				a = a + 1
-
-// 	// 			}
-// 	// 			b
-// 	// 		}
-// 	// 		')
-// 	if syntax_tree.log.all.len > 0 {
-// 		println('syntax error')
-// 		return
-// 	}
-// 	vars :=  binding.new_eval_variables()
-// 	tree := walker.print_expression(syntax_tree.root)
-// 	println(tree)
-// 	mut comp := comp.new_compilation(syntax_tree)
-// 	res := comp.evaluate(vars)
-// 	println('RES: $res')
-// }
-
-// fn evaluate(expr string) comp.EvaluationResult {
-// 	syntax_tree := parser.parse_syntax_tree(expr)
-
-// 	if syntax_tree.log.all.len > 0 {
-// 		eprintln('expression error: $expr')
-// 		assert syntax_tree.log.all.len == 0
-// 	}
-
-// 	mut comp := comp.new_compilation(syntax_tree)
-// 	vars := binding.new_eval_variables()
-// 	res := comp.evaluate(vars)
-// 	return res

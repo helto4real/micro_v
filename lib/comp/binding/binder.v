@@ -51,7 +51,7 @@ pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
 	return bound_program
 }
 
-pub fn bind_global_scope(previous &BoundGlobalScope, syntax_trees []ast.SyntaxTree) &BoundGlobalScope {
+pub fn bind_global_scope(previous &BoundGlobalScope, syntax_trees []&ast.SyntaxTree) &BoundGlobalScope {
 	parent_scope := create_parent_scope(previous)
 	mut binder := new_binder(parent_scope, symbols.undefined_fn)
 	// first bind the functions to make them visible 
