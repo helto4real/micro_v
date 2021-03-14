@@ -31,7 +31,8 @@ fn main() {
 				display_lowered_stmts = true
 			}
 			else {
-				files << arg
+				f := get_files(arg) ?
+				files << f
 			}
 		}
 	}
@@ -49,7 +50,7 @@ fn main() {
 		}
 		has_errors = has_errors || syntax_tree.log.all.len > 0
 	}
-	
+
 	if has_errors {
 		exit(-1)
 	}
@@ -154,4 +155,18 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 		iw.writeln('')
 	}
 	println(iw.str())
+}
+
+fn get_files(file_or_directory string) ?[]string {
+	mut result := []string{}
+	if os.is_dir(file_or_directory) {
+		files := os.ls(file_or_directory) ?
+		v_files := files.filter(it.ends_with('.v'))
+		for v_file in v_files {
+			result << os.join_path(file_or_directory, v_file)
+		}
+	} else {
+		result << file_or_directory
+	}
+	return result
 }
