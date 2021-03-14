@@ -23,6 +23,8 @@ pub fn print_fn(text string, nl bool, ref voidptr) {
 pub struct Compilation {
 mut:
 	previous &Compilation
+pub:
+	is_script bool
 pub mut:
 	global_scope &binding.BoundGlobalScope
 	syntax_trees []&ast.SyntaxTree
@@ -30,20 +32,29 @@ pub mut:
 	print_ref    voidptr
 }
 
-pub fn new_compilation(syntax_trees []&ast.SyntaxTree) &Compilation {
+fn new_compilation(is_script bool , previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
 	return &Compilation{
+		is_script: is_script
+		previous: previous
 		syntax_trees: syntax_trees
 		global_scope: &binding.BoundGlobalScope(0)
-		previous: &Compilation(0)
 	}
 }
 
-fn new_compilation_with_previous(previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
-	return &Compilation{
-		syntax_trees: syntax_trees
-		global_scope: &binding.BoundGlobalScope(0)
-		previous: previous
-	}
+// fn new_compilation_with_previous(previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
+// 	return &Compilation{
+// 		syntax_trees: syntax_trees
+// 		global_scope: &binding.BoundGlobalScope(0)
+// 		previous: previous
+// 	}
+// }
+
+pub fn create_compilation(syntax_trees []&ast.SyntaxTree) &Compilation {
+	return new_compilation(true, &Compilation(0), syntax_trees)
+}
+
+pub fn create_script(previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
+	return new_compilation(true, previous, syntax_trees)	
 }
 
 pub fn (mut c Compilation) register_print_callback(print_fn PrintFunc, ref voidptr) {
@@ -61,10 +72,6 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 		c.global_scope = binding.bind_global_scope(prev_glob_scope, c.syntax_trees)
 	}
 	return c.global_scope
-}
-
-pub fn (c &Compilation) continue_with(syntax_trees []&ast.SyntaxTree) &Compilation {
-	return new_compilation_with_previous(c, syntax_trees)
 }
 
 pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResult {
