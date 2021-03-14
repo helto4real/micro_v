@@ -2,14 +2,22 @@
 module comp
 
 import term
-import lib.comp.parser
+import lib.comp.ast
 import lib.comp.binding
 import lib.comp.types
-import lib.comp.util
+import lib.comp.util.source
 import lib.comp.io
 import lib.comp.symbols
 
 pub type PrintFunc = fn (text string, nl bool, ref voidptr)
+
+pub fn print_fn(text string, nl bool, ref voidptr) {
+	if nl {
+		println(text)
+	} else {
+		print(text)
+	}
+}
 
 [heap]
 pub struct Compilation {
@@ -17,22 +25,22 @@ mut:
 	previous &Compilation
 pub mut:
 	global_scope &binding.BoundGlobalScope
-	syntax       parser.SyntaxTree
-	print_fn     PrintFunc
+	syntax_trees []&ast.SyntaxTree
+	print_fn     PrintFunc = print_fn // Defaults to stdout
 	print_ref    voidptr
 }
 
-pub fn new_compilation(syntax_tree parser.SyntaxTree) &Compilation {
+pub fn new_compilation(syntax_trees []&ast.SyntaxTree) &Compilation {
 	return &Compilation{
-		syntax: syntax_tree
+		syntax_trees: syntax_trees
 		global_scope: &binding.BoundGlobalScope(0)
 		previous: &Compilation(0)
 	}
 }
 
-fn new_compilation_with_previous(previous &Compilation, syntax_tree parser.SyntaxTree) &Compilation {
+fn new_compilation_with_previous(previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
 	return &Compilation{
-		syntax: syntax_tree
+		syntax_trees: syntax_trees
 		global_scope: &binding.BoundGlobalScope(0)
 		previous: previous
 	}
@@ -43,12 +51,6 @@ pub fn (mut c Compilation) register_print_callback(print_fn PrintFunc, ref voidp
 	c.print_ref = ref
 }
 
-// pub fn (mut c Compilation) get_statement() binding.BoundBlockStmt {
-// 	result := c.get_bound_global_scope().stmt
-// 	lower := lowering.lower(result)
-// 	return lower
-// }
-
 pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 	// TODO: Make this thread safe
 	mut prev_glob_scope := &binding.BoundGlobalScope(0)
@@ -56,19 +58,21 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 		if c.previous != 0 {
 			prev_glob_scope = c.previous.global_scope
 		}
-		c.global_scope = binding.bind_global_scope(prev_glob_scope, c.syntax.root)
+		c.global_scope = binding.bind_global_scope(prev_glob_scope, c.syntax_trees)
 	}
 	return c.global_scope
 }
 
-pub fn (c &Compilation) continue_with(syntax_tree parser.SyntaxTree) &Compilation {
-	return new_compilation_with_previous(c, syntax_tree)
+pub fn (c &Compilation) continue_with(syntax_trees []&ast.SyntaxTree) &Compilation {
+	return new_compilation_with_previous(c, syntax_trees)
 }
 
 pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&util.Diagnostic{}
-	result << c.syntax.log.all
+	mut result := []&source.Diagnostic{}
+	for syntax in c.syntax_trees {
+		result << syntax.log.all
+	}
 	result << global_scope.log.all
 	if result.len > 0 {
 		return new_evaluation_result(result, 0)
@@ -124,11 +128,11 @@ pub fn (mut c Compilation) emit_tree(writer io.TermTextWriter, lower bool) {
 
 pub struct EvaluationResult {
 pub:
-	result []&util.Diagnostic
+	result []&source.Diagnostic
 	val    types.LitVal
 }
 
-pub fn new_evaluation_result(result []&util.Diagnostic, val types.LitVal) EvaluationResult {
+pub fn new_evaluation_result(result []&source.Diagnostic, val types.LitVal) EvaluationResult {
 	return EvaluationResult{
 		result: result
 		val: val

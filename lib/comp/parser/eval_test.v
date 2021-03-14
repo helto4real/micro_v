@@ -2,6 +2,7 @@
 import lib.comp.binding
 import lib.comp.parser
 import lib.comp
+import lib.comp.util.source
 import lib.comp.util
 
 struct TestCompilationState {
@@ -26,9 +27,9 @@ fn (mut tcs TestCompilationState) evaluate(expr string) comp.EvaluationResult {
 	}
 
 	mut comp := if tcs.prev_comp == 0 {
-		comp.new_compilation(syntax_tree)
+		comp.new_compilation([syntax_tree])
 	} else {
-		tcs.prev_comp.continue_with(syntax_tree)
+		tcs.prev_comp.continue_with([syntax_tree])
 	}
 	res := comp.evaluate(tcs.vars)
 	tcs.prev_comp = comp
@@ -300,7 +301,7 @@ fn assert_has_multi_diagostics(text string, diagnostic_text string, nr_of_err_ms
 	ann_text := util.parse_annotated_text(text)
 
 	syntax_tree := parser.parse_syntax_tree(ann_text.text)
-	mut comp := comp.new_compilation(syntax_tree)
+	mut comp := comp.new_compilation([syntax_tree])
 
 	res := comp.evaluate(vars)
 
@@ -325,7 +326,8 @@ fn assert_has_multi_diagostics(text string, diagnostic_text string, nr_of_err_ms
 		}
 
 		if i < ann_text.posns.len {
-			actual_pos := res.result[i].pos
+			actual_location := res.result[i].location
+			actual_pos := actual_location.pos
 			expected_pos := ann_text.posns[i]
 
 			if actual_pos != expected_pos {
@@ -337,10 +339,10 @@ fn assert_has_multi_diagostics(text string, diagnostic_text string, nr_of_err_ms
 }
 
 fn assert_err_info(input_rule string, expected_message string, actual_message string) {
-	assert_err_info_diag(input_rule, expected_message, actual_message, []&util.Diagnostic{})
+	assert_err_info_diag(input_rule, expected_message, actual_message, []&source.Diagnostic{})
 }
 
-fn assert_err_info_diag(input_rule string, expected_message string, actual_message string, actual_diagnostics []&util.Diagnostic) {
+fn assert_err_info_diag(input_rule string, expected_message string, actual_message string, actual_diagnostics []&source.Diagnostic) {
 	// make sure we print info so we can find the method that is faulty	
 	eprintln('input rule:')
 	eprintln(input_rule)

@@ -21,6 +21,6 @@ pub fn new_bound_cond_goto_stmt(label string, cond BoundExpr, jump_if_true bool)
 	}
 }
 
-pub fn (ex &BoundCondGotoStmt) node_str() string {
+pub fn (ex BoundCondGotoStmt) node_str() string {
 	return typeof(ex).name
 }

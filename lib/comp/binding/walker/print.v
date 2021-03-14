@@ -4,7 +4,6 @@ import strings
 import term
 import lib.comp.binding
 import lib.comp.parser
-import lib.comp.lowering
 
 pub struct BoundNodePrinter {
 mut:

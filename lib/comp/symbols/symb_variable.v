@@ -11,12 +11,12 @@ pub:
 	id     string
 }
 
-pub fn (vs &LocalVariableSymbol) str() string {
+pub fn (vs LocalVariableSymbol) str() string {
 	mut_str := if vs.is_mut { 'mut ' } else { '' }
 	return 'var: $mut_str <$vs.name> ($vs.typ.name)'
 }
 
-pub fn (vs &LocalVariableSymbol) str_ident(level int) string {
+pub fn (vs LocalVariableSymbol) str_ident(level int) string {
 	ident := '  '.repeat(level)
 	mut_str := if vs.is_mut { 'mut ' } else { '' }
 	return '${ident}var: $mut_str <$vs.name> ($vs.typ.name)'
@@ -39,12 +39,12 @@ pub:
 	id     string
 }
 
-pub fn (vs &GlobalVariableSymbol) str() string {
+pub fn (vs GlobalVariableSymbol) str() string {
 	mut_str := if vs.is_mut { 'mut ' } else { '' }
 	return 'var: $mut_str <$vs.name> ($vs.typ.name)'
 }
 
-pub fn (vs &GlobalVariableSymbol) str_ident(level int) string {
+pub fn (vs GlobalVariableSymbol) str_ident(level int) string {
 	ident := '  '.repeat(level)
 	mut_str := if vs.is_mut { 'mut ' } else { '' }
 	return '${ident}var: $mut_str <$vs.name> ($vs.typ.name)'

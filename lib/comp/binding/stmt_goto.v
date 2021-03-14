@@ -16,6 +16,6 @@ pub fn new_bound_goto_stmt(label string) BoundStmt {
 	}
 }
 
-pub fn (ex &BoundGotoStmt) node_str() string {
+pub fn (ex BoundGotoStmt) node_str() string {
 	return typeof(ex).name
 }

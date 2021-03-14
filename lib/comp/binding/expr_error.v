@@ -15,10 +15,10 @@ pub fn new_bound_error_expr() BoundExpr {
 	}
 }
 
-pub fn (ex &BoundErrorExpr) node_str() string {
+pub fn (ex BoundErrorExpr) node_str() string {
 	return typeof(ex).name
 }
 
-pub fn (ex &BoundErrorExpr) str() string {
+pub fn (ex BoundErrorExpr) str() string {
 	return '?'
 }

@@ -1,7 +1,7 @@
-import lib.comp.util
+import lib.comp.util.source
 
 fn test_source_at() {
-	source := util.new_source_text('abc')
+	source := source.new_source_text('abc')
 
 	assert source.at(0) == `a`
 	assert source.at(1) == `b`
@@ -11,14 +11,14 @@ fn test_source_at() {
 }
 
 fn test_source_range() {
-	source := util.new_source_text('abc123')
+	source := source.new_source_text('abc123')
 
 	assert source.str_range(0, 2) == 'ab'
 	assert source.str_range(3, 4) == '1'
 }
 
 fn text_line_parsing() {
-	mut source := util.new_source_text('abc123\n321abc')
+	mut source := source.new_source_text('abc123\n321abc')
 
 	source.add_line(0, 5, 1)
 
@@ -28,7 +28,7 @@ fn text_line_parsing() {
 }
 
 fn text_line_parsing_crln() {
-	mut source := util.new_source_text('abc123\r\n321abc')
+	mut source := source.new_source_text('abc123\r\n321abc')
 
 	source.add_line(0, 5, 2)
 
@@ -38,7 +38,7 @@ fn text_line_parsing_crln() {
 }
 
 fn text_empty_line_parsing() {
-	mut source := util.new_source_text('abc123\n')
+	mut source := source.new_source_text('abc123\n')
 
 	source.add_line(0, 5, 1)
 
@@ -48,7 +48,7 @@ fn text_empty_line_parsing() {
 }
 
 fn text_line_pos() {
-	mut source := util.new_source_text('abc123\n321abc')
+	mut source := source.new_source_text('abc123\n321abc')
 
 	source.add_line(0, 5, 1)
 
@@ -60,7 +60,7 @@ fn text_line_pos() {
 }
 
 fn test_line_pos_crln() {
-	mut source := util.new_source_text('abc123\r\n321abc')
+	mut source := source.new_source_text('abc123\r\n321abc')
 
 	source.add_line(0, 5, 2)
 	source.add_line(8, 13, 0)
@@ -73,7 +73,7 @@ fn test_line_pos_crln() {
 }
 
 fn test_text_line_nr() {
-	mut source := util.new_source_text('abc123\r\n321abc\r\n123456')
+	mut source := source.new_source_text('abc123\r\n321abc\r\n123456')
 
 	source.add_line(0, 5, 2)
 	source.add_line(8, 13, 2)

@@ -2,7 +2,7 @@ module binding
 
 import strings
 import lib.comp.ast
-import lib.comp.util
+import lib.comp.util.source
 import lib.comp.symbols
 
 pub struct BoundScope {
@@ -127,7 +127,7 @@ fn (bs &BoundScope) str_indent(level int) string {
 
 pub struct BoundGlobalScope {
 pub mut:
-	log      &util.Diagnostics // errors when parsing
+	log      &source.Diagnostics // errors when parsing
 	vars     []symbols.VariableSymbol
 	funcs    []symbols.FunctionSymbol
 	fn_decls []ast.FnDeclNode
@@ -136,7 +136,7 @@ pub:
 	stmt     BoundBlockStmt
 }
 
-pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &util.Diagnostics, funcs []symbols.FunctionSymbol, fn_decls []ast.FnDeclNode, vars []symbols.VariableSymbol, stmt BoundBlockStmt) &BoundGlobalScope {
+pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &source.Diagnostics, funcs []symbols.FunctionSymbol, fn_decls []ast.FnDeclNode, vars []symbols.VariableSymbol, stmt BoundBlockStmt) &BoundGlobalScope {
 	return &BoundGlobalScope{
 		previous: previous
 		log: diagostics

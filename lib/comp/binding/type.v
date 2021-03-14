@@ -4,9 +4,9 @@ pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundCo
 	BoundEmptyExpr | BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundRangeExpr |
 	BoundUnaryExpr | BoundVariableExpr
 
-pub type BoundStmt = BoundBlockStmt | BoundBreakStmt | BoundCondGotoStmt | BoundContinueStmt |
-	BoundExprStmt | BoundForRangeStmt | BoundForStmt | BoundGotoStmt | BoundIfStmt | BoundLabelStmt |
-	BoundReturnStmt | BoundVarDeclStmt | BoundCommentStmt | BoundModuleStmt
+pub type BoundStmt = BoundBlockStmt | BoundBreakStmt | BoundCommentStmt | BoundCondGotoStmt |
+	BoundContinueStmt | BoundExprStmt | BoundForRangeStmt | BoundForStmt | BoundGotoStmt |
+	BoundIfStmt | BoundLabelStmt | BoundModuleStmt | BoundReturnStmt | BoundVarDeclStmt
 
 pub type BoundNode = BoundExpr | BoundStmt
 
@@ -43,7 +43,7 @@ pub fn (bn &BoundNode) child_nodes() []BoundNode {
 	return bn.child_nodes
 }
 
-pub fn (bn &BoundNode) node_str() string {
+pub fn (bn BoundNode) node_str() string {
 	match bn {
 		BoundExpr {
 			return bn.node_str()
@@ -110,5 +110,24 @@ pub fn (bs BoundStmt) node_str() string {
 		BoundReturnStmt { return bs.node_str() }
 		BoundCommentStmt { return bs.node_str() }
 		BoundModuleStmt { return bs.node_str() }
+	}
+}
+
+pub fn (bs BoundStmt) str() string {
+	match bs {
+		BoundBlockStmt { return bs.str() }
+		BoundExprStmt { return bs.str() }
+		BoundForRangeStmt { return bs.str() }
+		BoundForStmt { return bs.str() }
+		BoundIfStmt { return bs.str() }
+		BoundVarDeclStmt { return bs.str() }
+		BoundGotoStmt { return bs.str() }
+		BoundCondGotoStmt { return bs.str() }
+		BoundLabelStmt { return bs.str() }
+		BoundBreakStmt { return bs.str() }
+		BoundContinueStmt { return bs.str() }
+		BoundReturnStmt { return bs.str() }
+		BoundCommentStmt { return bs.str() }
+		BoundModuleStmt { return bs.str() }
 	}
 }

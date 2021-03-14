@@ -53,7 +53,7 @@ pub fn (mut bb BasicBlock) add_incoming(branch BasicBlockBranch) {
 	bb.incoming << branch
 }
 
-pub fn (ex &BasicBlock) str() string {
+pub fn (ex BasicBlock) str() string {
 	mut b := io.new_node_string_writer()
 	if ex.is_start {
 		return '<start>'
@@ -422,6 +422,9 @@ pub fn all_path_return_in_body(body BoundBlockStmt) bool {
 	lowered_body := lower(body)
 	mut graph := create_control_flow_graph(lowered_body)
 	for branch in graph.end.incoming {
+		if branch.from.stmts.len == 0 {
+			return false
+		}
 		last_stmt := branch.from.stmts.last()
 		if last_stmt !is BoundReturnStmt {
 			return false

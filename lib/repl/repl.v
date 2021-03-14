@@ -8,7 +8,7 @@ import lib.comp.binding
 import lib.comp.parser
 import lib.comp.types
 import lib.comp.token
-import lib.comp.util
+import lib.comp.util.source
 import lib.comp.symbols
 import lib.comp
 import lib.comp.ast.walker
@@ -52,7 +52,7 @@ fn (mut a App) colorize() {
 	if raw_text.len == 0 {
 		return
 	}
-	source := util.new_source_text(b.raw())
+	source := source.new_source_text(b.raw())
 	mut tnz := token.new_tokenizer_from_source(source)
 	tokens := tnz.scan_all()
 	for tok in tokens {
@@ -190,9 +190,9 @@ fn event(e &tui.Event, x voidptr) {
 					syntax_tree := parser.parse_syntax_tree(buffer.raw())
 					if syntax_tree.log.all.len == 0 {
 						mut comp := if app.prev_comp == 0 {
-							comp.new_compilation(syntax_tree)
+							comp.new_compilation([syntax_tree])
 						} else {
-							app.prev_comp.continue_with(syntax_tree)
+							app.prev_comp.continue_with([syntax_tree])
 						}
 						comp.register_print_callback(print_fn, voidptr(app))
 						if app.show_tree {
@@ -221,16 +221,16 @@ fn event(e &tui.Event, x voidptr) {
 								mut b := strings.new_builder(0)
 								text := buffer.raw() // syntax_tree.source.str()
 								for err in res.result {
-									line_nr := syntax_tree.source.line_nr(err.pos.pos)
-									prefix := text[0..err.pos.pos]
-									mut err_end_pos := err.pos.pos + err.pos.len
+									line_nr := syntax_tree.source.line_nr(err.location.pos.pos)
+									prefix := text[0..err.location.pos.pos]
+									mut err_end_pos := err.location.pos.pos + err.location.pos.len
 									if err_end_pos > text.len {
 										err_end_pos = text.len
 									}
-									error := text[err.pos.pos..err_end_pos]
+									error := text[err.location.pos.pos..err_end_pos]
 
-									postfix := if err_end_pos + err.pos.len < text.len {
-										text[err.pos.pos + err.pos.len..]
+									postfix := if err_end_pos + err.location.pos.len < text.len {
+										text[err.location.pos.pos + err.location.pos.len..]
 									} else {
 										''
 									}

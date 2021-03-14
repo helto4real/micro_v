@@ -16,6 +16,10 @@ pub fn new_bound_label_stmt(name string) BoundStmt {
 	}
 }
 
-pub fn (ex &BoundLabelStmt) node_str() string {
+pub fn (ex BoundLabelStmt) node_str() string {
 	return typeof(ex).name
+}
+
+pub fn (ex BoundLabelStmt) str() string {
+	return '$ex.name:'
 }

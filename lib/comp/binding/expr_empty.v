@@ -15,10 +15,10 @@ pub fn new_bound_emtpy_expr() BoundExpr {
 	}
 }
 
-pub fn (ex &BoundEmptyExpr) node_str() string {
+pub fn (ex BoundEmptyExpr) node_str() string {
 	return typeof(ex).name
 }
 
-pub fn (ex &BoundEmptyExpr) str() string {
+pub fn (ex BoundEmptyExpr) str() string {
 	return '<empty>'
 }

@@ -33,6 +33,6 @@ fn new_if_else_stmt(cond_expr BoundExpr, block_stmt BoundStmt, else_clause Bound
 	}
 }
 
-pub fn (ex &BoundIfStmt) node_str() string {
+pub fn (ex BoundIfStmt) node_str() string {
 	return typeof(ex).name
 }

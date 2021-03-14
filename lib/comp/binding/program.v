@@ -1,15 +1,16 @@
 module binding
 
-import lib.comp.util
+import lib.comp.util.source
 
 pub struct BoundProgram {
 pub:
-	log         &util.Diagnostics
 	func_bodies map[string]BoundBlockStmt
 	stmt        BoundBlockStmt
+pub mut:
+	log &source.Diagnostics
 }
 
-pub fn new_bound_program(log &util.Diagnostics, stmt BoundBlockStmt, func_bodies map[string]BoundBlockStmt) BoundProgram {
+pub fn new_bound_program(log &source.Diagnostics, stmt BoundBlockStmt, func_bodies map[string]BoundBlockStmt) BoundProgram {
 	return BoundProgram{
 		log: log
 		stmt: stmt

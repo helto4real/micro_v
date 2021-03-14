@@ -1,14 +1,14 @@
 module binding
 
-import lib.comp.util
+import lib.comp.util.source
 import lib.comp.ast
 import lib.comp.symbols
 
 fn test_bound_global_scope_stack_basic() {
 	mut stack := new_bound_global_scope_stack()
-
-	scope := new_bound_global_scope(&BoundGlobalScope(0), &util.Diagnostics(0), []symbols.FunctionSymbol{},
-		[]ast.FnDeclNode{}, []symbols.VariableSymbol{}, BoundBlockStmt{})
+	bound_stmt := new_bound_block_stmt([]BoundStmt{})
+	scope := new_bound_global_scope(&BoundGlobalScope(0), &source.Diagnostics(0), []symbols.FunctionSymbol{},
+		[]ast.FnDeclNode{}, []symbols.VariableSymbol{}, bound_stmt)
 
 	stack.push(scope)
 

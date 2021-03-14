@@ -5,14 +5,6 @@ import lib.comp.binding
 import lib.comp.types
 import lib.comp.symbols
 
-pub fn print_fn(text string, nl bool, ref voidptr) {
-	if nl {
-		println(text)
-	} else {
-		print(text)
-	}
-}
-
 pub struct Evaluator {
 	root     binding.BoundBlockStmt
 	fn_stmts map[string]binding.BoundBlockStmt
@@ -45,7 +37,6 @@ pub fn new_evaluator(program binding.BoundProgram, glob_vars &binding.EvalVariab
 	// mut f := os.open_file(exe_path,'w+', 0o666) or {panic(err)}
 	// defer {f.close()}
 	// cfg.write_to(f) or {panic('unexpected error $err writing to file')}
-
 	mut eval := Evaluator{
 		root: lowered_stmt
 		fn_stmts: lowered_fn_stmts
@@ -271,7 +262,7 @@ fn (mut e Evaluator) eval_bound_variable_expr(bound_var binding.BoundVariableExp
 	} else {
 		mut local_symb := e.locals.peek() or { panic('unexpected empty stack') }
 		return local_symb.lookup(bound_var.var) or {
-			panic('expected local variable existing $local_symb in bound_var vars: $bound_var.var')
+			panic('expected local variable $bound_var.var to exist in local symbol table: $local_symb')
 		}
 	}
 }

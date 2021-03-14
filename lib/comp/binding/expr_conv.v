@@ -18,10 +18,10 @@ pub fn new_bound_conv_expr(typ symbols.TypeSymbol, expr BoundExpr) BoundExpr {
 	}
 }
 
-pub fn (ex &BoundConvExpr) node_str() string {
+pub fn (ex BoundConvExpr) node_str() string {
 	return typeof(ex).name
 }
 
-pub fn (ex &BoundConvExpr) str() string {
+pub fn (ex BoundConvExpr) str() string {
 	return '${ex.typ.name}($ex.expr)'
 }

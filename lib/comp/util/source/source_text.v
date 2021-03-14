@@ -1,16 +1,27 @@
-module util
+module source
+
+import lib.comp.util.source
 
 // SourceCode handles the source handling features
 // 	- linenumber and columns
 //	- formatting of errors
 pub struct SourceText {
 	text string
+pub:
+	filename string
 pub mut:
 	lines []TextLine
 }
 
+pub fn new_source_text_from_file(text string, filename string) &SourceText {
+	return &source.SourceText{
+		text: text
+		filename: filename
+	}
+}
+
 pub fn new_source_text(text string) &SourceText {
-	return &SourceText{
+	return &source.SourceText{
 		text: text
 	}
 }
@@ -35,17 +46,17 @@ pub fn (s SourceText) line_nr(pos int) int {
 	return lower
 }
 
-pub fn (s SourceText) str() string {
+pub fn (s &SourceText) str() string {
 	return s.text
 }
 
 [inline]
-pub fn (s SourceText) str_range(start int, end int) string {
+pub fn (s &SourceText) str_range(start int, end int) string {
 	return s.text[start..end]
 }
 
 [inline]
-pub fn (s SourceText) str_pos(pos Pos) string {
+pub fn (s &SourceText) str_pos(pos Pos) string {
 	return s.text[pos.pos..pos.pos + pos.len]
 }
 
@@ -67,7 +78,7 @@ pub:
 }
 
 fn new_text_line(source_text &SourceText, start int, len int, lb_len int) TextLine {
-	return TextLine{
+	return source.TextLine{
 		source: source_text
 		start: start
 		len: len
@@ -76,11 +87,11 @@ fn new_text_line(source_text &SourceText, start int, len int, lb_len int) TextLi
 }
 
 pub fn (tl TextLine) pos() Pos {
-	return new_pos(tl.start, tl.len)
+	return source.new_pos(tl.start, tl.len)
 }
 
 pub fn (tl TextLine) pos_include_linebreak() Pos {
-	return new_pos(tl.start, tl.len + tl.lb_len)
+	return source.new_pos(tl.start, tl.len + tl.lb_len)
 }
 
 pub fn (tl TextLine) str() string {

@@ -20,10 +20,10 @@ fn new_range_expr(from_exp BoundExpr, to_exp BoundExpr) BoundExpr {
 	}
 }
 
-pub fn (ex &BoundRangeExpr) node_str() string {
+pub fn (ex BoundRangeExpr) node_str() string {
 	return typeof(ex).name
 }
 
-pub fn (ex &BoundRangeExpr) str() string {
+pub fn (ex BoundRangeExpr) str() string {
 	return '${ex.from_exp}..$ex.to_exp'
 }
