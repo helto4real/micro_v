@@ -9,6 +9,8 @@ import lib.comp.binding.convertion
 
 [heap]
 pub struct Binder {
+pub:
+	is_script bool
 pub mut:
 	scope            &BoundScope = 0
 	func             symbols.FunctionSymbol
@@ -18,12 +20,13 @@ pub mut:
 	mod_ok_to_define bool = true // if true it is ok to define a module 
 }
 
-pub fn new_binder(parent &BoundScope, func symbols.FunctionSymbol) &Binder {
+pub fn new_binder(is_script bool, parent &BoundScope, func symbols.FunctionSymbol) &Binder {
 	mut scope := new_bound_scope(parent)
 	new_binder := &Binder{
 		scope: scope
 		log: source.new_diagonistics()
 		func: func
+		is_script: is_script
 	}
 	for param in func.params {
 		scope.try_declare_var(param)
@@ -31,16 +34,16 @@ pub fn new_binder(parent &BoundScope, func symbols.FunctionSymbol) &Binder {
 	return new_binder
 }
 
-pub fn bind_program(previous &BoundProgram, global_scope &BoundGlobalScope) &BoundProgram {
+pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundGlobalScope) &BoundProgram {
 	parent_scope := create_parent_scope(global_scope)
 	mut func_bodies := map[string]BoundBlockStmt{}
 	mut log := source.new_diagonistics()
 	for func in global_scope.funcs {
-		mut binder := new_binder(parent_scope, func)
+		mut binder := new_binder(is_script, parent_scope, func)
 		fn_decl := binder.scope.lookup_fn_decl(func.name) or {
 			panic('unexpected missing fn_decl in scope')
 		}
-		body := binder.bind_stmt(fn_decl.block)
+		body := binder.bind_stmt(fn_decl.block, false)
 		if func.typ != symbols.void_symbol && !all_path_return_in_body(body as BoundBlockStmt) {
 			binder.log.error_all_paths_must_return(fn_decl.ident.text_location())
 		}
@@ -51,9 +54,9 @@ pub fn bind_program(previous &BoundProgram, global_scope &BoundGlobalScope) &Bou
 	return bound_program
 }
 
-pub fn bind_global_scope(previous &BoundGlobalScope, syntax_trees []&ast.SyntaxTree) &BoundGlobalScope {
+pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_trees []&ast.SyntaxTree) &BoundGlobalScope {
 	parent_scope := create_parent_scope(previous)
-	mut binder := new_binder(parent_scope, symbols.undefined_fn)
+	mut binder := new_binder(is_script, parent_scope, symbols.undefined_fn)
 	// first bind the functions to make them visible 
 	for syntax_tree in syntax_trees {
 		for node in syntax_tree.root.members {
@@ -68,7 +71,7 @@ pub fn bind_global_scope(previous &BoundGlobalScope, syntax_trees []&ast.SyntaxT
 	for syntax_tree in syntax_trees {
 		for node in syntax_tree.root.members {
 			if node is ast.GlobStmt {
-				s := binder.bind_stmt(node.stmt)
+				s := binder.bind_global_stmt(node.stmt)
 				glob_stmts << s
 			}
 		}
@@ -122,7 +125,26 @@ fn create_root_scope() &BoundScope {
 	return result
 }
 
-pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
+pub fn (mut b Binder) bind_global_stmt(stmt ast.Stmt) BoundStmt {
+	return b.bind_stmt(stmt, true)
+}
+
+pub fn (mut b Binder) bind_stmt(stmt ast.Stmt, is_global bool) BoundStmt {
+	result := b.bind_stmt_internal(stmt)
+	if !b.is_script || !is_global {
+		if result is BoundExprStmt {
+			allowed_expression := result.bound_expr.kind == .call_expr
+				|| result.bound_expr.kind == .assign_expr || result.bound_expr.kind == .error_expr
+
+			if !allowed_expression {
+				b.log.error_invalid_expression_statement(stmt.text_location())
+			}
+		}
+	}
+	return result
+}
+
+pub fn (mut b Binder) bind_stmt_internal(stmt ast.Stmt) BoundStmt {
 	if b.mod_ok_to_define && stmt.kind != .comment_stmt && stmt.kind != .module_stmt {
 		b.mod_ok_to_define = false
 	}
@@ -289,7 +311,7 @@ pub fn (mut b Binder) bind_block_stmt(block_stmt ast.BlockStmt) BoundStmt {
 	b.scope = new_bound_scope(b.scope)
 	mut stmts := []BoundStmt{}
 	for blk in block_stmt.stmts {
-		stmts << b.bind_stmt(blk)
+		stmts << b.bind_stmt(blk, false)
 	}
 	b.scope = b.scope.parent
 	return new_bound_block_stmt(stmts)

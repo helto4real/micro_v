@@ -32,7 +32,7 @@ pub mut:
 	print_ref    voidptr
 }
 
-fn new_compilation(is_script bool , previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
+fn new_compilation(is_script bool, previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
 	return &Compilation{
 		is_script: is_script
 		previous: previous
@@ -41,20 +41,12 @@ fn new_compilation(is_script bool , previous &Compilation, syntax_trees []&ast.S
 	}
 }
 
-// fn new_compilation_with_previous(previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
-// 	return &Compilation{
-// 		syntax_trees: syntax_trees
-// 		global_scope: &binding.BoundGlobalScope(0)
-// 		previous: previous
-// 	}
-// }
-
 pub fn create_compilation(syntax_trees []&ast.SyntaxTree) &Compilation {
 	return new_compilation(true, &Compilation(0), syntax_trees)
 }
 
 pub fn create_script(previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
-	return new_compilation(true, previous, syntax_trees)	
+	return new_compilation(true, previous, syntax_trees)
 }
 
 pub fn (mut c Compilation) register_print_callback(print_fn PrintFunc, ref voidptr) {
@@ -69,14 +61,14 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 		if c.previous != 0 {
 			prev_glob_scope = c.previous.global_scope
 		}
-		c.global_scope = binding.bind_global_scope(prev_glob_scope, c.syntax_trees)
+		c.global_scope = binding.bind_global_scope(c.is_script, prev_glob_scope, c.syntax_trees)
 	}
 	return c.global_scope
 }
 
 pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&source.Diagnostic{}
+	mut result := []&util.source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
 	}
@@ -102,10 +94,10 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 fn (mut c Compilation) get_program() &binding.BoundProgram {
 	global_scope := c.get_bound_global_scope()
 	if c.previous == 0 {
-		return binding.bind_program(&binding.BoundProgram(0), global_scope)
+		return binding.bind_program(c.is_script, &binding.BoundProgram(0), global_scope)
 	} else {
 		p := c.previous.get_program()
-		return binding.bind_program(p, global_scope)
+		return binding.bind_program(c.is_script, p, global_scope)
 	}
 }
 
@@ -145,11 +137,11 @@ pub fn (mut c Compilation) emit_tree(writer io.TermTextWriter, lower bool) {
 
 pub struct EvaluationResult {
 pub:
-	result []&source.Diagnostic
+	result source.Diagnostic
 	val    types.LitVal
 }
 
-pub fn new_evaluation_result(result []&source.Diagnostic, val types.LitVal) EvaluationResult {
+pub fn new_evaluation_result(result []&util.source.Diagnostic, val types.LitVal) EvaluationResult {
 	return EvaluationResult{
 		result: result
 		val: val

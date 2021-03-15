@@ -110,3 +110,7 @@ pub fn (mut d Diagnostics) error_module_can_only_be_defined_once(loc TextLocatio
 pub fn (mut d Diagnostics) error_module_can_only_be_defined_as_first_statement(loc TextLocation) {
 	d.error('a module can only be definded as first statement', loc)
 }
+
+pub fn (mut d Diagnostics) error_invalid_expression_statement(loc TextLocation) {
+	d.error('only assignment and call expressions can be used as a statement', loc)
+}
