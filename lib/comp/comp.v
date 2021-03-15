@@ -68,7 +68,7 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 
 pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&util.source.Diagnostic{}
+	mut result := []&source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
 	}
@@ -137,11 +137,11 @@ pub fn (mut c Compilation) emit_tree(writer io.TermTextWriter, lower bool) {
 
 pub struct EvaluationResult {
 pub:
-	result source.Diagnostic
+	result []&source.Diagnostic
 	val    types.LitVal
 }
 
-pub fn new_evaluation_result(result []&util.source.Diagnostic, val types.LitVal) EvaluationResult {
+pub fn new_evaluation_result(result []&source.Diagnostic, val types.LitVal) EvaluationResult {
 	return EvaluationResult{
 		result: result
 		val: val

@@ -2,6 +2,7 @@ module symbols
 
 pub const (
 	// symbols
+	// any_symbol         = new_type_symbol('any')
 	int_symbol         = new_type_symbol('int')
 	bool_symbol        = new_type_symbol('bool')
 	string_symbol      = new_type_symbol('string')

@@ -31,7 +31,8 @@ pub mut:
 // }
 
 pub fn (cn &CompNode) child_nodes() []AstNode {
-	return cn.child_nodes
+	return cn.members.map(AstNode(it))
+	// return cn.child_nodes
 }
 
 pub fn (ex CompNode) text_location() source.TextLocation {

@@ -12,12 +12,14 @@ pub struct Binder {
 pub:
 	is_script bool
 pub mut:
-	scope            &BoundScope = 0
-	func             symbols.FunctionSymbol
-	log              &source.Diagnostics // errors when parsing
-	mod              string
-	is_loop          bool
-	mod_ok_to_define bool = true // if true it is ok to define a module 
+	scope              &BoundScope = 0
+	func               symbols.FunctionSymbol
+	log                &source.Diagnostics // errors when parsing
+	mod                string
+	is_loop            bool
+	mod_ok_to_define   bool = true // if true it is ok to define a module
+	current_is_global  bool // if current statement is global statement
+	allow_expr		   bool // always allow expressions in blocks
 }
 
 pub fn new_binder(is_script bool, parent &BoundScope, func symbols.FunctionSymbol) &Binder {
@@ -43,7 +45,7 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 		fn_decl := binder.scope.lookup_fn_decl(func.name) or {
 			panic('unexpected missing fn_decl in scope')
 		}
-		body := binder.bind_stmt(fn_decl.block, false)
+		body := binder.bind_stmt(fn_decl.block)
 		if func.typ != symbols.void_symbol && !all_path_return_in_body(body as BoundBlockStmt) {
 			binder.log.error_all_paths_must_return(fn_decl.ident.text_location())
 		}
@@ -126,15 +128,19 @@ fn create_root_scope() &BoundScope {
 }
 
 pub fn (mut b Binder) bind_global_stmt(stmt ast.Stmt) BoundStmt {
-	return b.bind_stmt(stmt, true)
+	b.current_is_global = true
+	glob_stmt := b.bind_stmt(stmt)
+	b.current_is_global = false
+	return glob_stmt
 }
 
-pub fn (mut b Binder) bind_stmt(stmt ast.Stmt, is_global bool) BoundStmt {
+pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 	result := b.bind_stmt_internal(stmt)
-	if !b.is_script || !is_global {
+
+	if !b.allow_expr && (!b.is_script || !b.current_is_global) {
 		if result is BoundExprStmt {
 			allowed_expression := result.bound_expr.kind == .call_expr
-				|| result.bound_expr.kind == .assign_expr || result.bound_expr.kind == .error_expr
+				|| result.bound_expr.kind == .if_expr|| result.bound_expr.kind == .assign_expr || result.bound_expr.kind == .error_expr
 
 			if !allowed_expression {
 				b.log.error_invalid_expression_statement(stmt.text_location())
@@ -311,7 +317,7 @@ pub fn (mut b Binder) bind_block_stmt(block_stmt ast.BlockStmt) BoundStmt {
 	b.scope = new_bound_scope(b.scope)
 	mut stmts := []BoundStmt{}
 	for blk in block_stmt.stmts {
-		stmts << b.bind_stmt(blk, false)
+		stmts << b.bind_stmt(blk)
 	}
 	b.scope = b.scope.parent
 	return new_bound_block_stmt(stmts)
@@ -404,16 +410,10 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	}
 
 	for i := 0; i < expr.params.len(); i++ {
+		arg_location := expr.params.at(i).text_location()
 		bound_arg := args[i]
 		param := func.params[i]
-		if bound_arg.typ == symbols.error_symbol {
-			return new_bound_error_expr()
-		}
-		if bound_arg.typ != param.typ {
-			b.log.error_wrong_argument_type(param.name, param.typ.name, bound_arg.typ.name,
-				expr.params.at(i).text_location())
-			return new_bound_error_expr()
-		}
+		args[i] = b.bind_convertion_diag(arg_location, bound_arg, param.typ)
 	}
 
 	return new_bound_call_expr(func, args)
@@ -450,9 +450,10 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 		b.log.error_empty_block_not_allowed(else_stmt.text_location())
 		return new_bound_error_expr()
 	}
-
+	b.allow_expr = true
 	bound_then_stmt := b.bind_block_stmt(then_stmt) as BoundBlockStmt
 	bound_else_stmt := b.bind_block_stmt(else_stmt) as BoundBlockStmt
+	b.allow_expr = false
 
 	// check that the last statment is expression
 	then_stmt_typ := bind_block_type(bound_then_stmt) or {

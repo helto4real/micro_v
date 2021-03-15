@@ -1,1 +1,1 @@
-println(greet('Boooss'))
+println(greet(20))
