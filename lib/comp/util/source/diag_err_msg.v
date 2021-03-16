@@ -24,6 +24,10 @@ pub fn (mut d Diagnostics) error_cannot_convert_variable_type(from_type string, 
 	d.error('cannot convert type <$from_type> to <$to_type>', loc)
 }
 
+pub fn (mut d Diagnostics) error_cannot_convert_implicitly(from_type string, to_type string, loc TextLocation) {
+	d.error('cannot convert explicitly from <$from_type> to type <$to_type>', loc)
+}
+
 pub fn (mut d Diagnostics) error_expected_var_decl(loc TextLocation) {
 	d.error('expected varable declaration after mut keyword', loc)
 }

@@ -6,8 +6,9 @@ import lib.comp.types
 import lib.comp.symbols
 
 pub struct Evaluator {
-	root     binding.BoundBlockStmt
-	fn_stmts map[string]binding.BoundBlockStmt
+	// root     binding.BoundBlockStmt
+	fn_stmts  map[string]binding.BoundBlockStmt
+	program   &binding.BoundProgram
 mut:
 	glob_vars &binding.EvalVariables
 	locals    binding.EvalVarsStack
@@ -18,7 +19,7 @@ mut:
 }
 
 pub fn new_evaluator(program &binding.BoundProgram, glob_vars &binding.EvalVariables) Evaluator {
-	lowered_stmt := binding.lower(program.stmt)
+	// lowered_stmt := binding.lower(program.stmt)
 	mut lowered_fn_stmts := map[string]binding.BoundBlockStmt{}
 
 	for id, func_body in program.func_bodies {
@@ -50,7 +51,7 @@ pub fn new_evaluator(program &binding.BoundProgram, glob_vars &binding.EvalVaria
 	// cfg.write_to(f) or {panic('unexpected error $err writing to file')}
 
 	mut eval := Evaluator{
-		root: lowered_stmt
+		program: program
 		fn_stmts: lowered_fn_stmts
 		glob_vars: glob_vars
 		print_fn: print_fn
@@ -68,7 +69,12 @@ pub fn (mut e Evaluator) register_print_callback(print_fn PrintFunc, ref voidptr
 
 pub fn (mut e Evaluator) evaluate() ?types.LitVal {
 	e.is_func = false
-	return e.evaluate_stmt(e.root)
+	func := if e.program.main_func != symbols.undefined_fn {
+		e.program.main_func
+	} else {e.program.script_func}
+	if func == symbols.undefined_fn {return types.None{}}
+	body := e.fn_stmts[func.id]
+	return e.evaluate_stmt(body)
 }
 
 pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?types.LitVal {

@@ -3,7 +3,7 @@ module symbols
 import rand
 
 pub const (
-	undefined_fn = FunctionSymbol{}
+	undefined_fn = FunctionSymbol{name: '' id: 'undefined'}
 )
 
 pub struct FunctionSymbol {

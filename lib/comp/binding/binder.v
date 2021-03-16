@@ -5,6 +5,7 @@ import lib.comp.ast
 import lib.comp.token
 import lib.comp.util.source
 import lib.comp.symbols
+import lib.comp.types
 import lib.comp.binding.convertion
 
 [heap]
@@ -52,7 +53,50 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 		func_bodies[func.id] = body as BoundBlockStmt
 		log.all << binder.log.all
 	}
-	bound_program := new_bound_program(previous, log, new_bound_block_stmt(global_scope.stmts), func_bodies)
+	valid_statements := global_scope.stmts.filter(it.kind != .comment_stmt)
+	if global_scope.main_func != symbols.undefined_fn && valid_statements.len > 0 {
+		body := new_bound_block_stmt(valid_statements)
+		func_bodies[global_scope.main_func.id] = body
+	} else if global_scope.script_func != symbols.undefined_fn {
+		if valid_statements.len > 0 {
+			mut stmts := []BoundStmt{cap: valid_statements.len+1}
+			// if valid_statements.len == 1 && 
+			// 	valid_statements[0].kind == .expr_stmt && 
+			// 	(valid_statements[0] as BoundExprStmt).bound_expr.typ != symbols.void_symbol {
+			// 	stmts << new_bound_return_with_expr_stmt((valid_statements[0] as BoundExprStmt).bound_expr)
+			// } else
+			last_statement := valid_statements.last()
+			if last_statement.kind != .return_stmt {
+				if last_statement.kind == .expr_stmt && 
+					(last_statement as BoundExprStmt).bound_expr.typ != symbols.void_symbol {
+					for i, stmt in valid_statements {
+						if i == valid_statements.len - 1 {
+							// last statement
+							stmts << new_bound_return_with_expr_stmt((stmt as BoundExprStmt).bound_expr)
+						} else {
+							stmts << stmt
+						}
+					}
+				} else {
+					none_return := new_bound_literal_expr(types.None{}) 
+					stmts << valid_statements
+					stmts << new_bound_return_with_expr_stmt(none_return)
+				}
+			} else {
+				stmts << valid_statements
+			}
+			body := new_bound_block_stmt(stmts)
+			func_bodies[global_scope.script_func.id] = body
+		} else {
+			none_return := new_bound_literal_expr(types.None{}) 
+			mut stmts := []BoundStmt{cap:1}
+			stmts << new_bound_return_with_expr_stmt(none_return)
+			body := new_bound_block_stmt(stmts)
+			func_bodies[global_scope.script_func.id] = body
+			
+		}
+	}
+	bound_program := new_bound_program(previous, log, global_scope.main_func, global_scope.script_func, func_bodies)
 	return bound_program
 }
 
@@ -78,52 +122,70 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 			}
 		}
 	}
+	mut main_func := symbols.undefined_fn
+	mut script_func := symbols.undefined_fn
 
-	// global statements can only occur at most in one syntax tree
-	// if main function exists, global statements cannot
-	main_func_filter_result := binder.scope.funcs().filter(it.name == 'main')
+	if is_script {
+		if glob_stmts.len > 0 {
+			script_func = symbols.new_function_symbol('\$eval', []symbols.ParamSymbol{}, symbols.any_symbol)
+		}
+	} else {
+		// global statements can only occur at most in one syntax tree
+		// if main function exists, global statements cannot
+		main_func_filter_result := binder.scope.funcs().filter(it.name == 'main')
 
-	// get the declared main function or return empty declaration
-	main_func := if main_func_filter_result.len == 1 {
+		// get the declared main function or return empty declaration
+		main_func = if main_func_filter_result.len == 1 {
 			main_func_filter_result[0]
 		} else {
-			symbols.FunctionSymbol{}
-	}
-
-	// if we have a main function declared, check the signature
-	if main_func.name == 'main' {
-		if main_func.typ != symbols.void_symbol ||  main_func.params.len > 0 {
-			func_decl := binder.scope.lookup_fn_decl(main_func.name) or {panic('unexpected error, function declaration not found')}
-			binder.log.error_main_function_must_have_correct_signature(func_decl.ident.text_location())
+			symbols.undefined_fn
 		}
-	}
 
-	// get the first global statement in each syntax tree
-	mut first_global_statements := []ast.GlobStmt{cap: syntax_trees.len}
-	for syntax_tree in syntax_trees {
-		if syntax_tree.root.members.len > 0 {
-			global_stmts := syntax_tree.root.members.filter(it is ast.GlobStmt && (it as ast.GlobStmt).stmt.kind != .comment_stmt)
-			if global_stmts.len > 0 {
-				first_global_stmt := global_stmts[0]
-				first_global_statements << first_global_stmt as ast.GlobStmt
+		// if we have a main function declared, check the signature
+		if main_func != symbols.undefined_fn {
+			if main_func.typ != symbols.void_symbol || main_func.params.len > 0 {
+				func_decl := binder.scope.lookup_fn_decl(main_func.name) or {
+					panic('unexpected error, function declaration not found')
+				}
+				binder.log.error_main_function_must_have_correct_signature(func_decl.ident.text_location())
+			}
+		}
+
+		// get the first global statement in each syntax tree
+		mut first_global_statements := []ast.GlobStmt{cap: syntax_trees.len}
+		for syntax_tree in syntax_trees {
+			if syntax_tree.root.members.len > 0 {
+				global_stmts := syntax_tree.root.members.filter(it is ast.GlobStmt
+					&& (it as ast.GlobStmt).stmt.kind != .comment_stmt)
+				if global_stmts.len > 0 {
+					first_global_stmt := global_stmts[0]
+					first_global_statements << first_global_stmt as ast.GlobStmt
+				}
+			}
+		}
+		if first_global_statements.len > 0 {
+			// we have global statements
+			if first_global_statements.len > 1 {
+				// has mulitple global statements in several syntax trees
+				for global_stmt in first_global_statements {
+					binder.log.error_global_stmts_can_only_be_defined_in_one_file(global_stmt.text_location())
+				}
+			} else if main_func != symbols.undefined_fn {
+				// has mixed main and glob stmts
+				for global_stmt in first_global_statements {
+					binder.log.error_cannot_mix_global_statements_and_main_function(global_stmt.text_location())
+				}
+				func_decl := binder.scope.lookup_fn_decl(main_func.name) or {
+					panic('unexpected error, function declaration not found')
+				}
+				binder.log.error_cannot_mix_global_statements_and_main_function(func_decl.ident.text_location())
+			} else {
+				main_func = symbols.new_function_symbol('main', []symbols.ParamSymbol{},
+					symbols.void_symbol)
 			}
 		}
 	}
-	if first_global_statements.len > 1 {
-		// has mulitple global statements in several syntax trees
-		for global_stmt in first_global_statements {
-			binder.log.error_global_stmts_can_only_be_defined_in_one_file(global_stmt.text_location())
-		}
-	} else if main_func.name == 'main' && first_global_statements.len > 0 {
-		// has mixed main and glob stmts
-		for global_stmt in first_global_statements {
-			binder.log.error_cannot_mix_global_statements_and_main_function(global_stmt.text_location())
-		}
-		func_decl := binder.scope.lookup_fn_decl(main_func.name) or {panic('unexpected error, function declaration not found')}
-		binder.log.error_cannot_mix_global_statements_and_main_function(func_decl.ident.text_location())
 
-	}
-	
 	fns := binder.scope.funcs()
 	fn_decls := binder.scope.func_decls()
 	vars := binder.scope.vars()
@@ -132,7 +194,8 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 		diagnostics.prepend(previous.log.all)
 	}
 
-	return new_bound_global_scope(previous, binder.log, main_func, fns, fn_decls, vars, glob_stmts)
+	return new_bound_global_scope(previous, binder.log, script_func, main_func, fns, fn_decls, vars,
+		glob_stmts)
 }
 
 fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
@@ -403,6 +466,10 @@ fn lookup_type(name string) symbols.TypeSymbol {
 }
 
 pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol) BoundExpr {
+	return b.bind_convertion_diag_explicit(diag_loc, expr, typ, false)
+}
+
+pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol, allow_explicit bool) BoundExpr {
 	conv := convertion.classify(expr.typ, typ)
 	if !conv.exists {
 		// convertion does not exist
@@ -411,7 +478,9 @@ pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr Bo
 		}
 		return new_bound_error_expr()
 	}
-
+	if !allow_explicit && conv.is_explicit {
+		b.log.error_cannot_convert_implicitly(expr.typ.str(), typ.str(), diag_loc)
+	}
 	if conv.is_identity {
 		return expr
 	}
@@ -423,13 +492,18 @@ pub fn (mut b Binder) bind_convertion(typ symbols.TypeSymbol, expr ast.Expr) Bou
 	return b.bind_convertion_diag(expr.text_location(), bound_expr, typ)
 }
 
+pub fn (mut b Binder) bind_convertion_explicit(typ symbols.TypeSymbol, expr ast.Expr, is_explicit bool) BoundExpr {
+	bound_expr := b.bind_expr(expr)
+	return b.bind_convertion_diag_explicit(expr.text_location(), bound_expr, typ, is_explicit)
+}
+
 pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	func_name := expr.ident.lit
 	// handle convertions as special functions
 	if expr.params.len() == 1 {
 		typ := lookup_type(func_name)
 		if typ != symbols.none_symbol {
-			return b.bind_convertion(typ, (expr.params.at(0) as ast.Expr))
+			return b.bind_convertion_explicit(typ, (expr.params.at(0) as ast.Expr), true)
 		}
 	}
 
@@ -484,7 +558,7 @@ fn bind_block_type(block BoundBlockStmt) ?symbols.TypeSymbol {
 }
 
 pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
-	cond_expr := b.bind_expr(if_expr.cond_expr)
+	cond_expr := b.bind_expr_type(if_expr.cond_expr, symbols.bool_symbol)
 
 	then_stmt := if_expr.then_stmt as ast.BlockStmt
 	else_stmt := if_expr.else_stmt as ast.BlockStmt

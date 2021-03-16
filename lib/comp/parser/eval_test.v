@@ -26,11 +26,9 @@ fn (mut tcs TestCompilationState) evaluate(expr string) comp.EvaluationResult {
 		assert syntax_tree.log.all.len == 0
 	}
 
-	mut comp := if tcs.prev_comp == 0 {
-		comp.create_script(&comp.Compilation(0), [syntax_tree])
-	} else {
-		comp.create_script(tcs.prev_comp, [syntax_tree])
-	}
+	mut comp := if tcs.prev_comp == 0 { comp.create_script(&comp.Compilation(0), [syntax_tree]) } else { comp.create_script(tcs.prev_comp, [
+			syntax_tree,
+		]) }
 	res := comp.evaluate(tcs.vars)
 	tcs.prev_comp = comp
 	return res
@@ -193,12 +191,19 @@ fn test_string_expressions() {
 fn test_if_else_stmt() {
 	mut c := new_test_compilation_state()
 
-	assert c.eval_int('if 10==10 {1}') == 1
-	assert c.eval_bool('if 11>10 {true}') == true
-	assert c.eval_int('if 10==10 {10} else {20}') == 10
-	assert c.eval_int('if 10!=10 {10} else {20}') == 20
+	assert c.eval_int('mut a:=0 if 10==10 {a=1} a') == 1
+	assert c.eval_bool('mut a:=false if 11>10 {a=true} a') == true
 	assert c.eval_int('
-	{
+		mut a:=0 
+		if 10==10 {
+			a=10
+		} else {
+			a=20
+		} 
+		a
+		') == 10
+	assert c.eval_int('mut a:=0 if 10!=10 {a=10} else {a=20} a') == 20
+	assert c.eval_int('
 		a:=100
 		mut b:=200
 		if a>b {
@@ -207,7 +212,7 @@ fn test_if_else_stmt() {
 			b=2
 		}
 		b
-	}') == 2
+	') == 2
 }
 
 fn test_error_delcarations_binar_operator_type() {

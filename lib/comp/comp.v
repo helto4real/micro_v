@@ -42,7 +42,7 @@ fn new_compilation(is_script bool, previous &Compilation, syntax_trees []&ast.Sy
 }
 
 pub fn create_compilation(syntax_trees []&ast.SyntaxTree) &Compilation {
-	return new_compilation(true, &Compilation(0), syntax_trees)
+	return new_compilation(false, &Compilation(0), syntax_trees)
 }
 
 pub fn create_script(previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
@@ -102,36 +102,23 @@ fn (mut c Compilation) get_program() &binding.BoundProgram {
 }
 
 pub fn (mut c Compilation) emit_tree(writer io.TermTextWriter, lower bool) {
-	mut global_scope := c.get_bound_global_scope()
+	global_scope := c.get_bound_global_scope()
+	if global_scope.main_func != symbols.undefined_fn {
+		c.emit_tree_for_function(writer, c.global_scope.main_func, lower)
+	} else if global_scope.script_func != symbols.undefined_fn {
+		c.emit_tree_for_function(writer, c.global_scope.script_func, lower)
+	} 
+}
+
+pub fn (mut c Compilation) emit_tree_for_function(writer io.TermTextWriter, function symbols.FunctionSymbol, lower bool) {
 	program := c.get_program()
+	symbols.write_symbol(writer, function)
+	body := program.func_bodies[function.id]
 	if lower {
-		if program.stmt.bound_stmts.len > 0 {
-			lowered_stmt := binding.lower(program.stmt)
-			binding.write_node(writer, binding.BoundStmt(lowered_stmt))
-		} else {
-			for key, fbody in program.func_bodies {
-				func := global_scope.funcs.filter(it.id == key)
-				if func.len == 0 {
-					continue
-				}
-				symbols.write_symbol(writer, func[0])
-				lowered_stmt := binding.lower(fbody)
-				binding.write_node(writer, binding.BoundStmt(lowered_stmt))
-			}
-		}
+		lowered_body := binding.lower(body)
+		binding.write_node(writer, binding.BoundStmt(lowered_body))
 	} else {
-		if program.stmt.bound_stmts.len > 0 {
-			binding.write_node(writer, binding.BoundStmt(program.stmt))
-		} else {
-			for key, fbody in program.func_bodies {
-				func := global_scope.funcs.filter(it.id == key)
-				if func.len == 0 {
-					continue
-				}
-				symbols.write_symbol(writer, func[0])
-				binding.write_node(writer, binding.BoundStmt(fbody))
-			}
-		}
+		binding.write_node(writer, binding.BoundStmt(body))
 	}
 }
 

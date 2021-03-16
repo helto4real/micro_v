@@ -40,6 +40,10 @@ fn write_function_symbol(writer io.TermTextWriter, fn_symbol FunctionSymbol) {
 		write_param_symbol(writer, param)
 	}
 	writer.write_punctuation(')')
+	if fn_symbol.typ != void_symbol {
+		writer.write_space()
+		write_type_symbol(writer, fn_symbol.typ)
+	}
 	writer.writeln('')
 }
 

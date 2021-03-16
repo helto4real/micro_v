@@ -127,21 +127,23 @@ fn (bs &BoundScope) str_indent(level int) string {
 
 pub struct BoundGlobalScope {
 pub mut:
-	log      &source.Diagnostics // errors when parsing
-	vars     []symbols.VariableSymbol
-	main_func symbols.FunctionSymbol
-	funcs    []symbols.FunctionSymbol
-	fn_decls []ast.FnDeclNode
+	log         &source.Diagnostics // errors when parsing
+	vars        []symbols.VariableSymbol
+	main_func   symbols.FunctionSymbol
+	script_func symbols.FunctionSymbol
+	funcs       []symbols.FunctionSymbol
+	fn_decls    []ast.FnDeclNode
+	stmts    	[]BoundStmt
 pub:
 	previous &BoundGlobalScope
-	stmts     []BoundStmt
 }
 
-pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &source.Diagnostics, main_func symbols.FunctionSymbol, funcs []symbols.FunctionSymbol, fn_decls []ast.FnDeclNode, vars []symbols.VariableSymbol, stmts []BoundStmt) &BoundGlobalScope {
+pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &source.Diagnostics, script_func symbols.FunctionSymbol, main_func symbols.FunctionSymbol, funcs []symbols.FunctionSymbol, fn_decls []ast.FnDeclNode, vars []symbols.VariableSymbol, stmts []BoundStmt) &BoundGlobalScope {
 	return &BoundGlobalScope{
 		previous: previous
 		log: diagostics
 		vars: vars
+		script_func: script_func
 		main_func: main_func
 		funcs: funcs
 		fn_decls: fn_decls
