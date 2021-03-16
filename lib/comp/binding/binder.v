@@ -12,14 +12,14 @@ pub struct Binder {
 pub:
 	is_script bool
 pub mut:
-	scope              &BoundScope = 0
-	func               symbols.FunctionSymbol
-	log                &source.Diagnostics // errors when parsing
-	mod                string
-	is_loop            bool
-	mod_ok_to_define   bool = true // if true it is ok to define a module
-	current_is_global  bool // if current statement is global statement
-	allow_expr		   bool // always allow expressions in blocks
+	scope             &BoundScope = 0
+	func              symbols.FunctionSymbol
+	log               &source.Diagnostics // errors when parsing
+	mod               string
+	is_loop           bool
+	mod_ok_to_define  bool = true // if true it is ok to define a module
+	current_is_global bool // if current statement is global statement
+	allow_expr        bool // always allow expressions in blocks
 }
 
 pub fn new_binder(is_script bool, parent &BoundScope, func symbols.FunctionSymbol) &Binder {
@@ -52,7 +52,7 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 		func_bodies[func.id] = body as BoundBlockStmt
 		log.all << binder.log.all
 	}
-	bound_program := new_bound_program(previous, log, global_scope.stmt, func_bodies)
+	bound_program := new_bound_program(previous, log, new_bound_block_stmt(global_scope.stmts), func_bodies)
 	return bound_program
 }
 
@@ -78,7 +78,52 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 			}
 		}
 	}
-	stmt := new_bound_block_stmt(glob_stmts)
+
+	// global statements can only occur at most in one syntax tree
+	// if main function exists, global statements cannot
+	main_func_filter_result := binder.scope.funcs().filter(it.name == 'main')
+
+	// get the declared main function or return empty declaration
+	main_func := if main_func_filter_result.len == 1 {
+			main_func_filter_result[0]
+		} else {
+			symbols.FunctionSymbol{}
+	}
+
+	// if we have a main function declared, check the signature
+	if main_func.name == 'main' {
+		if main_func.typ != symbols.void_symbol ||  main_func.params.len > 0 {
+			func_decl := binder.scope.lookup_fn_decl(main_func.name) or {panic('unexpected error, function declaration not found')}
+			binder.log.error_main_function_must_have_correct_signature(func_decl.ident.text_location())
+		}
+	}
+
+	// get the first global statement in each syntax tree
+	mut first_global_statements := []ast.GlobStmt{cap: syntax_trees.len}
+	for syntax_tree in syntax_trees {
+		if syntax_tree.root.members.len > 0 {
+			global_stmts := syntax_tree.root.members.filter(it is ast.GlobStmt && (it as ast.GlobStmt).stmt.kind != .comment_stmt)
+			if global_stmts.len > 0 {
+				first_global_stmt := global_stmts[0]
+				first_global_statements << first_global_stmt as ast.GlobStmt
+			}
+		}
+	}
+	if first_global_statements.len > 1 {
+		// has mulitple global statements in several syntax trees
+		for global_stmt in first_global_statements {
+			binder.log.error_global_stmts_can_only_be_defined_in_one_file(global_stmt.text_location())
+		}
+	} else if main_func.name == 'main' && first_global_statements.len > 0 {
+		// has mixed main and glob stmts
+		for global_stmt in first_global_statements {
+			binder.log.error_cannot_mix_global_statements_and_main_function(global_stmt.text_location())
+		}
+		func_decl := binder.scope.lookup_fn_decl(main_func.name) or {panic('unexpected error, function declaration not found')}
+		binder.log.error_cannot_mix_global_statements_and_main_function(func_decl.ident.text_location())
+
+	}
+	
 	fns := binder.scope.funcs()
 	fn_decls := binder.scope.func_decls()
 	vars := binder.scope.vars()
@@ -87,7 +132,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 		diagnostics.prepend(previous.log.all)
 	}
 
-	return new_bound_global_scope(previous, binder.log, fns, fn_decls, vars, stmt)
+	return new_bound_global_scope(previous, binder.log, main_func, fns, fn_decls, vars, glob_stmts)
 }
 
 fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
@@ -140,7 +185,8 @@ pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 	if !b.allow_expr && (!b.is_script || !b.current_is_global) {
 		if result is BoundExprStmt {
 			allowed_expression := result.bound_expr.kind == .call_expr
-				|| result.bound_expr.kind == .if_expr|| result.bound_expr.kind == .assign_expr || result.bound_expr.kind == .error_expr
+				|| result.bound_expr.kind == .if_expr || result.bound_expr.kind == .assign_expr
+				|| result.bound_expr.kind == .error_expr
 
 			if !allowed_expression {
 				b.log.error_invalid_expression_statement(stmt.text_location())

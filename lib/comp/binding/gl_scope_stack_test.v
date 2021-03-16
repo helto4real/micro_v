@@ -6,9 +6,10 @@ import lib.comp.symbols
 
 fn test_bound_global_scope_stack_basic() {
 	mut stack := new_bound_global_scope_stack()
-	bound_stmt := new_bound_block_stmt([]BoundStmt{})
-	scope := new_bound_global_scope(&BoundGlobalScope(0), &source.Diagnostics(0), []symbols.FunctionSymbol{},
-		[]ast.FnDeclNode{}, []symbols.VariableSymbol{}, bound_stmt)
+	bound_stmts := []BoundStmt{}
+
+	scope := new_bound_global_scope(&BoundGlobalScope(0), &source.Diagnostics(0), symbols.FunctionSymbol{}, []symbols.FunctionSymbol{},
+		[]ast.FnDeclNode{}, []symbols.VariableSymbol{}, bound_stmts)
 
 	stack.push(scope)
 

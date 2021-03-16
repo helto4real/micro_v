@@ -129,20 +129,22 @@ pub struct BoundGlobalScope {
 pub mut:
 	log      &source.Diagnostics // errors when parsing
 	vars     []symbols.VariableSymbol
+	main_func symbols.FunctionSymbol
 	funcs    []symbols.FunctionSymbol
 	fn_decls []ast.FnDeclNode
 pub:
 	previous &BoundGlobalScope
-	stmt     BoundBlockStmt
+	stmts     []BoundStmt
 }
 
-pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &source.Diagnostics, funcs []symbols.FunctionSymbol, fn_decls []ast.FnDeclNode, vars []symbols.VariableSymbol, stmt BoundBlockStmt) &BoundGlobalScope {
+pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &source.Diagnostics, main_func symbols.FunctionSymbol, funcs []symbols.FunctionSymbol, fn_decls []ast.FnDeclNode, vars []symbols.VariableSymbol, stmts []BoundStmt) &BoundGlobalScope {
 	return &BoundGlobalScope{
 		previous: previous
 		log: diagostics
 		vars: vars
+		main_func: main_func
 		funcs: funcs
 		fn_decls: fn_decls
-		stmt: stmt
+		stmts: stmts
 	}
 }

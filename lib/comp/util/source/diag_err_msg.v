@@ -114,3 +114,15 @@ pub fn (mut d Diagnostics) error_module_can_only_be_defined_as_first_statement(l
 pub fn (mut d Diagnostics) error_invalid_expression_statement(loc TextLocation) {
 	d.error('only assignment and call expressions can be used as a statement', loc)
 }
+
+pub fn (mut d Diagnostics) error_cannot_mix_global_statements_and_main_function(loc TextLocation) {
+	d.error('cannot mix global statements with definition of a main function', loc)
+}
+
+pub fn (mut d Diagnostics) error_main_function_must_have_correct_signature(loc TextLocation) {
+	d.error('main function must have correct signature, `fn main() {}', loc)
+}
+
+pub fn (mut d Diagnostics) error_global_stmts_can_only_be_defined_in_one_file(loc TextLocation) {
+	d.error('global statements can only be defined in one file/syntax tree', loc)
+}
