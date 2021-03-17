@@ -92,7 +92,8 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 			
 		}
 	}
-	bound_program := new_bound_program(previous, log, global_scope.main_func, global_scope.script_func, func_bodies)
+	bound_program := new_bound_program(previous, log, global_scope.main_func, global_scope.script_func, 
+		func_bodies, global_scope.funcs)
 	return bound_program
 }
 

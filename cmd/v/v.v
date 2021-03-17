@@ -8,7 +8,7 @@ import lib.comp.parser
 import lib.comp.ast
 import lib.comp.util.source
 import lib.comp
-
+import lib.comp.gen.golang
 fn main() {
 	args := os.args[1..]
 	if args.len == 0 {
@@ -22,6 +22,7 @@ fn main() {
 	mut files := []string{}
 	mut display_bound_stmts := false
 	mut display_lowered_stmts := false
+	mut use_evaluator := false
 	for arg in args {
 		match arg {
 			'-display_stmts' {
@@ -29,6 +30,9 @@ fn main() {
 			}
 			'-display_lower' {
 				display_lowered_stmts = true
+			}
+			'-eval' {
+				use_evaluator = true
 			}
 			else {
 				f := get_files(arg) ?
@@ -57,17 +61,31 @@ fn main() {
 	mut comp := comp.create_compilation(syntax_trees)
 
 	if !(display_bound_stmts || display_lowered_stmts) {
-		vars := binding.new_eval_variables()
-		res := comp.evaluate(vars)
-		if res.result.len == 0 {
-			if res.val !is types.None {
-				println(term.yellow(res.val.str()))
+		if use_evaluator {
+			vars := binding.new_eval_variables()
+			res := comp.evaluate(vars)
+			if res.result.len == 0 {
+				if res.val !is types.None {
+					println(term.yellow(res.val.str()))
+				}
+				println(term.cyan('OK'))
+				exit(0)
 			}
-			println(term.cyan('OK'))
+			write_diagnostics(res.result)
+			exit(-1)
+		} else {
+			// Compile mode, lets hard code to golang back-end for now
+			golang_backend := golang.new_golang_generator()
+			res := comp.gen(golang_backend, 'tmp/main') 
+
+			if res.result.len > 0 {
+				write_diagnostics(res.result)
+				exit(-1)
+			}
+			
+			println(term.green('success'))
 			exit(0)
 		}
-		write_diagnostics(res.result)
-		exit(-1)
 	}
 	mut iw := repl.IdentWriter{}
 	if display_bound_stmts {
@@ -96,6 +114,11 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 	sorted_diagnosics.sort(a.location.pos.pos < b.location.pos.pos)
 	mut iw := repl.IdentWriter{}
 	for err in sorted_diagnosics {
+		if err.has_loc == false {
+			iw.write(term.red('error: '))
+			iw.writeln(err.text)
+			continue
+		}
 		source := err.location.source
 		src := source.str()
 		error_line_nr := source.line_nr(err.location.pos.pos)

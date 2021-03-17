@@ -8,6 +8,7 @@ import lib.comp.types
 import lib.comp.util.source
 import lib.comp.io
 import lib.comp.symbols
+import lib.comp.gen
 
 pub type PrintFunc = fn (text string, nl bool, ref voidptr)
 
@@ -91,6 +92,25 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	return new_evaluation_result(result, val)
 }
 
+pub fn (mut c Compilation) gen(back_end gen.Generator, output_file string) CompilationResult{
+		mut global_scope := c.get_bound_global_scope()
+	mut result := []&source.Diagnostic{}
+	for syntax in c.syntax_trees {
+		result << syntax.log.all
+	}
+	result << global_scope.log.all
+	if result.len > 0 {
+		return new_compilation_result(result)
+	}
+	program := c.get_program()
+
+	if program.log.all.len > 0 {
+		return new_compilation_result(program.log.all)
+	}
+	diagnostics := back_end.generate(output_file, program)
+	return new_compilation_result(diagnostics.all)
+}
+
 fn (mut c Compilation) get_program() &binding.BoundProgram {
 	global_scope := c.get_bound_global_scope()
 	if c.previous == 0 {
@@ -132,5 +152,17 @@ pub fn new_evaluation_result(result []&source.Diagnostic, val types.LitVal) Eval
 	return EvaluationResult{
 		result: result
 		val: val
+	}
+}
+
+pub struct CompilationResult {
+pub:
+	result []&source.Diagnostic
+	val    types.LitVal
+}
+
+pub fn new_compilation_result(result []&source.Diagnostic) CompilationResult {
+	return CompilationResult{
+		result: result
 	}
 }
