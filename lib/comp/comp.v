@@ -23,6 +23,8 @@ pub fn print_fn(text string, nl bool, ref voidptr) {
 pub struct Compilation {
 mut:
 	previous &Compilation
+pub:
+	is_script bool
 pub mut:
 	global_scope &binding.BoundGlobalScope
 	syntax_trees []&ast.SyntaxTree
@@ -30,20 +32,21 @@ pub mut:
 	print_ref    voidptr
 }
 
-pub fn new_compilation(syntax_trees []&ast.SyntaxTree) &Compilation {
+fn new_compilation(is_script bool, previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
 	return &Compilation{
+		is_script: is_script
+		previous: previous
 		syntax_trees: syntax_trees
 		global_scope: &binding.BoundGlobalScope(0)
-		previous: &Compilation(0)
 	}
 }
 
-fn new_compilation_with_previous(previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
-	return &Compilation{
-		syntax_trees: syntax_trees
-		global_scope: &binding.BoundGlobalScope(0)
-		previous: previous
-	}
+pub fn create_compilation(syntax_trees []&ast.SyntaxTree) &Compilation {
+	return new_compilation(false, &Compilation(0), syntax_trees)
+}
+
+pub fn create_script(previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
+	return new_compilation(true, previous, syntax_trees)
 }
 
 pub fn (mut c Compilation) register_print_callback(print_fn PrintFunc, ref voidptr) {
@@ -58,13 +61,9 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 		if c.previous != 0 {
 			prev_glob_scope = c.previous.global_scope
 		}
-		c.global_scope = binding.bind_global_scope(prev_glob_scope, c.syntax_trees)
+		c.global_scope = binding.bind_global_scope(c.is_script, prev_glob_scope, c.syntax_trees)
 	}
 	return c.global_scope
-}
-
-pub fn (c &Compilation) continue_with(syntax_trees []&ast.SyntaxTree) &Compilation {
-	return new_compilation_with_previous(c, syntax_trees)
 }
 
 pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResult {
@@ -77,7 +76,7 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	if result.len > 0 {
 		return new_evaluation_result(result, 0)
 	}
-	program := binding.bind_program(global_scope)
+	program := c.get_program()
 
 	if program.log.all.len > 0 {
 		return new_evaluation_result(program.log.all, 0)
@@ -92,37 +91,34 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	return new_evaluation_result(result, val)
 }
 
-pub fn (mut c Compilation) emit_tree(writer io.TermTextWriter, lower bool) {
-	mut global_scope := c.get_bound_global_scope()
-	program := binding.bind_program(global_scope)
-	if lower {
-		if program.stmt.bound_stmts.len > 0 {
-			lowered_stmt := binding.lower(program.stmt)
-			binding.write_node(writer, binding.BoundStmt(lowered_stmt))
-		} else {
-			for key, fbody in program.func_bodies {
-				func := global_scope.funcs.filter(it.id == key)
-				if func.len == 0 {
-					continue
-				}
-				symbols.write_symbol(writer, func[0])
-				lowered_stmt := binding.lower(fbody)
-				binding.write_node(writer, binding.BoundStmt(lowered_stmt))
-			}
-		}
+fn (mut c Compilation) get_program() &binding.BoundProgram {
+	global_scope := c.get_bound_global_scope()
+	if c.previous == 0 {
+		return binding.bind_program(c.is_script, &binding.BoundProgram(0), global_scope)
 	} else {
-		if program.stmt.bound_stmts.len > 0 {
-			binding.write_node(writer, binding.BoundStmt(program.stmt))
-		} else {
-			for key, fbody in program.func_bodies {
-				func := global_scope.funcs.filter(it.id == key)
-				if func.len == 0 {
-					continue
-				}
-				symbols.write_symbol(writer, func[0])
-				binding.write_node(writer, binding.BoundStmt(fbody))
-			}
-		}
+		p := c.previous.get_program()
+		return binding.bind_program(c.is_script, p, global_scope)
+	}
+}
+
+pub fn (mut c Compilation) emit_tree(writer io.TermTextWriter, lower bool) {
+	global_scope := c.get_bound_global_scope()
+	if global_scope.main_func != symbols.undefined_fn {
+		c.emit_tree_for_function(writer, c.global_scope.main_func, lower)
+	} else if global_scope.script_func != symbols.undefined_fn {
+		c.emit_tree_for_function(writer, c.global_scope.script_func, lower)
+	} 
+}
+
+pub fn (mut c Compilation) emit_tree_for_function(writer io.TermTextWriter, function symbols.FunctionSymbol, lower bool) {
+	program := c.get_program()
+	symbols.write_symbol(writer, function)
+	body := program.func_bodies[function.id]
+	if lower {
+		lowered_body := binding.lower(body)
+		binding.write_node(writer, binding.BoundStmt(lowered_body))
+	} else {
+		binding.write_node(writer, binding.BoundStmt(body))
 	}
 }
 

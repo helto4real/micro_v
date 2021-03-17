@@ -190,9 +190,9 @@ fn event(e &tui.Event, x voidptr) {
 					syntax_tree := parser.parse_syntax_tree(buffer.raw())
 					if syntax_tree.log.all.len == 0 {
 						mut comp := if app.prev_comp == 0 {
-							comp.new_compilation([syntax_tree])
+							comp.create_script(&comp.Compilation(0), [syntax_tree])
 						} else {
-							app.prev_comp.continue_with([syntax_tree])
+							comp.create_script(app.prev_comp, [syntax_tree])
 						}
 						comp.register_print_callback(print_fn, voidptr(app))
 						if app.show_tree {
@@ -329,9 +329,11 @@ fn event(e &tui.Event, x voidptr) {
 			buffer.lines = []string{}
 			app.tui.clear()
 			app.tui.flush()
+			app.val = types.None{}
 		} else {
 			app.tui.clear()
 			app.tui.flush()
+			app.val = types.None{}
 			exit(0)
 		}
 	}

@@ -26,11 +26,9 @@ fn (mut tcs TestCompilationState) evaluate(expr string) comp.EvaluationResult {
 		assert syntax_tree.log.all.len == 0
 	}
 
-	mut comp := if tcs.prev_comp == 0 {
-		comp.new_compilation([syntax_tree])
-	} else {
-		tcs.prev_comp.continue_with([syntax_tree])
-	}
+	mut comp := if tcs.prev_comp == 0 { comp.create_script(&comp.Compilation(0), [syntax_tree]) } else { comp.create_script(tcs.prev_comp, [
+			syntax_tree,
+		]) }
 	res := comp.evaluate(tcs.vars)
 	tcs.prev_comp = comp
 	return res
@@ -102,8 +100,8 @@ fn test_eval_basic_exprs() {
 	assert c.eval_bool('false || false') == false
 
 	// test if expressions
-	assert c.eval_int('{ mut a:=0 if true {a=100} else {a=200} a}') == 100
-	assert c.eval_int('{ mut a:=0 if false {a=100} else {a=200} a}') == 200
+	assert c.eval_int('a:= if true {100} else {200} a') == 100
+	assert c.eval_int('a:= if false {100} else {200} a') == 200
 
 	// test lt, gt, le, ge
 	assert c.eval_bool('10 < 11') == true
@@ -162,14 +160,14 @@ fn test_range_expr() {
 
 fn test_loops() {
 	mut c := new_test_compilation_state()
-	assert c.eval_int('{mut a:=10 for a > 5 {a = a-1} a}') == 5
-	assert c.eval_int('{mut a:= 0 for a < 3 {a = a+1} a}') == 3
-	assert c.eval_int('{mut a:= 0 for b in 0..10 {a = a + b} a}') == 45
+	assert c.eval_int('mut a:=10 for a > 5 {a = a-1} a') == 5
+	assert c.eval_int('mut a:= 0 for a < 3 {a = a+1} a') == 3
+	assert c.eval_int('mut a:= 0 for b in 0..10 {a = a + b} a') == 45
 
-	assert c.eval_int('{mut a:= 0 for b in 0..10 {a = a + b if b == 5 {break}} a}') == 15
-	assert c.eval_int('{mut a:= 0 for b in 0..10 {if b == 5 {continue} a = a + b } a}') == 40
+	assert c.eval_int('mut a:= 0 for b in 0..10 {a = a + b if b == 5 {break}} a') == 15
+	assert c.eval_int('mut a:= 0 for b in 0..10 {if b == 5 {continue} a = a + b } return a') == 40
 	assert c.eval_int('
-		{
+		
 			mut a:= 0 
 			mut b:= 0
 			for {
@@ -180,7 +178,7 @@ fn test_loops() {
 				}
 			} 
 		   b
-		}') == 6
+		') == 6
 }
 
 fn test_string_expressions() {
@@ -193,12 +191,19 @@ fn test_string_expressions() {
 fn test_if_else_stmt() {
 	mut c := new_test_compilation_state()
 
-	assert c.eval_int('if 10==10 {1}') == 1
-	assert c.eval_bool('if 11>10 {true}') == true
-	assert c.eval_int('if 10==10 {10} else {20}') == 10
-	assert c.eval_int('if 10!=10 {10} else {20}') == 20
+	assert c.eval_int('mut a:=0 if 10==10 {a=1} return a') == 1
+	assert c.eval_bool('mut a:=false if 11>10 {a=true} return a') == true
 	assert c.eval_int('
-	{
+		mut a:=0 
+		if 10==10 {
+			a=10
+		} else {
+			a=20
+		} 
+		return a
+		') == 10
+	assert c.eval_int('mut a:=0 if 10!=10 {a=10} else {a=20} return a') == 20
+	assert c.eval_int('
 		a:=100
 		mut b:=200
 		if a>b {
@@ -206,8 +211,8 @@ fn test_if_else_stmt() {
 		} else {
 			b=2
 		}
-		b
-	}') == 2
+		return b
+	') == 2
 }
 
 fn test_error_delcarations_binar_operator_type() {
@@ -301,7 +306,7 @@ fn assert_has_multi_diagostics(text string, diagnostic_text string, nr_of_err_ms
 	ann_text := util.parse_annotated_text(text)
 
 	syntax_tree := parser.parse_syntax_tree(ann_text.text)
-	mut comp := comp.new_compilation([syntax_tree])
+	mut comp := comp.create_script(&comp.Compilation(0), [syntax_tree])
 
 	res := comp.evaluate(vars)
 

@@ -6,8 +6,9 @@ import lib.comp.types
 import lib.comp.symbols
 
 pub struct Evaluator {
-	root     binding.BoundBlockStmt
-	fn_stmts map[string]binding.BoundBlockStmt
+	// root     binding.BoundBlockStmt
+	fn_stmts  map[string]binding.BoundBlockStmt
+	program   &binding.BoundProgram
 mut:
 	glob_vars &binding.EvalVariables
 	locals    binding.EvalVarsStack
@@ -17,28 +18,40 @@ mut:
 	is_func   bool
 }
 
-pub fn new_evaluator(program binding.BoundProgram, glob_vars &binding.EvalVariables) Evaluator {
-	lowered_stmt := binding.lower(program.stmt)
+pub fn new_evaluator(program &binding.BoundProgram, glob_vars &binding.EvalVariables) Evaluator {
+	// lowered_stmt := binding.lower(program.stmt)
 	mut lowered_fn_stmts := map[string]binding.BoundBlockStmt{}
 
 	for id, func_body in program.func_bodies {
 		lowered_body := binding.lower(func_body)
 		lowered_fn_stmts[id] = lowered_body
 	}
-
-	mut cfg_stmt := binding.BoundBlockStmt{}
-	if program.stmt.bound_stmts.len == 0 && program.func_bodies.len > 0 {
-		cfg_stmt = binding.lower(program.func_bodies[program.func_bodies.keys().last()])
-	} else {
-		cfg_stmt = lowered_stmt
+	
+	mut current_program := program 
+	for current_program != 0 {
+		for id, func_body in current_program.func_bodies {
+			lowered_body := binding.lower(func_body)
+			lowered_fn_stmts[id] = lowered_body
+		}
+		current_program = current_program.previous
 	}
+
+	// If you want to display the control flow graph, uncomment following lines
+
+	// mut cfg_stmt := binding.BoundBlockStmt{}
+	// if program.stmt.bound_stmts.len == 0 && program.func_bodies.len > 0 {
+	// 	cfg_stmt = binding.lower(program.func_bodies[program.func_bodies.keys().last()])
+	// } else {
+	// 	cfg_stmt = lowered_stmt
+	// }
 	// cfg := binding.create_control_flow_graph(cfg_stmt)
 	// exe_path := os.join_path(os.dir(os.executable()), 'text.dot')
 	// mut f := os.open_file(exe_path,'w+', 0o666) or {panic(err)}
 	// defer {f.close()}
 	// cfg.write_to(f) or {panic('unexpected error $err writing to file')}
+
 	mut eval := Evaluator{
-		root: lowered_stmt
+		program: program
 		fn_stmts: lowered_fn_stmts
 		glob_vars: glob_vars
 		print_fn: print_fn
@@ -56,7 +69,12 @@ pub fn (mut e Evaluator) register_print_callback(print_fn PrintFunc, ref voidptr
 
 pub fn (mut e Evaluator) evaluate() ?types.LitVal {
 	e.is_func = false
-	return e.evaluate_stmt(e.root)
+	func := if e.program.main_func != symbols.undefined_fn {
+		e.program.main_func
+	} else {e.program.script_func}
+	if func == symbols.undefined_fn {return types.None{}}
+	body := e.fn_stmts[func.id]
+	return e.evaluate_stmt(body)
 }
 
 pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?types.LitVal {

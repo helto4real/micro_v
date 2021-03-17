@@ -17,18 +17,25 @@ pub:
 	is_implicit bool
 }
 
-fn new_convertion(exists bool, is_identity bool, is_explicit bool) Convertion {
+fn new_convertion(exists bool, is_identity bool, is_implicit bool) Convertion {
 	return Convertion{
 		exists: exists
 		is_identity: is_identity
-		is_explicit: is_explicit
-		is_implicit: exists && !is_explicit
+		is_implicit: is_implicit
+		is_explicit: exists && !is_implicit
 	}
 }
 
 pub fn classify(from symbols.TypeSymbol, to symbols.TypeSymbol) Convertion {
 	if from == to {
 		return convertion.conv_ident
+	}
+
+	if from != symbols.void_symbol && to == symbols.any_symbol {
+		return convertion.conv_implicit
+	}
+	if from == symbols.any_symbol && to != symbols.void_symbol {
+		return convertion.conv_explicit
 	}
 
 	if from == symbols.bool_symbol || from == symbols.int_symbol {

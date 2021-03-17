@@ -73,7 +73,7 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 					writer.write_number(lit)
 				}
 				types.None {
-					writer.write_punctuation('<no value>')
+					writer.write_punctuation('<nil>')
 				}
 			}
 		}

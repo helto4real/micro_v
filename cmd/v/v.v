@@ -54,7 +54,7 @@ fn main() {
 	if has_errors {
 		exit(-1)
 	}
-	mut comp := comp.new_compilation(syntax_trees)
+	mut comp := comp.create_compilation(syntax_trees)
 
 	if !(display_bound_stmts || display_lowered_stmts) {
 		vars := binding.new_eval_variables()

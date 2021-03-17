@@ -5,25 +5,31 @@ import lib.comp.ast
 import lib.comp.token
 import lib.comp.util.source
 import lib.comp.symbols
+import lib.comp.types
 import lib.comp.binding.convertion
 
 [heap]
 pub struct Binder {
+pub:
+	is_script bool
 pub mut:
-	scope            &BoundScope = 0
-	func             symbols.FunctionSymbol
-	log              &source.Diagnostics // errors when parsing
-	mod              string
-	is_loop          bool
-	mod_ok_to_define bool = true // if true it is ok to define a module 
+	scope             &BoundScope = 0
+	func              symbols.FunctionSymbol
+	log               &source.Diagnostics // errors when parsing
+	mod               string
+	is_loop           bool
+	mod_ok_to_define  bool = true // if true it is ok to define a module
+	current_is_global bool // if current statement is global statement
+	allow_expr        bool // always allow expressions in blocks
 }
 
-pub fn new_binder(parent &BoundScope, func symbols.FunctionSymbol) &Binder {
+pub fn new_binder(is_script bool, parent &BoundScope, func symbols.FunctionSymbol) &Binder {
 	mut scope := new_bound_scope(parent)
 	new_binder := &Binder{
 		scope: scope
 		log: source.new_diagonistics()
 		func: func
+		is_script: is_script
 	}
 	for param in func.params {
 		scope.try_declare_var(param)
@@ -31,12 +37,13 @@ pub fn new_binder(parent &BoundScope, func symbols.FunctionSymbol) &Binder {
 	return new_binder
 }
 
-pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
+pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundGlobalScope) &BoundProgram {
 	parent_scope := create_parent_scope(global_scope)
 	mut func_bodies := map[string]BoundBlockStmt{}
+	
 	mut log := source.new_diagonistics()
 	for func in global_scope.funcs {
-		mut binder := new_binder(parent_scope, func)
+		mut binder := new_binder(is_script, parent_scope, func)
 		fn_decl := binder.scope.lookup_fn_decl(func.name) or {
 			panic('unexpected missing fn_decl in scope')
 		}
@@ -47,13 +54,51 @@ pub fn bind_program(global_scope &BoundGlobalScope) BoundProgram {
 		func_bodies[func.id] = body as BoundBlockStmt
 		log.all << binder.log.all
 	}
-	bound_program := new_bound_program(log, global_scope.stmt, func_bodies)
+	valid_statements := global_scope.stmts.filter(it.kind != .comment_stmt)
+	if global_scope.main_func != symbols.undefined_fn && valid_statements.len > 0 {
+		body := new_bound_block_stmt(valid_statements)
+		func_bodies[global_scope.main_func.id] = body
+	} else if global_scope.script_func != symbols.undefined_fn {
+		if valid_statements.len > 0 {
+			mut stmts := []BoundStmt{cap: valid_statements.len+1}
+			last_statement := valid_statements.last()
+			if last_statement.kind != .return_stmt {
+				if last_statement.kind == .expr_stmt && 
+					(last_statement as BoundExprStmt).bound_expr.typ != symbols.void_symbol {
+					for i, stmt in valid_statements {
+						if i == valid_statements.len - 1 {
+							// last statement
+							stmts << new_bound_return_with_expr_stmt((stmt as BoundExprStmt).bound_expr)
+						} else {
+							stmts << stmt
+						}
+					}
+				} else {
+					none_return := new_bound_literal_expr(types.None{}) 
+					stmts << valid_statements
+					stmts << new_bound_return_with_expr_stmt(none_return)
+				}
+			} else {
+				stmts << valid_statements
+			}
+			body := new_bound_block_stmt(stmts)
+			func_bodies[global_scope.script_func.id] = body
+		} else {
+			none_return := new_bound_literal_expr(types.None{}) 
+			mut stmts := []BoundStmt{cap:1}
+			stmts << new_bound_return_with_expr_stmt(none_return)
+			body := new_bound_block_stmt(stmts)
+			func_bodies[global_scope.script_func.id] = body
+			
+		}
+	}
+	bound_program := new_bound_program(previous, log, global_scope.main_func, global_scope.script_func, func_bodies)
 	return bound_program
 }
 
-pub fn bind_global_scope(previous &BoundGlobalScope, syntax_trees []&ast.SyntaxTree) &BoundGlobalScope {
+pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_trees []&ast.SyntaxTree) &BoundGlobalScope {
 	parent_scope := create_parent_scope(previous)
-	mut binder := new_binder(parent_scope, symbols.undefined_fn)
+	mut binder := new_binder(is_script, parent_scope, symbols.undefined_fn)
 	// first bind the functions to make them visible 
 	for syntax_tree in syntax_trees {
 		for node in syntax_tree.root.members {
@@ -68,12 +113,75 @@ pub fn bind_global_scope(previous &BoundGlobalScope, syntax_trees []&ast.SyntaxT
 	for syntax_tree in syntax_trees {
 		for node in syntax_tree.root.members {
 			if node is ast.GlobStmt {
-				s := binder.bind_stmt(node.stmt)
+				s := binder.bind_global_stmt(node.stmt)
 				glob_stmts << s
 			}
 		}
 	}
-	stmt := new_bound_block_stmt(glob_stmts)
+	mut main_func := symbols.undefined_fn
+	mut script_func := symbols.undefined_fn
+
+	if is_script {
+		if glob_stmts.len > 0 {
+			script_func = symbols.new_function_symbol('\$eval', []symbols.ParamSymbol{}, symbols.any_symbol)
+		}
+	} else {
+		// global statements can only occur at most in one syntax tree
+		// if main function exists, global statements cannot
+		main_func_filter_result := binder.scope.funcs().filter(it.name == 'main')
+
+		// get the declared main function or return empty declaration
+		main_func = if main_func_filter_result.len == 1 {
+			main_func_filter_result[0]
+		} else {
+			symbols.undefined_fn
+		}
+
+		// if we have a main function declared, check the signature
+		if main_func != symbols.undefined_fn {
+			if main_func.typ != symbols.void_symbol || main_func.params.len > 0 {
+				func_decl := binder.scope.lookup_fn_decl(main_func.name) or {
+					panic('unexpected error, function declaration not found')
+				}
+				binder.log.error_main_function_must_have_correct_signature(func_decl.ident.text_location())
+			}
+		}
+
+		// get the first global statement in each syntax tree
+		mut first_global_statements := []ast.GlobStmt{cap: syntax_trees.len}
+		for syntax_tree in syntax_trees {
+			if syntax_tree.root.members.len > 0 {
+				global_stmts := syntax_tree.root.members.filter(it is ast.GlobStmt
+					&& (it as ast.GlobStmt).stmt.kind != .comment_stmt)
+				if global_stmts.len > 0 {
+					first_global_stmt := global_stmts[0]
+					first_global_statements << first_global_stmt as ast.GlobStmt
+				}
+			}
+		}
+		if first_global_statements.len > 0 {
+			// we have global statements
+			if first_global_statements.len > 1 {
+				// has mulitple global statements in several syntax trees
+				for global_stmt in first_global_statements {
+					binder.log.error_global_stmts_can_only_be_defined_in_one_file(global_stmt.text_location())
+				}
+			} else if main_func != symbols.undefined_fn {
+				// has mixed main and glob stmts
+				for global_stmt in first_global_statements {
+					binder.log.error_cannot_mix_global_statements_and_main_function(global_stmt.text_location())
+				}
+				func_decl := binder.scope.lookup_fn_decl(main_func.name) or {
+					panic('unexpected error, function declaration not found')
+				}
+				binder.log.error_cannot_mix_global_statements_and_main_function(func_decl.ident.text_location())
+			} else {
+				main_func = symbols.new_function_symbol('main', []symbols.ParamSymbol{},
+					symbols.void_symbol)
+			}
+		}
+	}
+
 	fns := binder.scope.funcs()
 	fn_decls := binder.scope.func_decls()
 	vars := binder.scope.vars()
@@ -82,7 +190,8 @@ pub fn bind_global_scope(previous &BoundGlobalScope, syntax_trees []&ast.SyntaxT
 		diagnostics.prepend(previous.log.all)
 	}
 
-	return new_bound_global_scope(previous, binder.log, fns, fn_decls, vars, stmt)
+	return new_bound_global_scope(previous, binder.log, script_func, main_func, fns, fn_decls, vars,
+		glob_stmts)
 }
 
 fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
@@ -122,7 +231,31 @@ fn create_root_scope() &BoundScope {
 	return result
 }
 
+pub fn (mut b Binder) bind_global_stmt(stmt ast.Stmt) BoundStmt {
+	b.current_is_global = true
+	glob_stmt := b.bind_stmt(stmt)
+	b.current_is_global = false
+	return glob_stmt
+}
+
 pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
+	result := b.bind_stmt_internal(stmt)
+
+	if !b.allow_expr && (!b.is_script || !b.current_is_global) {
+		if result is BoundExprStmt {
+			allowed_expression := result.bound_expr.kind == .call_expr
+				|| result.bound_expr.kind == .if_expr || result.bound_expr.kind == .assign_expr
+				|| result.bound_expr.kind == .error_expr
+
+			if !allowed_expression {
+				b.log.error_invalid_expression_statement(stmt.text_location())
+			}
+		}
+	}
+	return result
+}
+
+pub fn (mut b Binder) bind_stmt_internal(stmt ast.Stmt) BoundStmt {
 	if b.mod_ok_to_define && stmt.kind != .comment_stmt && stmt.kind != .module_stmt {
 		b.mod_ok_to_define = false
 	}
@@ -187,13 +320,21 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 }
 
 pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
-	// does the function have return typ
-	// does the return type match?
+	mut expr := if return_stmt.has_expr {b.bind_expr(return_stmt.expr)} else {new_bound_emtpy_expr()}
 	if b.func == symbols.undefined_fn {
-		b.log.error_invalid_return(return_stmt.return_tok.text_location())
+		if b.is_script {
+			// ignore cause we allow both return with and without 
+			// values in script mode
+			if !return_stmt.has_expr {
+				expr = new_bound_literal_expr("")
+			}
+		} else if return_stmt.has_expr {
+			// main does not support return values
+			b.log.error_invalid_return(return_stmt.return_tok.text_location())
+		} 
+		return new_bound_return_with_expr_stmt(expr)
 	} else {
 		if return_stmt.has_expr {
-			mut expr := b.bind_expr(return_stmt.expr)
 			if b.func.typ == symbols.void_symbol {
 				// it is a subroutine
 				b.log.error_invalid_return_expr(b.func.name, return_stmt.expr.text_location())
@@ -329,6 +470,10 @@ fn lookup_type(name string) symbols.TypeSymbol {
 }
 
 pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol) BoundExpr {
+	return b.bind_convertion_diag_explicit(diag_loc, expr, typ, false)
+}
+
+pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol, allow_explicit bool) BoundExpr {
 	conv := convertion.classify(expr.typ, typ)
 	if !conv.exists {
 		// convertion does not exist
@@ -337,7 +482,9 @@ pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr Bo
 		}
 		return new_bound_error_expr()
 	}
-
+	if !allow_explicit && conv.is_explicit {
+		b.log.error_cannot_convert_implicitly(expr.typ.str(), typ.str(), diag_loc)
+	}
 	if conv.is_identity {
 		return expr
 	}
@@ -349,13 +496,18 @@ pub fn (mut b Binder) bind_convertion(typ symbols.TypeSymbol, expr ast.Expr) Bou
 	return b.bind_convertion_diag(expr.text_location(), bound_expr, typ)
 }
 
+pub fn (mut b Binder) bind_convertion_explicit(typ symbols.TypeSymbol, expr ast.Expr, is_explicit bool) BoundExpr {
+	bound_expr := b.bind_expr(expr)
+	return b.bind_convertion_diag_explicit(expr.text_location(), bound_expr, typ, is_explicit)
+}
+
 pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	func_name := expr.ident.lit
 	// handle convertions as special functions
 	if expr.params.len() == 1 {
 		typ := lookup_type(func_name)
 		if typ != symbols.none_symbol {
-			return b.bind_convertion(typ, (expr.params.at(0) as ast.Expr))
+			return b.bind_convertion_explicit(typ, (expr.params.at(0) as ast.Expr), true)
 		}
 	}
 
@@ -382,16 +534,10 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	}
 
 	for i := 0; i < expr.params.len(); i++ {
+		arg_location := expr.params.at(i).text_location()
 		bound_arg := args[i]
 		param := func.params[i]
-		if bound_arg.typ == symbols.error_symbol {
-			return new_bound_error_expr()
-		}
-		if bound_arg.typ != param.typ {
-			b.log.error_wrong_argument_type(param.name, param.typ.name, bound_arg.typ.name,
-				expr.params.at(i).text_location())
-			return new_bound_error_expr()
-		}
+		args[i] = b.bind_convertion_diag(arg_location, bound_arg, param.typ)
 	}
 
 	return new_bound_call_expr(func, args)
@@ -416,7 +562,7 @@ fn bind_block_type(block BoundBlockStmt) ?symbols.TypeSymbol {
 }
 
 pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
-	cond_expr := b.bind_expr(if_expr.cond_expr)
+	cond_expr := b.bind_expr_type(if_expr.cond_expr, symbols.bool_symbol)
 
 	then_stmt := if_expr.then_stmt as ast.BlockStmt
 	else_stmt := if_expr.else_stmt as ast.BlockStmt
@@ -428,9 +574,10 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 		b.log.error_empty_block_not_allowed(else_stmt.text_location())
 		return new_bound_error_expr()
 	}
-
+	b.allow_expr = true
 	bound_then_stmt := b.bind_block_stmt(then_stmt) as BoundBlockStmt
 	bound_else_stmt := b.bind_block_stmt(else_stmt) as BoundBlockStmt
+	b.allow_expr = false
 
 	// check that the last statment is expression
 	then_stmt_typ := bind_block_type(bound_then_stmt) or {

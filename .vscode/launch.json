@@ -9,9 +9,9 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/cmd/v/v",
-            "args": [
-                "../../samples/for_loop.v"
-            ],
+            // "args": [
+            //     "../../samples/for_loop.v"
+            // ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}/cmd/v",
             "environment": [],
