@@ -329,9 +329,11 @@ fn event(e &tui.Event, x voidptr) {
 			buffer.lines = []string{}
 			app.tui.clear()
 			app.tui.flush()
+			app.val = types.None{}
 		} else {
 			app.tui.clear()
 			app.tui.flush()
+			app.val = types.None{}
 			exit(0)
 		}
 	}

@@ -165,7 +165,7 @@ fn test_loops() {
 	assert c.eval_int('mut a:= 0 for b in 0..10 {a = a + b} a') == 45
 
 	assert c.eval_int('mut a:= 0 for b in 0..10 {a = a + b if b == 5 {break}} a') == 15
-	assert c.eval_int('mut a:= 0 for b in 0..10 {if b == 5 {continue} a = a + b } a') == 40
+	assert c.eval_int('mut a:= 0 for b in 0..10 {if b == 5 {continue} a = a + b } return a') == 40
 	assert c.eval_int('
 		
 			mut a:= 0 
@@ -191,8 +191,8 @@ fn test_string_expressions() {
 fn test_if_else_stmt() {
 	mut c := new_test_compilation_state()
 
-	assert c.eval_int('mut a:=0 if 10==10 {a=1} a') == 1
-	assert c.eval_bool('mut a:=false if 11>10 {a=true} a') == true
+	assert c.eval_int('mut a:=0 if 10==10 {a=1} return a') == 1
+	assert c.eval_bool('mut a:=false if 11>10 {a=true} return a') == true
 	assert c.eval_int('
 		mut a:=0 
 		if 10==10 {
@@ -200,9 +200,9 @@ fn test_if_else_stmt() {
 		} else {
 			a=20
 		} 
-		a
+		return a
 		') == 10
-	assert c.eval_int('mut a:=0 if 10!=10 {a=10} else {a=20} a') == 20
+	assert c.eval_int('mut a:=0 if 10!=10 {a=10} else {a=20} return a') == 20
 	assert c.eval_int('
 		a:=100
 		mut b:=200
@@ -211,7 +211,7 @@ fn test_if_else_stmt() {
 		} else {
 			b=2
 		}
-		b
+		return b
 	') == 2
 }
 

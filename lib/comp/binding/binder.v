@@ -40,6 +40,7 @@ pub fn new_binder(is_script bool, parent &BoundScope, func symbols.FunctionSymbo
 pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundGlobalScope) &BoundProgram {
 	parent_scope := create_parent_scope(global_scope)
 	mut func_bodies := map[string]BoundBlockStmt{}
+	
 	mut log := source.new_diagonistics()
 	for func in global_scope.funcs {
 		mut binder := new_binder(is_script, parent_scope, func)
@@ -60,11 +61,6 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 	} else if global_scope.script_func != symbols.undefined_fn {
 		if valid_statements.len > 0 {
 			mut stmts := []BoundStmt{cap: valid_statements.len+1}
-			// if valid_statements.len == 1 && 
-			// 	valid_statements[0].kind == .expr_stmt && 
-			// 	(valid_statements[0] as BoundExprStmt).bound_expr.typ != symbols.void_symbol {
-			// 	stmts << new_bound_return_with_expr_stmt((valid_statements[0] as BoundExprStmt).bound_expr)
-			// } else
 			last_statement := valid_statements.last()
 			if last_statement.kind != .return_stmt {
 				if last_statement.kind == .expr_stmt && 
@@ -324,13 +320,21 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 }
 
 pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
-	// does the function have return typ
-	// does the return type match?
+	mut expr := if return_stmt.has_expr {b.bind_expr(return_stmt.expr)} else {new_bound_emtpy_expr()}
 	if b.func == symbols.undefined_fn {
-		b.log.error_invalid_return(return_stmt.return_tok.text_location())
+		if b.is_script {
+			// ignore cause we allow both return with and without 
+			// values in script mode
+			if !return_stmt.has_expr {
+				expr = new_bound_literal_expr("")
+			}
+		} else if return_stmt.has_expr {
+			// main does not support return values
+			b.log.error_invalid_return(return_stmt.return_tok.text_location())
+		} 
+		return new_bound_return_with_expr_stmt(expr)
 	} else {
 		if return_stmt.has_expr {
-			mut expr := b.bind_expr(return_stmt.expr)
 			if b.func.typ == symbols.void_symbol {
 				// it is a subroutine
 				b.log.error_invalid_return_expr(b.func.name, return_stmt.expr.text_location())
