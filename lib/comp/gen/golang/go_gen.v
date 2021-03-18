@@ -10,7 +10,8 @@ struct GolangGen {
 mut:
 	log  &source.Diagnostics
 	program &binding.BoundProgram = 0
-	filename string
+	binary_full_path string
+	gofile_full_path string
 }
 
 pub fn new_golang_generator() GolangGen {
@@ -18,9 +19,13 @@ pub fn new_golang_generator() GolangGen {
 		log: source.new_diagonistics()
 	}
 }
-pub fn (mut g GolangGen) generate(filename string, program &binding.BoundProgram) &source.Diagnostics {
+pub fn (mut g GolangGen) generate(binary_full_path string, program &binding.BoundProgram) &source.Diagnostics {
 	g.program = program
-	g.filename = filename
+	g.binary_full_path = binary_full_path
+
+	binary_directory := os.dir(binary_full_path)
+	binary_name := os.file_name(binary_full_path)
+	g.gofile_full_path = os.join_path(binary_directory, '${binary_name}.go')
 
 	// Generate code
 	g.generate_code()
@@ -59,14 +64,17 @@ fn (mut g GolangGen) generate_code() {
 	write_node(cw, binding.BoundStmt(main_body))
 
 	// write code to file
-	os.write_file('tmp/main.go', cw.str()) or {
+
+	os.write_file(g.gofile_full_path, cw.str()) or {
 		g.log.error_msg(err.msg)
 	}
 
 }
 
 fn (mut g GolangGen) compile_code() {
-	res := os.execute('go build -o tmp/main tmp/main.go')
+	compile_command := 'go build -o $g.binary_full_path $g.gofile_full_path'
+	println('COMPILE COMMAND: $compile_command')
+	res := os.execute(compile_command)
 	if res.exit_code != 0 {
 		g.log.error_msg(res.output)
 	}

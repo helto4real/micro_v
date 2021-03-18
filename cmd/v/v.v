@@ -74,9 +74,17 @@ fn main() {
 			write_diagnostics(res.result)
 			exit(-1)
 		} else {
+			is_compiled_in_folder := syntax_trees.len > 1
+			file := files[0]
+			folder := if is_compiled_in_folder {file} else {os.dir(file)}
+			filename := os.file_name(file)
+
+			println('file: $file, folder:$folder, filename: $filename')
+			out_filename := if is_compiled_in_folder {filename} else {filename[..filename.len-2]}
+			out_path := os.join_path(folder, out_filename)
 			// Compile mode, lets hard code to golang back-end for now
 			golang_backend := golang.new_golang_generator()
-			res := comp.gen(golang_backend, 'tmp/main') 
+			res := comp.gen(golang_backend, out_path) 
 
 			if res.result.len > 0 {
 				write_diagnostics(res.result)
@@ -115,6 +123,7 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 	mut iw := repl.IdentWriter{}
 	for err in sorted_diagnosics {
 		if err.has_loc == false {
+			println('ERROR: $err.text')
 			iw.write(term.red('error: '))
 			iw.writeln(err.text)
 			continue
