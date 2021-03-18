@@ -18,7 +18,7 @@ pub:
 }
 
 pub fn new_bound_unary_op(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ symbols.TypeSymbol) BoundUnaryOperator {
-	return new_bound_unary_op_with_ret(kind, op_kind, op_typ, symbols.undefined_symbol)
+	return new_bound_unary_op_with_ret(kind, op_kind, op_typ, op_typ)
 }
 
 pub fn new_bound_unary_op_with_ret(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ symbols.TypeSymbol, res_typ symbols.TypeSymbol) BoundUnaryOperator {

@@ -52,7 +52,7 @@ fn write_expr(writer io.CodeWriter, node binding.BoundExpr) {
 						}
 						else {}
 					}
-				} 
+				}
 				else {}
 			}
 			writer.write('(')
@@ -67,10 +67,10 @@ fn write_expr(writer io.CodeWriter, node binding.BoundExpr) {
 			writer.write_space()
 			write_expr(writer, node.cond_expr)
 			writer.write_space()
-			write_nested_stmt(writer, node.then_stmt)
+			write_nested_stmt(writer, node.then_stmt as binding.BoundBlockStmt, false)
 			writer.write('else')
 			writer.write_space()
-			write_nested_stmt(writer, node.else_stmt)
+			write_nested_stmt(writer, node.else_stmt as binding.BoundBlockStmt, true)
 		}
 		binding.BoundLiteralExpr {
 			match node.val {
@@ -108,18 +108,24 @@ fn write_expr(writer io.CodeWriter, node binding.BoundExpr) {
 	}
 }
 
+fn write_block_stmt(writer io.CodeWriter, node binding.BoundBlockStmt, new_line bool) {
+	writer.write('{')
+	writer.writeln('')
+	writer.indent_add(1)
+	for stmt in node.bound_stmts {
+		write_stmt(writer, stmt)
+	}
+	writer.indent_add(-1)
+	writer.write('}')
+	if new_line {
+		writer.writeln('')
+	}
+}
+
 fn write_stmt(writer io.CodeWriter, node binding.BoundStmt) {
 	match node {
 		binding.BoundBlockStmt {
-			writer.write('{')
-			writer.writeln('')
-			writer.indent_add(1)
-			for stmt in node.bound_stmts {
-				write_stmt(writer, stmt)
-			}
-			writer.indent_add(-1)
-			writer.write('}')
-			writer.writeln('')
+			write_block_stmt(writer, node, true)
 		}
 		binding.BoundCondGotoStmt {
 			writer.write('goto')
@@ -149,7 +155,7 @@ fn write_stmt(writer io.CodeWriter, node binding.BoundStmt) {
 				write_expr(writer, node.cond_expr)
 				writer.write_space()
 			}
-			write_nested_stmt(writer, node.body_stmt)
+			write_nested_stmt(writer, node.body_stmt as binding.BoundBlockStmt, true)
 		}
 		binding.BoundGotoStmt {
 			writer.write('goto')
@@ -168,11 +174,12 @@ fn write_stmt(writer io.CodeWriter, node binding.BoundStmt) {
 			writer.write_space()
 			write_expr(writer, node.cond_expr)
 			writer.write_space()
-			write_nested_stmt(writer, node.block_stmt)
+			write_nested_stmt(writer, node.block_stmt as binding.BoundBlockStmt, false)
 			if node.has_else {
 				writer.write('else')
 				writer.write_space()
-				write_nested_stmt(writer, node.else_clause)
+				write_nested_stmt(writer, node.else_clause as binding.BoundBlockStmt,
+					true)
 			}
 		}
 		binding.BoundLabelStmt {
@@ -189,9 +196,13 @@ fn write_stmt(writer io.CodeWriter, node binding.BoundStmt) {
 			}
 		}
 		binding.BoundVarDeclStmt {
+			if node.is_mut {
+				writer.write('var')
+				writer.write_space()
+			}
 			writer.write(node.var.name)
 			writer.write_space()
-			writer.write(':=')
+			writer.write('=')
 			writer.write_space()
 			write_expr(writer, node.expr)
 			writer.writeln('')
@@ -219,15 +230,15 @@ fn write_stmt(writer io.CodeWriter, node binding.BoundStmt) {
 	}
 }
 
-fn write_nested_stmt(writer io.CodeWriter, node binding.BoundStmt) {
-	needs_identation := !(node is binding.BoundBlockStmt)
-	if needs_identation {
-		writer.indent_add(1)
-	}
-	write_stmt(writer, node)
-	if needs_identation {
-		writer.indent_add(-1)
-	}
+fn write_nested_stmt(writer io.CodeWriter, node binding.BoundBlockStmt, new_line bool) {
+	// needs_identation := !(node is binding.BoundBlockStmt)
+	// if needs_identation {
+	writer.indent_add(1)
+	// }
+	write_block_stmt(writer, node, new_line)
+	// if needs_identation {
+	writer.indent_add(-1)
+	// }
 }
 
 fn write_nested_expr(writer io.CodeWriter, parent_prec int, node binding.BoundExpr) {
