@@ -15,7 +15,7 @@ func println(a ...interface{}) {
 }
 
 // conversion functions
-func conv_i_to_s(i int) string {
+func i_to_s(i int) string {
 	return strconv.Itoa(i)
 }
 

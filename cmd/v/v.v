@@ -76,7 +76,7 @@ fn main() {
 		} else {
 			is_compiled_in_folder := syntax_trees.len > 1
 			file := files[0]
-			folder := if is_compiled_in_folder {file} else {os.dir(file)}
+			folder := os.dir(file)
 			filename := os.file_name(file)
 
 			println('file: $file, folder:$folder, filename: $filename')
