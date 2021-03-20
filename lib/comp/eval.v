@@ -269,7 +269,7 @@ fn (mut e Evaluator) eval_bound_range_expr(node binding.BoundRangeExpr) ?symbols
 }
 
 fn (mut e Evaluator) eval_bound_literal_expr(root binding.BoundLiteralExpr) ?symbols.LitVal {
-	return root.val
+	return root.const_val.val
 }
 
 fn (mut e Evaluator) eval_bound_variable_expr(bound_var binding.BoundVariableExpr) ?symbols.LitVal {

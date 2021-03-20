@@ -74,15 +74,16 @@ fn write_expr(writer io.CodeWriter, node binding.BoundExpr) {
 			// writer.writeln('')
 		}
 		binding.BoundLiteralExpr {
-			match node.val {
+			val := node.const_val.val
+			match val {
 				string {
-					writer.write('"$node.val"')
+					writer.write('"$val"')
 				}
 				int {
-					writer.write(node.val.str())
+					writer.write(val.str())
 				}
 				bool {
-					lit := if node.val { 'true' } else { 'false' }
+					lit := if val { 'true' } else { 'false' }
 					writer.write(lit)
 				}
 				symbols.None {

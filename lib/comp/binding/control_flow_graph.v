@@ -274,7 +274,7 @@ pub fn (mut gb GraphBuilder) connect(mut from BasicBlock, mut to BasicBlock) {
 
 pub fn (mut gb GraphBuilder) connect_cond(mut from BasicBlock, mut to BasicBlock, cond BoundExpr) {
 	if cond is BoundLiteralExpr {
-		val := cond.val as bool
+		val := cond.const_val.val as bool
 		if val {
 			branch := new_branch_block(from, to)
 			from.add_outgoing(branch)
@@ -294,7 +294,7 @@ pub fn (mut gb GraphBuilder) connect_cond(mut from BasicBlock, mut to BasicBlock
 pub fn (mut gb GraphBuilder) negate(expr BoundExpr) BoundExpr {
 	match expr {
 		BoundLiteralExpr {
-			val := expr.val as bool
+			val := expr.const_val.val as bool
 			return new_bound_literal_expr(-val)
 		}
 		else {

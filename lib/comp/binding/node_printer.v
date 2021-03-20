@@ -61,15 +61,16 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 			write_nested_stmt(writer, node.else_stmt)
 		}
 		BoundLiteralExpr {
-			match node.val {
+			val := node.const_val.val
+			match val {
 				string {
-					writer.write_string("'$node.val'")
+					writer.write_string("'$val'")
 				}
 				int {
-					writer.write_number(node.val.str())
+					writer.write_number(val.str())
 				}
 				bool {
-					lit := if node.val { 'true' } else { 'false' }
+					lit := if val { 'true' } else { 'false' }
 					writer.write_number(lit)
 				}
 				symbols.None {
