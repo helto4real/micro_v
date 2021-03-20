@@ -15,6 +15,9 @@ pub fn write_symbol(writer io.CodeWriter, symbol symbols.Symbol) {
 		symbols.TypeSymbol {
 			write_type_symbol(writer, symbol)
 		}
+		symbols.ConstSymbol {
+			write_const_symbol(writer, symbol)
+		}
 	}
 }
 
@@ -49,6 +52,10 @@ fn write_function_symbol(writer io.CodeWriter, fn_symbol symbols.FunctionSymbol)
 
 fn write_type_symbol(writer io.CodeWriter, type_symbol symbols.TypeSymbol) {
 	writer.write(type_symbol.name)
+}
+
+fn write_const_symbol(writer io.CodeWriter, const_symbol symbols.ConstSymbol) {
+	writer.write(const_symbol.val.str())
 }
 
 fn write_var_symbol(writer io.CodeWriter, var_symbol symbols.VariableSymbol) {

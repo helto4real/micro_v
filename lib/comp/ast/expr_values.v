@@ -1,7 +1,7 @@
 module ast
 
 import lib.comp.token
-import lib.comp.types
+import lib.comp.symbols
 import lib.comp.util.source
 
 pub struct LiteralExpr {
@@ -9,12 +9,12 @@ pub struct LiteralExpr {
 pub:
 	tree        &SyntaxTree
 	kind        SyntaxKind = .literal_expr
-	val         types.LitVal
+	val         symbols.LitVal
 	pos         source.Pos
 	child_nodes []AstNode
 }
 
-pub fn new_literal_expr(tree &SyntaxTree, tok token.Token, val types.LitVal) LiteralExpr {
+pub fn new_literal_expr(tree &SyntaxTree, tok token.Token, val symbols.LitVal) LiteralExpr {
 	if tok.kind !in [.number, .string, .key_true, .key_false] {
 		panic('Expected a number token')
 	}

@@ -1,9 +1,9 @@
 module binding
 
 import lib.comp.io
-import lib.comp.types
 import lib.comp.ast
 import lib.comp.token
+import lib.comp.symbols
 
 pub fn write_node(writer io.TermTextWriter, node BoundNode) {
 	match node {
@@ -72,7 +72,7 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 					lit := if node.val { 'true' } else { 'false' }
 					writer.write_number(lit)
 				}
-				types.None {
+				symbols.None {
 					writer.write_punctuation('<nil>')
 				}
 			}

@@ -5,7 +5,6 @@ import lib.comp.ast
 import lib.comp.token
 import lib.comp.util.source
 import lib.comp.symbols
-import lib.comp.types
 import lib.comp.binding.convertion
 
 [heap]
@@ -74,7 +73,7 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 						}
 					}
 				} else {
-					none_return := new_bound_literal_expr(types.None{})
+					none_return := new_bound_literal_expr(symbols.None{})
 					stmts << valid_statements
 					stmts << new_bound_return_with_expr_stmt(none_return)
 				}
@@ -84,7 +83,7 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 			body := new_bound_block_stmt(stmts)
 			func_bodies[global_scope.script_func.id] = body
 		} else {
-			none_return := new_bound_literal_expr(types.None{})
+			none_return := new_bound_literal_expr(symbols.None{})
 			mut stmts := []BoundStmt{cap: 1}
 			stmts << new_bound_return_with_expr_stmt(none_return)
 			body := new_bound_block_stmt(stmts)

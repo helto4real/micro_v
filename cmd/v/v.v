@@ -2,12 +2,12 @@ import term
 import strings
 import lib.repl
 import os
-import lib.comp.types
+import lib.comp
+import lib.comp.ast
 import lib.comp.binding
 import lib.comp.parser
-import lib.comp.ast
+import lib.comp.symbols
 import lib.comp.util.source
-import lib.comp
 import lib.comp.gen.golang
 fn main() {
 	args := os.args[1..]
@@ -65,7 +65,7 @@ fn main() {
 			vars := binding.new_eval_variables()
 			res := comp.evaluate(vars)
 			if res.result.len == 0 {
-				if res.val !is types.None {
+				if res.val !is symbols.None {
 					println(term.yellow(res.val.str()))
 				}
 				println(term.cyan('OK'))

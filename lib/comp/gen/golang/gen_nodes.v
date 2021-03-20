@@ -1,7 +1,7 @@
 module golang
 
 import lib.comp.io
-import lib.comp.types
+import lib.comp.symbols
 import lib.comp.ast
 import lib.comp.token
 import lib.comp.binding
@@ -63,14 +63,15 @@ fn write_expr(writer io.CodeWriter, node binding.BoundExpr) {
 			writer.write('?')
 		}
 		binding.BoundIfExpr {
-			writer.write('if')
-			writer.write_space()
+			writer.write('if_then_else')
+			writer.write('(')
 			write_expr(writer, node.cond_expr)
-			writer.write_space()
-			write_nested_stmt(writer, node.then_stmt as binding.BoundBlockStmt, false)
-			writer.write('else')
-			writer.write_space()
-			write_nested_stmt(writer, node.else_stmt as binding.BoundBlockStmt, true)
+			writer.write(', ')
+			write_block_stmt_one_line(writer, node.then_stmt as binding.BoundBlockStmt, false)
+			writer.write(', ')
+			write_block_stmt_one_line(writer, node.else_stmt as binding.BoundBlockStmt, false)
+			writer.write(')')
+			// writer.writeln('')
 		}
 		binding.BoundLiteralExpr {
 			match node.val {
@@ -84,7 +85,7 @@ fn write_expr(writer io.CodeWriter, node binding.BoundExpr) {
 					lit := if node.val { 'true' } else { 'false' }
 					writer.write(lit)
 				}
-				types.None {
+				symbols.None {
 					writer.write('<nil>')
 				}
 			}
@@ -108,6 +109,15 @@ fn write_expr(writer io.CodeWriter, node binding.BoundExpr) {
 	}
 }
 
+fn write_block_stmt_one_line(writer io.CodeWriter, node binding.BoundBlockStmt, new_line bool) {
+	for i, stmt in node.bound_stmts {
+		if i!=0 {
+			writer.write('; ')
+		}
+		write_stmt_ex(writer, stmt, false)
+	}
+}
+
 fn write_block_stmt(writer io.CodeWriter, node binding.BoundBlockStmt, new_line bool) {
 	writer.write('{')
 	writer.writeln('')
@@ -123,6 +133,9 @@ fn write_block_stmt(writer io.CodeWriter, node binding.BoundBlockStmt, new_line 
 }
 
 fn write_stmt(writer io.CodeWriter, node binding.BoundStmt) {
+	write_stmt_ex(writer, node, true)
+}
+fn write_stmt_ex(writer io.CodeWriter, node binding.BoundStmt, new_line bool) {
 	match node {
 		binding.BoundBlockStmt {
 			write_block_stmt(writer, node, true)
@@ -136,11 +149,11 @@ fn write_stmt(writer io.CodeWriter, node binding.BoundStmt) {
 			writer.write(cond_str)
 			writer.write_space()
 			write_expr(writer, node.cond)
-			writer.writeln('')
+			if new_line {writer.writeln('')}
 		}
 		binding.BoundExprStmt {
 			write_expr(writer, node.bound_expr)
-			writer.writeln('')
+			if new_line {writer.writeln('')}
 		}
 		binding.BoundForRangeStmt {
 			lowered_for_range := lower_for_range(node)
@@ -161,13 +174,13 @@ fn write_stmt(writer io.CodeWriter, node binding.BoundStmt) {
 			writer.write('goto')
 			writer.write_space()
 			writer.write(node.label)
-			writer.writeln('')
+			if new_line {writer.writeln('')}
 		}
 		binding.BoundModuleStmt {
 			writer.write('module')
 			writer.write_space()
 			writer.write(node.name)
-			writer.writeln('')
+			if new_line {writer.writeln('')}
 		}
 		binding.BoundIfStmt {
 			writer.write('if')
@@ -189,7 +202,7 @@ fn write_stmt(writer io.CodeWriter, node binding.BoundStmt) {
 			}
 			writer.write(node.name)
 			writer.write(':')
-			writer.writeln('')
+			if new_line {writer.writeln('')}
 
 			if unindent {
 				writer.indent_add(1)
@@ -202,22 +215,26 @@ fn write_stmt(writer io.CodeWriter, node binding.BoundStmt) {
 			}
 			writer.write(node.var.name)
 			writer.write_space()
-			writer.write('=')
+			if node.is_mut {
+				writer.write('=')
+			} else {
+				writer.write(':=')
+			}
 			writer.write_space()
 			write_expr(writer, node.expr)
-			writer.writeln('')
+			if new_line {writer.writeln('')}
 		}
 		binding.BoundBreakStmt {
 			writer.write('break')
-			writer.writeln('')
+			if new_line {writer.writeln('')}
 		}
 		binding.BoundContinueStmt {
 			writer.write('continue')
-			writer.writeln('')
+			if new_line {writer.writeln('')}
 		}
 		binding.BoundCommentStmt {
 			writer.write(node.comment)
-			writer.writeln('')
+			if new_line {writer.writeln('')}
 		}
 		binding.BoundReturnStmt {
 			writer.write('return')
@@ -225,7 +242,7 @@ fn write_stmt(writer io.CodeWriter, node binding.BoundStmt) {
 				writer.write_space()
 				write_expr(writer, node.expr)
 			}
-			writer.writeln('')
+			if new_line {writer.writeln('')}
 		}
 	}
 }

@@ -2,7 +2,6 @@ module comp
 
 import os
 import lib.comp.binding
-import lib.comp.types
 import lib.comp.symbols
 
 pub struct Evaluator {
@@ -12,7 +11,7 @@ pub struct Evaluator {
 mut:
 	glob_vars &binding.EvalVariables
 	locals    binding.EvalVarsStack
-	last_val  types.LitVal = types.None{}
+	last_val  symbols.LitVal = symbols.None{}
 	print_ref voidptr
 	print_fn  PrintFunc
 	is_func   bool
@@ -67,18 +66,18 @@ pub fn (mut e Evaluator) register_print_callback(print_fn PrintFunc, ref voidptr
 	e.print_fn = print_fn
 }
 
-pub fn (mut e Evaluator) evaluate() ?types.LitVal {
+pub fn (mut e Evaluator) evaluate() ?symbols.LitVal {
 	e.is_func = false
 	func := if e.program.main_func != symbols.undefined_fn {
 		e.program.main_func
 	} else {e.program.script_func}
-	if func == symbols.undefined_fn {return types.None{}}
+	if func == symbols.undefined_fn {return symbols.None{}}
 	body := e.fn_stmts[func.id]
 	return e.evaluate_stmt(body)
 }
 
-pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?types.LitVal {
-	e.last_val = types.None{}
+pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?symbols.LitVal {
+	e.last_val = symbols.None{}
 
 	mut label_to_index := map[string]int{}
 	for i, s in block.child_nodes {
@@ -128,7 +127,7 @@ pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?types.LitV
 							}
 							return e.last_val
 						} else {
-							return types.None{}
+							return symbols.None{}
 						}
 					}
 					binding.BoundCommentStmt {
@@ -164,7 +163,7 @@ fn (mut e Evaluator) eval_bound_expr_stmt(stmt binding.BoundExprStmt) {
 	}
 }
 
-fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
+fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?symbols.LitVal {
 	match node {
 		binding.BoundLiteralExpr {
 			return e.eval_bound_literal_expr(node)
@@ -199,7 +198,7 @@ fn (mut e Evaluator) eval_expr(node binding.BoundExpr) ?types.LitVal {
 	}
 }
 
-fn (mut e Evaluator) eval_bound_if_expr(node binding.BoundIfExpr) ?types.LitVal {
+fn (mut e Evaluator) eval_bound_if_expr(node binding.BoundIfExpr) ?symbols.LitVal {
 	cond_expr := e.eval_expr(node.cond_expr) ?
 	cond := cond_expr as bool
 	if cond {
@@ -209,7 +208,7 @@ fn (mut e Evaluator) eval_bound_if_expr(node binding.BoundIfExpr) ?types.LitVal 
 	}
 }
 
-fn (mut e Evaluator) eval_bound_conv_expr(node binding.BoundConvExpr) ?types.LitVal {
+fn (mut e Evaluator) eval_bound_conv_expr(node binding.BoundConvExpr) ?symbols.LitVal {
 	val := e.eval_expr(node.expr) or { panic('unexpected error evaluate expression') }
 	if node.typ == symbols.string_symbol {
 		if val is int {
@@ -233,7 +232,7 @@ fn (mut e Evaluator) eval_bound_conv_expr(node binding.BoundConvExpr) ?types.Lit
 	panic('unexpected allowed conversion')
 }
 
-fn (mut e Evaluator) eval_bound_call_expr(node binding.BoundCallExpr) ?types.LitVal {
+fn (mut e Evaluator) eval_bound_call_expr(node binding.BoundCallExpr) ?symbols.LitVal {
 	if node.func == symbols.input_symbol {
 		return os.get_line()
 	} else if node.func == symbols.print_symbol {
@@ -263,17 +262,17 @@ fn (mut e Evaluator) eval_bound_call_expr(node binding.BoundCallExpr) ?types.Lit
 	return e.last_val
 }
 
-fn (mut e Evaluator) eval_bound_range_expr(node binding.BoundRangeExpr) ?types.LitVal {
+fn (mut e Evaluator) eval_bound_range_expr(node binding.BoundRangeExpr) ?symbols.LitVal {
 	from_val := e.eval_expr(node.from_exp) ?
 	to_val := e.eval_expr(node.to_exp) ?
 	return '${from_val as int}..${to_val as int}'
 }
 
-fn (mut e Evaluator) eval_bound_literal_expr(root binding.BoundLiteralExpr) ?types.LitVal {
+fn (mut e Evaluator) eval_bound_literal_expr(root binding.BoundLiteralExpr) ?symbols.LitVal {
 	return root.val
 }
 
-fn (mut e Evaluator) eval_bound_variable_expr(bound_var binding.BoundVariableExpr) ?types.LitVal {
+fn (mut e Evaluator) eval_bound_variable_expr(bound_var binding.BoundVariableExpr) ?symbols.LitVal {
 	var_symbol := bound_var.var
 	if var_symbol is symbols.GlobalVariableSymbol {
 		return e.glob_vars.lookup(bound_var.var) or { panic('expected variable existing') }
@@ -285,7 +284,7 @@ fn (mut e Evaluator) eval_bound_variable_expr(bound_var binding.BoundVariableExp
 	}
 }
 
-fn (mut e Evaluator) assign_var(var symbols.VariableSymbol, val types.LitVal) {
+fn (mut e Evaluator) assign_var(var symbols.VariableSymbol, val symbols.LitVal) {
 	if var is symbols.GlobalVariableSymbol {
 		e.glob_vars.assign_variable_value(var, val)
 	} else {
@@ -294,13 +293,13 @@ fn (mut e Evaluator) assign_var(var symbols.VariableSymbol, val types.LitVal) {
 	}
 }
 
-fn (mut e Evaluator) eval_bound_assign_expr(node binding.BoundAssignExpr) ?types.LitVal {
+fn (mut e Evaluator) eval_bound_assign_expr(node binding.BoundAssignExpr) ?symbols.LitVal {
 	val := e.eval_expr(node.expr) ?
 	e.assign_var(node.var, val)
 	return val
 }
 
-fn (mut e Evaluator) eval_bound_unary_expr(node binding.BoundUnaryExpr) ?types.LitVal {
+fn (mut e Evaluator) eval_bound_unary_expr(node binding.BoundUnaryExpr) ?symbols.LitVal {
 	operand := e.eval_expr(node.operand) ?
 	match node.op.op_kind {
 		.identity { return operand as int }
@@ -311,7 +310,7 @@ fn (mut e Evaluator) eval_bound_unary_expr(node binding.BoundUnaryExpr) ?types.L
 	}
 }
 
-fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?types.LitVal {
+fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?symbols.LitVal {
 	left := e.eval_expr(node.left) ?
 	right := e.eval_expr(node.right) ?
 	// compiler bug does exl_mark work with normal cast

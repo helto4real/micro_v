@@ -6,7 +6,6 @@ import os
 import strings
 import lib.comp.binding
 import lib.comp.parser
-import lib.comp.types
 import lib.comp.token
 import lib.comp.util.source
 import lib.comp.symbols
@@ -34,7 +33,7 @@ mut:
 	status         string
 	error_msg      string
 	has_val        bool
-	val            types.LitVal = ' '
+	val            symbols.LitVal = ' '
 	// is multi line editing
 	is_ml bool
 
@@ -329,11 +328,11 @@ fn event(e &tui.Event, x voidptr) {
 			buffer.lines = []string{}
 			app.tui.clear()
 			app.tui.flush()
-			app.val = types.None{}
+			app.val = symbols.None{}
 		} else {
 			app.tui.clear()
 			app.tui.flush()
-			app.val = types.None{}
+			app.val = symbols.None{}
 			exit(0)
 		}
 	}

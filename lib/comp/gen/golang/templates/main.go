@@ -19,4 +19,12 @@ func i_to_s(i int) string {
 	return strconv.Itoa(i)
 }
 
+// convenience functions
+func if_then_else(condition bool, a interface{}, b interface{}) interface{} {
+	if condition {
+		return a
+	}
+	return b
+}
+
 // Generated code

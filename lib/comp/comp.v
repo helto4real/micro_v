@@ -4,7 +4,6 @@ module comp
 import term
 import lib.comp.ast
 import lib.comp.binding
-import lib.comp.types
 import lib.comp.util.source
 import lib.comp.io
 import lib.comp.symbols
@@ -145,10 +144,10 @@ pub fn (mut c Compilation) emit_tree_for_function(writer io.TermTextWriter, func
 pub struct EvaluationResult {
 pub:
 	result []&source.Diagnostic
-	val    types.LitVal
+	val    symbols.LitVal
 }
 
-pub fn new_evaluation_result(result []&source.Diagnostic, val types.LitVal) EvaluationResult {
+pub fn new_evaluation_result(result []&source.Diagnostic, val symbols.LitVal) EvaluationResult {
 	return EvaluationResult{
 		result: result
 		val: val
@@ -158,7 +157,7 @@ pub fn new_evaluation_result(result []&source.Diagnostic, val types.LitVal) Eval
 pub struct CompilationResult {
 pub:
 	result []&source.Diagnostic
-	val    types.LitVal
+	val    symbols.LitVal
 }
 
 pub fn new_compilation_result(result []&source.Diagnostic) CompilationResult {

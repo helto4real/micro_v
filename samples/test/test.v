@@ -15,3 +15,7 @@ if not(x) {
 } else {
 	println('true')
 }
+
+z := if x {false} else {true}
+
+println(string(z))

@@ -1,6 +1,5 @@
 module binding
 
-import lib.comp.types
 import lib.comp.token
 import lib.comp.symbols
 
@@ -63,7 +62,7 @@ pub fn add(left BoundExpr, right BoundExpr) BoundExpr {
 	return binary(left, .plus, right)
 }
 
-pub fn literal(val types.LitVal) BoundExpr {
+pub fn literal(val symbols.LitVal) BoundExpr {
 	return new_bound_literal_expr(val)
 }
 
