@@ -1,0 +1,185 @@
+module core
+
+#include <llvm-c/Core.h>
+#include <llvm-c/ExecutionEngine.h>
+#include <llvm-c/Target.h>
+#include <llvm-c/Analysis.h>
+#include <llvm-c/BitWriter.h>
+
+#flag -I/usr/lib/llvm-10/include -L/usr/lib/llvm-10/lib -L/lib/llvm-10/lib
+
+// #flag -I llvm10/lib
+#flag -l LLVM
+
+enum LLVMVerifierFailureAction {
+  llvm_abort_process_action = 0 /* verifier will print to stderr and abort() */
+  llvm_print_message_action = 1 /* verifier will print to stderr and return 1 */
+  llvm_return_status_action = 2 /* verifier will just return 1 */
+}
+
+fn C.LLVMDumpValue(val C.LLVMValueRef)
+fn C.LLVMDumpType(val C.LLVMTypeRef)
+fn C.LLVMDumpModule(mod C.LLVMModuleRef)
+
+[typedef] pub struct C.LLVMBool {} 
+
+[typedef] pub struct C.LLVMModuleRef {}
+[typedef] pub struct C.LLVMTypeRef{}
+[typedef] pub struct C.LLVMValueRef{}
+[typedef] pub struct C.LLVMBuilderRef{}
+[typedef] pub struct C.LLVMExecutionEngineRef{}
+
+fn C.LLVMInt1Type() C.LLVMTypeRef
+fn C.LLVMInt8Type() C.LLVMTypeRef
+fn C.LLVMInt16Type() C.LLVMTypeRef
+fn C.LLVMInt32Type() C.LLVMTypeRef
+fn C.LLVMInt64Type() C.LLVMTypeRef
+fn C.LLVMInt128Type() C.LLVMTypeRef
+fn C.LLVMVoidType() C.LLVMTypeRef
+// fn C. LLVMIntType(unsigned NumBits) LLVMTypeRef
+
+fn C.LLVMModuleCreateWithName(charptr) C.LLVMModuleRef
+fn C.LLVMFunctionType(ReturnType C.LLVMTypeRef, param_types voidptr , param_count int,
+                            is_var_arg int) C.LLVMTypeRef
+
+fn C.LLVMAddFunction(mod C.LLVMModuleRef, name charptr, fn_type C.LLVMTypeRef ) C.LLVMValueRef
+
+fn C.LLVMBuildCall2(builder C.LLVMBuilderRef, typ C.LLVMTypeRef, func C.LLVMValueRef,
+                            args_ptr voidptr, nr_of_args int,
+                            name charptr) C.LLVMValueRef 
+fn C.LLVMBuildCall(builder C.LLVMBuilderRef, func C.LLVMValueRef,
+                            args_ptr voidptr, nr_of_args int,
+                            name charptr) C.LLVMValueRef 
+
+//  LLVMBuildCall2(LLVMBuilderRef, LLVMTypeRef, LLVMValueRef Fn,
+//                             LLVMValueRef *Args, unsigned NumArgs,
+//                             const char *Name); LLVMValueRef
+fn C.LLVMAppendBasicBlock(func C.LLVMValueRef, name charptr) C.LLVMBasicBlockRef
+
+fn C.LLVMCreateBuilder() C.LLVMBuilderRef
+
+fn C.LLVMPositionBuilderAtEnd(builder C.LLVMBuilderRef, block C.LLVMBasicBlockRef)
+
+fn C.LLVMBuildAdd(builder C.LLVMBuilderRef, lhs C.LLVMValueRef, rhs C.LLVMValueRef,	name charptr) C.LLVMValueRef
+fn C.LLVMBuildSub(builder C.LLVMBuilderRef, lhs C.LLVMValueRef, rhs C.LLVMValueRef,	name charptr) C.LLVMValueRef
+fn C.LLVMBuildMul(builder C.LLVMBuilderRef, lhs C.LLVMValueRef, rhs C.LLVMValueRef,	name charptr) C.LLVMValueRef
+
+fn C.LLVMBuildBinOp(builder C.LLVMBuilderRef, op_code Opcode, left C.LLVMValueRef, right C.LLVMValueRef,
+                            name charptr) C.LLVMValueRef
+
+fn C.LLVMGetParams(func C.LLVMValueRef, params &LLVMValueRef)
+fn C.LLVMGetParam(func C.LLVMValueRef, index int) C.LLVMValueRef
+fn C.LLVMBuildRet(ref C.LLVMBuilderRef, val C.LLVMValueRef ) C.LLVMValueRef
+fn C.LLVMDisposeBuilder(builder C.LLVMBuilderRef)
+fn C.LLVMVerifyModule(mod C.LLVMModuleRef, action LLVMVerifierFailureAction,
+                          err_msg charptr) int //C.LLVMBool
+
+fn C.LLVMWriteBitcodeToFile(mod C.LLVMModuleRef, path charptr) int
+fn C.LLVMPrintModuleToFile(mod C.LLVMModuleRef, path charptr, err_msg charptr) int
+
+fn C.LLVMBuildAlloca(builder C.LLVMBuilderRef, typ C.LLVMTypeRef, name charptr) C.LLVMValueRef
+fn C.LLVMBuildStore(builder C.LLVMBuilderRef, val C.LLVMValueRef, val_ref C.LLVMValueRef) C.LLVMValueRef
+
+fn C.LLVMConstInt(type_ref C.LLVMTypeRef , val u64,
+                          sign_extend bool ) C.LLVMValueRef
+
+fn C.LLVMBuildGlobalString(builder C.LLVMBuilderRef, str charptr, name charptr) C.LLVMValueRef
+
+fn C.LLVMGetLastInstruction(blocl C.LLVMBasicBlockRef) C.LLVMValueRef
+
+fn C.LLVMBuildNeg(builder C.LLVMBuilderRef, val C.LLVMValueRef, name charptr) C.LLVMValueRef
+
+fn C.LLVMBuildLoad2(builder C.LLVMBuilderRef, typ_ref C.LLVMTypeRef, val_ref C.LLVMValueRef, name charptr) C.LLVMValueRef
+
+fn C.LLVMPointerType(element_type C.LLVMTypeRef, address_space u32) C.LLVMTypeRef
+
+fn C.LLVMBuildPointerCast(builder C.LLVMBuilderRef, val C.LLVMValueRef, dest_type C.LLVMTypeRef, name charptr) C.LLVMValueRef
+
+fn C.LLVMPointerType(element_type C.LLVMTypeRef, address_space int) C.LLVMTypeRef
+
+pub enum Opcode {
+  /* Terminator Instructions */
+  // llvm_ret            = 1
+  // llvm_Br             = 2
+  // llvm_Switch         = 3
+  // llvm_IndirectBr     = 4
+  // llvm_Invoke         = 5
+  // /* removed 6 due to API changes */
+  // llvm_Unreachable    = 7
+  // llvm_CallBr         = 67
+
+  /* Standard Unary Operators */
+  // llvm_FNeg           = 66
+
+  /* Standard Binary Operators */
+  llvm_add            = 8
+  // llvm_FAdd           = 9
+  llvm_sub            = 10
+  // llvm_FSub           = 11
+  llvm_mul            = 12
+  // llvm_FMul           = 13
+  llvm_udiv           = 14
+  // llvm_SDiv           = 15
+  // llvm_FDiv           = 16
+  // llvm_URem           = 17
+  // llvm_SRem           = 18
+  // llvm_FRem           = 19
+  /* Logical Operators */
+  // llvm_Shl            = 20
+  // llvm_LShr           = 21
+  // llvm_AShr           = 22
+  // llvm_And            = 23
+  // llvm_Or             = 24
+  // llvm_Xor            = 25
+
+  // /* Memory Operators */
+  // llvm_Alloca         = 26
+  // llvm_Load           = 27
+  // llvm_Store          = 28
+  // llvm_GetElementPtr  = 29
+
+  // /* Cast Operators */
+  // llvm_Trunc          = 30
+  // llvm_ZExt           = 31
+  // llvm_SExt           = 32
+  // llvm_FPToUI         = 33
+  // llvm_FPToSI         = 34
+  // llvm_UIToFP         = 35
+  // llvm_SIToFP         = 36
+  // llvm_FPTrunc        = 37
+  // llvm_FPExt          = 38
+  // llvm_PtrToInt       = 39
+  // llvm_IntToPtr       = 40
+  // llvm_BitCast        = 41
+  // llvm_AddrSpaceCast  = 60
+
+  // /* Other Operators */
+  // llvm_ICmp           = 42
+  // llvm_FCmp           = 43
+  // llvm_PHI            = 44
+  // llvm_Call           = 45
+  // llvm_Select         = 46
+  // llvm_UserOp1        = 47
+  // llvm_UserOp2        = 48
+  // llvm_VAArg          = 49
+  // llvm_ExtractElement = 50
+  // llvm_InsertElement  = 51
+  // llvm_ShuffleVector  = 52
+  // llvm_ExtractValue   = 53
+  // llvm_InsertValue    = 54
+  // llvm_Freeze         = 68
+
+  // /* Atomic operators */
+  // llvm_Fence          = 55
+  // llvm_AtomicCmpXchg  = 56
+  // llvm_AtomicRMW      = 57
+
+  // /* Exception Handling Operators */
+  // llvm_Resume         = 58
+  // llvm_LandingPad     = 59
+  // llvm_CleanupRet     = 61
+  // llvm_CatchRet       = 62
+  // llvm_CatchPad       = 63
+  // llvm_CleanupPad     = 64
+  // llvm_CatchSwitch    = 65
+} 

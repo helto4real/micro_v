@@ -1,4 +1,4 @@
-module llvm 
+module core 
 
 import lib.comp.symbols
 import lib.comp.binding
@@ -23,6 +23,7 @@ mut:
 	mod_ref C.LLVMModuleRef
 	builder Builder
 	funcs []Function
+	built_in_funcs map[string]C.LLVMValueRef
 }
 
 pub fn new_llvm_module(name string, builder Builder) Module {
@@ -33,19 +34,29 @@ pub fn new_llvm_module(name string, builder Builder) Module {
 	}
 }
 
-pub fn (mut m Module) generate() {
-	// start declaring the functions
-	for func in m.funcs {
-		func.llvm_func
+pub fn (mut m Module) verify() ? {
+	mut err := charptr(0)
+	res := C.LLVMVerifyModule(m.mod_ref, .llvm_abort_process_action, &err)
+
+	if res != 0 {
+		unsafe{return error(err.vstring())}
 	}
-	// return_type := C.LLVMFunctionType(C.LLVMInt32Type(), param_types.data, 2, C.LLVMBool(0))
-	// sum_name := 'sum'
-	// sum := C.LLVMAddFunction(llvm_mod, sum_name.str, return_type)
-	// entry_name := 'entry'
-	// entry := C.LLVMAppendBasicBlock(sum, entry_name.str)
+	return none
+}
+
+// pub fn (mut m Module) generate() {
+// 	// start declaring the functions
+// 	for func in m.funcs {
+// 		func.llvm_func
+// 	}
+// 	// return_type := C.LLVMFunctionType(C.LLVMInt32Type(), param_types.data, 2, C.LLVMBool(0))
+// 	// sum_name := 'sum'
+// 	// sum := C.LLVMAddFunction(llvm_mod, sum_name.str, return_type)
+// 	// entry_name := 'entry'
+// 	// entry := C.LLVMAppendBasicBlock(sum, entry_name.str)
 
 	
-}
+// }
 
 
 

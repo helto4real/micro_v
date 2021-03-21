@@ -1,4 +1,4 @@
-module llvm
+module core
 import lib.comp.binding
 
 pub type EmitNodeFn = fn (node binding.BoundNode, data voidptr) 

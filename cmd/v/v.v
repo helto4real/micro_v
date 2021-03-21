@@ -8,7 +8,9 @@ import lib.comp.binding
 import lib.comp.parser
 import lib.comp.symbols
 import lib.comp.util.source
-import lib.comp.gen.golang
+// import lib.comp.gen.golang
+import lib.comp.gen.llvm
+
 fn main() {
 	args := os.args[1..]
 	if args.len == 0 {
@@ -83,8 +85,9 @@ fn main() {
 			out_filename := if is_compiled_in_folder {filename} else {filename[..filename.len-2]}
 			out_path := os.join_path(folder, out_filename)
 			// Compile mode, lets hard code to golang back-end for now
-			golang_backend := golang.new_golang_generator()
-			res := comp.gen(golang_backend, out_path) 
+			// golang_backend := golang.new_golang_generator()
+			llvm_backend := llvm.new_llvm_generator()
+			res := comp.gen(llvm_backend, out_path) 
 
 			if res.result.len > 0 {
 				write_diagnostics(res.result)

@@ -12,6 +12,7 @@ pub fn new_bound_return_with_expr_stmt(expr BoundExpr) BoundStmt {
 	return BoundReturnStmt{
 		expr: expr
 		has_expr: true
+		child_nodes: [BoundNode(expr)]
 	}
 }
 
