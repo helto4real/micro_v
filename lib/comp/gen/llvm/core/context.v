@@ -72,23 +72,24 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 }
 
 fn (mut c Context) emit_call_expr(node binding.BoundCallExpr) {
-	if node.func.name == 'println' {
+	if node.func.name in ['println', 'print'] {
 		c.emit_node(node.params[0])
-		fn_ref := c.mod.built_in_funcs['println'] or {panic('built in function println not found')}
+		fn_ref := c.mod.built_in_funcs['printf'] or {panic('built in function println not found')}
+		// fn_ref := c.mod.built_in_funcs['puts'] or {panic('built in function println not found')}
 		mut params := []C.LLVMValueRef{cap: 1}
 		param := c.value_refs.pop()
+		fmt_str := if node.func.name == 'print' {'%s'} else {'%s\n'}
+		params << c.add_global_string_literal_ptr(fmt_str)
 		params << param
 
-		C.LLVMDumpValue(fn_ref)
-		C.LLVMDumpValue(param)
-		C.LLVMDumpModule(c.mod.mod_ref)
+		// C.LLVMDumpValue(fn_ref)
+		// C.LLVMDumpValue(param)
+		// C.LLVMDumpModule(c.mod.mod_ref)
 
 		C.LLVMBuildCall(c.mod.builder.builder_ref, fn_ref,
-                            params.data, 1,
+                            params.data, 2,
                             no_name.str) 
-		// C.LLVMBuildCall2(c.mod.builder.builder_ref, C.LLVMInt32Type(), fn_ref,
-        //                     params.data, 1,
-        //                     no_name.str) 
+
 	}
 }
 fn (mut c Context) emit_variable_expr(node binding.BoundVariableExpr) {
@@ -170,12 +171,7 @@ fn (mut c Context) emit_bound_litera_expr(lit binding.BoundLiteralExpr) {
 		}
 		'string' {
 			str_val :=  lit.const_val.val as string
-			ref := C.LLVMBuildGlobalString(c.mod.builder.builder_ref, str_val.str, no_name.str) 
-			ptr := C.LLVMBuildPointerCast(
-					c.mod.builder.builder_ref, 
-					ref, 
-					C.LLVMPointerType(C.LLVMInt8Type(), 0), 
-					no_name.str) 
+			ptr := c.add_global_string_literal_ptr(str_val)
 			
 			c.value_refs.prepend(ptr)
 		}
@@ -184,6 +180,16 @@ fn (mut c Context) emit_bound_litera_expr(lit binding.BoundLiteralExpr) {
 			panic('Cannot emit literal of type $typ')
 		}
 	}
+}
+
+fn (mut c Context) add_global_string_literal_ptr(str_val string) C.LLVMValueRef {
+	ref := C.LLVMBuildGlobalString(c.mod.builder.builder_ref, str_val.str, no_name.str) 
+	ptr := C.LLVMBuildPointerCast(
+			c.mod.builder.builder_ref, 
+			ref, 
+			C.LLVMPointerType(C.LLVMInt8Type(), 0), 
+			no_name.str) 
+	return ptr
 }
 
 [inline]

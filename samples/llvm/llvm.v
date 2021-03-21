@@ -1,6 +1,8 @@
 fn main() {
 	x := 1
-	z := 'Helloooo world!'
+	z := 'Hellooo world!'
 	y := x + 4
-	println(z)
+	print(z)
+	print(z)
+	println('')
 }
