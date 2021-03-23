@@ -17,17 +17,20 @@ enum LLVMVerifierFailureAction {
   llvm_return_status_action = 2 /* verifier will just return 1 */
 }
 
-fn C.LLVMDumpValue(val C.LLVMValueRef)
+fn C.LLVMDumpValue(val &C.LLVMValueRef)
 fn C.LLVMDumpType(val C.LLVMTypeRef)
 fn C.LLVMDumpModule(mod C.LLVMModuleRef)
-
+fn C.LLVMIsNull(val C.LLVMValueRef) int
 [typedef] pub struct C.LLVMBool {} 
 
+[typedef] pub struct C.LLVMContextRef {}
 [typedef] pub struct C.LLVMModuleRef {}
 [typedef] pub struct C.LLVMTypeRef{}
 [typedef] pub struct C.LLVMValueRef{}
 [typedef] pub struct C.LLVMBuilderRef{}
 [typedef] pub struct C.LLVMExecutionEngineRef{}
+
+pub struct C.LLVMOpaqueValue{}
 
 fn C.LLVMInt1Type() C.LLVMTypeRef
 fn C.LLVMInt8Type() C.LLVMTypeRef
@@ -36,6 +39,15 @@ fn C.LLVMInt32Type() C.LLVMTypeRef
 fn C.LLVMInt64Type() C.LLVMTypeRef
 fn C.LLVMInt128Type() C.LLVMTypeRef
 fn C.LLVMVoidType() C.LLVMTypeRef
+
+fn C.LLVMInt1TypeInContext(ctx_ref C.LLVMContextRef) C.LLVMTypeRef
+fn C.LLVMInt8TypeInContext(ctx_ref C.LLVMContextRef) C.LLVMTypeRef
+fn C.LLVMInt16TypeInContext(ctx_ref C.LLVMContextRef) C.LLVMTypeRef
+fn C.LLVMInt32TypeInContext(ctx_ref C.LLVMContextRef) C.LLVMTypeRef
+fn C.LLVMInt64TypeInContext(ctx_ref C.LLVMContextRef) C.LLVMTypeRef
+fn C.LLVMInt128TypeInContext(ctx_ref C.LLVMContextRef) C.LLVMTypeRef
+fn C.LLVMIntTypeInContext(ctx_ref C.LLVMContextRef, nr_bits int) C.LLVMTypeRef
+fn C.LLVMVoidTypeInContext(ctx_ref C.LLVMContextRef) C.LLVMTypeRef
 // fn C. LLVMIntType(unsigned NumBits) LLVMTypeRef
 
 fn C.LLVMModuleCreateWithName(charptr) C.LLVMModuleRef
@@ -69,7 +81,10 @@ fn C.LLVMBuildBinOp(builder C.LLVMBuilderRef, op_code Opcode, left C.LLVMValueRe
 
 fn C.LLVMGetParams(func C.LLVMValueRef, params &LLVMValueRef)
 fn C.LLVMGetParam(func C.LLVMValueRef, index int) C.LLVMValueRef
+
 fn C.LLVMBuildRet(ref C.LLVMBuilderRef, val C.LLVMValueRef ) C.LLVMValueRef
+fn C.LLVMBuildRetVoid(builder C.LLVMBuilderRef) C.LLVMValueRef
+
 fn C.LLVMDisposeBuilder(builder C.LLVMBuilderRef)
 fn C.LLVMVerifyModule(mod C.LLVMModuleRef, action LLVMVerifierFailureAction,
                           err_msg charptr) int //C.LLVMBool
@@ -84,7 +99,7 @@ fn C.LLVMConstInt(type_ref C.LLVMTypeRef , val u64,
                           sign_extend bool ) C.LLVMValueRef
 
 fn C.LLVMBuildGlobalString(builder C.LLVMBuilderRef, str charptr, name charptr) C.LLVMValueRef
-
+fn C.LLVMBuildGlobalStringPtr(builder C.LLVMBuilderRef, str charptr, name charptr) C.LLVMValueRef 
 fn C.LLVMGetLastInstruction(blocl C.LLVMBasicBlockRef) C.LLVMValueRef
 
 fn C.LLVMBuildNeg(builder C.LLVMBuilderRef, val C.LLVMValueRef, name charptr) C.LLVMValueRef
@@ -96,6 +111,39 @@ fn C.LLVMPointerType(element_type C.LLVMTypeRef, address_space u32) C.LLVMTypeRe
 fn C.LLVMBuildPointerCast(builder C.LLVMBuilderRef, val C.LLVMValueRef, dest_type C.LLVMTypeRef, name charptr) C.LLVMValueRef
 
 fn C.LLVMPointerType(element_type C.LLVMTypeRef, address_space int) C.LLVMTypeRef
+
+fn C.LLVMBuildBr(builder C.LLVMBuilderRef, dest C.LLVMBasicBlockRef) C.LLVMValueRef
+fn C.LLVMBuildCondBr(builder C.LLVMBuilderRef, cond C.LLVMValueRef, then_block C.LLVMBasicBlockRef, else_block C.LLVMBasicBlockRef) C.LLVMValueRef
+
+// Context specific functions and structs
+
+fn C.LLVMContextCreate() C.LLVMContextRef
+fn C.LLVMContextDispose(ctx C.LLVMContextRef)
+fn C.LLVMModuleCreateWithNameInContext(mod_id charptr, ctx_ref C.LLVMContextRef) C.LLVMModuleRef
+fn C.LLVMDisposeModule(mod_ref C.LLVMModuleRef)
+fn C.LLVMCreateBuilderInContext(ctx_ref C.LLVMContextRef) C.LLVMBuilderRef
+fn C.LLVMAppendBasicBlockInContext(ctx_ref C.LLVMContextRef, func C.LLVMValueRef, name charptr) C.LLVMBasicBlockRef
+
+// comparations
+
+fn C.LLVMBuildICmp(builder C.LLVMBuilderRef, op IntPredicate,
+                          left C.LLVMValueRef, right C.LLVMValueRef,
+                          name charptr) C.LLVMValueRef
+
+fn C.LLVMGetLastInstruction(block C.LLVMBasicBlockRef) &C.LLVMValueRef
+fn C.LLVMIsATerminatorInst(inst C.LLVMValueRef ) C.LLVMValueRef
+pub enum IntPredicate{
+  int_eq      = 32  /**< equal */
+  int_ne           /**< not equal */
+  int_u_gt         /**< unsigned greater than */
+  int_u_ge         /**< unsigned greater or equal */
+  int_u_lt         /**< unsigned less than */
+  int_u_le         /**< unsigned less or equal */
+  int_s_gt         /**< signed greater than */
+  int_s_ge         /**< signed greater or equal */
+  int_s_lt         /**< signed less than */
+  int_s_le          /**< signed less or equal */
+} 
 
 pub enum Opcode {
   /* Terminator Instructions */

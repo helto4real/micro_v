@@ -7,8 +7,8 @@ fn main() {
 	// fn main() {
 
 	// }'
-	builder := llvm.new_llvm_builder()
-	mut mod := llvm.new_llvm_module('main', builder)
+	
+	mut mod := llvm.new_llvm_module('main')
 	op := binding.bind_binary_operator(.mul, symbols.int_symbol, symbols.int_symbol) or {panic('not expected')}
 	stmts := [binding.new_bound_return_with_expr_stmt(
 		binding.new_bound_binary_expr(

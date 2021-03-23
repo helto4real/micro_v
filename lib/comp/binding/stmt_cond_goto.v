@@ -7,16 +7,16 @@ pub:
 	kind         BoundNodeKind = .cond_goto_stmt
 	typ          symbols.TypeSymbol
 	child_nodes  []BoundNode
-	label        string
 	cond         BoundExpr
-	jump_if_true bool
+	true_label        string
+	false_label        string
 }
 
-pub fn new_bound_cond_goto_stmt(label string, cond BoundExpr, jump_if_true bool) BoundStmt {
+pub fn new_bound_cond_goto_stmt(cond BoundExpr, true_label string, false_label string) BoundStmt {
 	return BoundCondGotoStmt{
-		label: label
 		cond: cond
-		jump_if_true: jump_if_true
+		true_label: true_label
+		false_label: false_label
 		child_nodes: [BoundNode(cond)]
 	}
 }

@@ -113,12 +113,15 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 		BoundCondGotoStmt {
 			writer.write_keyword('goto')
 			writer.write_space()
-			writer.write_identifier(node.label)
+			writer.write_identifier(node.true_label)
 			writer.write_space()
-			cond_str := if node.jump_if_true { 'if' } else { 'unless' }
-			writer.write_number(cond_str)
+			writer.write('if')
 			writer.write_space()
 			write_expr(writer, node.cond)
+			writer.write_space()
+			writer.write('else')
+			writer.write_space()
+			writer.write_identifier(node.false_label)
 			writer.writeln('')
 		}
 		BoundExprStmt {

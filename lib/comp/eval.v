@@ -108,10 +108,10 @@ pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?symbols.Li
 					binding.BoundCondGotoStmt {
 						cond := e.eval_expr(stmt.cond) ?
 						if cond is bool {
-							if cond == stmt.jump_if_true {
-								index = label_to_index[stmt.label]
+							if cond {
+								index = label_to_index[stmt.true_label]
 							} else {
-								index++
+								index = label_to_index[stmt.false_label]
 							}
 						} else {
 							panic('bound goto could never have other than bool conditions')

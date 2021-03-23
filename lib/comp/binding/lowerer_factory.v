@@ -7,12 +7,8 @@ pub fn block(stmts ...BoundStmt) BoundStmt {
 	return new_bound_block_stmt(stmts)
 }
 
-pub fn goto_false(label string, expr BoundExpr) BoundStmt {
-	return new_bound_cond_goto_stmt(label, expr, false)
-}
-
-pub fn goto_true(label string, expr BoundExpr) BoundStmt {
-	return new_bound_cond_goto_stmt(label, expr, true)
+pub fn goto_cond(expr BoundExpr, true_label string, false_label string) BoundStmt {
+	return new_bound_cond_goto_stmt(expr, true_label, false_label)
 }
 
 pub fn goto_label(label string) BoundStmt {

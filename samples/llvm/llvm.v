@@ -1,8 +1,14 @@
 fn main() {
-	x := 1
-	z := 'Hellooo world!'
-	y := x + 4
-	print(z)
-	print(z)
-	println('')
+	// for x in 0..5 {
+	// 	println('hello')
+	// }
+
+	mut i := 5
+	for {
+		if i == 0 {
+			break
+		}
+		println('hello again')
+		i = i - 1
+	}
 }

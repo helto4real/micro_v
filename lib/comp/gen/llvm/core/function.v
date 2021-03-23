@@ -10,16 +10,17 @@ pub struct Function {
 	llvm_entry_block C.LLVMBasicBlockRef
 	func      symbols.FunctionSymbol
 	body      binding.BoundBlockStmt
+
 pub:
 	ctx	  	  Context
 }
 fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBlockStmt) Function {
-	llvm_params := get_params(func.params)
+	llvm_params := get_params(func.params, mod)
 	
 	return_typ := if func.name == 'main' {
-			C.LLVMInt32Type()
+			C.LLVMInt32TypeInContext(mod.ctx_ref)
 		} else {
-			get_llvm_type_ref(func.typ)
+			get_llvm_type_ref(func.typ, mod)
 	}
 
 	llvm_func_typ := C.LLVMFunctionType(return_typ, llvm_params.data,
@@ -37,15 +38,24 @@ fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBloc
 		}
 	}
 	entry_name := 'entry'
-	entry := C.LLVMAppendBasicBlock(llvm_func, entry_name.str)
+	entry := C.LLVMAppendBasicBlockInContext(mod.ctx_ref, llvm_func, entry_name.str)
+	// Generate the statements at entry
+	C.LLVMPositionBuilderAtEnd(mod.builder.builder_ref, entry)
 	mut ctx := new_context(mod, entry)
+	// generate all blocks
+	for stmt in body.bound_stmts {
+		if stmt is binding.BoundLabelStmt {
+			label_block := C.LLVMAppendBasicBlockInContext(mod.ctx_ref, llvm_func, stmt.name.str)
+			ctx.blocks[stmt.name] = label_block
+		}
+	}
 	// Generate the statements at entry
 	C.LLVMPositionBuilderAtEnd(mod.builder.builder_ref, entry)
 	for stmt in body.bound_stmts {
 		ctx.emit_node(stmt)
 	}
 	if func.name == 'main' {
-		return_code := C.LLVMConstInt(get_llvm_type_ref(symbols.int_symbol), 0, false)
+		return_code := C.LLVMConstInt(get_llvm_type_ref(symbols.int_symbol, mod), 0, false)
 		C.LLVMBuildRet(mod.builder.builder_ref, return_code)
 	}
 	return Function{
@@ -59,11 +69,11 @@ fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBloc
 }
 
 
-fn get_params(params []symbols.ParamSymbol) []C.LLVMTypeRef {
+fn get_params(params []symbols.ParamSymbol, mod Module) []C.LLVMTypeRef {
 	mut res := []C.LLVMTypeRef{cap: params.len}
 
 	for param in params {
-		res << get_llvm_type_ref(param.typ)
+		res << get_llvm_type_ref(param.typ, mod)
 	}
 
 	return res

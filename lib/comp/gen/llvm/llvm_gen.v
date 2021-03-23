@@ -43,9 +43,8 @@ pub fn (mut l LlvmGen) generate(binary_full_path string, program &binding.BoundP
 
 fn (mut l LlvmGen) generate_code() {
 
-	builder := core.new_llvm_builder()
-	mut mod := core.new_llvm_module('program', builder)
-	mod.add_standard_funcs()
+	mut mod := core.new_llvm_module('program')
+	
 	for func in l.program.func_symbols {
 		body := l.program.func_bodies[func.id]
 		lowered_body := binding.lower(body)
@@ -58,19 +57,7 @@ fn (mut l LlvmGen) generate_code() {
 
 	mod.print_to_file(l.result_file_full_path) or {panic('ERROR another mother fucker')}
 	mod.verify() or {panic('ERROR mother fucker')}
-	// // write main func
-	// main_func := l.program.main_func
-	// main_body := l.program.func_bodies[main_func.id]
-	// write_symbol(cw, main_func)
-	// cw.write_space()
-	// write_node(cw, binding.BoundStmt(main_body))
-
-	// // write code to file
-
-	// os.write_file(l.gofile_full_path, cw.str()) or {
-	// 	l.log.error_msg(err.msg)
-	// }
-
+	mod.free()
 }
 
 fn (mut l LlvmGen) compile_code() {

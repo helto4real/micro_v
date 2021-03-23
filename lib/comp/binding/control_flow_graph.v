@@ -345,10 +345,10 @@ pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) ControlFlowGr
 					}
 				}
 				BoundCondGotoStmt {
-					mut then_block := gb.block_from_label[stmt.label]
+					mut then_block := gb.block_from_label[stmt.true_label]
 					negated_cond := gb.negate(stmt.cond)
-					then_cond := if stmt.jump_if_true { stmt.cond } else { negated_cond }
-					else_cond := if stmt.jump_if_true { negated_cond } else { stmt.cond }
+					then_cond := stmt.cond 
+					else_cond := negated_cond
 					mut else_block := next
 					gb.connect_cond(mut current, mut then_block, then_cond)
 					gb.connect_cond(mut current, mut else_block, else_cond)
