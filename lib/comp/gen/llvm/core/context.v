@@ -6,16 +6,16 @@ import lib.comp.symbols
 pub struct Context {
 	
 mut:
-	current_block C.LLVMBasicBlockRef
+	current_block &C.LLVMBasicBlockRef
 	mod Module
 	ref_nr int
-	blocks 	map[string]C.LLVMBasicBlockRef
+	blocks 	map[string]&C.LLVMBasicBlockRef
 pub mut:
-	value_refs []C.LLVMValueRef
-	var_decl map[string] C.LLVMValueRef
+	value_refs []&C.LLVMValueRef
+	var_decl map[string] &C.LLVMValueRef
 }
 
-pub fn new_context(mod Module, current_block C.LLVMBasicBlockRef) Context {
+pub fn new_context(mod Module, current_block &C.LLVMBasicBlockRef) Context {
 	return Context{
 		mod:mod
 		current_block: current_block
@@ -95,24 +95,23 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 			} else if node is binding.BoundCommentStmt {
 			
 			} else if node is binding.BoundGotoStmt {
-				last_instruction := C.LLVMGetLastInstruction(c.current_block)
-				println('last: ${voidptr(last_instruction)}')
-				if !isnil(last_instruction)  {
-					C.LLVMDumpValue(last_instruction)
-					println('dump done')
-					// is_term_instr := C.LLVMIsATerminatorInst(*last_instruction)
-					// if is_term_instr != 0 {
-					// 	println('TERM:')
-					// 	C.LLVMDumpValue(*is_term_instr)
-					// }
-				}
-				// if C.LLVMIsNull(last_instruction) == 0 {
-				// 	print('LAST INSTR: ')
-				// 	C.LLVMDumpValue(last_instruction)
-				// 	println('')
-				// }
 				goto_block := c.blocks[node.label]
-				C.LLVMBuildBr(c.mod.builder.builder_ref, goto_block)
+
+				// Check if last instruction is terminator, only
+				// if it is not terminated last instruction
+				// we add a goto statement
+				last_instruction := C.LLVMGetLastInstruction(c.current_block)
+				if !isnil(last_instruction)  {
+					is_term_instr := C.LLVMIsATerminatorInst(last_instruction)
+					if isnil(is_term_instr) {
+						// No terminator instruction
+						// we need to add a branch to next block
+						C.LLVMBuildBr(c.mod.builder.builder_ref, goto_block)	
+					} 
+				} else {
+					// there are no instructions we can add the br
+					C.LLVMBuildBr(c.mod.builder.builder_ref, goto_block)	
+				}
 			} else {
 				panic('unexepected unsupported statement $node')
 			}
@@ -138,7 +137,7 @@ fn (mut c Context) emit_call_expr(node binding.BoundCallExpr) {
 		// }
 		c.emit_node(node.params[0])
 		fn_ref := c.mod.built_in_funcs['printf'] or {panic('built in function println not found')}
-		mut params := []C.LLVMValueRef{cap: 1}
+		mut params := []&C.LLVMValueRef{cap: 1}
 		param := c.value_refs.pop()
 		// print_str := c.mod.add_global_string_literal_ptr('%s')//  c.mod.global_const['print_str'] or {panic('unexpected')}
 		// println_str := c.mod.add_global_string_literal_ptr('%s\n')// c.mod.global_const['println_str'] or {panic('unexpected')}
@@ -272,7 +271,7 @@ fn (mut c Context) emit_bound_litera_expr(lit binding.BoundLiteralExpr) {
 
 
 [inline]
-fn get_llvm_type_ref(typ symbols.TypeSymbol, mod Module) C.LLVMTypeRef {
+fn get_llvm_type_ref(typ symbols.TypeSymbol, mod Module) &C.LLVMTypeRef {
 	match typ.name {
 		'int' {
 			return C.LLVMInt32TypeInContext(mod.ctx_ref)

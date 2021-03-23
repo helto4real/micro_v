@@ -7,7 +7,7 @@ pub fn (mut m Module) add_standard_funcs() {
 
 fn (mut m Module) add_puts() {
 		//Argument type
-	mut puts_function_args_type := []C.LLVMTypeRef{}
+	mut puts_function_args_type := []&C.LLVMTypeRef{}
 	puts_function_args_type << C.LLVMPointerType(C.LLVMInt8TypeInContext(m.ctx_ref), 0)
 	// puts function
 	puts_function_type := C.LLVMFunctionType(C.LLVMInt32TypeInContext(m.ctx_ref), puts_function_args_type.data, 1, false)
@@ -18,7 +18,7 @@ fn (mut m Module) add_puts() {
 
 fn (mut m Module) add_printf() {
 		//Argument type
-	mut puts_function_args_type := []C.LLVMTypeRef{}
+	mut puts_function_args_type := []&C.LLVMTypeRef{}
 	// Add the char* format
 	puts_function_args_type << C.LLVMPointerType(C.LLVMInt8TypeInContext(m.ctx_ref), 0)
 	// puts function

@@ -6,8 +6,8 @@ import lib.comp.binding
 
 pub struct Function {
 	llvm_func_typ C.LLVMTypeRef
-	llvm_func C.LLVMValueRef
-	llvm_entry_block C.LLVMBasicBlockRef
+	llvm_func &C.LLVMValueRef
+	llvm_entry_block &C.LLVMBasicBlockRef
 	func      symbols.FunctionSymbol
 	body      binding.BoundBlockStmt
 
@@ -33,6 +33,7 @@ fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBloc
 		return Function{
 			llvm_func_typ: llvm_func_typ
 			llvm_func: llvm_func
+			llvm_entry_block: 0
 			func: func
 			body: body
 		}
@@ -69,8 +70,8 @@ fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBloc
 }
 
 
-fn get_params(params []symbols.ParamSymbol, mod Module) []C.LLVMTypeRef {
-	mut res := []C.LLVMTypeRef{cap: params.len}
+fn get_params(params []symbols.ParamSymbol, mod Module) []&C.LLVMTypeRef {
+	mut res := []&C.LLVMTypeRef{cap: params.len}
 
 	for param in params {
 		res << get_llvm_type_ref(param.typ, mod)

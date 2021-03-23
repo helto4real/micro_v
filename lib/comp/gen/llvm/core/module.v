@@ -14,10 +14,10 @@ pub enum GlobalVarRefType {
 
 pub struct Builder {
 mut:
-	builder_ref C.LLVMBuilderRef
+	builder_ref &C.LLVMBuilderRef
 }
 
-pub fn new_llvm_builder(ctx_ref C.LLVMContextRef) Builder {
+pub fn new_llvm_builder(ctx_ref &C.LLVMContextRef) Builder {
 	return Builder {
 		builder_ref: C.LLVMCreateBuilderInContext(ctx_ref)
 	}
@@ -29,14 +29,14 @@ pub fn (mut b Builder) free() {
 
 
 pub struct Module {
-	ctx_ref C.LLVMContextRef
-	mod_ref C.LLVMModuleRef
+	ctx_ref &C.LLVMContextRef
+	mod_ref &C.LLVMModuleRef
 mut:
 	builder Builder
 	funcs []Function
-	built_in_funcs map[string]C.LLVMValueRef
+	built_in_funcs map[string]&C.LLVMValueRef
 	
-	global_const map[GlobalVarRefType]C.LLVMValueRef
+	global_const map[GlobalVarRefType]&C.LLVMValueRef
 }
 
 pub fn new_llvm_module(name string) Module {
@@ -74,7 +74,7 @@ pub fn (mut m Module) verify() ? {
 	return none
 }
 
-pub fn (mut m Module) add_global_string_literal_ptr(str_val string) C.LLVMValueRef {
+pub fn (mut m Module) add_global_string_literal_ptr(str_val string) &C.LLVMValueRef {
 	return C.LLVMBuildGlobalStringPtr(m.builder.builder_ref, charptr(str_val.str), charptr(no_name.str)) 
 }
 
