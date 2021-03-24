@@ -1,7 +1,7 @@
 ; ModuleID = 'program'
 source_filename = "program"
 
-@0 = private unnamed_addr constant [6 x i8] c"hello\00", align 1
+@0 = private unnamed_addr constant [7 x i8] c"helloo\00", align 1
 @1 = private unnamed_addr constant [6 x i8] c"world\00", align 1
 @2 = private unnamed_addr constant [6 x i8] c"hello\00", align 1
 @3 = private unnamed_addr constant [6 x i8] c"world\00", align 1
@@ -19,7 +19,7 @@ entry:
   br i1 true, label %1, label %2
 
 1:                                                ; preds = %entry
-  store i8* getelementptr inbounds ([6 x i8], [6 x i8]* @0, i32 0, i32 0), i8** %0
+  store i8* getelementptr inbounds ([7 x i8], [7 x i8]* @0, i32 0, i32 0), i8** %0
   br label %5
 
 2:                                                ; preds = %entry

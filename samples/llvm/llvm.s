@@ -35,8 +35,8 @@ main:                                   # @main
 	.type	.L__unnamed_1,@object   # @0
 	.section	.rodata.str1.1,"aMS",@progbits,1
 .L__unnamed_1:
-	.asciz	"hello"
-	.size	.L__unnamed_1, 6
+	.asciz	"helloo"
+	.size	.L__unnamed_1, 7
 
 	.type	.L__unnamed_6,@object   # @1
 .L__unnamed_6:

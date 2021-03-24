@@ -59,6 +59,7 @@ fn (mut m Module) init_globals() {
 
 pub fn (mut m Module) free() {
 	if m.exec_engine != 0 {
+		err := charptr(0)
 		// if exec engine exists we need to remove the module
 		// before you can dispose the engine and the module		mut err := charptr(0)
 		mut out_mod := voidptr(0)
