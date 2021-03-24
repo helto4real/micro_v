@@ -80,6 +80,8 @@ pub fn (mut p Parser) parse_members() {
 pub fn (mut p Parser) parse_member() ast.MemberNode {
 	if p.peek_fn_decl(0) {
 		return p.parse_function()
+	} else if p.peek_struct_decl(0) {
+		return p.parse_struct()
 	} else {
 		global_stmt := p.parse_global_stmt()
 		return global_stmt
@@ -89,6 +91,35 @@ pub fn (mut p Parser) parse_member() ast.MemberNode {
 pub fn (mut p Parser) parse_global_stmt() ast.MemberNode {
 	stmt := p.parse_stmt()
 	return ast.new_glob_stmt(p.syntax_tree, stmt)
+}
+
+pub fn (mut p Parser) parse_struct() ast.StructDeclNode {
+	struct_key := p.match_token(.key_struct)
+	ident := p.match_token(.name)
+	lcbr_tok := p.match_token(.lcbr)
+	params := p.parse_struct_members()
+	rcbr_tok := p.match_token(.rcbr)
+	struct_ast:= ast.new_struct_decl_node(p.syntax_tree, struct_key, ident, lcbr_tok, 
+			params, rcbr_tok)
+	println(struct_ast)
+	return struct_ast
+}
+
+fn (mut p Parser) parse_struct_members() []ast.StructMemberNode {
+	mut members := []ast.StructMemberNode{}
+	
+	for p.current_token().kind != .eof && p.current_token().kind != .rcbr {
+		start_tok := p.current_token()
+		ident := p.match_token(.name)
+		typ := p.match_token(.name)
+		if p.current_token() == start_tok {
+			// makes sure we not in infinite loop
+			p.next_token()
+		}
+		members << ast.new_struct_member_node(p.syntax_tree, ident, typ)
+		
+	}
+	return members
 }
 
 pub fn (mut p Parser) parse_function() ast.FnDeclNode {

@@ -98,7 +98,16 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_trees []&ast.SyntaxTree) &BoundGlobalScope {
 	parent_scope := create_parent_scope(previous)
 	mut binder := new_binder(is_script, parent_scope, symbols.undefined_fn)
-	// first bind the functions to make them visible 
+	// first bind the types
+	for syntax_tree in syntax_trees {
+		for node in syntax_tree.root.members {
+			if node is ast.StructDeclNode {
+				binder.bind_struct_decl(node)
+			}
+		}
+	}
+
+	// first bind the functions
 	for syntax_tree in syntax_trees {
 		for node in syntax_tree.root.members {
 			if node is ast.FnDeclNode {
@@ -288,6 +297,9 @@ pub fn (mut b Binder) bind_module_stmt(module_stmt ast.ModuleStmt) BoundStmt {
 	return new_bound_module_stmt(module_stmt.tok_name)
 }
 
+pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
+
+}
 pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 	mut params := []symbols.ParamSymbol{}
 	mut seen_param_names := []string{}
