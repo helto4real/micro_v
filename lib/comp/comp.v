@@ -110,6 +110,25 @@ pub fn (mut c Compilation) gen(back_end gen.Generator, output_file string) Compi
 	return new_compilation_result(diagnostics.all)
 }
 
+pub fn (mut c Compilation) run(back_end gen.Generator) CompilationResult{
+		mut global_scope := c.get_bound_global_scope()
+	mut result := []&source.Diagnostic{}
+	for syntax in c.syntax_trees {
+		result << syntax.log.all
+	}
+	result << global_scope.log.all
+	if result.len > 0 {
+		return new_compilation_result(result)
+	}
+	program := c.get_program()
+
+	if program.log.all.len > 0 {
+		return new_compilation_result(program.log.all)
+	}
+	diagnostics := back_end.run(program)
+	return new_compilation_result(diagnostics.all)
+}
+
 fn (mut c Compilation) get_program() &binding.BoundProgram {
 	global_scope := c.get_bound_global_scope()
 	if c.previous == 0 {

@@ -1,9 +1,10 @@
 fn main() {
-	for i in 0..5 {
-		if i==2 {
-			continue
-		}
-		if i == 4 {break}
-		println('tomas')
-	}
+	x := if true {'helloo'} else {'world'}
+	y := if false {'hello'} else {'world'}
+	print(x)
+	print(' ')
+	println(y)
 }
+
+// This is the program... going to run it using
+// llvm backend and.... wait for it..e

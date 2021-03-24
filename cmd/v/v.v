@@ -11,6 +11,11 @@ import lib.comp.util.source
 // import lib.comp.gen.golang
 import lib.comp.gen.llvm
 
+enum Command {
+	build
+	run
+	test
+}
 fn main() {
 	args := os.args[1..]
 	if args.len == 0 {
@@ -25,7 +30,26 @@ fn main() {
 	mut display_bound_stmts := false
 	mut display_lowered_stmts := false
 	mut use_evaluator := false
-	for arg in args {
+	mut command := Command.build
+	for i, arg in args {
+		if i == 0 {
+			match arg {
+				'run'  { 
+					command = .run 
+					continue
+				} 
+				'test' { 
+					command = .test 
+					continue
+				}
+				'build' { 
+					command = .build 
+					continue
+				}
+				else {}
+			}
+			
+		}
 		match arg {
 			'-display_stmts' {
 				display_bound_stmts = true
@@ -76,26 +100,38 @@ fn main() {
 			write_diagnostics(res.result)
 			exit(-1)
 		} else {
-			is_compiled_in_folder := syntax_trees.len > 1
-			file := files[0]
-			folder := os.dir(file)
-			filename := os.file_name(file)
+			if command == .build {
+				is_compiled_in_folder := syntax_trees.len > 1
+				file := files[0]
+				folder := os.dir(file)
+				filename := os.file_name(file)
 
-			println('file: $file, folder:$folder, filename: $filename')
-			out_filename := if is_compiled_in_folder {filename} else {filename[..filename.len-2]}
-			out_path := os.join_path(folder, out_filename)
-			// Compile mode, lets hard code to golang back-end for now
-			// golang_backend := golang.new_golang_generator()
-			llvm_backend := llvm.new_llvm_generator()
-			res := comp.gen(llvm_backend, out_path) 
+				out_filename := if is_compiled_in_folder {filename} else {filename[..filename.len-2]}
+				out_path := os.join_path(folder, out_filename)
 
-			if res.result.len > 0 {
-				write_diagnostics(res.result)
-				exit(-1)
+				llvm_backend := llvm.new_llvm_generator()
+				res := comp.gen(llvm_backend, out_path) 
+
+				if res.result.len > 0 {
+					write_diagnostics(res.result)
+					exit(-1)
+				}
+				
+				println(term.green('success'))
+				exit(0)
+			} else if command == .run {
+		
+				llvm_backend := llvm.new_llvm_generator()
+				res := comp.run(llvm_backend) 
+
+				if res.result.len > 0 {
+					write_diagnostics(res.result)
+					exit(-1)
+				}
+				
+				println(term.green('success'))
+				exit(0)
 			}
-			
-			println(term.green('success'))
-			exit(0)
 		}
 	}
 	mut iw := repl.IdentWriter{}

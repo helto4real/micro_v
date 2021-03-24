@@ -42,7 +42,7 @@ fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBloc
 	entry := C.LLVMAppendBasicBlockInContext(mod.ctx_ref, llvm_func, entry_name.str)
 	// Generate the statements at entry
 	C.LLVMPositionBuilderAtEnd(mod.builder.builder_ref, entry)
-	mut ctx := new_context(mod, entry)
+	mut ctx := new_context(mod, entry, llvm_func)
 	// generate all blocks
 	for stmt in body.bound_stmts {
 		if stmt is binding.BoundLabelStmt {

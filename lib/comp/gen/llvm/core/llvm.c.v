@@ -29,6 +29,8 @@ fn C.LLVMIsNull(val &C.LLVMValueRef) int
 [typedef] pub struct C.LLVMValueRef{}
 [typedef] pub struct C.LLVMBuilderRef{}
 [typedef] pub struct C.LLVMExecutionEngineRef{}
+[typedef] pub struct C.LLVMMCJITCompilerOptions{}
+[typedef] pub struct C.LLVMGenericValueRef{}
 
 pub struct C.LLVMOpaqueValue{}
 
@@ -122,6 +124,7 @@ fn C.LLVMModuleCreateWithNameInContext(mod_id charptr, ctx_ref &C.LLVMContextRef
 fn C.LLVMDisposeModule(mod_ref &C.LLVMModuleRef)
 fn C.LLVMCreateBuilderInContext(ctx_ref &C.LLVMContextRef) &C.LLVMBuilderRef
 fn C.LLVMAppendBasicBlockInContext(ctx_ref &C.LLVMContextRef, func &C.LLVMValueRef, name charptr) &C.LLVMBasicBlockRef
+fn C.LLVMMoveBasicBlockAfter(block &C.LLVMBasicBlockRef, move_after_block &C.LLVMBasicBlockRef)
 
 // comparations
 
@@ -132,6 +135,25 @@ fn C.LLVMBuildICmp(builder &C.LLVMBuilderRef, op IntPredicate,
 fn C.LLVMGetLastInstruction(block &C.LLVMBasicBlockRef) &C.LLVMValueRef
 fn C.LLVMIsATerminatorInst(inst &C.LLVMValueRef ) &C.LLVMValueRef
 
+// Exectution engeine and JIT
+fn C.LLVMLinkInMCJIT()
+fn C.LLVMInitializeNativeTarget() int
+fn C.LLVMInitializeNativeAsmPrinter() int
+fn C.LLVMInitializeNativeAsmParser() int
+
+fn C.LLVMRemoveModule(exec_engine &C.LLVMExecutionEngineRef, mod &C.LLVMModuleRef,
+                          out_mod voidptr, err charptr) int
+
+fn C.LLVMCreateMCJITCompilerForModule(
+  out_ref &&C.LLVMExecutionEngineRef , nid &C.LLVMModuleRef,
+  opt &C.LLVMMCJITCompilerOptions, size_of_opt u32,
+  err charptr) int
+
+fn C.LLVMDisposeExecutionEngine(exec_engine &C.LLVMExecutionEngineRef)
+
+fn C.LLVMRunFunction(engine &C.LLVMExecutionEngineRef, func_ref &C.LLVMValueRef,
+                                    nr_args u32,
+                                    args voidptr) &C.LLVMGenericValueRef
 pub enum IntPredicate{
   int_eq      = 32  /**< equal */
   int_ne           /**< not equal */

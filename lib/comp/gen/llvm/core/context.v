@@ -4,7 +4,7 @@ import lib.comp.binding
 import lib.comp.symbols
 
 pub struct Context {
-	
+	current_func &C.LLVMValueRef
 mut:
 	current_block &C.LLVMBasicBlockRef
 	mod Module
@@ -15,10 +15,11 @@ pub mut:
 	var_decl map[string] &C.LLVMValueRef
 }
 
-pub fn new_context(mod Module, current_block &C.LLVMBasicBlockRef) Context {
+pub fn new_context(mod Module, current_block &C.LLVMBasicBlockRef, current_func &C.LLVMValueRef) Context {
 	return Context{
 		mod:mod
 		current_block: current_block
+		current_func: current_func
 	}
 }
 
@@ -50,6 +51,49 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 				c.emit_unary_expr(node)
 			} else if node is binding.BoundCallExpr {
 				c.emit_call_expr(node)
+			} else if node is binding.BoundIfExpr {
+				// Evaluate the cond expression
+				c.emit_node(node.cond_expr)
+				cond_expr_ref := c.value_refs.pop()
+
+				// Create the temporary variable that will store the result
+				// in the then_block and else_block				
+				merge_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, get_llvm_type_ref(node.typ, c.mod), no_name.str)
+				// C.LLVMBuildStore(c.mod.builder.builder_ref, expr_val_ref, ref_var) 
+
+				then_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, no_name.str)
+				else_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, no_name.str)
+				result_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, no_name.str)
+				C.LLVMMoveBasicBlockAfter(then_block, c.current_block)
+				C.LLVMMoveBasicBlockAfter(else_block, then_block)
+				
+				C.LLVMBuildCondBr(c.mod.builder.builder_ref, cond_expr_ref, then_block, else_block)
+				
+				// handle the logic for then block
+				C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, then_block)
+				c.current_block = then_block
+				c.emit_node(node.then_stmt)
+				then_block_val_ref := c.value_refs.pop()
+				C.LLVMBuildStore(c.mod.builder.builder_ref, then_block_val_ref, merge_var) 
+				C.LLVMBuildBr(c.mod.builder.builder_ref, result_block)
+
+				// handle the logic for then block
+				C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, else_block)
+				c.current_block = else_block
+				c.emit_node(node.else_stmt)
+				else_block_val_ref := c.value_refs.pop()
+				C.LLVMBuildStore(c.mod.builder.builder_ref, else_block_val_ref, merge_var) 
+				C.LLVMBuildBr(c.mod.builder.builder_ref, result_block)
+
+				C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, result_block)
+				loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, get_llvm_type_ref(node.typ, c.mod), merge_var, no_name.str)
+				c.value_refs.prepend(loaded_var)
+				
+				// C.LLVMMoveBasicBlockAfter(then_block, c.current_block)
+				// C.LLVMMoveBasicBlockAfter(else_block, then_block)
+				
+				
+				
 			} else if  node is binding.BoundAssignExpr {
 				c.emit_node(node.expr)
 				expr_ref := c.value_refs.pop()
@@ -112,8 +156,13 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 					// there are no instructions we can add the br
 					C.LLVMBuildBr(c.mod.builder.builder_ref, goto_block)	
 				}
-			} else {
-				panic('unexepected unsupported statement $node')
+			} else if node is binding.BoundBlockStmt {
+				for stmt in node.bound_stmts {
+					c.emit_node(stmt)
+				}
+
+			}  else {
+				panic('unexepected unsupported statement $node.kind')
 			}
 
 		}

@@ -19,6 +19,9 @@ pub fn new_golang_generator() GolangGen {
 		log: source.new_diagonistics()
 	}
 }
+pub fn (mut g GolangGen) run(program &binding.BoundProgram) &source.Diagnostics {
+	return log
+}
 pub fn (mut g GolangGen) generate(binary_full_path string, program &binding.BoundProgram) &source.Diagnostics {
 	g.program = program
 	g.binary_full_path = binary_full_path

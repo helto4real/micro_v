@@ -17,6 +17,7 @@
             "type": "process",
             "command": "cmd/v/v",
             "args": [
+                "run",
                 "${relativeFileDirname}"
             ],
             "presentation": {
