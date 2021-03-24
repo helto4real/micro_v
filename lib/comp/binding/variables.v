@@ -1,25 +1,24 @@
 module binding
 
-import lib.comp.types
 import lib.comp.symbols
 
 [heap]
 pub struct EvalVariables {
 mut:
-	vars map[string]types.LitVal
+	vars map[string]symbols.LitVal
 }
 
 pub fn new_eval_variables() &EvalVariables {
 	return &EvalVariables{
-		vars: map[string]types.LitVal{}
+		vars: map[string]symbols.LitVal{}
 	}
 }
 
-pub fn (mut ev EvalVariables) assign_variable_value(var symbols.VariableSymbol, val types.LitVal) {
+pub fn (mut ev EvalVariables) assign_variable_value(var symbols.VariableSymbol, val symbols.LitVal) {
 	ev.vars[var.id] = val
 }
 
-pub fn (mut ev EvalVariables) lookup(var symbols.VariableSymbol) ?types.LitVal {
+pub fn (mut ev EvalVariables) lookup(var symbols.VariableSymbol) ?symbols.LitVal {
 	val := ev.vars[var.id] or { return none }
 	return val
 }

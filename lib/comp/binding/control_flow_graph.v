@@ -274,7 +274,7 @@ pub fn (mut gb GraphBuilder) connect(mut from BasicBlock, mut to BasicBlock) {
 
 pub fn (mut gb GraphBuilder) connect_cond(mut from BasicBlock, mut to BasicBlock, cond BoundExpr) {
 	if cond is BoundLiteralExpr {
-		val := cond.val as bool
+		val := cond.const_val.val as bool
 		if val {
 			branch := new_branch_block(from, to)
 			from.add_outgoing(branch)
@@ -294,7 +294,7 @@ pub fn (mut gb GraphBuilder) connect_cond(mut from BasicBlock, mut to BasicBlock
 pub fn (mut gb GraphBuilder) negate(expr BoundExpr) BoundExpr {
 	match expr {
 		BoundLiteralExpr {
-			val := expr.val as bool
+			val := expr.const_val.val as bool
 			return new_bound_literal_expr(-val)
 		}
 		else {
@@ -345,10 +345,10 @@ pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) ControlFlowGr
 					}
 				}
 				BoundCondGotoStmt {
-					mut then_block := gb.block_from_label[stmt.label]
+					mut then_block := gb.block_from_label[stmt.true_label]
 					negated_cond := gb.negate(stmt.cond)
-					then_cond := if stmt.jump_if_true { stmt.cond } else { negated_cond }
-					else_cond := if stmt.jump_if_true { negated_cond } else { stmt.cond }
+					then_cond := stmt.cond 
+					else_cond := negated_cond
 					mut else_block := next
 					gb.connect_cond(mut current, mut then_block, then_cond)
 					gb.connect_cond(mut current, mut else_block, else_cond)

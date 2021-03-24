@@ -13,7 +13,6 @@ pub:
 
 pub fn new_bound_call_expr(func symbols.FunctionSymbol, params []BoundExpr) BoundExpr {
 	return BoundCallExpr{
-		// child_nodes: [BoundNode(cond_expr), then_stmt, else_stmt]
 		typ: func.typ
 		func: func
 		params: params

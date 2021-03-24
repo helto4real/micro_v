@@ -2,6 +2,7 @@ module source
 
 pub struct Diagnostic {
 pub:
+	has_loc  bool
 	location TextLocation // location of error
 	text     string       // error text
 }
@@ -38,5 +39,13 @@ pub fn (mut d Diagnostics) error(text string, location TextLocation) {
 	d.all << &Diagnostic{
 		text: text
 		location: location
+		has_loc: true
+	}
+}
+
+pub fn (mut d Diagnostics) error_msg(text string) {
+	d.all << &Diagnostic{
+		text: text
+		has_loc: false
 	}
 }

@@ -5,7 +5,6 @@ import lib.comp.ast
 import lib.comp.token
 import lib.comp.util.source
 import lib.comp.symbols
-import lib.comp.types
 import lib.comp.binding.convertion
 
 [heap]
@@ -40,7 +39,7 @@ pub fn new_binder(is_script bool, parent &BoundScope, func symbols.FunctionSymbo
 pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundGlobalScope) &BoundProgram {
 	parent_scope := create_parent_scope(global_scope)
 	mut func_bodies := map[string]BoundBlockStmt{}
-	
+
 	mut log := source.new_diagonistics()
 	for func in global_scope.funcs {
 		mut binder := new_binder(is_script, parent_scope, func)
@@ -60,11 +59,11 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 		func_bodies[global_scope.main_func.id] = body
 	} else if global_scope.script_func != symbols.undefined_fn {
 		if valid_statements.len > 0 {
-			mut stmts := []BoundStmt{cap: valid_statements.len+1}
+			mut stmts := []BoundStmt{cap: valid_statements.len + 1}
 			last_statement := valid_statements.last()
 			if last_statement.kind != .return_stmt {
-				if last_statement.kind == .expr_stmt && 
-					(last_statement as BoundExprStmt).bound_expr.typ != symbols.void_symbol {
+				if last_statement.kind == .expr_stmt
+					&& (last_statement as BoundExprStmt).bound_expr.typ != symbols.void_symbol {
 					for i, stmt in valid_statements {
 						if i == valid_statements.len - 1 {
 							// last statement
@@ -74,7 +73,7 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 						}
 					}
 				} else {
-					none_return := new_bound_literal_expr(types.None{}) 
+					none_return := new_bound_literal_expr(symbols.None{})
 					stmts << valid_statements
 					stmts << new_bound_return_with_expr_stmt(none_return)
 				}
@@ -84,15 +83,15 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 			body := new_bound_block_stmt(stmts)
 			func_bodies[global_scope.script_func.id] = body
 		} else {
-			none_return := new_bound_literal_expr(types.None{}) 
-			mut stmts := []BoundStmt{cap:1}
+			none_return := new_bound_literal_expr(symbols.None{})
+			mut stmts := []BoundStmt{cap: 1}
 			stmts << new_bound_return_with_expr_stmt(none_return)
 			body := new_bound_block_stmt(stmts)
 			func_bodies[global_scope.script_func.id] = body
-			
 		}
 	}
-	bound_program := new_bound_program(previous, log, global_scope.main_func, global_scope.script_func, func_bodies)
+	bound_program := new_bound_program(previous, log, global_scope.main_func, global_scope.script_func,
+		func_bodies, global_scope.funcs)
 	return bound_program
 }
 
@@ -123,7 +122,8 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 
 	if is_script {
 		if glob_stmts.len > 0 {
-			script_func = symbols.new_function_symbol('\$eval', []symbols.ParamSymbol{}, symbols.any_symbol)
+			script_func = symbols.new_function_symbol('\$eval', []symbols.ParamSymbol{},
+				symbols.any_symbol)
 		}
 	} else {
 		// global statements can only occur at most in one syntax tree
@@ -190,8 +190,8 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 		diagnostics.prepend(previous.log.all)
 	}
 
-	return new_bound_global_scope(previous, binder.log, script_func, main_func, fns, fn_decls, vars,
-		glob_stmts)
+	return new_bound_global_scope(previous, binder.log, script_func, main_func, fns, fn_decls,
+		vars, glob_stmts)
 }
 
 fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
@@ -320,18 +320,22 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 }
 
 pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
-	mut expr := if return_stmt.has_expr {b.bind_expr(return_stmt.expr)} else {new_bound_emtpy_expr()}
+	mut expr := if return_stmt.has_expr {
+		b.bind_expr(return_stmt.expr)
+	} else {
+		new_bound_emtpy_expr()
+	}
 	if b.func == symbols.undefined_fn {
 		if b.is_script {
 			// ignore cause we allow both return with and without 
 			// values in script mode
 			if !return_stmt.has_expr {
-				expr = new_bound_literal_expr("")
+				expr = new_bound_literal_expr('')
 			}
 		} else if return_stmt.has_expr {
 			// main does not support return values
 			b.log.error_invalid_return(return_stmt.return_tok.text_location())
-		} 
+		}
 		return new_bound_return_with_expr_stmt(expr)
 	} else {
 		if return_stmt.has_expr {
@@ -388,7 +392,6 @@ pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, i
 	} else {
 		symbols.VariableSymbol(symbols.new_local_variable_symbol(name, typ, is_mut))
 	}
-
 	if !b.scope.try_declare_var(variable) {
 		b.log.error_name_already_defined(name, ident.text_location())
 	}
@@ -614,7 +617,6 @@ pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 	bound_expr := b.bind_expr(syntax.expr)
 
 	var := b.bind_variable(syntax.ident, bound_expr.typ, syntax.is_mut)
-
 	return new_var_decl_stmt(var, bound_expr, syntax.is_mut)
 }
 
@@ -632,13 +634,11 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 		b.log.error_var_not_exists(name, syntax.ident.text_location())
 		return new_bound_error_expr()
 	}
-
 	if !var.is_mut() {
 		// trying to assign a nom a mutable var
 		b.log.error_assign_non_mutable_variable(name, syntax.eq_tok.text_location())
 		return new_bound_error_expr()
 	}
-
 	conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, var.typ)
 
 	return new_bound_assign_expr(var, conv_expr)

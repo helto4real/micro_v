@@ -75,6 +75,8 @@ fn test_eval_basic_exprs() {
 	assert c.eval_int('(10+8)*((2+2)*(2+3))') == 360
 
 	// test unary expressions
+	assert c.eval_bool('!true') == false
+	assert c.eval_bool('!false') == true
 	assert c.eval_int('-1') == -1
 	assert c.eval_int('~1') == -2
 
@@ -150,6 +152,8 @@ fn test_eval_var_exprs() {
 	assert c.eval_bool('a!=c') == true
 	assert c.eval_bool('a||c') == true
 	assert c.eval_bool('a&&c') == false
+
+	assert c.eval_bool('mut a:=true a = !a return a') == false
 }
 
 fn test_range_expr() {

@@ -14,6 +14,9 @@ pub fn write_symbol(writer io.TermTextWriter, symbol Symbol) {
 		TypeSymbol {
 			write_type_symbol(writer, symbol)
 		}
+		ConstSymbol {
+			write_const_symbol(writer, symbol)
+		}
 	}
 }
 
@@ -49,6 +52,10 @@ fn write_function_symbol(writer io.TermTextWriter, fn_symbol FunctionSymbol) {
 
 fn write_type_symbol(writer io.TermTextWriter, type_symbol TypeSymbol) {
 	writer.write_identifier(type_symbol.name)
+}
+
+fn write_const_symbol(writer io.TermTextWriter, const_symbol ConstSymbol) {
+	writer.write_identifier(const_symbol.val.str())
 }
 
 fn write_var_symbol(writer io.TermTextWriter, var_symbol VariableSymbol) {

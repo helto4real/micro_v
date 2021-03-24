@@ -1,9 +1,9 @@
 module binding
 
 import lib.comp.io
-import lib.comp.types
 import lib.comp.ast
 import lib.comp.token
+import lib.comp.symbols
 
 pub fn write_node(writer io.TermTextWriter, node BoundNode) {
 	match node {
@@ -61,18 +61,19 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 			write_nested_stmt(writer, node.else_stmt)
 		}
 		BoundLiteralExpr {
-			match node.val {
+			val := node.const_val.val
+			match val {
 				string {
-					writer.write_string("'$node.val'")
+					writer.write_string("'$val'")
 				}
 				int {
-					writer.write_number(node.val.str())
+					writer.write_number(val.str())
 				}
 				bool {
-					lit := if node.val { 'true' } else { 'false' }
+					lit := if val { 'true' } else { 'false' }
 					writer.write_number(lit)
 				}
-				types.None {
+				symbols.None {
 					writer.write_punctuation('<nil>')
 				}
 			}
@@ -112,12 +113,15 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 		BoundCondGotoStmt {
 			writer.write_keyword('goto')
 			writer.write_space()
-			writer.write_identifier(node.label)
+			writer.write_identifier(node.true_label)
 			writer.write_space()
-			cond_str := if node.jump_if_true { 'if' } else { 'unless' }
-			writer.write_number(cond_str)
+			writer.write('if')
 			writer.write_space()
 			write_expr(writer, node.cond)
+			writer.write_space()
+			writer.write('else')
+			writer.write_space()
+			writer.write_identifier(node.false_label)
 			writer.writeln('')
 		}
 		BoundExprStmt {

@@ -24,7 +24,7 @@ pub fn new_bound_scope(parent &BoundScope) &BoundScope {
 
 pub fn (bs &BoundScope) lookup_var(name string) ?symbols.VariableSymbol {
 	var := bs.vars[name] or {
-		if bs.parent > 0 {
+	if bs.parent != 0 {
 			return bs.parent.lookup_var(name)
 		}
 		return none

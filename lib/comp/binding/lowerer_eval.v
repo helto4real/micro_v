@@ -36,10 +36,34 @@ pub fn (mut l Lowerer) gen_label() string {
 	l.label_count++
 	return 'Label_$l.label_count'
 }
+pub fn (mut l Lowerer) gen_then_label() string {
+	l.label_count++
+	return 'Then_$l.label_count'
+}
+
+pub fn (mut l Lowerer) gen_else_label() string {
+	l.label_count++
+	return 'Else_$l.label_count'
+}
+
+pub fn (mut l Lowerer) gen_end_label() string {
+	l.label_count++
+	return 'End_$l.label_count'
+}
 
 pub fn (mut l Lowerer) gen_break_label() string {
 	l.label_count++
 	return 'Break_$l.label_count'
+}
+
+pub fn (mut l Lowerer) gen_cond_label() string {
+	l.label_count++
+	return 'Cond_$l.label_count'
+}
+
+pub fn (mut l Lowerer) gen_body_label() string {
+	l.label_count++
+	return 'Body_$l.label_count'
 }
 
 pub fn (mut l Lowerer) gen_continue_label() string {
@@ -93,12 +117,20 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt BoundIfStmt) BoundStmt {
 		//
 		// ---->
 		//
-		// gotoFalse <condition> end
-		// <then>
-		// end:		
+		// gotoTrue <condition> label_eq, label_end
+		// label_eq:
+		// 	<then>
+		// goto label_end:
+		// label_end:
 
-		end_label_name := l.gen_label()
-		res := block(goto_false(end_label_name, stmt.cond_expr), stmt.block_stmt, label(end_label_name))
+		end_then_name := l.gen_then_label()
+		end_label_name := l.gen_end_label()
+		res := block(
+				goto_cond(stmt.cond_expr, end_then_name, end_label_name), 
+				label(end_then_name),
+				stmt.block_stmt, 
+				goto_label(end_label_name),
+				label(end_label_name))
 
 		if l.shallow {
 			return res
@@ -118,14 +150,30 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt BoundIfStmt) BoundStmt {
 		// else:
 		// <else>
 		// end:
-		// else_label_name := l.gen_label()
-		// end_label_name := l.gen_label()
+		
+		// gotoTrue <condition> label_eq, label_not_eq
+		// label_eq:
+		// 	<then>
+		//  goto end:
+		// label_not_eq:
+		//  <else>
+		// goto end:
+		// end:
 
-		else_label := l.gen_label()
-		end_label := l.gen_label()
 
-		res := block(goto_false(else_label, stmt.cond_expr), stmt.block_stmt, goto_label(end_label),
-			label(else_label), stmt.else_clause, label(end_label))
+		then_label := l.gen_then_label()
+		else_label := l.gen_else_label()
+		end_label := l.gen_end_label()
+
+		res := block(
+			goto_cond(stmt.cond_expr, then_label, else_label), 
+			label(then_label), 
+			stmt.block_stmt, 
+			goto_label(end_label),
+			label(else_label), 
+			stmt.else_clause, 
+			goto_label(end_label),
+			label(end_label))
 
 		if l.shallow {
 			return res
@@ -142,42 +190,6 @@ pub fn (mut l Lowerer) rewrite_if_expr(expr BoundIfExpr) BoundExpr {
 	return new_if_else_expr(cond_expr, then_stmt, else_stmt)
 }
 
-// fn (mut l Lowerer) rewrite_if_expr(expr BoundIfExpr) BoundStmt {
-
-// 	// if <condition>
-// 	//      <then>
-// 	// else
-// 	//      <else>
-// 	//
-// 	// ---->
-// 	//
-// 	// gotoFalse <condition> else
-// 	// <then>
-// 	// goto end
-// 	// else:
-// 	// <else>
-// 	// end:
-// 	// else_label_name := l.gen_label()
-// 	// end_label_name := l.gen_label()
-
-// 	else_label := l.gen_label()
-// 	end_label := l.gen_label()
-
-// 	res := block_expr(
-// 		goto_false(else_label, expr.cond_expr), 
-// 		expr.then_stmt, 
-// 		goto_label(end_label),
-// 		label(else_label), 
-// 		expr.else_stmt, 
-// 		label(end_label)
-// 		)
-
-// 	if l.shallow {
-// 		return res
-// 	}
-// 	return l.rewrite_stmt(res)
-// }
-
 fn (mut l Lowerer) rewrite_for_stmt(stmt BoundForStmt) BoundStmt {
 	if stmt.has_cond {
 		// this is a 'for expr {}'
@@ -190,15 +202,23 @@ fn (mut l Lowerer) rewrite_for_stmt(stmt BoundForStmt) BoundStmt {
 		// goto continue
 		// body:
 		// <body>
+		// goto continue
 		// continue:
-		// gotoTrue <condition> body
+		// gotoTrue <condition> body, break
 		// break:
 		continue_label := l.gen_continue_label()
-		body_label := l.gen_label()
+		body_label := l.gen_body_label()
 		break_label := l.gen_break_label()
 		// end_label := l.gen_label()
-		res := block(goto_label(continue_label), label(body_label), stmt.body_stmt, label(continue_label),
-			goto_true(body_label, stmt.cond_expr), label(break_label))
+		res := block(
+			goto_label(continue_label), 
+			label(body_label), 
+				stmt.body_stmt,
+			goto_label(continue_label),
+			label(continue_label),
+			goto_cond(stmt.cond_expr, body_label, break_label), 
+			label(break_label)
+		)
 		if l.shallow {
 			return res
 		}
@@ -216,6 +236,7 @@ fn (mut l Lowerer) rewrite_for_stmt(stmt BoundForStmt) BoundStmt {
 		//
 		// body:
 		// <body>
+		// goto continue
 		// continue:
 		// goto body
 		// break:
@@ -223,7 +244,13 @@ fn (mut l Lowerer) rewrite_for_stmt(stmt BoundForStmt) BoundStmt {
 		body_label := l.gen_label()
 		break_label := l.gen_break_label()
 		// end_label := l.gen_label()
-		res := block(label(body_label), stmt.body_stmt, label(continue_label), goto_label(body_label),
+		res := block(
+			goto_label(body_label),
+			label(body_label), 
+			stmt.body_stmt, 
+			goto_label(continue_label),
+			label(continue_label), 
+			goto_label(body_label),
 			label(break_label))
 		if l.shallow {
 			return res
@@ -250,10 +277,12 @@ fn (mut l Lowerer) rewrite_for_range_stmt(stmt BoundForRangeStmt) BoundStmt {
 	//   goto cond
 	//   body:
 	//   <body>
+	//   goto continue
 	//   continue:
 	//   <var> = <var> + 1
+	//   goto cond
 	//   cond:
-	//   gotoTrue <var> < upper body
+	//   gotoTrue <var> < upper body, break
 	//   break:
 	// }
 
@@ -263,13 +292,27 @@ fn (mut l Lowerer) rewrite_for_range_stmt(stmt BoundForRangeStmt) BoundStmt {
 	upper_decl := var_decl_local('upper', symbols.int_symbol, range.to_exp, false)
 
 	continue_label := l.gen_continue_label()
-	body_label := l.gen_label()
+	body_label := l.gen_body_label()
 	break_label := l.gen_break_label()
 	cond_label := l.gen_label()
 
-	res := block(lower_decl, upper_decl, goto_label(cond_label), label(body_label), stmt.body_stmt,
-		label(continue_label), increment(variable(lower_decl)), label(cond_label), goto_true(body_label,
-		less_than(variable(lower_decl), variable(upper_decl))), label(break_label))
+	res := block(
+			lower_decl, 
+			upper_decl, 
+			goto_label(cond_label), 
+			label(body_label), 
+				stmt.body_stmt,
+			goto_label(continue_label),
+			label(continue_label), 
+				increment(variable(lower_decl)), 
+			goto_label(cond_label),
+			label(cond_label), 
+			goto_cond(
+				less_than(variable(lower_decl), variable(upper_decl)),
+				body_label,
+				break_label
+				), 
+			label(break_label))
 	if l.shallow {
 		return res
 	}
@@ -339,7 +382,7 @@ fn (mut l Lowerer) rewrite_goto_stmt(stmt BoundGotoStmt) BoundStmt {
 
 fn (mut l Lowerer) rewrite_cond_goto_stmt(stmt BoundCondGotoStmt) BoundStmt {
 	cond := l.rewrite_expr(stmt.cond)
-	return new_bound_cond_goto_stmt(stmt.label, cond, stmt.jump_if_true)
+	return new_bound_cond_goto_stmt(cond, stmt.true_label, stmt.false_label)
 }
 
 pub fn (mut l Lowerer) rewrite_expr(expr BoundExpr) BoundExpr {

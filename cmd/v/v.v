@@ -2,13 +2,20 @@ import term
 import strings
 import lib.repl
 import os
-import lib.comp.types
+import lib.comp
+import lib.comp.ast
 import lib.comp.binding
 import lib.comp.parser
-import lib.comp.ast
+import lib.comp.symbols
 import lib.comp.util.source
-import lib.comp
+// import lib.comp.gen.golang
+import lib.comp.gen.llvm
 
+enum Command {
+	build
+	run
+	test
+}
 fn main() {
 	args := os.args[1..]
 	if args.len == 0 {
@@ -22,13 +29,36 @@ fn main() {
 	mut files := []string{}
 	mut display_bound_stmts := false
 	mut display_lowered_stmts := false
-	for arg in args {
+	mut use_evaluator := false
+	mut command := Command.build
+	for i, arg in args {
+		if i == 0 {
+			match arg {
+				'run'  { 
+					command = .run 
+					continue
+				} 
+				'test' { 
+					command = .test 
+					continue
+				}
+				'build' { 
+					command = .build 
+					continue
+				}
+				else {}
+			}
+			
+		}
 		match arg {
 			'-display_stmts' {
 				display_bound_stmts = true
 			}
 			'-display_lower' {
 				display_lowered_stmts = true
+			}
+			'-eval' {
+				use_evaluator = true
 			}
 			else {
 				f := get_files(arg) ?
@@ -57,17 +87,52 @@ fn main() {
 	mut comp := comp.create_compilation(syntax_trees)
 
 	if !(display_bound_stmts || display_lowered_stmts) {
-		vars := binding.new_eval_variables()
-		res := comp.evaluate(vars)
-		if res.result.len == 0 {
-			if res.val !is types.None {
-				println(term.yellow(res.val.str()))
+		if use_evaluator {
+			vars := binding.new_eval_variables()
+			res := comp.evaluate(vars)
+			if res.result.len == 0 {
+				if res.val !is symbols.None {
+					println(term.yellow(res.val.str()))
+				}
+				println(term.cyan('OK'))
+				exit(0)
 			}
-			println(term.cyan('OK'))
-			exit(0)
+			write_diagnostics(res.result)
+			exit(-1)
+		} else {
+			if command == .build {
+				is_compiled_in_folder := syntax_trees.len > 1
+				file := files[0]
+				folder := os.dir(file)
+				filename := os.file_name(file)
+
+				out_filename := if is_compiled_in_folder {filename} else {filename[..filename.len-2]}
+				out_path := os.join_path(folder, out_filename)
+
+				llvm_backend := llvm.new_llvm_generator()
+				res := comp.gen(llvm_backend, out_path) 
+
+				if res.result.len > 0 {
+					write_diagnostics(res.result)
+					exit(-1)
+				}
+				
+				println(term.green('success'))
+				exit(0)
+			} else if command == .run {
+		
+				llvm_backend := llvm.new_llvm_generator()
+				res := comp.run(llvm_backend) 
+
+				if res.result.len > 0 {
+					write_diagnostics(res.result)
+					exit(-1)
+				}
+				
+				println(term.green('success'))
+				exit(0)
+			}
 		}
-		write_diagnostics(res.result)
-		exit(-1)
 	}
 	mut iw := repl.IdentWriter{}
 	if display_bound_stmts {
@@ -96,6 +161,12 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 	sorted_diagnosics.sort(a.location.pos.pos < b.location.pos.pos)
 	mut iw := repl.IdentWriter{}
 	for err in sorted_diagnosics {
+		if err.has_loc == false {
+			println('ERROR: $err.text')
+			iw.write(term.red('error: '))
+			iw.writeln(err.text)
+			continue
+		}
 		source := err.location.source
 		src := source.str()
 		error_line_nr := source.line_nr(err.location.pos.pos)

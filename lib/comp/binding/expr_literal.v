@@ -1,21 +1,20 @@
 module binding
 
 import lib.comp.symbols
-import lib.comp.types
 
 pub struct BoundLiteralExpr {
 pub:
 	kind        BoundNodeKind
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	val         types.LitVal
+	const_val	symbols.ConstSymbol
 }
 
-pub fn new_bound_literal_expr(val types.LitVal) BoundExpr {
+pub fn new_bound_literal_expr(val symbols.LitVal) BoundExpr {
 	return BoundLiteralExpr{
 		typ: val.typ()
 		kind: .literal_expr
-		val: val
+		const_val: symbols.new_const_symbol(val)
 	}
 }
 
@@ -24,5 +23,5 @@ pub fn (ex BoundLiteralExpr) node_str() string {
 }
 
 pub fn (ex BoundLiteralExpr) str() string {
-	return '$ex.val'
+	return '$ex.const_val.val'
 }
