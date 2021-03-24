@@ -12,7 +12,7 @@ pub fn write_symbol(writer io.CodeWriter, symbol symbols.Symbol) {
 		symbols.FunctionSymbol {
 			write_function_symbol(writer, symbol)
 		}
-		symbols.TypeSymbol {
+		symbols.BuiltInTypeSymbol {
 			write_type_symbol(writer, symbol)
 		}
 		symbols.ConstSymbol {
@@ -50,7 +50,7 @@ fn write_function_symbol(writer io.CodeWriter, fn_symbol symbols.FunctionSymbol)
 	}
 }
 
-fn write_type_symbol(writer io.CodeWriter, type_symbol symbols.TypeSymbol) {
+fn write_type_symbol(writer io.CodeWriter, type_symbol symbols.BuiltInTypeSymbol) {
 	writer.write(type_symbol.name)
 }
 

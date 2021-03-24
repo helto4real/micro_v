@@ -6,7 +6,7 @@ import lib.comp.token
 pub struct BoundBinaryExpr {
 pub:
 	kind        BoundNodeKind
-	typ         symbols.TypeSymbol
+	typ         symbols.BuiltInTypeSymbol
 	child_nodes []BoundNode
 	left        BoundExpr
 	op          BoundBinaryOperator

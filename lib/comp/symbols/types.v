@@ -2,7 +2,9 @@ module symbols
 
 pub type VariableSymbol = GlobalVariableSymbol | LocalVariableSymbol | ParamSymbol
 
-pub type Symbol = FunctionSymbol | TypeSymbol | VariableSymbol | ConstSymbol
+pub type TypeSymbol = StructTypeSymbol | BuiltInTypeSymbol
+
+pub type Symbol = FunctionSymbol | VariableSymbol | ConstSymbol | TypeSymbol
 
 pub struct NoneStruct {}
 
@@ -106,7 +108,7 @@ pub fn (l LitVal) le(r LitVal) bool {
 	}
 }
 
-pub fn (l LitVal) typ() TypeSymbol {
+pub fn (l LitVal) typ() BuiltInTypeSymbol {
 	return match l {
 		string {
 			string_symbol

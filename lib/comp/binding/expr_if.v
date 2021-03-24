@@ -5,7 +5,7 @@ import lib.comp.symbols
 pub struct BoundIfExpr {
 pub:
 	kind        BoundNodeKind = .if_expr
-	typ         symbols.TypeSymbol
+	typ         symbols.BuiltInTypeSymbol
 	child_nodes []BoundNode
 	cond_expr   BoundExpr
 	then_stmt   BoundStmt

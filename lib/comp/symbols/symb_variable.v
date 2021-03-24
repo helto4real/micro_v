@@ -6,7 +6,7 @@ import lib.comp.symbols
 pub struct LocalVariableSymbol {
 pub:
 	name   string
-	typ    TypeSymbol
+	typ    BuiltInTypeSymbol
 	is_mut bool
 	id     string
 }
@@ -22,7 +22,7 @@ pub fn (vs LocalVariableSymbol) str_ident(level int) string {
 	return '${ident}var: $mut_str <$vs.name> ($vs.typ.name)'
 }
 
-pub fn new_local_variable_symbol(name string, typ TypeSymbol, is_mut bool) LocalVariableSymbol {
+pub fn new_local_variable_symbol(name string, typ BuiltInTypeSymbol, is_mut bool) LocalVariableSymbol {
 	return symbols.LocalVariableSymbol{
 		name: name
 		typ: typ
@@ -34,7 +34,7 @@ pub fn new_local_variable_symbol(name string, typ TypeSymbol, is_mut bool) Local
 pub struct GlobalVariableSymbol {
 pub:
 	name   string
-	typ    TypeSymbol
+	typ    BuiltInTypeSymbol
 	is_mut bool
 	id     string
 }
@@ -50,7 +50,7 @@ pub fn (vs GlobalVariableSymbol) str_ident(level int) string {
 	return '${ident}var: $mut_str <$vs.name> ($vs.typ.name)'
 }
 
-pub fn new_global_variable_symbol(name string, typ TypeSymbol, is_mut bool) GlobalVariableSymbol {
+pub fn new_global_variable_symbol(name string, typ BuiltInTypeSymbol, is_mut bool) GlobalVariableSymbol {
 	return symbols.GlobalVariableSymbol{
 		name: name
 		typ: typ

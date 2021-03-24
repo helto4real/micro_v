@@ -5,7 +5,7 @@ import lib.comp.symbols
 pub struct BoundRangeExpr {
 pub:
 	kind        BoundNodeKind = .range_expr
-	typ         symbols.TypeSymbol
+	typ         symbols.BuiltInTypeSymbol
 	child_nodes []BoundNode
 	from_exp    BoundExpr
 	to_exp      BoundExpr

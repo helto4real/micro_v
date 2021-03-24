@@ -5,7 +5,7 @@ import rand
 pub struct ParamSymbol {
 pub:
 	name   string
-	typ    TypeSymbol
+	typ    BuiltInTypeSymbol
 	is_mut bool
 	id     string
 }
@@ -24,7 +24,7 @@ pub fn (ts ParamSymbol) str_ident(level int) string {
 	return '${ident}var: $mut_str <$ts.name> ($ts.typ.name)'
 }
 
-pub fn new_param_symbol(name string, typ TypeSymbol, is_mut bool) ParamSymbol {
+pub fn new_param_symbol(name string, typ BuiltInTypeSymbol, is_mut bool) ParamSymbol {
 	return ParamSymbol{
 		name: name
 		typ: typ

@@ -395,7 +395,7 @@ pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 	return new_for_stmt(cond_expr, body_stmt, for_stmt.has_cond)
 }
 
-pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, is_mut bool) symbols.VariableSymbol {
+pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.BuiltInTypeSymbol, is_mut bool) symbols.VariableSymbol {
 	name := ident.lit
 
 	variable := if b.func == symbols.undefined_fn {
@@ -456,7 +456,7 @@ pub fn (mut b Binder) bind_expr_stmt(expr_stmt ast.ExprStmt) BoundStmt {
 	return new_bound_expr_stmt(expr)
 }
 
-pub fn (mut b Binder) bind_expr_type(expr ast.Expr, typ symbols.TypeSymbol) BoundExpr {
+pub fn (mut b Binder) bind_expr_type(expr ast.Expr, typ symbols.BuiltInTypeSymbol) BoundExpr {
 	return b.bind_convertion(typ, expr)
 }
 
@@ -475,7 +475,7 @@ pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 	}
 }
 
-fn lookup_type(name string) symbols.TypeSymbol {
+fn lookup_type(name string) symbols.BuiltInTypeSymbol {
 	match name {
 		'bool' { return symbols.bool_symbol }
 		'int' { return symbols.int_symbol }
@@ -484,11 +484,11 @@ fn lookup_type(name string) symbols.TypeSymbol {
 	}
 }
 
-pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol) BoundExpr {
+pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr BoundExpr, typ symbols.BuiltInTypeSymbol) BoundExpr {
 	return b.bind_convertion_diag_explicit(diag_loc, expr, typ, false)
 }
 
-pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol, allow_explicit bool) BoundExpr {
+pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation, expr BoundExpr, typ symbols.BuiltInTypeSymbol, allow_explicit bool) BoundExpr {
 	conv := convertion.classify(expr.typ, typ)
 	if !conv.exists {
 		// convertion does not exist
@@ -506,12 +506,12 @@ pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation
 	return new_bound_conv_expr(typ, expr)
 }
 
-pub fn (mut b Binder) bind_convertion(typ symbols.TypeSymbol, expr ast.Expr) BoundExpr {
+pub fn (mut b Binder) bind_convertion(typ symbols.BuiltInTypeSymbol, expr ast.Expr) BoundExpr {
 	bound_expr := b.bind_expr(expr)
 	return b.bind_convertion_diag(expr.text_location(), bound_expr, typ)
 }
 
-pub fn (mut b Binder) bind_convertion_explicit(typ symbols.TypeSymbol, expr ast.Expr, is_explicit bool) BoundExpr {
+pub fn (mut b Binder) bind_convertion_explicit(typ symbols.BuiltInTypeSymbol, expr ast.Expr, is_explicit bool) BoundExpr {
 	bound_expr := b.bind_expr(expr)
 	return b.bind_convertion_diag_explicit(expr.text_location(), bound_expr, typ, is_explicit)
 }
@@ -568,7 +568,7 @@ pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 	return new_range_expr(from_expr, to_expr)
 }
 
-fn bind_block_type(block BoundBlockStmt) ?symbols.TypeSymbol {
+fn bind_block_type(block BoundBlockStmt) ?symbols.BuiltInTypeSymbol {
 	last_block_node := block.bound_stmts.last()
 	if last_block_node is BoundExprStmt {
 		return last_block_node.bound_expr.typ
@@ -617,7 +617,7 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 	return new_if_else_expr(conv_expre, bound_then_stmt, bound_else_stmt)
 }
 
-pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
+pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.BuiltInTypeSymbol {
 	bound_typ := lookup_type(typ.ident.lit)
 	if bound_typ == symbols.none_symbol {
 		b.log.error_undefined_type(typ.ident.lit, typ.text_location())

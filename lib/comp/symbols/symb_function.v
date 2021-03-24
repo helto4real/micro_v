@@ -9,7 +9,7 @@ pub const (
 pub struct FunctionSymbol {
 pub:
 	name   string
-	typ    TypeSymbol
+	typ    BuiltInTypeSymbol
 	params []ParamSymbol
 	id     string
 }
@@ -22,7 +22,7 @@ pub fn (ts FunctionSymbol) str() string {
 	return ts.name
 }
 
-pub fn new_function_symbol(name string, params []ParamSymbol, typ TypeSymbol) FunctionSymbol {
+pub fn new_function_symbol(name string, params []ParamSymbol, typ BuiltInTypeSymbol) FunctionSymbol {
 	return FunctionSymbol{
 		name: name
 		params: params

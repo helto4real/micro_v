@@ -13,15 +13,15 @@ pub struct BoundUnaryOperator {
 pub:
 	op_kind BoundUnaryOperatorKind
 	kind    token.Kind
-	op_typ  symbols.TypeSymbol
-	res_typ symbols.TypeSymbol
+	op_typ  symbols.BuiltInTypeSymbol
+	res_typ symbols.BuiltInTypeSymbol
 }
 
-pub fn new_bound_unary_op(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ symbols.TypeSymbol) BoundUnaryOperator {
+pub fn new_bound_unary_op(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ symbols.BuiltInTypeSymbol) BoundUnaryOperator {
 	return new_bound_unary_op_with_ret(kind, op_kind, op_typ, op_typ)
 }
 
-pub fn new_bound_unary_op_with_ret(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ symbols.TypeSymbol, res_typ symbols.TypeSymbol) BoundUnaryOperator {
+pub fn new_bound_unary_op_with_ret(kind token.Kind, op_kind BoundUnaryOperatorKind, op_typ symbols.BuiltInTypeSymbol, res_typ symbols.BuiltInTypeSymbol) BoundUnaryOperator {
 	return BoundUnaryOperator{
 		kind: kind
 		op_kind: op_kind
@@ -46,7 +46,7 @@ fn build_bound_unary_operators() []BoundUnaryOperator {
 	return operators
 }
 
-pub fn bind_unary_operator(kind token.Kind, op_typ symbols.TypeSymbol) ?BoundUnaryOperator {
+pub fn bind_unary_operator(kind token.Kind, op_typ symbols.BuiltInTypeSymbol) ?BoundUnaryOperator {
 	for op in binding.bound_unary_operators {
 		if op.kind == kind && op.op_typ == op_typ {
 			return op
@@ -61,12 +61,12 @@ pub struct BoundBinaryOperator {
 pub:
 	op_kind   BoundBinaryOperatorKind
 	kind      token.Kind
-	left_typ  symbols.TypeSymbol
-	right_typ symbols.TypeSymbol
-	res_typ   symbols.TypeSymbol
+	left_typ  symbols.BuiltInTypeSymbol
+	right_typ symbols.BuiltInTypeSymbol
+	res_typ   symbols.BuiltInTypeSymbol
 }
 
-pub fn new_bound_binary_op_full(kind token.Kind, op_kind BoundBinaryOperatorKind, left_typ symbols.TypeSymbol, right_typ symbols.TypeSymbol, res_typ symbols.TypeSymbol) BoundBinaryOperator {
+pub fn new_bound_binary_op_full(kind token.Kind, op_kind BoundBinaryOperatorKind, left_typ symbols.BuiltInTypeSymbol, right_typ symbols.BuiltInTypeSymbol, res_typ symbols.BuiltInTypeSymbol) BoundBinaryOperator {
 	return BoundBinaryOperator{
 		kind: kind
 		op_kind: op_kind
@@ -80,11 +80,11 @@ pub fn (ex BoundBinaryOperator) node_str() string {
 	return typeof(ex).name
 }
 
-pub fn new_bound_binary_op(kind token.Kind, op_kind BoundBinaryOperatorKind, typ symbols.TypeSymbol) BoundBinaryOperator {
+pub fn new_bound_binary_op(kind token.Kind, op_kind BoundBinaryOperatorKind, typ symbols.BuiltInTypeSymbol) BoundBinaryOperator {
 	return new_bound_binary_op_full(kind, op_kind, typ, typ, typ)
 }
 
-pub fn new_bound_binary_op_with_res(kind token.Kind, op_kind BoundBinaryOperatorKind, op_typ symbols.TypeSymbol, res_typ symbols.TypeSymbol) BoundBinaryOperator {
+pub fn new_bound_binary_op_with_res(kind token.Kind, op_kind BoundBinaryOperatorKind, op_typ symbols.BuiltInTypeSymbol, res_typ symbols.BuiltInTypeSymbol) BoundBinaryOperator {
 	return new_bound_binary_op_full(kind, op_kind, op_typ, op_typ, res_typ)
 }
 
@@ -131,7 +131,7 @@ fn build_bound_binary_operators() []BoundBinaryOperator {
 	return operators
 }
 
-pub fn bind_binary_operator(kind token.Kind, left_typ symbols.TypeSymbol, right_typ symbols.TypeSymbol) ?BoundBinaryOperator {
+pub fn bind_binary_operator(kind token.Kind, left_typ symbols.BuiltInTypeSymbol, right_typ symbols.BuiltInTypeSymbol) ?BoundBinaryOperator {
 	for op in binding.bound_binary_operators {
 		if op.kind == kind && op.left_typ == left_typ && op.right_typ == right_typ {
 			return op

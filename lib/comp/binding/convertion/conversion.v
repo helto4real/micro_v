@@ -26,7 +26,7 @@ fn new_convertion(exists bool, is_identity bool, is_implicit bool) Convertion {
 	}
 }
 
-pub fn classify(from symbols.TypeSymbol, to symbols.TypeSymbol) Convertion {
+pub fn classify(from symbols.BuiltInTypeSymbol, to symbols.BuiltInTypeSymbol) Convertion {
 	if from == to {
 		return convertion.conv_ident
 	}

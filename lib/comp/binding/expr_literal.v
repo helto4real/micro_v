@@ -5,7 +5,7 @@ import lib.comp.symbols
 pub struct BoundLiteralExpr {
 pub:
 	kind        BoundNodeKind
-	typ         symbols.TypeSymbol
+	typ         symbols.BuiltInTypeSymbol
 	child_nodes []BoundNode
 	const_val	symbols.ConstSymbol
 }

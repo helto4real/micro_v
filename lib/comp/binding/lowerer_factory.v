@@ -20,12 +20,12 @@ pub fn label(label string) BoundStmt {
 }
 
 pub fn var_decl(var symbols.VariableSymbol, expr BoundExpr, is_mut bool) BoundVarDeclStmt {
-	// new_local_variable_symbol(name string, typ symbols.TypeSymbol, is_mut bool)
+	// new_local_variable_symbol(name string, typ symbols.BuiltInTypeSymbol, is_mut bool)
 	// new_local_variable_symbol
 	return new_var_decl_stmt(var, expr, is_mut) as BoundVarDeclStmt
 }
 
-pub fn var_decl_local(name string, typ symbols.TypeSymbol, expr BoundExpr, is_mut bool) BoundVarDeclStmt {
+pub fn var_decl_local(name string, typ symbols.BuiltInTypeSymbol, expr BoundExpr, is_mut bool) BoundVarDeclStmt {
 	var := symbols.new_local_variable_symbol(name, typ, is_mut)
 	return new_var_decl_stmt(var, expr, is_mut) as BoundVarDeclStmt
 }

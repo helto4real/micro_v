@@ -5,7 +5,7 @@ import lib.comp.symbols
 pub struct BoundCondGotoStmt {
 pub:
 	kind         BoundNodeKind = .cond_goto_stmt
-	typ          symbols.TypeSymbol
+	typ          symbols.BuiltInTypeSymbol
 	child_nodes  []BoundNode
 	cond         BoundExpr
 	true_label        string

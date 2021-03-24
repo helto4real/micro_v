@@ -320,7 +320,7 @@ fn (mut c Context) emit_bound_litera_expr(lit binding.BoundLiteralExpr) {
 
 
 [inline]
-fn get_llvm_type_ref(typ symbols.TypeSymbol, mod Module) &C.LLVMTypeRef {
+fn get_llvm_type_ref(typ symbols.BuiltInTypeSymbol, mod Module) &C.LLVMTypeRef {
 	match typ.name {
 		'int' {
 			return C.LLVMInt32TypeInContext(mod.ctx_ref)
