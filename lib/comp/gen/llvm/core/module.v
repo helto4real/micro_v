@@ -36,6 +36,7 @@ mut:
 	funcs          map[string]Function
 	built_in_funcs map[string]&C.LLVMValueRef
 	main_func_ref  &C.LLVMValueRef = 0
+	types          map[string]&C.LLVMTypeRef
 
 	global_const map[GlobalVarRefType]&C.LLVMValueRef
 }
@@ -133,16 +134,40 @@ pub fn (m Module) print_to_file(path string) ? {
 }
 
 pub fn (mut m Module) generate_module(program &binding.BoundProgram) {
+	// first declare struct names
+	for _, typ in program.types {
+		if typ is symbols.StructTypeSymbol {
+			typ_ref := C.LLVMStructCreateNamed(m.ctx_ref, typ.name.str)
+			m.types[typ.id] = typ_ref
+		}
+	}
+	// then declare struct body
+	for _, typ in program.types {
+		if typ is symbols.StructTypeSymbol {
+			struct_type_ref := get_llvm_type_ref(typ, m)
+			mut type_refs := []&C.LLVMTypeRef{}
+			for member in typ.members {
+				type_refs << get_llvm_type_ref(member.typ, m)
+			}
+			C.LLVMStructSetBody(struct_type_ref, type_refs.data, type_refs.len, 0)
+		}
+	}
+
+	//					
 	// first declare all functions except the main
 	for func in program.func_symbols {
 		if func.name != 'main' {
-			body := program.func_bodies[func.id] or {panic('unexpected, function body for $func.name ($func.id) missing')}
+			body := program.func_bodies[func.id] or {
+				panic('unexpected, function body for $func.name ($func.id) missing')
+			}
 			lowered_body := binding.lower(body)
 			m.declare_function(func, lowered_body)
 		}
 	}
 	// last declare main function
-	body := program.func_bodies[program.main_func.id] or {panic('unexpected, function body for $program.main_func.name ($program.main_func.id) missing')}
+	body := program.func_bodies[program.main_func.id] or {
+		panic('unexpected, function body for $program.main_func.name ($program.main_func.id) missing')
+	}
 	lowered_body := binding.lower(body)
 	m.declare_function(program.main_func, lowered_body)
 
@@ -150,7 +175,6 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram) {
 	for _, mut func in m.funcs {
 		func.generate_function_bodies()
 	}
-
 }
 
 pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding.BoundBlockStmt) {
