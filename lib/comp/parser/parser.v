@@ -99,15 +99,14 @@ pub fn (mut p Parser) parse_struct() ast.StructDeclNode {
 	lcbr_tok := p.match_token(.lcbr)
 	params := p.parse_struct_members()
 	rcbr_tok := p.match_token(.rcbr)
-	struct_ast:= ast.new_struct_decl_node(p.syntax_tree, struct_key, ident, lcbr_tok, 
-			params, rcbr_tok)
-	println(struct_ast)
+	struct_ast := ast.new_struct_decl_node(p.syntax_tree, struct_key, ident, lcbr_tok,
+		params, rcbr_tok)
 	return struct_ast
 }
 
 fn (mut p Parser) parse_struct_members() []ast.StructMemberNode {
 	mut members := []ast.StructMemberNode{}
-	
+
 	for p.current_token().kind != .eof && p.current_token().kind != .rcbr {
 		start_tok := p.current_token()
 		ident := p.match_token(.name)
@@ -117,7 +116,6 @@ fn (mut p Parser) parse_struct_members() []ast.StructMemberNode {
 			p.next_token()
 		}
 		members << ast.new_struct_member_node(p.syntax_tree, ident, typ)
-		
 	}
 	return members
 }

@@ -5,9 +5,9 @@ import rand
 pub struct StructTypeSymbol {
 pub:
 	kind TypeSymbolKind
-	name string 
+	name string
 	id   string
-
+pub mut:
 	members []StructTypeMember
 }
 
@@ -30,11 +30,11 @@ pub fn new_struct_symbol(name string) StructTypeSymbol {
 pub struct StructTypeMember {
 pub:
 	ident string
-	typ TypeSymbol
+	typ   TypeSymbol
 }
 
 pub fn new_struct_type_member(ident string, typ TypeSymbol) StructTypeMember {
-	return StructTypeMember {
+	return StructTypeMember{
 		ident: ident
 		typ: typ
 	}

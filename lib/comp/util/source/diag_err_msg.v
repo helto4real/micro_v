@@ -86,6 +86,10 @@ pub fn (mut d Diagnostics) error_function_allready_declared(ident string, loc Te
 	d.error('function <$ident> already declared', loc)
 }
 
+pub fn (mut d Diagnostics) error_struct_allready_declared(name string, loc TextLocation) {
+	d.error('struct <$name> already declared', loc)
+}
+
 pub fn (mut d Diagnostics) error_keyword_are_only_allowed_inside_a_loop(keyword string, loc TextLocation) {
 	d.error('statment <$keyword> are only allowed inside a loop', loc)
 }

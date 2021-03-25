@@ -91,18 +91,32 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 		}
 	}
 	bound_program := new_bound_program(previous, log, global_scope.main_func, global_scope.script_func,
-		func_bodies, global_scope.funcs)
+		func_bodies, global_scope.funcs, global_scope.types)
 	return bound_program
 }
 
 pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_trees []&ast.SyntaxTree) &BoundGlobalScope {
 	parent_scope := create_parent_scope(previous)
 	mut binder := new_binder(is_script, parent_scope, symbols.undefined_fn)
+
+	// bind the built-in types
+	binder.scope.try_declare_type(symbols.int_symbol)
+	binder.scope.try_declare_type(symbols.bool_symbol)
+	binder.scope.try_declare_type(symbols.string_symbol)
+
 	// first bind the types
 	for syntax_tree in syntax_trees {
 		for node in syntax_tree.root.members {
 			if node is ast.StructDeclNode {
 				binder.bind_struct_decl(node)
+			}
+		}
+	}
+	// then bind the type members
+	for syntax_tree in syntax_trees {
+		for node in syntax_tree.root.members {
+			if node is ast.StructDeclNode {
+				binder.bind_struct_member(node)
 			}
 		}
 	}
@@ -200,7 +214,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 	}
 
 	return new_bound_global_scope(previous, binder.log, script_func, main_func, fns, fn_decls,
-		vars, glob_stmts)
+		vars, glob_stmts, binder.scope.types)
 }
 
 fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
@@ -297,9 +311,33 @@ pub fn (mut b Binder) bind_module_stmt(module_stmt ast.ModuleStmt) BoundStmt {
 	return new_bound_module_stmt(module_stmt.tok_name)
 }
 
-pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
+pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
+	// binds the members after all structs has been declared
+	struct_name := struct_decl.ident.lit
 
+	symbol := b.scope.lookup_type(struct_name) or {
+		panic('unexpected: struct symbol table missing member $struct_name')
+	}
+	mut struct_symbol := symbol as symbols.StructTypeSymbol
+	for member in struct_decl.members {
+		member_name := member.ident.lit
+		member_type := b.lookup_type(member.type_name.lit)
+		member_symbol := symbols.new_struct_type_member(member_name, member_type)
+		struct_symbol.members << member_symbol
+		// Todo:, check the casing of names and types
+	}
+	if !b.scope.try_replace_type(struct_symbol) {
+		panic('unexpected, fail to replace type')
+	}
 }
+
+pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
+	struct_symbol := symbols.new_struct_symbol(struct_decl.ident.lit)
+	if !b.scope.try_declare_type(struct_symbol) {
+		b.log.error_struct_allready_declared(struct_decl.ident.lit, struct_decl.ident.text_location())
+	}
+}
+
 pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 	mut params := []symbols.ParamSymbol{}
 	mut seen_param_names := []string{}
@@ -475,13 +513,8 @@ pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 	}
 }
 
-fn lookup_type(name string) symbols.TypeSymbol {
-	match name {
-		'bool' { return symbols.bool_symbol }
-		'int' { return symbols.int_symbol }
-		'string' { return symbols.string_symbol }
-		else { return symbols.none_symbol }
-	}
+fn (mut b Binder) lookup_type(name string) symbols.TypeSymbol {
+	return b.scope.lookup_type(name) or { symbols.none_symbol }
 }
 
 pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol) BoundExpr {
@@ -520,7 +553,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	func_name := expr.ident.lit
 	// handle convertions as special functions
 	if expr.params.len() == 1 {
-		typ := lookup_type(func_name)
+		typ := b.lookup_type(func_name)
 		if typ.kind != .built_in_symbol && typ.name == 'none' {
 			return b.bind_convertion_explicit(typ, (expr.params.at(0) as ast.Expr), true)
 		}
@@ -618,7 +651,7 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 }
 
 pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
-	bound_typ := lookup_type(typ.ident.lit)
+	bound_typ := b.lookup_type(typ.ident.lit)
 	if bound_typ.kind == .none_symbol {
 		b.log.error_undefined_type(typ.ident.lit, typ.text_location())
 	}
