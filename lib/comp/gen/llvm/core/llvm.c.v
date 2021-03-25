@@ -154,6 +154,9 @@ fn C.LLVMDisposeExecutionEngine(exec_engine &C.LLVMExecutionEngineRef)
 fn C.LLVMRunFunction(engine &C.LLVMExecutionEngineRef, func_ref &C.LLVMValueRef,
                                     nr_args u32,
                                     args voidptr) &C.LLVMGenericValueRef
+
+fn C.LLVMGetParam(func &C.LLVMValueRef, index u32) &C.LLVMValueRef
+
 pub enum IntPredicate{
   int_eq      = 32  /**< equal */
   int_ne           /**< not equal */

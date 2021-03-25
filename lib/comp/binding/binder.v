@@ -47,7 +47,7 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 			panic('unexpected missing fn_decl in scope')
 		}
 		body := binder.bind_stmt(fn_decl.block)
-		if func.typ != symbols.void_symbol && !all_path_return_in_body(body as BoundBlockStmt) {
+		if func.typ.kind != .void_symbol && !all_path_return_in_body(body as BoundBlockStmt) {
 			binder.log.error_all_paths_must_return(fn_decl.ident.text_location())
 		}
 		func_bodies[func.id] = body as BoundBlockStmt
@@ -63,7 +63,7 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 			last_statement := valid_statements.last()
 			if last_statement.kind != .return_stmt {
 				if last_statement.kind == .expr_stmt
-					&& (last_statement as BoundExprStmt).bound_expr.typ != symbols.void_symbol {
+					&& (last_statement as BoundExprStmt).bound_expr.typ.kind != .void_symbol {
 					for i, stmt in valid_statements {
 						if i == valid_statements.len - 1 {
 							// last statement
@@ -148,7 +148,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 
 		// if we have a main function declared, check the signature
 		if main_func != symbols.undefined_fn {
-			if main_func.typ != symbols.void_symbol || main_func.params.len > 0 {
+			if main_func.typ.kind != .void_symbol || main_func.params.len > 0 {
 				func_decl := binder.scope.lookup_fn_decl(main_func.name) or {
 					panic('unexpected error, function declaration not found')
 				}
@@ -315,11 +315,10 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 			seen_param_names << name
 		}
 	}
-
 	typ := if !fn_decl.typ_node.is_void {
 		b.bind_type(fn_decl.typ_node)
 	} else {
-		symbols.void_symbol
+		symbols.TypeSymbol(symbols.void_symbol)
 	}
 
 	func := symbols.new_function_symbol(fn_decl.ident.lit, params, typ)
@@ -350,8 +349,9 @@ pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
 		}
 		return new_bound_return_with_expr_stmt(expr)
 	} else {
+		// is_void_return_typ := b.func.typ is symbols.BuiltInTypeSymbol && b.func.typ as symbols.BuiltInTypeSymbol 
 		if return_stmt.has_expr {
-			if b.func.typ == symbols.void_symbol {
+			if b.func.typ.kind == .void_symbol {
 				// it is a subroutine
 				b.log.error_invalid_return_expr(b.func.name, return_stmt.expr.text_location())
 			} else {
@@ -360,7 +360,7 @@ pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
 			}
 			return new_bound_return_with_expr_stmt(expr)
 		} else {
-			if b.func.typ != symbols.void_symbol {
+			if b.func.typ.kind != .void_symbol {
 				b.log.error_expected_return_value(b.func.typ.name, return_stmt.return_tok.text_location())
 			}
 			return new_bound_return_stmt()
@@ -395,7 +395,7 @@ pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 	return new_for_stmt(cond_expr, body_stmt, for_stmt.has_cond)
 }
 
-pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.BuiltInTypeSymbol, is_mut bool) symbols.VariableSymbol {
+pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, is_mut bool) symbols.VariableSymbol {
 	name := ident.lit
 
 	variable := if b.func == symbols.undefined_fn {
@@ -456,7 +456,7 @@ pub fn (mut b Binder) bind_expr_stmt(expr_stmt ast.ExprStmt) BoundStmt {
 	return new_bound_expr_stmt(expr)
 }
 
-pub fn (mut b Binder) bind_expr_type(expr ast.Expr, typ symbols.BuiltInTypeSymbol) BoundExpr {
+pub fn (mut b Binder) bind_expr_type(expr ast.Expr, typ symbols.TypeSymbol) BoundExpr {
 	return b.bind_convertion(typ, expr)
 }
 
@@ -475,7 +475,7 @@ pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 	}
 }
 
-fn lookup_type(name string) symbols.BuiltInTypeSymbol {
+fn lookup_type(name string) symbols.TypeSymbol {
 	match name {
 		'bool' { return symbols.bool_symbol }
 		'int' { return symbols.int_symbol }
@@ -484,15 +484,15 @@ fn lookup_type(name string) symbols.BuiltInTypeSymbol {
 	}
 }
 
-pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr BoundExpr, typ symbols.BuiltInTypeSymbol) BoundExpr {
+pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol) BoundExpr {
 	return b.bind_convertion_diag_explicit(diag_loc, expr, typ, false)
 }
 
-pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation, expr BoundExpr, typ symbols.BuiltInTypeSymbol, allow_explicit bool) BoundExpr {
+pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol, allow_explicit bool) BoundExpr {
 	conv := convertion.classify(expr.typ, typ)
 	if !conv.exists {
 		// convertion does not exist
-		if expr.typ != symbols.error_symbol && typ != symbols.error_symbol {
+		if expr.typ.kind != .error_symbol && typ.kind != .error_symbol {
 			b.log.error_cannot_convert_type(expr.typ.str(), typ.str(), diag_loc)
 		}
 		return new_bound_error_expr()
@@ -506,12 +506,12 @@ pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation
 	return new_bound_conv_expr(typ, expr)
 }
 
-pub fn (mut b Binder) bind_convertion(typ symbols.BuiltInTypeSymbol, expr ast.Expr) BoundExpr {
+pub fn (mut b Binder) bind_convertion(typ symbols.TypeSymbol, expr ast.Expr) BoundExpr {
 	bound_expr := b.bind_expr(expr)
 	return b.bind_convertion_diag(expr.text_location(), bound_expr, typ)
 }
 
-pub fn (mut b Binder) bind_convertion_explicit(typ symbols.BuiltInTypeSymbol, expr ast.Expr, is_explicit bool) BoundExpr {
+pub fn (mut b Binder) bind_convertion_explicit(typ symbols.TypeSymbol, expr ast.Expr, is_explicit bool) BoundExpr {
 	bound_expr := b.bind_expr(expr)
 	return b.bind_convertion_diag_explicit(expr.text_location(), bound_expr, typ, is_explicit)
 }
@@ -521,7 +521,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	// handle convertions as special functions
 	if expr.params.len() == 1 {
 		typ := lookup_type(func_name)
-		if typ != symbols.none_symbol {
+		if typ.kind != .built_in_symbol && typ.name == 'none' {
 			return b.bind_convertion_explicit(typ, (expr.params.at(0) as ast.Expr), true)
 		}
 	}
@@ -532,7 +532,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 		param_expr := expr.params.at(i) as ast.Expr
 		arg_expr := b.bind_expr(param_expr)
 
-		if arg_expr.typ == symbols.error_symbol {
+		if arg_expr.typ.kind == .error_symbol {
 			return new_bound_error_expr()
 		}
 		args << arg_expr
@@ -568,7 +568,7 @@ pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 	return new_range_expr(from_expr, to_expr)
 }
 
-fn bind_block_type(block BoundBlockStmt) ?symbols.BuiltInTypeSymbol {
+fn bind_block_type(block BoundBlockStmt) ?symbols.TypeSymbol {
 	last_block_node := block.bound_stmts.last()
 	if last_block_node is BoundExprStmt {
 		return last_block_node.bound_expr.typ
@@ -603,7 +603,7 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 		b.log.error_expected_block_end_with_expression(else_stmt.text_location())
 		return new_bound_error_expr()
 	}
-	if then_stmt_typ == symbols.error_symbol || else_stmt_typ == symbols.error_symbol {
+	if then_stmt_typ.kind == .error_symbol || else_stmt_typ.kind == .error_symbol {
 		return new_bound_error_expr()
 	}
 	if then_stmt_typ != else_stmt_typ {
@@ -617,9 +617,9 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 	return new_if_else_expr(conv_expre, bound_then_stmt, bound_else_stmt)
 }
 
-pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.BuiltInTypeSymbol {
+pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
 	bound_typ := lookup_type(typ.ident.lit)
-	if bound_typ == symbols.none_symbol {
+	if bound_typ.kind == .none_symbol {
 		b.log.error_undefined_type(typ.ident.lit, typ.text_location())
 	}
 	return bound_typ
@@ -637,7 +637,7 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 
 	bound_expr := b.bind_expr(syntax.expr)
 
-	if bound_expr.typ == symbols.error_symbol {
+	if bound_expr.typ.kind == .error_symbol {
 		return bound_expr
 	}
 	// check is varable exist in scope

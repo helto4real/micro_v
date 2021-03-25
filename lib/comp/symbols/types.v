@@ -2,7 +2,8 @@ module symbols
 
 pub type VariableSymbol = GlobalVariableSymbol | LocalVariableSymbol | ParamSymbol
 
-pub type TypeSymbol = StructTypeSymbol | BuiltInTypeSymbol
+pub type TypeSymbol = StructTypeSymbol | BuiltInTypeSymbol | VoidTypeSymbol | 
+					ErrorTypeSymbol | AnyTypeSymbol 
 
 pub type Symbol = FunctionSymbol | VariableSymbol | ConstSymbol | TypeSymbol
 
@@ -11,6 +12,15 @@ pub struct NoneStruct {}
 pub type None = NoneStruct
 
 pub type LitVal = None | bool | int | string
+
+pub enum TypeSymbolKind {
+	built_in_symbol
+	struct_symbol
+	void_symbol
+	error_symbol
+	any_symbol
+	none_symbol
+}
 
 pub fn (vs &VariableSymbol) is_mut() bool {
 	match vs {
@@ -122,6 +132,7 @@ pub fn (l LitVal) typ() BuiltInTypeSymbol {
 		None {
 			none_symbol
 		}
+
 	}
 }
 

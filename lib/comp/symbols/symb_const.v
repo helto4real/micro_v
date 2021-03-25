@@ -6,7 +6,7 @@ import lib.comp.symbols
 pub struct ConstSymbol {
 pub:
 	id     string
-	typ    BuiltInTypeSymbol
+	typ    TypeSymbol
 	val    LitVal	
 }
 

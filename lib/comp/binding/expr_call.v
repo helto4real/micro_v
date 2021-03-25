@@ -5,7 +5,7 @@ import lib.comp.symbols
 pub struct BoundCallExpr {
 pub:
 	kind        BoundNodeKind = .call_expr
-	typ         symbols.BuiltInTypeSymbol
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	func        symbols.FunctionSymbol
 	params      []BoundExpr

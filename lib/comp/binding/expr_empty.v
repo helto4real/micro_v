@@ -5,7 +5,7 @@ import lib.comp.symbols
 pub struct BoundEmptyExpr {
 pub:
 	kind        BoundNodeKind = .error_expr
-	typ         symbols.BuiltInTypeSymbol
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 }
 

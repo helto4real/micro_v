@@ -6,7 +6,6 @@ import lib.comp.util.source
 import lib.comp.binding
 // import lib.comp.io
 import lib.comp.gen.llvm.core
-import lib.comp.symbols
 
 struct LlvmGen {
 mut:
@@ -46,11 +45,7 @@ pub fn (mut l LlvmGen) generate(binary_full_path string, program &binding.BoundP
 
 pub fn (mut l LlvmGen) run(program &binding.BoundProgram) &source.Diagnostics {
 	l.program = program
-	// l.mod.init_jit_execution_engine() or {
-	// 	l.log.error_msg('$err.msg')
-	// 	return l.log
-	// }
-	// Generate code
+	l.result_file_full_path = 'generated.ll'
 	l.generate_code()
 	l.mod.run_main()
 	l.mod.free()
@@ -60,22 +55,24 @@ pub fn (mut l LlvmGen) run(program &binding.BoundProgram) &source.Diagnostics {
 
 fn (mut l LlvmGen) generate_code() {
 
-	for func in l.program.func_symbols {
-		body := l.program.func_bodies[func.id]
-		lowered_body := binding.lower(body)
-		l.mod.declare_function(
-			symbols.new_function_symbol(
-			func.name, []symbols.ParamSymbol{}, symbols.int_symbol),
-			lowered_body 
-		)
+	l.mod.generate_module(l.program)
+	l.mod.print_to_file(l.result_file_full_path) or {panic('ERROR: cannot print')}
+	l.mod.verify() or {
+		panic('ERROR mother fucker')
 	}
-
-	l.mod.verify() or {panic('ERROR mother fucker')}
 	
 }
 
+// fn (mut l LlvmGen) generate_function(func symbols.FunctionSymbol) {
+// 	body := l.program.func_bodies[func.id] or {panic('unexpected, function body for $func.name ($func.id) missing')}
+// 	lowered_body := binding.lower(body)
+// 	l.mod.declare_function(
+// 		symbols.new_function_symbol(
+// 		func.name, func.params, func.typ),
+// 		lowered_body)
+// }
+
 fn (mut l LlvmGen) compile_code() {
-	l.mod.print_to_file(l.result_file_full_path) or {panic('ERROR another mother fucker')}
 	binary_directory := os.dir(l.binary_full_path)
 	binary_name := os.file_name(l.binary_full_path)
 	compile_command := 'llc -O3 ${l.result_file_full_path}'

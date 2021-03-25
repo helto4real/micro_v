@@ -170,6 +170,7 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 }
 
 fn (mut c Context) emit_call_expr(node binding.BoundCallExpr) {
+	// TODO: #11 refator when built-in functions are growing in numbers
 	if node.func.name in ['println', 'print'] {
 		glob_str_println := c.mod.global_const[GlobalVarRefType.printf_str_nl] or {
 			println_str := c.mod.add_global_string_literal_ptr('%s\n')
@@ -181,15 +182,11 @@ fn (mut c Context) emit_call_expr(node binding.BoundCallExpr) {
 			c.mod.global_const[GlobalVarRefType.printf_str]  = print_str
 			print_str
 		}
-		// if 'println' !in m.global_const {
-		// 	m.global_const['println'] != 
-		// }
+
 		c.emit_node(node.params[0])
 		fn_ref := c.mod.built_in_funcs['printf'] or {panic('built in function println not found')}
 		mut params := []&C.LLVMValueRef{cap: 1}
 		param := c.value_refs.pop()
-		// print_str := c.mod.add_global_string_literal_ptr('%s')//  c.mod.global_const['print_str'] or {panic('unexpected')}
-		// println_str := c.mod.add_global_string_literal_ptr('%s\n')// c.mod.global_const['println_str'] or {panic('unexpected')}
 		glob_print_str := if node.func.name == 'print' {glob_str_print} else {glob_str_println}
 		params << glob_print_str
 		params << param
@@ -198,11 +195,26 @@ fn (mut c Context) emit_call_expr(node binding.BoundCallExpr) {
                             params.data, 2,
                             no_name.str) 
 
+	} else {
+		// handle the parameters 
+		mut params := []&C.LLVMValueRef{}
+		for param in node.params {
+			c.emit_node(param)
+			param_ref := c.value_refs.pop()
+			println('Paramref: $param_ref')
+			params << param_ref
+		}
+		fun := c.mod.funcs[node.func.id] or { panic('unexpected, $node.func.name ($node.func.id) func not declared')}
+		fn_ref := fun.llvm_func
+		C.LLVMBuildCall(c.mod.builder.builder_ref, fn_ref,
+                            params.data, params.len,
+                            no_name.str) 
+
 	}
 }
 fn (mut c Context) emit_variable_expr(node binding.BoundVariableExpr) {
 	typ := node.var.typ
-	var := c.var_decl[node.var.id] or {panic('unexpected, variable not declared')}
+	var := c.var_decl[node.var.id] or {panic('unexpected, variable not declared: $node.var.name')}
 	loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, get_llvm_type_ref(typ, c.mod), var, no_name.str)
 	c.value_refs.prepend(loaded_var)
 }
@@ -293,26 +305,33 @@ fn (mut c Context) emit_unary_expr(unary_expr binding.BoundUnaryExpr) {
 fn (mut c Context) emit_bound_litera_expr(lit binding.BoundLiteralExpr) {
 	// id := lit.const_val.id
 	typ := lit.const_val.typ
-	match typ.name {
-		'int' {
-			val := C.LLVMConstInt(get_llvm_type_ref(symbols.int_symbol, c.mod), lit.const_val.val as int, false)
-			c.value_refs.prepend(val)
-		}
-		'bool' {
-			lit_val := lit.const_val.val as bool
-			bool_int := if lit_val {1} else {0}
-			val := C.LLVMConstInt(get_llvm_type_ref(symbols.bool_symbol, c.mod), bool_int, false)
-			c.value_refs.prepend(val)
-		}
-		'string' {
-			str_val :=  lit.const_val.val as string
-			ptr := c.mod.add_global_string_literal_ptr(str_val)
-			
-			c.value_refs.prepend(ptr)
+	match typ {
+		symbols.BuiltInTypeSymbol {
+			match typ.name {
+				'int' {
+					val := C.LLVMConstInt(get_llvm_type_ref(symbols.int_symbol, c.mod), lit.const_val.val as int, false)
+					c.value_refs.prepend(val)
+				}
+				'bool' {
+					lit_val := lit.const_val.val as bool
+					bool_int := if lit_val {1} else {0}
+					val := C.LLVMConstInt(get_llvm_type_ref(symbols.bool_symbol, c.mod), bool_int, false)
+					c.value_refs.prepend(val)
+				}
+				'string' {
+					str_val :=  lit.const_val.val as string
+					ptr := c.mod.add_global_string_literal_ptr(str_val)
+					
+					c.value_refs.prepend(ptr)
+				}
+				else {
+					// not supported yet
+					panic('Cannot emit literal of type $typ')
+				}
+			}
 		}
 		else {
-			// not supported yet
-			panic('Cannot emit literal of type $typ')
+			// TODO: add structs
 		}
 	}
 }
@@ -320,17 +339,29 @@ fn (mut c Context) emit_bound_litera_expr(lit binding.BoundLiteralExpr) {
 
 
 [inline]
-fn get_llvm_type_ref(typ symbols.BuiltInTypeSymbol, mod Module) &C.LLVMTypeRef {
-	match typ.name {
-		'int' {
-			return C.LLVMInt32TypeInContext(mod.ctx_ref)
+fn get_llvm_type_ref(typ symbols.TypeSymbol, mod Module) &C.LLVMTypeRef {
+	match typ {
+		symbols.BuiltInTypeSymbol {
+			match typ.name {
+				'int' {
+					return C.LLVMInt32TypeInContext(mod.ctx_ref)
+				}
+				'bool' {
+					return C.LLVMInt1TypeInContext(mod.ctx_ref)
+				}
+				'string' {
+					return C.LLVMPointerType(C.LLVMInt8TypeInContext(mod.ctx_ref), 0)
+				}
+				else {panic('unexpected, unsupported built-in type: $typ')}
+			}
 		}
-		'bool' {
-			return C.LLVMInt1TypeInContext(mod.ctx_ref)
+		symbols.VoidTypeSymbol {
+			return C.LLVMVoidTypeInContext(mod.ctx_ref)
 		}
-		'string' {
-			return C.LLVMPointerType(C.LLVMInt8TypeInContext(mod.ctx_ref), 0)
+		else {
+			// TODO: Add struct support
 		}
-		else {return C.LLVMInt32TypeInContext(mod.ctx_ref)}
 	}
+
+	panic('unexpected, unsupported type: $typ')
 }

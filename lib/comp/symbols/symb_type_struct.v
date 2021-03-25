@@ -4,23 +4,25 @@ import rand
 
 pub struct StructTypeSymbol {
 pub:
-	ident string 
+	kind TypeSymbolKind
+	name string 
 	id   string
 
 	members []StructTypeMember
 }
 
 pub fn (ss StructTypeSymbol) == (rss StructTypeSymbol) bool {
-	return ss.ident == rss.ident
+	return ss.name == rss.name
 }
 
 pub fn (ss StructTypeSymbol) str() string {
-	return ss.ident
+	return ss.name
 }
 
-pub fn new_struct_symbol(ident string) StructTypeSymbol {
+pub fn new_struct_symbol(name string) StructTypeSymbol {
 	return StructTypeSymbol{
-		ident: ident
+		kind: .struct_symbol
+		name: name
 		id: rand.uuid_v4()
 	}
 }

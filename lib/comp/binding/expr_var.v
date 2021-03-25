@@ -5,7 +5,7 @@ import lib.comp.symbols
 pub struct BoundVariableExpr {
 pub:
 	kind        BoundNodeKind = .variable_expr
-	typ         symbols.BuiltInTypeSymbol
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	var         symbols.VariableSymbol
 }

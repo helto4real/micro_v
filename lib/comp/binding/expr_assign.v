@@ -5,7 +5,7 @@ import lib.comp.symbols
 pub struct BoundAssignExpr {
 pub:
 	kind        BoundNodeKind = .assign_expr
-	typ         symbols.BuiltInTypeSymbol
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	expr        BoundExpr
 	var         symbols.VariableSymbol

@@ -33,7 +33,7 @@ pub struct Module {
 	exec_engine &C.LLVMExecutionEngineRef = 0
 mut:
 	builder        Builder
-	funcs          []Function
+	funcs          map[string]Function
 	built_in_funcs map[string]&C.LLVMValueRef
 	main_func_ref  &C.LLVMValueRef = 0
 
@@ -109,7 +109,7 @@ pub fn (mut m Module) verify() ? {
 	mut err := charptr(0)
 	res := C.LLVMVerifyModule(m.mod_ref, .llvm_abort_process_action, &err)
 
-	if res != 0 {
+	if res != 0 || err != 0 {
 		unsafe {
 			return error(err.vstring())
 		}
@@ -132,9 +132,30 @@ pub fn (m Module) print_to_file(path string) ? {
 	return none
 }
 
+pub fn (mut m Module) generate_module(program &binding.BoundProgram) {
+	// first declare all functions except the main
+	for func in program.func_symbols {
+		if func.name != 'main' {
+			body := program.func_bodies[func.id] or {panic('unexpected, function body for $func.name ($func.id) missing')}
+			lowered_body := binding.lower(body)
+			m.declare_function(func, lowered_body)
+		}
+	}
+	// last declare main function
+	body := program.func_bodies[program.main_func.id] or {panic('unexpected, function body for $program.main_func.name ($program.main_func.id) missing')}
+	lowered_body := binding.lower(body)
+	m.declare_function(program.main_func, lowered_body)
+
+	// generate bodies of all functions
+	for _, mut func in m.funcs {
+		func.generate_function_bodies()
+	}
+
+}
+
 pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding.BoundBlockStmt) {
 	f := new_llvm_func(m, func, body)
-	m.funcs << f
+	m.funcs[func.id] = f
 
 	if func.name == 'main' {
 		m.main_func_ref = f.llvm_func

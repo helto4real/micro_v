@@ -5,7 +5,7 @@ import lib.comp.symbols
 pub struct BoundVarDeclStmt {
 pub:
 	kind        BoundNodeKind = .var_decl_stmt
-	typ         symbols.BuiltInTypeSymbol
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	is_mut      bool
 	expr        BoundExpr

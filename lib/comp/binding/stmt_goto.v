@@ -5,7 +5,7 @@ import lib.comp.symbols
 pub struct BoundGotoStmt {
 pub:
 	kind        BoundNodeKind = .goto_stmt
-	typ         symbols.BuiltInTypeSymbol
+	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	label       string
 }
