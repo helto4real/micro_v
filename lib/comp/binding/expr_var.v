@@ -1,19 +1,28 @@
 module binding
 
 import lib.comp.symbols
+import lib.comp.token
 
 pub struct BoundVariableExpr {
 pub:
 	kind        BoundNodeKind = .variable_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
+	names 		[]token.Token
 	var         symbols.VariableSymbol
 }
 
-pub fn new_bound_variable_expr(var symbols.VariableSymbol) BoundExpr {
+pub fn new_bound_variable_expr(var symbols.VariableSymbol, typ symbols.TypeSymbol) BoundExpr {
 	return BoundVariableExpr{
 		var: var
-		typ: var.typ
+		typ: typ
+	}
+}
+pub fn new_bound_variable_with_names_expr(var symbols.VariableSymbol, names []token.Token, typ symbols.TypeSymbol) BoundExpr {
+	return BoundVariableExpr{
+		var: var
+		names: names
+		typ: typ
 	}
 }
 

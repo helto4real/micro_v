@@ -94,6 +94,9 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 		BoundEmptyExpr {
 			writer.write_identifier(node.str())
 		}
+		BoundStructInitExpr {
+			writer.write_identifier(node.str())
+		}
 	}
 }
 

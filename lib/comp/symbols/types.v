@@ -2,13 +2,25 @@ module symbols
 
 pub type VariableSymbol = GlobalVariableSymbol | LocalVariableSymbol | ParamSymbol
 
-pub type Symbol = FunctionSymbol | TypeSymbol | VariableSymbol | ConstSymbol
+pub type TypeSymbol = StructTypeSymbol | BuiltInTypeSymbol | VoidTypeSymbol | 
+					ErrorTypeSymbol | AnyTypeSymbol 
+
+pub type Symbol = FunctionSymbol | VariableSymbol | ConstSymbol | TypeSymbol
 
 pub struct NoneStruct {}
 
 pub type None = NoneStruct
 
 pub type LitVal = None | bool | int | string
+
+pub enum TypeSymbolKind {
+	built_in_symbol
+	struct_symbol
+	void_symbol
+	error_symbol
+	any_symbol
+	none_symbol
+}
 
 pub fn (vs &VariableSymbol) is_mut() bool {
 	match vs {
@@ -23,6 +35,54 @@ pub fn (vs VariableSymbol) str_ident(level int) string {
 		LocalVariableSymbol { return vs.str_ident(level) }
 		GlobalVariableSymbol { return vs.str_ident(level) }
 		ParamSymbol { return vs.str_ident(level) }
+	}
+}
+
+pub fn (typ TypeSymbol) lookup_member_type(name string) TypeSymbol {
+	match typ {
+		StructTypeSymbol { 
+			member := typ.members.filter(it.ident == name)
+			if member.len == 0 {
+				return symbols.error_symbol
+			}
+			return member[0].typ
+		}
+		else {return symbols.error_symbol}
+	}
+	return symbols.error_symbol
+}
+
+pub fn (typ TypeSymbol) lookup_member_index(name string) int {
+	match typ {
+		StructTypeSymbol { 
+			for i, member in typ.members {
+				if member.ident == name {
+					return i
+				}
+			}
+		}
+		else {return -1}
+	}
+	return -1
+}
+
+pub fn (t TypeSymbol) str() string {
+	match t {
+		StructTypeSymbol {
+			return t.str()
+		} 
+		BuiltInTypeSymbol {
+			return t.str()
+		}
+		VoidTypeSymbol {
+			return t.str()
+		}
+		ErrorTypeSymbol {
+			return t.str()
+		}
+		AnyTypeSymbol {
+			return t.str()
+		}
 	}
 }
 
@@ -106,7 +166,7 @@ pub fn (l LitVal) le(r LitVal) bool {
 	}
 }
 
-pub fn (l LitVal) typ() TypeSymbol {
+pub fn (l LitVal) typ() BuiltInTypeSymbol {
 	return match l {
 		string {
 			string_symbol
@@ -120,6 +180,7 @@ pub fn (l LitVal) typ() TypeSymbol {
 		None {
 			none_symbol
 		}
+
 	}
 }
 

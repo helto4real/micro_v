@@ -4,3 +4,4 @@
 !makefile
 *.o
 *.exe
+*.ll

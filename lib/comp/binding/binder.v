@@ -47,7 +47,7 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 			panic('unexpected missing fn_decl in scope')
 		}
 		body := binder.bind_stmt(fn_decl.block)
-		if func.typ != symbols.void_symbol && !all_path_return_in_body(body as BoundBlockStmt) {
+		if func.typ.kind != .void_symbol && !all_path_return_in_body(body as BoundBlockStmt) {
 			binder.log.error_all_paths_must_return(fn_decl.ident.text_location())
 		}
 		func_bodies[func.id] = body as BoundBlockStmt
@@ -63,7 +63,7 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 			last_statement := valid_statements.last()
 			if last_statement.kind != .return_stmt {
 				if last_statement.kind == .expr_stmt
-					&& (last_statement as BoundExprStmt).bound_expr.typ != symbols.void_symbol {
+					&& (last_statement as BoundExprStmt).bound_expr.typ.kind != .void_symbol {
 					for i, stmt in valid_statements {
 						if i == valid_statements.len - 1 {
 							// last statement
@@ -91,14 +91,37 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 		}
 	}
 	bound_program := new_bound_program(previous, log, global_scope.main_func, global_scope.script_func,
-		func_bodies, global_scope.funcs)
+		func_bodies, global_scope.funcs, global_scope.types)
 	return bound_program
 }
 
 pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_trees []&ast.SyntaxTree) &BoundGlobalScope {
 	parent_scope := create_parent_scope(previous)
 	mut binder := new_binder(is_script, parent_scope, symbols.undefined_fn)
-	// first bind the functions to make them visible 
+
+	// bind the built-in types
+	binder.scope.try_declare_type(symbols.int_symbol)
+	binder.scope.try_declare_type(symbols.bool_symbol)
+	binder.scope.try_declare_type(symbols.string_symbol)
+
+	// first bind the types
+	for syntax_tree in syntax_trees {
+		for node in syntax_tree.root.members {
+			if node is ast.StructDeclNode {
+				binder.bind_struct_decl(node)
+			}
+		}
+	}
+	// then bind the type members
+	for syntax_tree in syntax_trees {
+		for node in syntax_tree.root.members {
+			if node is ast.StructDeclNode {
+				binder.bind_struct_member(node)
+			}
+		}
+	}
+
+	// first bind the functions
 	for syntax_tree in syntax_trees {
 		for node in syntax_tree.root.members {
 			if node is ast.FnDeclNode {
@@ -139,7 +162,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 
 		// if we have a main function declared, check the signature
 		if main_func != symbols.undefined_fn {
-			if main_func.typ != symbols.void_symbol || main_func.params.len > 0 {
+			if main_func.typ.kind != .void_symbol || main_func.params.len > 0 {
 				func_decl := binder.scope.lookup_fn_decl(main_func.name) or {
 					panic('unexpected error, function declaration not found')
 				}
@@ -191,7 +214,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 	}
 
 	return new_bound_global_scope(previous, binder.log, script_func, main_func, fns, fn_decls,
-		vars, glob_stmts)
+		vars, glob_stmts, binder.scope.types)
 }
 
 fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
@@ -216,6 +239,9 @@ fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
 		}
 		for var in prev.vars {
 			scope.try_declare_var(var)
+		}
+		for _, typ in prev.types {
+			scope.try_declare_type(typ)
 		}
 		parent = scope
 	}
@@ -288,6 +314,33 @@ pub fn (mut b Binder) bind_module_stmt(module_stmt ast.ModuleStmt) BoundStmt {
 	return new_bound_module_stmt(module_stmt.tok_name)
 }
 
+pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
+	// binds the members after all structs has been declared
+	struct_name := struct_decl.ident.lit
+
+	symbol := b.scope.lookup_type(struct_name) or {
+		panic('unexpected: struct symbol table missing member $struct_name')
+	}
+	mut struct_symbol := symbol as symbols.StructTypeSymbol
+	for member in struct_decl.members {
+		member_name := member.ident.lit
+		member_type := b.lookup_type(member.type_name.lit)
+		member_symbol := symbols.new_struct_type_member(member_name, member_type)
+		struct_symbol.members << member_symbol
+		// Todo:, check the casing of names and types
+	}
+	if !b.scope.try_replace_type(struct_symbol) {
+		panic('unexpected, fail to replace type')
+	}
+}
+
+pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
+	struct_symbol := symbols.new_struct_symbol(struct_decl.ident.lit)
+	if !b.scope.try_declare_type(struct_symbol) {
+		b.log.error_struct_allready_declared(struct_decl.ident.lit, struct_decl.ident.text_location())
+	}
+}
+
 pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 	mut params := []symbols.ParamSymbol{}
 	mut seen_param_names := []string{}
@@ -303,11 +356,10 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 			seen_param_names << name
 		}
 	}
-
 	typ := if !fn_decl.typ_node.is_void {
 		b.bind_type(fn_decl.typ_node)
 	} else {
-		symbols.void_symbol
+		symbols.TypeSymbol(symbols.void_symbol)
 	}
 
 	func := symbols.new_function_symbol(fn_decl.ident.lit, params, typ)
@@ -338,8 +390,9 @@ pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
 		}
 		return new_bound_return_with_expr_stmt(expr)
 	} else {
+		// is_void_return_typ := b.func.typ is symbols.BuiltInTypeSymbol && b.func.typ as symbols.BuiltInTypeSymbol 
 		if return_stmt.has_expr {
-			if b.func.typ == symbols.void_symbol {
+			if b.func.typ.kind == .void_symbol {
 				// it is a subroutine
 				b.log.error_invalid_return_expr(b.func.name, return_stmt.expr.text_location())
 			} else {
@@ -348,7 +401,7 @@ pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
 			}
 			return new_bound_return_with_expr_stmt(expr)
 		} else {
-			if b.func.typ != symbols.void_symbol {
+			if b.func.typ.kind != .void_symbol {
 				b.log.error_expected_return_value(b.func.typ.name, return_stmt.return_tok.text_location())
 			}
 			return new_bound_return_stmt()
@@ -456,6 +509,7 @@ pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 		ast.BinaryExpr { return b.bind_binary_expr(expr) }
 		ast.ParaExpr { return b.bind_para_expr(expr) }
 		ast.NameExpr { return b.bind_name_expr(expr) }
+		ast.StructInitExpr { return b.bind_struct_init_expr(expr) }
 		ast.AssignExpr { return b.bind_assign_expr(expr) }
 		ast.IfExpr { return b.bind_if_expr(expr) }
 		ast.RangeExpr { return b.bind_range_expr(expr) }
@@ -463,13 +517,8 @@ pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 	}
 }
 
-fn lookup_type(name string) symbols.TypeSymbol {
-	match name {
-		'bool' { return symbols.bool_symbol }
-		'int' { return symbols.int_symbol }
-		'string' { return symbols.string_symbol }
-		else { return symbols.none_symbol }
-	}
+fn (mut b Binder) lookup_type(name string) symbols.TypeSymbol {
+	return b.scope.lookup_type(name) or { symbols.none_symbol }
 }
 
 pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol) BoundExpr {
@@ -480,7 +529,7 @@ pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation
 	conv := convertion.classify(expr.typ, typ)
 	if !conv.exists {
 		// convertion does not exist
-		if expr.typ != symbols.error_symbol && typ != symbols.error_symbol {
+		if expr.typ.kind != .error_symbol && typ.kind != .error_symbol {
 			b.log.error_cannot_convert_type(expr.typ.str(), typ.str(), diag_loc)
 		}
 		return new_bound_error_expr()
@@ -508,8 +557,8 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	func_name := expr.ident.lit
 	// handle convertions as special functions
 	if expr.params.len() == 1 {
-		typ := lookup_type(func_name)
-		if typ != symbols.none_symbol {
+		typ := b.lookup_type(func_name)
+		if typ.kind != .built_in_symbol && typ.name == 'none' {
 			return b.bind_convertion_explicit(typ, (expr.params.at(0) as ast.Expr), true)
 		}
 	}
@@ -520,7 +569,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 		param_expr := expr.params.at(i) as ast.Expr
 		arg_expr := b.bind_expr(param_expr)
 
-		if arg_expr.typ == symbols.error_symbol {
+		if arg_expr.typ.kind == .error_symbol {
 			return new_bound_error_expr()
 		}
 		args << arg_expr
@@ -591,7 +640,7 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 		b.log.error_expected_block_end_with_expression(else_stmt.text_location())
 		return new_bound_error_expr()
 	}
-	if then_stmt_typ == symbols.error_symbol || else_stmt_typ == symbols.error_symbol {
+	if then_stmt_typ.kind == .error_symbol || else_stmt_typ.kind == .error_symbol {
 		return new_bound_error_expr()
 	}
 	if then_stmt_typ != else_stmt_typ {
@@ -606,61 +655,169 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 }
 
 pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
-	bound_typ := lookup_type(typ.ident.lit)
-	if bound_typ == symbols.none_symbol {
+	bound_typ := b.lookup_type(typ.ident.lit)
+	if bound_typ.kind == .none_symbol {
 		b.log.error_undefined_type(typ.ident.lit, typ.text_location())
 	}
 	return bound_typ
 }
 
 pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
+	
+	if syntax.ident.names.len > 1 {
+		// Todo: handle modules later
+		// We are not allowed to declare variables like var.x := 1
+		b.log.error_structs_fields_declared_on_init(syntax.ident.names[1].text_location())
+		return new_bound_expr_stmt(new_bound_error_expr()) 
+	}
 	bound_expr := b.bind_expr(syntax.expr)
-
-	var := b.bind_variable(syntax.ident, bound_expr.typ, syntax.is_mut)
+	var := b.bind_variable(syntax.ident.ident, bound_expr.typ, syntax.is_mut)
 	return new_var_decl_stmt(var, bound_expr, syntax.is_mut)
 }
 
 fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
-	name := syntax.ident.lit
-
 	bound_expr := b.bind_expr(syntax.expr)
 
-	if bound_expr.typ == symbols.error_symbol {
+	if bound_expr.typ.kind == .error_symbol {
 		return bound_expr
 	}
-	// check is varable exist in scope
-	mut var := b.scope.lookup_var(name) or {
-		// var have to be declared with := to be able to set a value
-		b.log.error_var_not_exists(name, syntax.ident.text_location())
-		return new_bound_error_expr()
-	}
-	if !var.is_mut() {
-		// trying to assign a nom a mutable var
-		b.log.error_assign_non_mutable_variable(name, syntax.eq_tok.text_location())
-		return new_bound_error_expr()
-	}
-	conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, var.typ)
 
-	return new_bound_assign_expr(var, conv_expr)
+	// todo: when modules is supported, lookup here
+	// then it can be a global constant
+	base_ident := syntax.ident.names[0]
+	base_name :=  base_ident.lit
+	// check is variable exist in scope
+	base_var := b.scope.lookup_var(base_name) or {
+		b.log.error_var_not_exists(base_name, base_ident.text_location())
+		return new_bound_error_expr()
+	}
+
+	if syntax.ident.names.len == 1 {
+		// non struct, just return the bound variable
+		conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, base_var.typ)
+		return new_bound_assign_expr(base_var, conv_expr)
+	}
+
+	mut current_typ := base_var.typ
+	for i := 1; i < syntax.ident.names.len; i++ {
+		name_tok := syntax.ident.names[i]
+		member_name := name_tok.lit
+		member_typ := current_typ.lookup_member_type(member_name)
+		if member_typ.kind == .error_symbol {
+			b.log.error_member_not_exists(member_name, name_tok.text_location())
+			return new_bound_error_expr()
+		}
+		// Todo: check mutability of fields
+		current_typ = member_typ
+	}
+
+	if !base_var.is_mut() {
+		// trying to assign a nom a mutable var
+		b.log.error_assign_non_mutable_variable(base_name, syntax.eq_tok.text_location())
+		return new_bound_error_expr()
+	}
+
+	conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, current_typ)
+
+	return new_bound_assign_with_names_expr(base_var, syntax.ident.names, conv_expr)
 }
 
 fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {
 	return b.bind_expr(syntax.expr)
 }
 
+fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
+	// TODO:
+	// - check that all struct members are initialized, if not add standard values
+	// - check data type is correct
+	typ := b.lookup_type(syntax.typ_token.lit)
+	struct_typ := typ as symbols.StructTypeSymbol
+
+	mut members := []BoundStructInitMember{}
+	for struct_member in struct_typ.members {
+		struct_member_typ := struct_member.typ
+		members_result := syntax.members.filter(it.ident.lit == struct_member.ident)
+		mut bound_expr := BoundExpr{}
+		if members_result.len == 0 {
+			bound_expr = b.bind_default_value_expr(struct_member_typ)
+		} else {
+			expr := b.bind_expr(members_result[0].expr)
+			bound_expr = b.bind_convertion_diag(members_result[0].expr.text_location(), expr, struct_member_typ)
+		}
+		bound_member := new_bound_struct_init_member(struct_member.ident, bound_expr)
+		members << bound_member
+	}
+	// for member in syntax.members {
+	// 	member_name := member.ident.lit
+	// 	bound_expr := b.bind_expr(member.expr)
+	// 	bound_member := new_bound_struct_init_member(member_name, bound_expr)
+	// 	members << bound_member
+	// }
+
+	return new_bound_struct_init_expr(typ, members)
+}
+
+fn (mut b Binder) bind_default_value_expr(typ symbols.TypeSymbol) BoundExpr {
+	match typ {
+		symbols.StructTypeSymbol {
+			return b.bind_struct_init_expr(
+				ast.new_struct_init_no_members_expr(typ.name)
+			)
+		}
+		symbols.ErrorTypeSymbol {
+			return new_bound_error_expr()
+		}
+		symbols.AnyTypeSymbol {panic('unexpected any type')}
+		symbols.VoidTypeSymbol {panic('unexpected void type')}
+		symbols.BuiltInTypeSymbol {
+			match typ.name {
+				'string' {
+					return new_bound_literal_expr('') // Default to empty string
+				}
+				'int' {
+					return new_bound_literal_expr(0) // Default to 0
+				}
+				'bool' {
+					return new_bound_literal_expr(false) // Default to false
+				}
+				else {panic('unexpected literal type $typ.name')}
+			}
+		}
+	}
+	panic('unexpected not found match for type $typ') 
+}
+
 fn (mut b Binder) bind_name_expr(syntax ast.NameExpr) BoundExpr {
-	name := syntax.ident.lit
-	if name.len == 0 {
+	if syntax.names.len == 0 {
 		// the parser inserted the token so we already reported 
 		// correct error so just return an error expression
 		return new_bound_error_expr()
 	}
-
-	variable := b.scope.lookup_var(name) or {
-		b.log.error_var_not_exists(name, syntax.ident.text_location())
+	// todo: when modules is supported, lookup here
+	// then it can be a global constant
+	base_ident := syntax.names[0]
+	base_name :=  base_ident.lit
+	base_var := b.scope.lookup_var(base_name) or {
+		b.log.error_var_not_exists(base_name, base_ident.text_location())
 		return new_bound_error_expr()
 	}
-	return new_bound_variable_expr(variable)
+	if syntax.names.len == 1 {
+		// non struct, just return the bound variable
+		return new_bound_variable_expr(base_var, base_var.typ)
+	}
+	mut current_typ := base_var.typ
+	for i := 1; i < syntax.names.len; i++ {
+		name_tok := syntax.names[i]
+		member_name := name_tok.lit
+		member_typ := current_typ.lookup_member_type(member_name)
+		if member_typ.kind == .error_symbol {
+			b.log.error_member_not_exists(member_name, name_tok.text_location())
+			return new_bound_error_expr()
+		}
+		current_typ = member_typ
+	}
+
+	return new_bound_variable_with_names_expr(base_var, syntax.names, current_typ)
 }
 
 fn (mut b Binder) bind_literal_expr(syntax ast.LiteralExpr) BoundExpr {

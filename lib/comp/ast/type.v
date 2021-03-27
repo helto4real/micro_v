@@ -9,13 +9,13 @@ pub type Stmt = BlockStmt | BreakStmt | CommentStmt | ContinueStmt | ExprStmt | 
 
 // Sumtype expressions
 pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | EmptyExpr | IfExpr | LiteralExpr |
-	NameExpr | ParaExpr | RangeExpr | UnaryExpr
+	NameExpr | ParaExpr | RangeExpr | UnaryExpr | StructInitExpr
 
 // Nodes in syntax tree
-pub type AstNode = Expr | MemberNode | ParamNode | Stmt | TypeNode | token.Token
+pub type AstNode = Expr | MemberNode | ParamNode | Stmt | TypeNode | StructMemberNode | StructInitMemberNode | token.Token
 
 // top level members like top level statements or function declarations
-pub type MemberNode = FnDeclNode | GlobStmt
+pub type MemberNode = FnDeclNode | GlobStmt | StructDeclNode
 
 pub interface Node {
 	child_nodes() []AstNode
@@ -32,6 +32,8 @@ pub fn (ex &AstNode) child_nodes() []AstNode {
 		Stmt { return ex.child_nodes }
 		token.Token { return []AstNode{} }
 		TypeNode { return ex.child_nodes }
+		StructMemberNode { return ex.child_nodes }
+		StructInitMemberNode { return ex.child_nodes }
 		ParamNode { return ex.child_nodes }
 		MemberNode { return ex.child_nodes }
 	}
@@ -43,6 +45,8 @@ pub fn (ex AstNode) text_location() source.TextLocation {
 		Stmt { return ex.text_location() }
 		token.Token { return ex.text_location() }
 		TypeNode { return ex.text_location() }
+		StructMemberNode { return ex.text_location() }
+		StructInitMemberNode { return ex.text_location() }
 		ParamNode { return ex.text_location() }
 		MemberNode { return ex.text_location() }
 	}
@@ -54,6 +58,8 @@ pub fn (ex AstNode) node_str() string {
 		Stmt { return ex.node_str() }
 		token.Token { return ex.lit }
 		TypeNode { return ex.node_str() }
+		StructMemberNode { return ex.node_str() }
+		StructInitMemberNode { return ex.node_str() }
 		ParamNode { return ex.node_str() }
 		MemberNode { return ex.node_str() }
 	}
@@ -65,6 +71,8 @@ pub fn (ex AstNode) str() string {
 		Stmt { return ex.str() }
 		token.Token { return ex.lit }
 		TypeNode { return ex.str() }
+		StructMemberNode { return ex.str() }
+		StructInitMemberNode { return ex.str() }
 		ParamNode { return ex.str() }
 		MemberNode { return ex.str() }
 	}
@@ -87,6 +95,7 @@ pub fn (ex Expr) text_location() source.TextLocation {
 		RangeExpr { return ex.text_location() }
 		CallExpr { return ex.text_location() }
 		EmptyExpr { return ex.text_location() }
+		StructInitExpr { return ex.text_location() }
 	}
 }
 
@@ -103,6 +112,7 @@ pub fn (ex Expr) node_str() string {
 		RangeExpr { return ex.node_str() }
 		CallExpr { return ex.node_str() }
 		EmptyExpr { return ex.node_str() }
+		StructInitExpr { return ex.node_str() }
 	}
 }
 
@@ -119,6 +129,7 @@ pub fn (ex Expr) str() string {
 		RangeExpr { return ex.str() }
 		CallExpr { return ex.str() }
 		EmptyExpr { return ex.str() }
+		StructInitExpr { return ex.str() }
 	}
 }
 
@@ -182,6 +193,7 @@ pub fn (ex MemberNode) node_str() string {
 	match ex {
 		GlobStmt { return ex.node_str() }
 		FnDeclNode { return ex.node_str() }
+		StructDeclNode { return ex.node_str() }
 	}
 }
 
@@ -189,6 +201,7 @@ pub fn (ex MemberNode) text_location() source.TextLocation {
 	match ex {
 		GlobStmt { return ex.text_location() }
 		FnDeclNode { return ex.text_location() }
+		StructDeclNode { return ex.text_location() }
 	}
 }
 

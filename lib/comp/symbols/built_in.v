@@ -2,14 +2,15 @@ module symbols
 
 pub const (
 	// symbols
-	any_symbol         = new_type_symbol('any')
-	int_symbol         = new_type_symbol('int')
-	bool_symbol        = new_type_symbol('bool')
-	string_symbol      = new_type_symbol('string')
-	void_symbol        = new_type_symbol('void')
-	error_symbol       = new_type_symbol('?')
-	undefined_symbol   = new_type_symbol('undefined')
-	none_symbol        = new_type_symbol('none')
+	int_symbol         = new_builtin_type_symbol('int')
+	bool_symbol        = new_builtin_type_symbol('bool')
+	string_symbol      = new_builtin_type_symbol('string')
+	undefined_symbol   = new_builtin_type_symbol('undefined')
+	none_symbol   	   = new_builtin_type_symbol('none')
+
+	any_symbol         = new_any_type_symbol()
+	error_symbol       = new_error_type_symbol()
+	void_symbol        = new_void_type_symbol()
 
 	// built-in function symbols
 	println_symbol     = new_function_symbol('println', [new_param_symbol('text', string_symbol,

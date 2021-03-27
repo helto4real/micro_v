@@ -92,7 +92,7 @@ fn (mut a App) colorize() {
 fn (mut a App) message() {
 	mut b := a.ed
 
-	if a.status == '' && a.val.typ() != symbols.none_symbol {
+	if a.status == '' && a.val.typ().kind != .none_symbol {
 		// a.output.clear()
 		a.tui.draw_text(2, b.lines.len + 1, term.yellow('$a.val'))
 	} else if a.error_msg.len > 0 {

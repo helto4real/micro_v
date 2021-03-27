@@ -398,6 +398,7 @@ pub fn (mut l Lowerer) rewrite_expr(expr BoundExpr) BoundExpr {
 		BoundCallExpr { return l.rewrite_call_expr(expr) }
 		BoundConvExpr { return l.rewrite_conv_expr(expr) }
 		BoundEmptyExpr { return expr }
+		BoundStructInitExpr { return expr }
 	}
 }
 
@@ -441,7 +442,7 @@ pub fn (mut l Lowerer) rewrite_binary_expr(expr BoundBinaryExpr) BoundExpr {
 
 pub fn (mut l Lowerer) rewrite_assign_expr(expr BoundAssignExpr) BoundExpr {
 	rewritten_expr := l.rewrite_expr(expr.expr)
-	return new_bound_assign_expr(expr.var, rewritten_expr)
+	return new_bound_assign_with_names_expr(expr.var, expr.names, rewritten_expr)
 }
 
 pub fn (mut l Lowerer) rewrite_range_expr(expr BoundRangeExpr) BoundExpr {

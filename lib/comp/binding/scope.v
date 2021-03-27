@@ -10,6 +10,7 @@ mut:
 	vars     map[string]symbols.VariableSymbol
 	funcs    map[string]symbols.FunctionSymbol
 	fn_decls map[string]ast.FnDeclNode
+	types    map[string]symbols.TypeSymbol
 pub:
 	parent &BoundScope
 }
@@ -24,7 +25,7 @@ pub fn new_bound_scope(parent &BoundScope) &BoundScope {
 
 pub fn (bs &BoundScope) lookup_var(name string) ?symbols.VariableSymbol {
 	var := bs.vars[name] or {
-	if bs.parent != 0 {
+		if bs.parent != 0 {
 			return bs.parent.lookup_var(name)
 		}
 		return none
@@ -75,6 +76,41 @@ pub fn (mut bs BoundScope) try_declare_glob_fn(func symbols.FunctionSymbol) bool
 	}
 	bs.funcs[func.name] = func
 	return true
+}
+
+pub fn (bs &BoundScope) lookup_type(name string) ?symbols.TypeSymbol {
+	var := bs.types[name] or {
+		if bs.parent != 0 {
+			return bs.parent.lookup_type(name)
+		}
+		return none
+	}
+	return var
+}
+
+pub fn (mut bs BoundScope) try_declare_type(type_symbol symbols.TypeSymbol) bool {
+	if type_symbol.name in bs.types {
+		return false
+	}
+	bs.types[type_symbol.name] = type_symbol
+	return true
+}
+
+pub fn (mut bs BoundScope) try_replace_type(type_symbol symbols.TypeSymbol) bool {
+	if type_symbol.name !in bs.types {
+		return false
+	}
+	bs.types[type_symbol.name] = type_symbol
+	return true
+}
+
+pub fn (bs &BoundScope) types() []symbols.TypeSymbol {
+	mut res := []symbols.TypeSymbol{}
+	for i, _ in bs.types {
+		t := bs.types[i]
+		res << t
+	}
+	return res
 }
 
 pub fn (bs &BoundScope) vars() []symbols.VariableSymbol {
@@ -133,12 +169,13 @@ pub mut:
 	script_func symbols.FunctionSymbol
 	funcs       []symbols.FunctionSymbol
 	fn_decls    []ast.FnDeclNode
-	stmts    	[]BoundStmt
+	stmts       []BoundStmt
+	types       map[string]symbols.TypeSymbol
 pub:
 	previous &BoundGlobalScope
 }
 
-pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &source.Diagnostics, script_func symbols.FunctionSymbol, main_func symbols.FunctionSymbol, funcs []symbols.FunctionSymbol, fn_decls []ast.FnDeclNode, vars []symbols.VariableSymbol, stmts []BoundStmt) &BoundGlobalScope {
+pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &source.Diagnostics, script_func symbols.FunctionSymbol, main_func symbols.FunctionSymbol, funcs []symbols.FunctionSymbol, fn_decls []ast.FnDeclNode, vars []symbols.VariableSymbol, stmts []BoundStmt, types map[string]symbols.TypeSymbol) &BoundGlobalScope {
 	return &BoundGlobalScope{
 		previous: previous
 		log: diagostics
@@ -148,5 +185,6 @@ pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &source.Dia
 		funcs: funcs
 		fn_decls: fn_decls
 		stmts: stmts
+		types: types
 	}
 }

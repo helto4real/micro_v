@@ -42,7 +42,7 @@ fn (mut p NodePrinter) visit_tree(node ast.Node, last_child bool, indent string)
 			} else if node is ast.BinaryExpr {
 				b.writeln(term.bright_cyan(' $node.op.kind'))
 			} else if node is ast.NameExpr {
-				b.writeln(term.bright_cyan(' $node.ident'))
+				b.writeln(term.bright_cyan(' ${node.ident}'))
 			} else if node is ast.UnaryExpr {
 				b.writeln(term.bright_cyan(' $node.op.kind'))
 			} else {
@@ -51,7 +51,7 @@ fn (mut p NodePrinter) visit_tree(node ast.Node, last_child bool, indent string)
 		}
 		ast.Stmt {
 			if node is ast.VarDeclStmt {
-				b.writeln(term.bright_cyan(' $node.ident.lit'))
+				b.writeln(term.bright_cyan(' $node.ident.ident.lit'))
 			} else {
 				b.writeln('')
 			}
