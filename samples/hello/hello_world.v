@@ -9,7 +9,7 @@ fn do_test(test Test) {
 
 fn main() {
 	mut t := Test {
-		member: 100
+		member: 10
 		another: 'hello'
 	}
 

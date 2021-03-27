@@ -731,15 +731,60 @@ fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
 	// - check that all struct members are initialized, if not add standard values
 	// - check data type is correct
 	typ := b.lookup_type(syntax.typ_token.lit)
+	struct_typ := typ as symbols.StructTypeSymbol
+
 	mut members := []BoundStructInitMember{}
-	for member in syntax.members {
-		member_name := member.ident.lit
-		bound_expr := b.bind_expr(member.expr)
-		bound_member := new_bound_struct_init_member(member_name, bound_expr)
+	for struct_member in struct_typ.members {
+		struct_member_typ := struct_member.typ
+		members_result := syntax.members.filter(it.ident.lit == struct_member.ident)
+		mut bound_expr := BoundExpr{}
+		if members_result.len == 0 {
+			bound_expr = b.bind_default_value_expr(struct_member_typ)
+		} else {
+			expr := b.bind_expr(members_result[0].expr)
+			bound_expr = b.bind_convertion_diag(members_result[0].expr.text_location(), expr, struct_member_typ)
+		}
+		bound_member := new_bound_struct_init_member(struct_member.ident, bound_expr)
 		members << bound_member
 	}
+	// for member in syntax.members {
+	// 	member_name := member.ident.lit
+	// 	bound_expr := b.bind_expr(member.expr)
+	// 	bound_member := new_bound_struct_init_member(member_name, bound_expr)
+	// 	members << bound_member
+	// }
 
 	return new_bound_struct_init_expr(typ, members)
+}
+
+fn (mut b Binder) bind_default_value_expr(typ symbols.TypeSymbol) BoundExpr {
+	match typ {
+		symbols.StructTypeSymbol {
+			return b.bind_struct_init_expr(
+				ast.new_struct_init_no_members_expr(typ.name)
+			)
+		}
+		symbols.ErrorTypeSymbol {
+			return new_bound_error_expr()
+		}
+		symbols.AnyTypeSymbol {panic('unexpected any type')}
+		symbols.VoidTypeSymbol {panic('unexpected void type')}
+		symbols.BuiltInTypeSymbol {
+			match typ.name {
+				'string' {
+					return new_bound_literal_expr('') // Default to empty string
+				}
+				'int' {
+					return new_bound_literal_expr(0) // Default to 0
+				}
+				'bool' {
+					return new_bound_literal_expr(false) // Default to false
+				}
+				else {panic('unexpected literal type $typ.name')}
+			}
+		}
+	}
+	panic('unexpected not found match for type $typ') 
 }
 
 fn (mut b Binder) bind_name_expr(syntax ast.NameExpr) BoundExpr {

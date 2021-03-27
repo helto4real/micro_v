@@ -28,10 +28,10 @@ main:                                   # @main
 # %bb.0:                                # %entry
 	subq	$24, %rsp
 	.cfi_def_cfa_offset 32
+	movl	$10, 8(%rsp)
 	movq	$.L__unnamed_2, 16(%rsp)
-	movl	$200, 8(%rsp)
 	movl	$.L__unnamed_2, %esi
-	movl	$200, %edi
+	movl	$10, %edi
 	callq	do_test
 	xorl	%eax, %eax
 	addq	$24, %rsp
@@ -52,9 +52,14 @@ main:                                   # @main
 	.asciz	"%s"
 	.size	.L__unnamed_3, 3
 
-	.type	.L__unnamed_2,@object   # @2
-.L__unnamed_2:
+	.type	.L__unnamed_4,@object   # @2
+.L__unnamed_4:
 	.asciz	"hello"
-	.size	.L__unnamed_2, 6
+	.size	.L__unnamed_4, 6
+
+	.type	.L__unnamed_2,@object   # @3
+.L__unnamed_2:
+	.asciz	"hello world"
+	.size	.L__unnamed_2, 12
 
 	.section	".note.GNU-stack","",@progbits

@@ -32,6 +32,21 @@ pub fn new_struct_init_expr(tree &SyntaxTree, typ_token   token.Token, lcbr_toke
 	}
 }
 
+pub fn new_struct_init_no_members_expr(type_name string) StructInitExpr {
+	return StructInitExpr{
+		tree: &SyntaxTree(0)
+		typ_token: token.Token{
+			kind: .name
+			lit: type_name
+			source: &source.SourceText(0)
+		}
+		// members: members
+		// lcbr_token: lcbr_token
+		// pos: source.new_pos_from_pos_bounds(typ_token.pos, lcbr_token.pos)
+		// child_nodes: child_nodes
+	}
+}
+
 pub fn (iss &StructInitExpr) child_nodes() []AstNode {
 	return iss.child_nodes
 }
