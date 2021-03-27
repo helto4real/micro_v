@@ -38,6 +38,40 @@ pub fn (vs VariableSymbol) str_ident(level int) string {
 	}
 }
 
+pub fn (typ TypeSymbol) lookup_member_type(name string) TypeSymbol {
+	match typ {
+		StructTypeSymbol { 
+			member := typ.members.filter(it.ident == name)
+			if member.len == 0 {
+				return symbols.error_symbol
+			}
+			return member[0].typ
+		}
+		else {return symbols.error_symbol}
+	}
+	return symbols.error_symbol
+}
+
+pub fn (t TypeSymbol) str() string {
+	match t {
+		StructTypeSymbol {
+			return t.str()
+		} 
+		BuiltInTypeSymbol {
+			return t.str()
+		}
+		VoidTypeSymbol {
+			return t.str()
+		}
+		ErrorTypeSymbol {
+			return t.str()
+		}
+		AnyTypeSymbol {
+			return t.str()
+		}
+	}
+}
+
 pub fn (l LitVal) eq(r LitVal) bool {
 	if l.type_name() != r.type_name() {
 		panic('no equals is defined between types $l.type_name() and $r.type_name()')

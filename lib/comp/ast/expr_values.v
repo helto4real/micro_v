@@ -1,4 +1,5 @@
 module ast
+import strings
 
 import lib.comp.token
 import lib.comp.symbols
@@ -48,14 +49,17 @@ pub:
 	tree        &SyntaxTree
 	kind        SyntaxKind = .name_expr
 	ident       token.Token
+	names 		[]token.Token
 	pos         source.Pos
 	child_nodes []AstNode
 }
 
-pub fn new_name_expr(tree &SyntaxTree, ident token.Token) NameExpr {
+pub fn new_name_expr(tree &SyntaxTree, names []token.Token) NameExpr {
+	ident := merge_names(names)
 	return NameExpr{
 		tree: tree
 		ident: ident
+		names: names
 		pos: ident.pos
 		child_nodes: [AstNode(ident)]
 	}
@@ -75,4 +79,26 @@ pub fn (ex NameExpr) node_str() string {
 
 pub fn (ex NameExpr) str() string {
 	return '$ex.ident.lit'
+}
+
+fn merge_names(names []token.Token) token.Token {
+	if names.len == 1 {
+		return names[0]
+	}
+	mut b := strings.new_builder(20)
+	for i, tok in names {
+		if i != 0 {
+			b.write_string('.')
+		}
+		b.write_string(tok.lit)
+	}
+	return token.Token {
+		source: names[0].source
+		kind: .name
+		lit: b.str()
+		pos: source.new_pos_from_pos_bounds(
+			names[0].pos,
+			names[names.len-1].pos
+		)
+	}
 }

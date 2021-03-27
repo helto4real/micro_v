@@ -13,6 +13,7 @@ enum SyntaxKind {
 	range_expr
 	if_expr
 	call_expr
+	struct_init_expr
 	// nodes
 	operator_node
 	else_node
@@ -25,6 +26,8 @@ enum SyntaxKind {
 	global_stmt
 	comment_stmt
 	module_stmt
+	struct_mbr_node
+	struct_init_mbr_node
 	// statements
 	block_stmt
 	break_stmt

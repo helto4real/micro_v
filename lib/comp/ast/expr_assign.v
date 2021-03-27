@@ -9,20 +9,20 @@ pub:
 	kind        SyntaxKind = .assign_expr
 	child_nodes []AstNode
 
-	ident  token.Token
+	ident  NameExpr
 	eq_tok token.Token
 	expr   Expr
 	pos    source.Pos
 }
 
-pub fn new_assign_expr(tree &SyntaxTree, ident token.Token, eq_tok token.Token, expr Expr) AssignExpr {
+pub fn new_assign_expr(tree &SyntaxTree, ident NameExpr, eq_tok token.Token, expr Expr) AssignExpr {
 	return AssignExpr{
 		tree: tree
 		ident: ident
 		expr: expr
 		eq_tok: eq_tok
 		pos: source.new_pos_from_pos_bounds(ident.pos, expr.pos)
-		child_nodes: [AstNode(ident), eq_tok, expr]
+		child_nodes: [AstNode(Expr(ident)), eq_tok, expr]
 	}
 }
 

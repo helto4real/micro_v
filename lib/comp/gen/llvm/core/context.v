@@ -51,6 +51,8 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 				c.emit_unary_expr(node)
 			} else if node is binding.BoundCallExpr {
 				c.emit_call_expr(node)
+			} else if node is binding.BoundStructInitExpr {
+				c.emit_struct_init_expr(node)
 			} else if node is binding.BoundIfExpr {
 				// Evaluate the cond expression
 				c.emit_node(node.cond_expr)
@@ -209,20 +211,22 @@ fn (mut c Context) emit_call_expr(node binding.BoundCallExpr) {
 
 fn (mut c Context) emit_variable_expr(node binding.BoundVariableExpr) {
 	typ := node.var.typ
+	typ_ref := get_llvm_type_ref(typ, c.mod)
 	var := c.var_decl[node.var.id] or { panic('unexpected, variable not declared: $node.var.name') }
-	loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, get_llvm_type_ref(typ, c.mod),
+	loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, typ_ref,
 		var, no_name.str)
 	c.value_refs.prepend(loaded_var)
 }
 
 fn (mut c Context) emit_var_decl(node binding.BoundVarDeclStmt) {
 	typ := node.var.typ
+	typ_ref := get_llvm_type_ref(typ, c.mod)
 	var_name := node.var.name
 
 	c.emit_node(node.expr)
 	expr_val_ref := c.value_refs.pop()
 
-	ref_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, get_llvm_type_ref(typ, c.mod),
+	ref_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, typ_ref,
 		var_name.str)
 	// ref2 := C.LLVMBuildLoad2(c.mod.builder.builder_ref, get_llvm_type_ref(typ), expr_val_ref, no_name.str)
 	C.LLVMBuildStore(c.mod.builder.builder_ref, expr_val_ref, ref_var)
@@ -336,14 +340,38 @@ fn (mut c Context) emit_bound_litera_expr(lit binding.BoundLiteralExpr) {
 				}
 				else {
 					// not supported yet
-					panic('Cannot emit literal of type $typ')
+					panic('cannot emit literal of type $typ')
 				}
 			}
 		}
 		else {
-			// TODO: add structs
+			panic('unexpected type')
 		}
 	}
+}
+
+fn (mut c Context) emit_struct_init_expr(si binding.BoundStructInitExpr) {
+	// id := lit.const_val.id
+	// typ := si.typ as symbols.StructTypeSymbol
+	typ_ref := get_llvm_type_ref(si.typ, c.mod)
+	mut value_refs := []&C.LLVMValueRef{}
+	for member in si.members {
+		c.emit_node(member.bound_expr)
+		expr_val_ref := c.value_refs.pop()
+		value_refs << expr_val_ref
+	}
+
+	res := C.LLVMConstNamedStruct(typ_ref, value_refs.data,
+                                    value_refs.len)
+
+	// val := C.LLVMAddGlobal(c.mod.mod_ref, typ_ref, no_name.str)
+	// C.LLVMSetInitializer(val, res)
+	// res_ptr := C.LLVMBuildPointerCast(c.mod.builder.builder_ref, res,
+    //                               typ_ref, no_name.str)
+	// val := c.mod.add_global_struct_const_ptr(typ_ref, res)
+	// C.LLVMDumpValue(res)
+	// println('')
+	c.value_refs.prepend(res)
 }
 
 [inline]
@@ -372,7 +400,7 @@ fn get_llvm_type_ref(typ symbols.TypeSymbol, mod Module) &C.LLVMTypeRef {
 			return mod.types[typ.id] or { panic('unexpected, type $typ not found in symols table') }
 		}
 		else {
-			// TODO: Add struct support
+			panic('unexpected, unsupported type ref $typ')
 		}
 	}
 

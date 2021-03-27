@@ -80,7 +80,7 @@ pub fn (mut bs BoundScope) try_declare_glob_fn(func symbols.FunctionSymbol) bool
 
 pub fn (bs &BoundScope) lookup_type(name string) ?symbols.TypeSymbol {
 	var := bs.types[name] or {
-		if bs.parent > 0 {
+		if bs.parent != 0 {
 			return bs.parent.lookup_type(name)
 		}
 		return none

@@ -122,6 +122,15 @@ pub fn (mut m Module) add_global_string_literal_ptr(str_val string) &C.LLVMValue
 	return C.LLVMBuildGlobalStringPtr(m.builder.builder_ref, charptr(str_val.str), charptr(core.no_name.str))
 }
 
+pub fn (mut m Module) add_global_struct_const_ptr(typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef) &C.LLVMValueRef {
+	println('typref: ${voidptr(typ_ref)} valref: ${voidptr(val_ref)}')
+	val :=  C.LLVMBuildStructGEP2(m.builder.builder_ref, typ_ref,
+                                val_ref, 0,
+                                no_name.str)
+	println('HEEEELLLOOO ${voidptr(val)}')
+	return val
+}
+
 pub fn (m Module) print_to_file(path string) ? {
 	mut err := charptr(0)
 	res := C.LLVMPrintModuleToFile(m.mod_ref, path.str, &err)
@@ -149,6 +158,7 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram) {
 			for member in typ.members {
 				type_refs << get_llvm_type_ref(member.typ, m)
 			}
+			println('TYPEREFS: $type_refs')
 			C.LLVMStructSetBody(struct_type_ref, type_refs.data, type_refs.len, 0)
 		}
 	}

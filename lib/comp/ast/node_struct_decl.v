@@ -66,7 +66,7 @@ pub struct StructMemberNode {
 pub:
 	// general ast node
 	tree        &SyntaxTree
-	kind        SyntaxKind = .node_fn_decl
+	kind        SyntaxKind = .struct_mbr_node
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes

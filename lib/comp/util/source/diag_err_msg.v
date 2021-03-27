@@ -12,6 +12,10 @@ pub fn (mut d Diagnostics) error_var_not_exists(name string, loc TextLocation) {
 	d.error('variable <$name> does not exist', loc)
 }
 
+pub fn (mut d Diagnostics) error_member_not_exists(name string, loc TextLocation) {
+	d.error('member <$name> does not exist', loc)
+}
+
 pub fn (mut d Diagnostics) error_name_already_defined(name string, loc TextLocation) {
 	d.error('name: <$name> already defined', loc)
 }
@@ -133,4 +137,8 @@ pub fn (mut d Diagnostics) error_main_function_must_have_correct_signature(loc T
 
 pub fn (mut d Diagnostics) error_global_stmts_can_only_be_defined_in_one_file(loc TextLocation) {
 	d.error('global statements can only be defined in one file/syntax tree', loc)
+}
+
+pub fn (mut d Diagnostics) error_structs_fields_declared_on_init(loc TextLocation) {
+	d.error('struct fields can only be declared during the initialization', loc)
 }

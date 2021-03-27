@@ -10,21 +10,21 @@ pub:
 	child_nodes []AstNode
 	is_mut      bool
 
-	ident token.Token
+	ident NameExpr
 	eq    token.Token
 	expr  Expr
 	pos   source.Pos
 }
 
-pub fn new_var_decl_stmt(tree &SyntaxTree, ident token.Token, eq token.Token, expr Expr, is_mut bool) VarDeclStmt {
+pub fn new_var_decl_stmt(tree &SyntaxTree, ident NameExpr, eq token.Token, expr Expr, is_mut bool) VarDeclStmt {
 	return VarDeclStmt{
 		tree: tree
 		ident: ident
 		expr: expr
 		eq: eq
 		is_mut: is_mut
-		pos: source.new_pos_from_pos_bounds(ident.pos, expr.pos)
-		child_nodes: [AstNode(ident), eq, expr]
+		pos: source.new_pos_from_pos_bounds(ident.ident.pos, expr.pos)
+		child_nodes: [AstNode(ident.ident), eq, expr]
 	}
 }
 

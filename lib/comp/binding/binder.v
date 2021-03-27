@@ -240,6 +240,9 @@ fn create_parent_scope(previous &BoundGlobalScope) &BoundScope {
 		for var in prev.vars {
 			scope.try_declare_var(var)
 		}
+		for _, typ in prev.types {
+			scope.try_declare_type(typ)
+		}
 		parent = scope
 	}
 
@@ -506,6 +509,7 @@ pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 		ast.BinaryExpr { return b.bind_binary_expr(expr) }
 		ast.ParaExpr { return b.bind_para_expr(expr) }
 		ast.NameExpr { return b.bind_name_expr(expr) }
+		ast.StructInitExpr { return b.bind_struct_init_expr(expr) }
 		ast.AssignExpr { return b.bind_assign_expr(expr) }
 		ast.IfExpr { return b.bind_if_expr(expr) }
 		ast.RangeExpr { return b.bind_range_expr(expr) }
@@ -659,53 +663,117 @@ pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
 }
 
 pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
+	
+	if syntax.ident.names.len > 1 {
+		// Todo: handle modules later
+		// We are not allowed to declare variables like var.x := 1
+		b.log.error_structs_fields_declared_on_init(syntax.ident.names[1].text_location())
+		return new_bound_expr_stmt(new_bound_error_expr()) 
+	}
 	bound_expr := b.bind_expr(syntax.expr)
-
-	var := b.bind_variable(syntax.ident, bound_expr.typ, syntax.is_mut)
+	
+	var := b.bind_variable(syntax.ident.ident, bound_expr.typ, syntax.is_mut)
 	return new_var_decl_stmt(var, bound_expr, syntax.is_mut)
 }
 
 fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
-	name := syntax.ident.lit
-
 	bound_expr := b.bind_expr(syntax.expr)
 
 	if bound_expr.typ.kind == .error_symbol {
 		return bound_expr
 	}
-	// check is varable exist in scope
-	mut var := b.scope.lookup_var(name) or {
-		// var have to be declared with := to be able to set a value
-		b.log.error_var_not_exists(name, syntax.ident.text_location())
-		return new_bound_error_expr()
-	}
-	if !var.is_mut() {
-		// trying to assign a nom a mutable var
-		b.log.error_assign_non_mutable_variable(name, syntax.eq_tok.text_location())
-		return new_bound_error_expr()
-	}
-	conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, var.typ)
 
-	return new_bound_assign_expr(var, conv_expr)
+	// todo: when modules is supported, lookup here
+	// then it can be a global constant
+	base_ident := syntax.ident.names[0]
+	base_name :=  base_ident.lit
+	// check is variable exist in scope
+	base_var := b.scope.lookup_var(base_name) or {
+		b.log.error_var_not_exists(base_name, base_ident.text_location())
+		return new_bound_error_expr()
+	}
+
+	if syntax.ident.names.len == 1 {
+		// non struct, just return the bound variable
+		conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, base_var.typ)
+		return new_bound_assign_expr(base_var, conv_expr)
+	}
+
+	mut current_typ := base_var.typ
+	for i := 1; i < syntax.ident.names.len; i++ {
+		name_tok := syntax.ident.names[i]
+		member_name := name_tok.lit
+		member_typ := current_typ.lookup_member_type(member_name)
+		if member_typ.kind == .error_symbol {
+			b.log.error_member_not_exists(member_name, name_tok.text_location())
+			return new_bound_error_expr()
+		}
+		// Todo: check mutability of fields
+		current_typ = member_typ
+	}
+
+	if !base_var.is_mut() {
+		// trying to assign a nom a mutable var
+		b.log.error_assign_non_mutable_variable(base_name, syntax.eq_tok.text_location())
+		return new_bound_error_expr()
+	}
+
+	conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, current_typ)
+
+	return new_bound_assign_expr(base_var, conv_expr)
 }
 
 fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {
 	return b.bind_expr(syntax.expr)
 }
 
+fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
+	// TODO:
+	// - check that all struct members are initialized, if not add standard values
+	// - check data type is correct
+	typ := b.lookup_type(syntax.typ_token.lit)
+	mut members := []BoundStructInitMember{}
+	for member in syntax.members {
+		member_name := member.ident.lit
+		bound_expr := b.bind_expr(member.expr)
+		bound_member := new_bound_struct_init_member(member_name, bound_expr)
+		members << bound_member
+	}
+
+	return new_bound_struct_init_expr(typ, members)
+}
+
 fn (mut b Binder) bind_name_expr(syntax ast.NameExpr) BoundExpr {
-	name := syntax.ident.lit
-	if name.len == 0 {
+	if syntax.names.len == 0 {
 		// the parser inserted the token so we already reported 
 		// correct error so just return an error expression
 		return new_bound_error_expr()
 	}
-
-	variable := b.scope.lookup_var(name) or {
-		b.log.error_var_not_exists(name, syntax.ident.text_location())
+	// todo: when modules is supported, lookup here
+	// then it can be a global constant
+	base_ident := syntax.names[0]
+	base_name :=  base_ident.lit
+	base_var := b.scope.lookup_var(base_name) or {
+		b.log.error_var_not_exists(base_name, base_ident.text_location())
 		return new_bound_error_expr()
 	}
-	return new_bound_variable_expr(variable)
+	if syntax.names.len == 1 {
+		// non struct, just return the bound variable
+		return new_bound_variable_expr(base_var, base_var.typ)
+	}
+	mut current_typ := base_var.typ
+	for i := 1; i < syntax.names.len; i++ {
+		name_tok := syntax.names[i]
+		member_name := name_tok.lit
+		member_typ := current_typ.lookup_member_type(member_name)
+		if member_typ.kind == .error_symbol {
+			b.log.error_member_not_exists(member_name, name_tok.text_location())
+			return new_bound_error_expr()
+		}
+		current_typ = member_typ
+	}
+
+	return new_bound_variable_expr(base_var, current_typ)
 }
 
 fn (mut b Binder) bind_literal_expr(syntax ast.LiteralExpr) BoundExpr {

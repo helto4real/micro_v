@@ -10,10 +10,10 @@ pub:
 	var         symbols.VariableSymbol
 }
 
-pub fn new_bound_variable_expr(var symbols.VariableSymbol) BoundExpr {
+pub fn new_bound_variable_expr(var symbols.VariableSymbol, typ symbols.TypeSymbol) BoundExpr {
 	return BoundVariableExpr{
 		var: var
-		typ: var.typ
+		typ: typ
 	}
 }
 

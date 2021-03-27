@@ -50,6 +50,12 @@ pub fn classify(from symbols.TypeSymbol, to symbols.TypeSymbol) Convertion {
 				}
 			}
 		}
+	} else if from is symbols.StructTypeSymbol {
+		if to is symbols.StructTypeSymbol {
+			if from == to {
+				return convertion.conv_ident
+			}
+		}
 	}
 	return convertion.conv_none
 }

@@ -2,7 +2,7 @@ module binding
 
 pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundConvExpr |
 	BoundEmptyExpr | BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundRangeExpr |
-	BoundUnaryExpr | BoundVariableExpr
+	BoundUnaryExpr | BoundVariableExpr | BoundStructInitExpr
 
 pub type BoundStmt = BoundBlockStmt | BoundBreakStmt | BoundCommentStmt | BoundCondGotoStmt |
 	BoundContinueStmt | BoundExprStmt | BoundForRangeStmt | BoundForStmt | BoundGotoStmt |
@@ -22,6 +22,7 @@ pub enum BoundNodeKind {
 	call_expr
 	conv_expr
 	error_expr
+	sruct_init_expr
 	// Stmts
 	block_stmt
 	expr_stmt
@@ -71,6 +72,7 @@ pub fn (be BoundExpr) node_str() string {
 		BoundCallExpr { return be.node_str() }
 		BoundConvExpr { return be.node_str() }
 		BoundEmptyExpr { return be.node_str() }
+		BoundStructInitExpr { return be.node_str() }
 	}
 }
 
@@ -87,6 +89,7 @@ pub fn (be BoundExpr) str() string {
 		BoundCallExpr { return be.str() }
 		BoundConvExpr { return be.str() }
 		BoundEmptyExpr { return be.str() }
+		BoundStructInitExpr { return be.str() }
 	}
 }
 
