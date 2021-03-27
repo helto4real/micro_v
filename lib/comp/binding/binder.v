@@ -719,7 +719,6 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 
 	conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, current_typ)
 
-	println('ASSIGN: $base_var, $syntax.ident.names')
 	return new_bound_assign_with_names_expr(base_var, syntax.ident.names, conv_expr)
 }
 

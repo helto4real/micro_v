@@ -175,7 +175,6 @@ fn (mut c Context) emit_assignment_expr(node binding.BoundAssignExpr) {
 	mut ref_var := c.var_decl[var.id]
 	
 	typ := var.typ
-	println('ASSIGNMENT: $var.name ($typ) : $node.names')
 	if typ is symbols.StructTypeSymbol && node.names.len > 0 {
 		ref_var = c.get_reference_to_element(ref_var, typ, node.names)
 	}
