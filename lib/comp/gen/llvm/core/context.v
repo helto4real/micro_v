@@ -2,6 +2,7 @@ module core
 
 import lib.comp.binding
 import lib.comp.symbols
+import lib.comp.token
 
 pub struct Context {
 	current_func &C.LLVMValueRef
@@ -100,10 +101,7 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 				// C.LLVMMoveBasicBlockAfter(then_block, c.current_block)
 				// C.LLVMMoveBasicBlockAfter(else_block, then_block)
 			} else if node is binding.BoundAssignExpr {
-				c.emit_node(node.expr)
-				expr_ref := c.value_refs.pop()
-				ref_var := c.var_decl[node.var.id]
-				C.LLVMBuildStore(c.mod.builder.builder_ref, expr_ref, ref_var)
+				c.emit_assignment_expr(node)
 			} else {
 				panic('unexpected expr: $node.kind')
 			}
@@ -170,6 +168,44 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 	}
 }
 
+fn (mut c Context) emit_assignment_expr(node binding.BoundAssignExpr) {
+	c.emit_node(node.expr)
+	expr_ref := c.value_refs.pop()
+	var := node.var
+	mut ref_var := c.var_decl[var.id]
+	
+	typ := var.typ
+	println('ASSIGNMENT: $var.name ($typ) : $node.names')
+	if typ is symbols.StructTypeSymbol && node.names.len > 0 {
+		ref_var = c.get_reference_to_element(ref_var, typ, node.names)
+	}
+
+	C.LLVMBuildStore(c.mod.builder.builder_ref, expr_ref, ref_var)
+}
+fn (mut c Context) get_reference_to_element(var_ref &C.LLVMValueRef, struct_symbol symbols.TypeSymbol, names []token.Token) &C.LLVMValueRef {
+	typ_ref := get_llvm_type_ref(struct_symbol, c.mod)
+
+	// mut current_typ_ref := typ_ref
+	mut current_typ := struct_symbol
+	mut indicies := [C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), 0, false)] 
+	
+	for i, name in names {
+		if i == 0 {continue}
+
+		idx := current_typ.lookup_member_index(name.lit)
+		current_typ = current_typ.lookup_member_type(name.lit)
+		// current_typ_ref = get_llvm_type_ref(current_typ, c.mod)
+		if idx < 0 {panic('unexepected, lookup member $name, resultet in error')}
+		indicies << C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), idx, false)
+	}
+
+	return C.LLVMBuildInBoundsGEP2(c.mod.builder.builder_ref, typ_ref,
+							var_ref, indicies.data,
+							indicies.len, no_name.str) 
+	// loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, current_typ_ref,
+	// 				val, no_name.str)
+
+}
 fn (mut c Context) emit_call_expr(node binding.BoundCallExpr) {
 	// TODO: #11 refator when built-in functions are growing in numbers
 	if node.func.name in ['println', 'print'] {

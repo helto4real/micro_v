@@ -29,9 +29,9 @@ main:                                   # @main
 	subq	$24, %rsp
 	.cfi_def_cfa_offset 32
 	movq	$.L__unnamed_2, 16(%rsp)
-	movl	$100, 8(%rsp)
+	movl	$200, 8(%rsp)
 	movl	$.L__unnamed_2, %esi
-	movl	$100, %edi
+	movl	$200, %edi
 	callq	do_test
 	xorl	%eax, %eax
 	addq	$24, %rsp

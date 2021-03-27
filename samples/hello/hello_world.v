@@ -13,6 +13,7 @@ fn main() {
 		another: 'hello'
 	}
 
+	t.another = 'hello world'
 	do_test(t)
 
 }
