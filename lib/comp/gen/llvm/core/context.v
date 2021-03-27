@@ -213,6 +213,33 @@ fn (mut c Context) emit_variable_expr(node binding.BoundVariableExpr) {
 	typ := node.var.typ
 	typ_ref := get_llvm_type_ref(typ, c.mod)
 	var := c.var_decl[node.var.id] or { panic('unexpected, variable not declared: $node.var.name') }
+	mut current_typ_ref := typ_ref
+	mut current_typ := typ
+	// mut current_val := var
+	if typ is symbols.StructTypeSymbol {
+		if node.names.len > 0 {
+			mut indicies := [C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), 0, false)]
+			
+			for i, name in node.names {
+				if i == 0 {continue}
+				idx := current_typ.lookup_member_index(name.lit)
+				current_typ = current_typ.lookup_member_type(name.lit)
+				current_typ_ref = get_llvm_type_ref(current_typ, c.mod)
+				if idx < 0 {panic('unexepected, lookup member $name, resultet in error')}
+				indicies << C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), idx, false)
+			}
+
+			val := C.LLVMBuildInBoundsGEP2(c.mod.builder.builder_ref, typ_ref,
+                                   var, indicies.data,
+                                   indicies.len, no_name.str) 
+			loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, current_typ_ref,
+							val, no_name.str)
+		
+			c.value_refs.prepend(loaded_var)
+			return
+		}
+	} 
+
 	loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, typ_ref,
 		var, no_name.str)
 	c.value_refs.prepend(loaded_var)
@@ -220,7 +247,7 @@ fn (mut c Context) emit_variable_expr(node binding.BoundVariableExpr) {
 
 fn (mut c Context) emit_var_decl(node binding.BoundVarDeclStmt) {
 	typ := node.var.typ
-	typ_ref := get_llvm_type_ref(typ, c.mod)
+	mut typ_ref := get_llvm_type_ref(typ, c.mod)
 	var_name := node.var.name
 
 	c.emit_node(node.expr)
@@ -364,13 +391,6 @@ fn (mut c Context) emit_struct_init_expr(si binding.BoundStructInitExpr) {
 	res := C.LLVMConstNamedStruct(typ_ref, value_refs.data,
                                     value_refs.len)
 
-	// val := C.LLVMAddGlobal(c.mod.mod_ref, typ_ref, no_name.str)
-	// C.LLVMSetInitializer(val, res)
-	// res_ptr := C.LLVMBuildPointerCast(c.mod.builder.builder_ref, res,
-    //                               typ_ref, no_name.str)
-	// val := c.mod.add_global_struct_const_ptr(typ_ref, res)
-	// C.LLVMDumpValue(res)
-	// println('')
 	c.value_refs.prepend(res)
 }
 

@@ -36,7 +36,7 @@ pub fn for_stmt(cond_expr BoundExpr, body_stmt BoundStmt) BoundStmt {
 }
 
 pub fn variable_exp(var BoundVariableExpr) BoundVariableExpr {
-	return new_bound_variable_expr(var.var, var.typ) as BoundVariableExpr
+	return new_bound_variable_with_names_expr(var.var, var.names, var.typ) as BoundVariableExpr
 }
 
 pub fn variable(var_decl BoundVarDeclStmt) BoundVariableExpr {

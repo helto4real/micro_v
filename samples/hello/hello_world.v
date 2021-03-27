@@ -3,8 +3,8 @@ struct Test{
 	another string
 }
 
-fn do_test(t Test) {
-	
+fn do_test(test Test) {
+	println(test.another)
 }
 
 fn main() {
@@ -12,10 +12,8 @@ fn main() {
 		member: 100
 		another: 'hello'
 	}
-	t.another = t.member
-	// t.member = 200
-	// println()
+
 	do_test(t)
-	// println('hello world!')
+
 }
 

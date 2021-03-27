@@ -52,6 +52,20 @@ pub fn (typ TypeSymbol) lookup_member_type(name string) TypeSymbol {
 	return symbols.error_symbol
 }
 
+pub fn (typ TypeSymbol) lookup_member_index(name string) int {
+	match typ {
+		StructTypeSymbol { 
+			for i, member in typ.members {
+				if member.ident == name {
+					return i
+				}
+			}
+		}
+		else {return -1}
+	}
+	return -1
+}
+
 pub fn (t TypeSymbol) str() string {
 	match t {
 		StructTypeSymbol {

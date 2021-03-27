@@ -158,7 +158,6 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram) {
 			for member in typ.members {
 				type_refs << get_llvm_type_ref(member.typ, m)
 			}
-			println('TYPEREFS: $type_refs')
 			C.LLVMStructSetBody(struct_type_ref, type_refs.data, type_refs.len, 0)
 		}
 	}

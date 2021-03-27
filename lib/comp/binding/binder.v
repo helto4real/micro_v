@@ -671,7 +671,6 @@ pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 		return new_bound_expr_stmt(new_bound_error_expr()) 
 	}
 	bound_expr := b.bind_expr(syntax.expr)
-	
 	var := b.bind_variable(syntax.ident.ident, bound_expr.typ, syntax.is_mut)
 	return new_var_decl_stmt(var, bound_expr, syntax.is_mut)
 }
@@ -773,7 +772,7 @@ fn (mut b Binder) bind_name_expr(syntax ast.NameExpr) BoundExpr {
 		current_typ = member_typ
 	}
 
-	return new_bound_variable_expr(base_var, current_typ)
+	return new_bound_variable_with_names_expr(base_var, syntax.names, current_typ)
 }
 
 fn (mut b Binder) bind_literal_expr(syntax ast.LiteralExpr) BoundExpr {
