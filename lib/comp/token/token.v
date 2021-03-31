@@ -81,6 +81,7 @@ pub enum Kind {
 	key_return // 'return'
 	key_module // 'module'
 	key_struct // 'struct'
+	key_assert // 'assert'
 	key_true // 'true'
 	key_false // 'false'
 	key_mut // 'mut'
@@ -146,6 +147,7 @@ fn build_token_str() []string {
 	s[Kind.key_return] = 'return'
 	s[Kind.key_module] = 'module'
 	s[Kind.key_struct] = 'struct'
+	s[Kind.key_assert] = 'assert'
 	s[Kind.key_for] = 'for'
 	s[Kind.key_in] = 'in'
 	return s

@@ -36,7 +36,7 @@ pub fn new_binder(is_script bool, parent &BoundScope, func symbols.FunctionSymbo
 	return new_binder
 }
 
-pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundGlobalScope) &BoundProgram {
+pub fn bind_program(is_test bool, is_script bool, previous &BoundProgram, global_scope &BoundGlobalScope) &BoundProgram {
 	parent_scope := create_parent_scope(global_scope)
 	mut func_bodies := map[string]BoundBlockStmt{}
 
@@ -90,6 +90,14 @@ pub fn bind_program(is_script bool, previous &BoundProgram, global_scope &BoundG
 			func_bodies[global_scope.script_func.id] = body
 		}
 	}
+	
+	// check if program is not test and missing main or script function
+	if is_test == false {
+		if global_scope.main_func.id !in func_bodies {
+			log.error_missing_main_func()
+		} 
+	} 
+
 	bound_program := new_bound_program(previous, log, global_scope.main_func, global_scope.script_func,
 		func_bodies, global_scope.funcs, global_scope.types)
 	return bound_program
@@ -101,6 +109,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 
 	// bind the built-in types
 	binder.scope.try_declare_type(symbols.int_symbol)
+	binder.scope.try_declare_type(symbols.i64_symbol)
 	binder.scope.try_declare_type(symbols.bool_symbol)
 	binder.scope.try_declare_type(symbols.string_symbol)
 
@@ -297,8 +306,21 @@ pub fn (mut b Binder) bind_stmt_internal(stmt ast.Stmt) BoundStmt {
 		.return_stmt { return b.bind_return_stmt(stmt as ast.ReturnStmt) }
 		.comment_stmt { return new_bound_comment_stmt((stmt as ast.CommentStmt).comment_tok) }
 		.module_stmt { return b.bind_module_stmt(stmt as ast.ModuleStmt) }
+		.assert_stmt { return b.bind_assert_stmt(stmt as ast.AssertStmt) }
 		else { panic('unexpected stmt kind: $stmt.kind') }
 	}
+}
+
+pub fn (mut b Binder) bind_assert_stmt(assert_stmt ast.AssertStmt) BoundStmt {
+	bound_expr := b.bind_expr(assert_stmt.expr)
+	if bound_expr.kind == .error_expr {
+		// We got an error allready
+		return new_bound_expr_stmt(new_bound_error_expr())
+	}
+	converted_expr := b.bind_convertion_diag(assert_stmt.expr.text_location(), bound_expr,
+					symbols.bool_symbol)
+	
+	return new_bound_assert_stmt(converted_expr)
 }
 
 pub fn (mut b Binder) bind_module_stmt(module_stmt ast.ModuleStmt) BoundStmt {
@@ -727,9 +749,6 @@ fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {
 }
 
 fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
-	// TODO:
-	// - check that all struct members are initialized, if not add standard values
-	// - check data type is correct
 	typ := b.lookup_type(syntax.typ_token.lit)
 	struct_typ := typ as symbols.StructTypeSymbol
 
@@ -737,7 +756,7 @@ fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
 	for struct_member in struct_typ.members {
 		struct_member_typ := struct_member.typ
 		members_result := syntax.members.filter(it.ident.lit == struct_member.ident)
-		mut bound_expr := BoundExpr{}
+		mut bound_expr := new_empty_expr()
 		if members_result.len == 0 {
 			bound_expr = b.bind_default_value_expr(struct_member_typ)
 		} else {
@@ -747,12 +766,7 @@ fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
 		bound_member := new_bound_struct_init_member(struct_member.ident, bound_expr)
 		members << bound_member
 	}
-	// for member in syntax.members {
-	// 	member_name := member.ident.lit
-	// 	bound_expr := b.bind_expr(member.expr)
-	// 	bound_member := new_bound_struct_init_member(member_name, bound_expr)
-	// 	members << bound_member
-	// }
+
 
 	return new_bound_struct_init_expr(typ, members)
 }
@@ -776,6 +790,9 @@ fn (mut b Binder) bind_default_value_expr(typ symbols.TypeSymbol) BoundExpr {
 				}
 				'int' {
 					return new_bound_literal_expr(0) // Default to 0
+				}
+				'i64' {
+					return new_bound_literal_expr(i64(0)) // Default to 0
 				}
 				'bool' {
 					return new_bound_literal_expr(false) // Default to false

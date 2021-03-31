@@ -16,6 +16,7 @@ enum Command {
 	run
 	test
 }
+
 fn main() {
 	args := os.args[1..]
 	if args.len == 0 {
@@ -34,21 +35,20 @@ fn main() {
 	for i, arg in args {
 		if i == 0 {
 			match arg {
-				'run'  { 
-					command = .run 
-					continue
-				} 
-				'test' { 
-					command = .test 
+				'run' {
+					command = .run
 					continue
 				}
-				'build' { 
-					command = .build 
+				'test' {
+					command = .test
+					continue
+				}
+				'build' {
+					command = .build
 					continue
 				}
 				else {}
 			}
-			
 		}
 		match arg {
 			'-display_stmts' {
@@ -61,8 +61,15 @@ fn main() {
 				use_evaluator = true
 			}
 			else {
-				f := get_files(arg) ?
-				files << f
+				v_files := get_files(arg) ?
+				for v_file in v_files {
+					if command == .test {
+						files << v_file
+					} else if !v_file.ends_with('_test.v') {
+						println('NOT END WITH TEST: $v_file')
+						files << v_file
+					}
+				}
 			}
 		}
 	}
@@ -80,14 +87,13 @@ fn main() {
 		}
 		has_errors = has_errors || syntax_tree.log.all.len > 0
 	}
-
 	if has_errors {
 		exit(-1)
 	}
-	mut comp := comp.create_compilation(syntax_trees)
-
+	
 	if !(display_bound_stmts || display_lowered_stmts) {
 		if use_evaluator {
+			mut comp := comp.create_compilation(syntax_trees)
 			vars := binding.new_eval_variables()
 			res := comp.evaluate(vars)
 			if res.result.len == 0 {
@@ -101,39 +107,57 @@ fn main() {
 			exit(-1)
 		} else {
 			if command == .build {
+				mut comp := comp.create_compilation(syntax_trees)
 				is_compiled_in_folder := syntax_trees.len > 1
 				file := files[0]
 				folder := os.dir(file)
 				filename := os.file_name(file)
 
-				out_filename := if is_compiled_in_folder {filename} else {filename[..filename.len-2]}
+				out_filename := if is_compiled_in_folder {
+					filename
+				} else {
+					filename[..filename.len - 2]
+				}
 				out_path := os.join_path(folder, out_filename)
 
 				llvm_backend := llvm.new_llvm_generator()
-				res := comp.gen(llvm_backend, out_path) 
+				res := comp.gen(llvm_backend, out_path)
 
 				if res.result.len > 0 {
 					write_diagnostics(res.result)
 					exit(-1)
 				}
-				
+
 				println(term.green('success'))
 				exit(0)
 			} else if command == .run {
-		
+				mut comp := comp.create_compilation(syntax_trees)
 				llvm_backend := llvm.new_llvm_generator()
-				res := comp.run(llvm_backend) 
+				res := comp.run(llvm_backend)
 
 				if res.result.len > 0 {
 					write_diagnostics(res.result)
 					exit(-1)
 				}
-				
+
 				println(term.green('success'))
+				exit(0)
+			} else if command == .test {
+				mut comp := comp.create_test(syntax_trees)
+				llvm_backend := llvm.new_llvm_generator()
+				res := comp.run_tests(llvm_backend)
+
+				if res.result.len > 0 {
+					write_diagnostics(res.result)
+					exit(-1)
+				}
+
+				println(term.green('test success'))
 				exit(0)
 			}
 		}
 	}
+	mut comp := comp.create_compilation(syntax_trees)
 	mut iw := repl.IdentWriter{}
 	if display_bound_stmts {
 		comp.emit_tree(iw, false)
@@ -162,7 +186,6 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 	mut iw := repl.IdentWriter{}
 	for err in sorted_diagnosics {
 		if err.has_loc == false {
-			println('ERROR: $err.text')
 			iw.write(term.red('error: '))
 			iw.writeln(err.text)
 			continue
@@ -184,7 +207,6 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 			line_nr_end = source.lines.len
 		}
 
-		
 		mut err_end_pos := err.location.pos.pos + err.location.pos.len
 		if err_end_pos > src.len {
 			err_end_pos = src.len

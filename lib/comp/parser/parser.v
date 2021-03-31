@@ -269,6 +269,9 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.key_module {
 			return p.parse_module_stmt()
 		}
+		.key_assert {
+			return p.parse_assert_stmt()
+		}
 		.comment {
 			return ast.new_comment_stmt(p.syntax_tree, p.current_token())
 		}
@@ -282,6 +285,12 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		}
 	}
 	return p.parse_expression_stmt()
+}
+
+fn (mut p Parser) parse_assert_stmt() ast.Stmt {
+	assert_tok := p.match_token(.key_assert)
+	expr := p.parse_expr()
+	return ast.new_assert_stmt(p.syntax_tree, assert_tok, expr)
 }
 
 fn (mut p Parser) parse_module_stmt() ast.Stmt {
@@ -319,7 +328,7 @@ fn (mut p Parser) parse_break_stmt() ast.Stmt {
 
 fn (mut p Parser) parse_for_stmt(has_cond bool) ast.Stmt {
 	for_key := p.match_token(.key_for)
-	mut cond_expr := if has_cond { p.parse_expr() } else { ast.Expr{} }
+	mut cond_expr := if has_cond { p.parse_expr() } else { ast.Expr(ast.new_empty_expr()) }
 	body_stmt := p.parse_block_stmt()
 	return ast.new_for_stmt(p.syntax_tree, for_key, cond_expr, body_stmt, has_cond)
 }
@@ -494,7 +503,7 @@ fn (mut p Parser) parse_binary_expr() ast.Expr {
 }
 
 fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.Expr {
-	mut left := ast.Expr{}
+	mut left := ast.Expr(ast.new_empty_expr())
 	mut tok := p.current_token()
 
 	unary_op_prec := ast.unary_operator_precedence(tok.kind)

@@ -66,7 +66,7 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 				string {
 					writer.write_string("'$val'")
 				}
-				int {
+				int, i64 {
 					writer.write_number(val.str())
 				}
 				bool {
@@ -95,6 +95,9 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 			writer.write_identifier(node.str())
 		}
 		BoundStructInitExpr {
+			writer.write_identifier(node.str())
+		}
+		EmptyExpr {
 			writer.write_identifier(node.str())
 		}
 	}
@@ -161,6 +164,12 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			writer.write_keyword('module')
 			writer.write_space()
 			writer.write_identifier(node.name)
+			writer.writeln('')
+		}
+		BoundAssertStmt {
+			writer.write_keyword('assert')
+			writer.write_space()
+			write_expr(writer, node.bound_expr)
 			writer.writeln('')
 		}
 		BoundIfStmt {

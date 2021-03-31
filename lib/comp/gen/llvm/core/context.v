@@ -4,6 +4,42 @@ import lib.comp.binding
 import lib.comp.symbols
 import lib.comp.token
 
+pub struct CallBuilder {
+	name string
+	// return_typ symbols.TypeSymbol
+	fn_ref &C.LLVMValueRef
+	is_built_in bool
+pub mut:
+	ctx  &Context
+	params []&C.LLVMValueRef
+}
+
+fn new_builtin_call(name string, ctx &Context) CallBuilder {
+	return CallBuilder {
+		name: name
+		ctx: ctx
+		fn_ref: ctx.mod.built_in_funcs[name]
+		is_built_in: true
+	}
+}
+
+pub fn (mut cb CallBuilder) add_param(val_ref &C.LLVMValueRef) {
+	cb.params << val_ref
+}
+pub fn (mut cb CallBuilder) add_lit_param(val symbols.LitVal) {
+	lit_expr := binding.new_bound_literal_expr(val) as binding.BoundLiteralExpr
+	cb.ctx.emit_bound_litera_expr(lit_expr)
+	val_ref := cb.ctx.value_refs.pop()
+	cb.params << val_ref
+}
+
+pub fn (mut cb CallBuilder) emit() &C.LLVMValueRef {
+	if cb.is_built_in {
+		return C.LLVMBuildCall(cb.ctx.mod.builder.builder_ref, cb.fn_ref, cb.params.data, cb.params.len, no_name.str)
+	} else {
+		return 0
+	}
+}
 pub struct Context {
 	current_func &C.LLVMValueRef
 mut:
@@ -24,14 +60,9 @@ pub fn new_context(mod Module, current_block &C.LLVMBasicBlockRef, current_func 
 	}
 }
 
-// pub fn (mut m Module) add_standard_globals() {
-// 	glob_nl_fmt_ref := m.add_global_string_literal_ptr('%s\n')
-// 	m.global_const['println'] = glob_nl_fmt_ref
-
-// 	glob_fmt_ref := m.add_global_string_literal_ptr('%s')
-// 	m.global_const['print'] = glob_fmt_ref
-
-// }
+fn (mut c Context) new_builtin_call(name string) CallBuilder {
+	return new_builtin_call(name, c)
+}
 
 fn (mut c Context) next_ref_name() string {
 	name := '$c.ref_nr'
@@ -117,6 +148,36 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 				}
 			} else if node is binding.BoundVarDeclStmt {
 				c.emit_var_decl(node)
+			} else if node is binding.BoundAssertStmt {
+				//   branch <cond> continue: else assert:
+				// assert:
+				//   printf <assert inormation>
+				//   setjmp() 
+				// continue:
+				// 	 <rest_of_body> 
+				cond_expr := node.bound_expr
+				c.emit_node(cond_expr)
+				cond_expr_ref := c.value_refs.pop()
+		
+				continue_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func,
+					no_name.str)
+				assert_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func,
+					no_name.str)
+				C.LLVMMoveBasicBlockAfter(assert_block, c.current_block)
+				C.LLVMMoveBasicBlockAfter(continue_block, assert_block)
+				
+				C.LLVMBuildCondBr(c.mod.builder.builder_ref, cond_expr_ref, continue_block,
+					assert_block)
+				C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, assert_block)
+				mut cb := c.new_builtin_call('longjmp')
+				cb.add_param(c.mod.jmp_buff)
+				cb.add_lit_param(i64(1))
+				cb.emit()
+				C.LLVMBuildUnreachable(c.mod.builder.builder_ref)
+
+				C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, continue_block)
+
+
 			} else if node is binding.BoundExprStmt {
 				c.emit_node(node.bound_expr)
 			} else if node is binding.BoundLabelStmt {
@@ -228,6 +289,13 @@ fn (mut c Context) emit_call_expr(node binding.BoundCallExpr) {
 		params << param
 
 		C.LLVMBuildCall(c.mod.builder.builder_ref, fn_ref, params.data, 2, no_name.str)
+	} else if node.func.name == 'exit' {
+		fn_ref := c.mod.built_in_funcs['exit'] or { panic('built in function exit not found') }
+		c.emit_node(node.params[0])
+		param := c.value_refs.pop()
+		mut params := []&C.LLVMValueRef{cap: 1}
+		params << param
+		C.LLVMBuildCall(c.mod.builder.builder_ref, fn_ref, params.data, 1, no_name.str)
 	} else {
 		// handle the parameters 
 		mut params := []&C.LLVMValueRef{}
@@ -240,7 +308,12 @@ fn (mut c Context) emit_call_expr(node binding.BoundCallExpr) {
 			panic('unexpected, $node.func.name ($node.func.id) func not declared')
 		}
 		fn_ref := fun.llvm_func
-		C.LLVMBuildCall(c.mod.builder.builder_ref, fn_ref, params.data, params.len, no_name.str)
+		if node.typ.kind == symbols.TypeSymbolKind.void_symbol {
+			C.LLVMBuildCall(c.mod.builder.builder_ref, fn_ref, params.data, params.len, no_name.str)
+		} else {
+			res := C.LLVMBuildCall(c.mod.builder.builder_ref, fn_ref, params.data, params.len, no_name.str)
+			c.value_refs.prepend(res)
+		}
 	}
 }
 
@@ -286,6 +359,9 @@ fn (mut c Context) emit_var_decl(node binding.BoundVarDeclStmt) {
 	var_name := node.var.name
 
 	c.emit_node(node.expr)
+	if c.value_refs.len == 0 {
+		println('ERR: $node.expr')
+	}
 	expr_val_ref := c.value_refs.pop()
 
 	ref_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, typ_ref,
@@ -387,6 +463,11 @@ fn (mut c Context) emit_bound_litera_expr(lit binding.BoundLiteralExpr) {
 						lit.const_val.val as int, false)
 					c.value_refs.prepend(val)
 				}
+				'i64' {
+					val := C.LLVMConstInt(get_llvm_type_ref(symbols.i64_symbol, c.mod),
+						lit.const_val.val as i64, false)
+					c.value_refs.prepend(val)
+				}
 				'bool' {
 					lit_val := lit.const_val.val as bool
 					bool_int := if lit_val { 1 } else { 0 }
@@ -436,6 +517,9 @@ fn get_llvm_type_ref(typ symbols.TypeSymbol, mod Module) &C.LLVMTypeRef {
 			match typ.name {
 				'int' {
 					return C.LLVMInt32TypeInContext(mod.ctx_ref)
+				}
+				'i64' {
+					return C.LLVMInt64TypeInContext(mod.ctx_ref)
 				}
 				'bool' {
 					return C.LLVMInt1TypeInContext(mod.ctx_ref)

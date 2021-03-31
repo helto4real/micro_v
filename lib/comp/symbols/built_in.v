@@ -3,6 +3,7 @@ module symbols
 pub const (
 	// symbols
 	int_symbol         = new_builtin_type_symbol('int')
+	i64_symbol         = new_builtin_type_symbol('i64')
 	bool_symbol        = new_builtin_type_symbol('bool')
 	string_symbol      = new_builtin_type_symbol('string')
 	undefined_symbol   = new_builtin_type_symbol('undefined')
@@ -17,6 +18,8 @@ pub const (
 		false)], void_symbol)
 	print_symbol       = new_function_symbol('print', [new_param_symbol('text', string_symbol,
 		false)], void_symbol)
+	exit_symbol       = new_function_symbol('exit', [new_param_symbol('exit_code', int_symbol,
+		false)], void_symbol)
 	input_symbol       = new_function_symbol('input', [], string_symbol)
-	built_in_functions = [println_symbol, print_symbol, input_symbol]
+	built_in_functions = [println_symbol, print_symbol, input_symbol, exit_symbol]
 )

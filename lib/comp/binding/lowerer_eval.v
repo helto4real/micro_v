@@ -87,9 +87,14 @@ pub fn (mut l Lowerer) rewrite_stmt(stmt BoundStmt) BoundStmt {
 		BoundReturnStmt { return l.rewrite_return_stmt(stmt) }
 		BoundCommentStmt { return stmt }
 		BoundModuleStmt { return stmt }
+		BoundAssertStmt { return l.rewrite_assert_stmt(stmt)  }
 	}
 }
 
+fn (mut l Lowerer) rewrite_assert_stmt(stmt BoundAssertStmt) BoundStmt {
+	lowered_expr := l.rewrite_expr(stmt.bound_expr)
+	return binding.new_bound_assert_stmt(lowered_expr)
+}
 fn (mut l Lowerer) rewrite_return_stmt(stmt BoundReturnStmt) BoundStmt {
 	if stmt.has_expr {
 		expr := l.rewrite_expr(stmt.expr)
@@ -399,6 +404,7 @@ pub fn (mut l Lowerer) rewrite_expr(expr BoundExpr) BoundExpr {
 		BoundConvExpr { return l.rewrite_conv_expr(expr) }
 		BoundEmptyExpr { return expr }
 		BoundStructInitExpr { return expr }
+		EmptyExpr { return expr }
 	}
 }
 

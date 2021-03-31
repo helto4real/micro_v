@@ -11,7 +11,7 @@ pub struct NoneStruct {}
 
 pub type None = NoneStruct
 
-pub type LitVal = None | bool | int | string
+pub type LitVal = None | bool | int | i64 | string
 
 pub enum TypeSymbolKind {
 	built_in_symbol
@@ -97,6 +97,9 @@ pub fn (l LitVal) eq(r LitVal) bool {
 		int {
 			l == (r as int)
 		}
+		i64 {
+			l == (r as i64)
+		}
 		bool {
 			l == (r as bool)
 		}
@@ -174,6 +177,9 @@ pub fn (l LitVal) typ() BuiltInTypeSymbol {
 		int {
 			int_symbol
 		}
+		i64 {
+			i64_symbol
+		}
 		bool {
 			bool_symbol
 		}
@@ -189,7 +195,7 @@ pub fn (l LitVal) str() string {
 		string {
 			l.str()
 		}
-		int {
+		int, i64 {
 			l.str()
 		}
 		bool {
