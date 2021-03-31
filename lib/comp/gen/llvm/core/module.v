@@ -133,6 +133,11 @@ pub fn (mut m Module) run_tests() bool {
 	}
 	test_funcs.sort(a.func.name < b.func.name)
 
+	// run main to be sure it is jit
+	main_args := []&C.LLVMGenericValueRef{}
+	C.LLVMRunFunction(m.exec_engine, m.main_func_ref, 0, main_args.data)
+
+
 	mut nr_of_tests := 0 
 	mut nr_of_errors := 0 
 

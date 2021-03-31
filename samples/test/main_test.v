@@ -1,4 +1,4 @@
 fn test_operator_sum() {
 	
-	assert sum(1, 1) == 3
+	assert sum(1, 1) == 2
 }
