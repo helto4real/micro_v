@@ -4,7 +4,7 @@ import lib.comp.binding
 import lib.comp.symbols
 import lib.comp.token
 
-pub struct Context {
+pub struct Emitter {
 	current_func &C.LLVMValueRef
 mut:
 	current_block &C.LLVMBasicBlockRef
@@ -16,8 +16,8 @@ pub mut:
 	last_expr_ref &C.LLVMValueRef
 }
 
-pub fn new_context(mod Module, current_block &C.LLVMBasicBlockRef, current_func &C.LLVMValueRef) Context {
-	return Context{
+pub fn new_emitter(mod Module, current_block &C.LLVMBasicBlockRef, current_func &C.LLVMValueRef) Emitter {
+	return Emitter{
 		mod: mod
 		current_block: current_block
 		current_func: current_func
@@ -25,21 +25,21 @@ pub fn new_context(mod Module, current_block &C.LLVMBasicBlockRef, current_func 
 	}
 }
 
-fn (mut c Context) new_builtin_call(name string) CallBuilder {
+fn (mut c Emitter) new_builtin_call(name string) CallBuilder {
 	return new_builtin_call(name, c)
 }
 
-fn (mut c Context) emit_call(call_expr binding.BoundCallExpr) &C.LLVMValueRef {
+fn (mut c Emitter) emit_call(call_expr binding.BoundCallExpr) &C.LLVMValueRef {
 	return emit_call(call_expr, mut c)
 }
 
-fn (mut c Context) next_ref_name() string {
+fn (mut c Emitter) next_ref_name() string {
 	name := '$c.ref_nr'
 	c.ref_nr++
 	return name
 }
 
-fn (mut c Context) emit_expr(node binding.BoundExpr) &C.LLVMValueRef {
+fn (mut c Emitter) emit_expr(node binding.BoundExpr) &C.LLVMValueRef {
 	match node {
 		binding.BoundLiteralExpr { return c.emit_bound_litera_expr(node) }
 		binding.BoundBinaryExpr { return c.emit_binary_expr(node) }
@@ -53,7 +53,7 @@ fn (mut c Context) emit_expr(node binding.BoundExpr) &C.LLVMValueRef {
 	}
 }
 
-fn (mut c Context) emit_stmt(node binding.BoundStmt) {
+fn (mut c Emitter) emit_stmt(node binding.BoundStmt) {
 	match node {
 		binding.BoundReturnStmt {
 			if node.has_expr {
@@ -94,7 +94,7 @@ fn (mut c Context) emit_stmt(node binding.BoundStmt) {
 	}
 }
 
-fn (mut c Context) emit_cond_goto_stmt(node binding.BoundCondGotoStmt) {
+fn (mut c Emitter) emit_cond_goto_stmt(node binding.BoundCondGotoStmt) {
 	cond_expr := node.cond_expr
 	cond_expr_ref := c.emit_expr(cond_expr)
 
@@ -104,7 +104,7 @@ fn (mut c Context) emit_cond_goto_stmt(node binding.BoundCondGotoStmt) {
 	C.LLVMBuildCondBr(c.mod.builder.builder_ref, cond_expr_ref, eq_block, not_eq_block)
 }
 
-fn (mut c Context) emit_goto_stmt(node binding.BoundGotoStmt) {
+fn (mut c Emitter) emit_goto_stmt(node binding.BoundGotoStmt) {
 	goto_block := c.blocks[node.label]
 
 	// Check if last instruction is terminator, only
@@ -124,7 +124,7 @@ fn (mut c Context) emit_goto_stmt(node binding.BoundGotoStmt) {
 	}
 }
 
-fn (mut c Context) emit_assert_stmt(node binding.BoundAssertStmt) {
+fn (mut c Emitter) emit_assert_stmt(node binding.BoundAssertStmt) {
 	//   branch <cond> continue: else assert:
 	// assert:
 	//   printf <assert inormation>
@@ -150,7 +150,7 @@ fn (mut c Context) emit_assert_stmt(node binding.BoundAssertStmt) {
 	C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, continue_block)
 }
 
-fn (mut c Context) emit_if_expr(node binding.BoundIfExpr) &C.LLVMValueRef {
+fn (mut c Emitter) emit_if_expr(node binding.BoundIfExpr) &C.LLVMValueRef {
 	cond_expr_ref := c.emit_expr(node.cond_expr)
 
 	// Create the temporary variable that will store the result
@@ -188,7 +188,7 @@ fn (mut c Context) emit_if_expr(node binding.BoundIfExpr) &C.LLVMValueRef {
 		merge_var, no_name.str)
 }
 
-fn (mut c Context) emit_assignment_expr(node binding.BoundAssignExpr) &C.LLVMValueRef {
+fn (mut c Emitter) emit_assignment_expr(node binding.BoundAssignExpr) &C.LLVMValueRef {
 	expr_ref := c.emit_expr(node.expr)
 	var := node.var
 	mut ref_var := c.var_decl[var.id]
@@ -202,7 +202,7 @@ fn (mut c Context) emit_assignment_expr(node binding.BoundAssignExpr) &C.LLVMVal
 	return ref_var
 }
 
-fn (mut c Context) get_reference_to_element(var_ref &C.LLVMValueRef, struct_symbol symbols.TypeSymbol, names []token.Token) &C.LLVMValueRef {
+fn (mut c Emitter) get_reference_to_element(var_ref &C.LLVMValueRef, struct_symbol symbols.TypeSymbol, names []token.Token) &C.LLVMValueRef {
 	typ_ref := get_llvm_type_ref(struct_symbol, c.mod)
 
 	// mut current_typ_ref := typ_ref
@@ -229,7 +229,7 @@ fn (mut c Context) get_reference_to_element(var_ref &C.LLVMValueRef, struct_symb
 	// 				val, no_name.str)
 }
 
-fn (mut c Context) emit_call_expr(node binding.BoundCallExpr) &C.LLVMValueRef {
+fn (mut c Emitter) emit_call_expr(node binding.BoundCallExpr) &C.LLVMValueRef {
 	// TODO: #11 refator when built-in functions are growing in numbers
 	if node.func.name in ['println', 'print'] {
 		glob_str_println := c.mod.global_const[GlobalVarRefType.printf_str_nl] or {
@@ -262,7 +262,7 @@ fn (mut c Context) emit_call_expr(node binding.BoundCallExpr) &C.LLVMValueRef {
 	return 0
 }
 
-fn (mut c Context) emit_variable_expr(node binding.BoundVariableExpr) &C.LLVMValueRef {
+fn (mut c Emitter) emit_variable_expr(node binding.BoundVariableExpr) &C.LLVMValueRef {
 	typ := node.var.typ
 	typ_ref := get_llvm_type_ref(typ, c.mod)
 	var := c.var_decl[node.var.id] or { panic('unexpected, variable not declared: $node.var.name') }
@@ -301,7 +301,7 @@ fn (mut c Context) emit_variable_expr(node binding.BoundVariableExpr) &C.LLVMVal
 	return loaded_var
 }
 
-fn (mut c Context) emit_var_decl(node binding.BoundVarDeclStmt) {
+fn (mut c Emitter) emit_var_decl(node binding.BoundVarDeclStmt) {
 	typ := node.var.typ
 	mut typ_ref := get_llvm_type_ref(typ, c.mod)
 	var_name := node.var.name
@@ -313,7 +313,7 @@ fn (mut c Context) emit_var_decl(node binding.BoundVarDeclStmt) {
 	c.var_decl[node.var.id] = ref_var
 }
 
-fn (mut c Context) emit_binary_expr(binary_expr binding.BoundBinaryExpr) &C.LLVMValueRef {
+fn (mut c Emitter) emit_binary_expr(binary_expr binding.BoundBinaryExpr) &C.LLVMValueRef {
 	ref_left := c.emit_expr(binary_expr.left_expr)
 	ref_right := c.emit_expr(binary_expr.right_expr)
 	match binary_expr.op.op_kind {
@@ -364,7 +364,7 @@ fn (mut c Context) emit_binary_expr(binary_expr binding.BoundBinaryExpr) &C.LLVM
 	panic('kind not supported: $binary_expr.op.op_kind')
 }
 
-fn (mut c Context) emit_unary_expr(unary_expr binding.BoundUnaryExpr) &C.LLVMValueRef {
+fn (mut c Emitter) emit_unary_expr(unary_expr binding.BoundUnaryExpr) &C.LLVMValueRef {
 	operand_expr_val_ref := c.emit_expr(unary_expr.operand_expr)
 	// typ := unary_expr.typ
 	match unary_expr.op.op_kind {
@@ -380,7 +380,7 @@ fn (mut c Context) emit_unary_expr(unary_expr binding.BoundUnaryExpr) &C.LLVMVal
 	}
 }
 
-fn (mut c Context) emit_bound_litera_expr(lit binding.BoundLiteralExpr) &C.LLVMValueRef {
+fn (mut c Emitter) emit_bound_litera_expr(lit binding.BoundLiteralExpr) &C.LLVMValueRef {
 	// id := lit.const_val.id
 	typ := lit.const_val.typ
 	match typ {
@@ -417,7 +417,7 @@ fn (mut c Context) emit_bound_litera_expr(lit binding.BoundLiteralExpr) &C.LLVMV
 	panic('unexpected type $typ')
 }
 
-fn (mut c Context) emit_struct_init_expr(si binding.BoundStructInitExpr) &C.LLVMValueRef {
+fn (mut c Emitter) emit_struct_init_expr(si binding.BoundStructInitExpr) &C.LLVMValueRef {
 	// id := lit.const_val.id
 	// typ := si.typ as symbols.StructTypeSymbol
 	typ_ref := get_llvm_type_ref(si.typ, c.mod)

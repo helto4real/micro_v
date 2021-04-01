@@ -143,7 +143,7 @@ pub fn (mut m Module) run_tests() bool {
 
 	for func in test_funcs {
 		args := []&C.LLVMGenericValueRef{}
-		res := C.LLVMRunFunction(m.exec_engine, func.llvm_func, 0, args.data)
+		res := C.LLVMRunFunction(m.exec_engine, func.func_ref, 0, args.data)
 		int_res := C.LLVMGenericValueToInt(res, 1) 
 		nr_of_tests++
 		if int_res == 0 {
@@ -257,6 +257,6 @@ pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding
 	m.funcs[func.id] = f
 
 	if func.name == 'main' {
-		m.main_func_ref = f.llvm_func
+		m.main_func_ref = f.func_ref
 	}
 }

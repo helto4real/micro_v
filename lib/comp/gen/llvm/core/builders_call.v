@@ -9,11 +9,11 @@ pub struct CallBuilder {
 	is_built_in bool
 	func Function
 pub mut:
-	ctx    &Context
+	ctx    &Emitter
 	params []&C.LLVMValueRef
 }
 
-fn new_builtin_call(name string, ctx &Context) CallBuilder {
+fn new_builtin_call(name string, ctx &Emitter) CallBuilder {
 	return CallBuilder{
 		name: name
 		ctx: ctx
@@ -22,7 +22,7 @@ fn new_builtin_call(name string, ctx &Context) CallBuilder {
 	}
 }
 
-fn emit_call(call_expr binding.BoundCallExpr, mut ctx &Context) &C.LLVMValueRef {
+fn emit_call(call_expr binding.BoundCallExpr, mut ctx &Emitter) &C.LLVMValueRef {
 	func := ctx.mod.funcs[call_expr.func.id] or {
 			panic('unexpected, $call_expr.func.name ($call_expr.func.id) func not declared')
 	}
@@ -36,7 +36,7 @@ fn emit_call(call_expr binding.BoundCallExpr, mut ctx &Context) &C.LLVMValueRef 
 		ctx: ctx
 		func: func
 		params: params
-		fn_ref: func.llvm_func
+		fn_ref: func.func_ref
 		is_built_in: false
 	}
 
@@ -63,8 +63,8 @@ pub fn (mut cb CallBuilder) emit() &C.LLVMValueRef {
 		return C.LLVMBuildCall(cb.ctx.mod.builder.builder_ref, cb.fn_ref, cb.params.data,
 			cb.params.len, no_name.str)
 	} else {
-		fn_ref := cb.func.llvm_func
-		fn_typ_ref := cb.func.llvm_func_typ
+		fn_ref := cb.func.func_ref
+		fn_typ_ref := cb.func.func_typ_ref
 		return C.LLVMBuildCall2(cb.ctx.mod.builder.builder_ref, fn_typ_ref, fn_ref, cb.params.data, cb.params.len,
 				no_name.str)
 		
