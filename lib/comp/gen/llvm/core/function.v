@@ -5,14 +5,14 @@ import lib.comp.binding
 
 pub struct Function {
 	mod           Module
-	llvm_func_typ C.LLVMTypeRef
-	llvm_func     &C.LLVMValueRef
+	func_typ_ref &C.LLVMTypeRef
+	func_ref     &C.LLVMValueRef
 	func          symbols.FunctionSymbol
 	body          binding.BoundBlockStmt
 mut:
 	llvm_entry_block &C.LLVMBasicBlockRef = 0
 pub:
-	ctx Context
+	ctx Emitter
 }
 
 fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBlockStmt) Function {
@@ -24,16 +24,16 @@ fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBloc
 		get_llvm_type_ref(func.typ, mod)
 	}
 
-	llvm_func_typ := C.LLVMFunctionType(return_typ, llvm_params.data, llvm_params.len,
+	func_typ_ref := C.LLVMFunctionType(return_typ, llvm_params.data, llvm_params.len,
 		0)
 
 	func_name := func.name
-	llvm_func := C.LLVMAddFunction(mod.mod_ref, func_name.str, llvm_func_typ)
+	func_ref := C.LLVMAddFunction(mod.mod_ref, func_name.str, func_typ_ref)
 
 	return Function{
 		mod: mod
-		llvm_func_typ: llvm_func_typ
-		llvm_func: llvm_func
+		func_typ_ref: func_typ_ref
+		func_ref: func_ref
 		llvm_entry_block: 0
 		func: func
 		body: body
@@ -42,14 +42,14 @@ fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBloc
 
 fn (mut f Function) generate_function_bodies() {
 	entry_name := 'entry'
-	entry := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.llvm_func, entry_name.str)
+	entry := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.func_ref, entry_name.str)
 	f.llvm_entry_block = entry
 	// Generate the statements at entry
 	C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, entry)
-	mut ctx := new_context(f.mod, entry, f.llvm_func)
+	mut ctx := new_emitter(f.mod, entry, f.func_ref)
 	// declare the inparameters 
 	for i, param in f.func.params {
-		param_ref := C.LLVMGetParam(f.llvm_func, i)
+		param_ref := C.LLVMGetParam(f.func_ref, i)
 		ref_var := C.LLVMBuildAlloca(f.mod.builder.builder_ref, get_llvm_type_ref(param.typ,
 			f.mod), no_name.str)
 
@@ -69,13 +69,13 @@ fn (mut f Function) generate_function_bodies() {
 		// error_exit:
 		//   ret 1 
 		continue_str := 'continue'
-		continue_block := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.llvm_func,
+		continue_block := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.func_ref,
 				continue_str.str)
 
 		C.LLVMMoveBasicBlockAfter(continue_block, entry)
 
 		error_exit_str := 'error_exit'
-		error_exit_block := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.llvm_func,
+		error_exit_block := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.func_ref,
 				error_exit_str.str)
 
 		C.LLVMMoveBasicBlockAfter(error_exit_block, continue_block)
@@ -105,7 +105,7 @@ fn (mut f Function) generate_function_bodies() {
 	// generate all blocks
 	for stmt in f.body.stmts {
 		if stmt is binding.BoundLabelStmt {
-			label_block := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.llvm_func,
+			label_block := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.func_ref,
 				stmt.name.str)
 			ctx.blocks[stmt.name] = label_block
 			C.LLVMMoveBasicBlockAfter(label_block, current_block)
@@ -116,7 +116,7 @@ fn (mut f Function) generate_function_bodies() {
 	// Generate the statements at entry
 	C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, main_block)
 	for stmt in f.body.stmts {
-		ctx.emit_node(stmt)
+		ctx.emit_stmt(stmt)
 	}
 	if f.func.name == 'main' {
 		// C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, continue_block)

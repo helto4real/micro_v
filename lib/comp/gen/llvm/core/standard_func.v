@@ -44,7 +44,6 @@ fn (mut m Module) add_exit() {
 	m.built_in_funcs['exit'] = func_typ
 }
 
-// exit(int)
 fn (mut m Module) add_longjmp_setjmp() {
 	// declare the jmp buffer
 	// TODO: size depending on target

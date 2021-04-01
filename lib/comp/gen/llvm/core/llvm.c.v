@@ -83,7 +83,6 @@ fn C.LLVMBuildStructGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_
 
 fn C.LLVMBuildInBoundsGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, indicies voidptr, nr_indicies u32, name charptr) &C.LLVMValueRef
 
-// fn C. LLVMIntType(unsigned NumBits) LLVMTypeRef
 fn C.LLVMBuildPointerCast(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, dest_typ &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
 
 fn C.LLVMModuleCreateWithName(charptr) &C.LLVMModuleRef
@@ -139,6 +138,7 @@ fn C.LLVMSetInitializer(glob_var &C.LLVMValueRef, const_val &C.LLVMValueRef)
 fn C.LLVMGetLastInstruction(blocl &C.LLVMBasicBlockRef) &C.LLVMValueRef
 
 fn C.LLVMBuildNeg(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildNSWNeg(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name charptr) &C.LLVMValueRef
 fn C.LLVMBuildNot(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name charptr) &C.LLVMValueRef
 
 fn C.LLVMBuildLoad2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, name charptr) &C.LLVMValueRef
