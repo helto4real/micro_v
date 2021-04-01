@@ -11,7 +11,7 @@ pub:
 	child_nodes []AstNode
 }
 
-pub fn new_empty_stmt() EmptyExpr {
+pub fn new_empty_expr() EmptyExpr {
 	return EmptyExpr{}
 }
 

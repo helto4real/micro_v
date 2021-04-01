@@ -1,9 +1,12 @@
 struct Test{
 	member int
+	big i64
 	another string
 }
 
 fn do_test(test Test) {
+	println(test.another)
+	assert true
 	println(test.another)
 }
 
@@ -12,9 +15,9 @@ fn main() {
 		member: 10
 		another: 'hello'
 	}
-
-	t.another = 'hello world'
+	println('before exit')
 	do_test(t)
+	println('after exit')
 
 }
 

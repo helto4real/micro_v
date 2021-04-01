@@ -25,6 +25,7 @@ mut:
 	previous &Compilation
 pub:
 	is_script bool
+	is_test	  bool
 pub mut:
 	global_scope &binding.BoundGlobalScope
 	syntax_trees []&ast.SyntaxTree
@@ -32,8 +33,9 @@ pub mut:
 	print_ref    voidptr
 }
 
-fn new_compilation(is_script bool, previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
+fn new_compilation(is_test bool, is_script bool, previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
 	return &Compilation{
+		is_test: is_test
 		is_script: is_script
 		previous: previous
 		syntax_trees: syntax_trees
@@ -42,11 +44,15 @@ fn new_compilation(is_script bool, previous &Compilation, syntax_trees []&ast.Sy
 }
 
 pub fn create_compilation(syntax_trees []&ast.SyntaxTree) &Compilation {
-	return new_compilation(false, &Compilation(0), syntax_trees)
+	return new_compilation(false, false, &Compilation(0), syntax_trees)
 }
 
 pub fn create_script(previous &Compilation, syntax_trees []&ast.SyntaxTree) &Compilation {
-	return new_compilation(true, previous, syntax_trees)
+	return new_compilation(false, true, previous, syntax_trees)
+}
+
+pub fn create_test(syntax_trees []&ast.SyntaxTree) &Compilation {
+	return new_compilation(true, false, &Compilation(0), syntax_trees)
 }
 
 pub fn (mut c Compilation) register_print_callback(print_fn PrintFunc, ref voidptr) {
@@ -129,13 +135,32 @@ pub fn (mut c Compilation) run(back_end gen.Generator) CompilationResult{
 	return new_compilation_result(diagnostics.all)
 }
 
+pub fn (mut c Compilation) run_tests(back_end gen.Generator) CompilationResult{
+		mut global_scope := c.get_bound_global_scope()
+	mut result := []&source.Diagnostic{}
+	for syntax in c.syntax_trees {
+		result << syntax.log.all
+	}
+	result << global_scope.log.all
+	if result.len > 0 {
+		return new_compilation_result(result)
+	}
+	program := c.get_program()
+
+	if program.log.all.len > 0 {
+		return new_compilation_result(program.log.all)
+	}
+	diagnostics := back_end.run_tests(program)
+	return new_compilation_result(diagnostics.all)
+}
+
 fn (mut c Compilation) get_program() &binding.BoundProgram {
 	global_scope := c.get_bound_global_scope()
 	if c.previous == 0 {
-		return binding.bind_program(c.is_script, &binding.BoundProgram(0), global_scope)
+		return binding.bind_program(c.is_test, c.is_script, &binding.BoundProgram(0), global_scope)
 	} else {
 		p := c.previous.get_program()
-		return binding.bind_program(c.is_script, p, global_scope)
+		return binding.bind_program(c.is_test, c.is_script, p, global_scope)
 	}
 }
 

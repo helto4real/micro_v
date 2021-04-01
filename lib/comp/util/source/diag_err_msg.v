@@ -90,6 +90,10 @@ pub fn (mut d Diagnostics) error_function_allready_declared(ident string, loc Te
 	d.error('function <$ident> already declared', loc)
 }
 
+pub fn (mut d Diagnostics) error_missing_main_func() {
+	d.error_msg('no main function declared')
+}
+
 pub fn (mut d Diagnostics) error_struct_allready_declared(name string, loc TextLocation) {
 	d.error('struct <$name> already declared', loc)
 }

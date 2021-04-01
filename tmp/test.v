@@ -1,12 +1,9 @@
-struct Test {
-mut:	
-	x int
-}
 
 fn main() {
-	mut t := Test {
-		
-	}
-	t.z := 100
+	x := 1
+
+	assert 1==2
+
+	y:=10	
 
 }

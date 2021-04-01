@@ -2,11 +2,12 @@ module binding
 
 pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundConvExpr |
 	BoundEmptyExpr | BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundRangeExpr |
-	BoundUnaryExpr | BoundVariableExpr | BoundStructInitExpr
+	BoundUnaryExpr | BoundVariableExpr | BoundStructInitExpr | EmptyExpr
 
 pub type BoundStmt = BoundBlockStmt | BoundBreakStmt | BoundCommentStmt | BoundCondGotoStmt |
 	BoundContinueStmt | BoundExprStmt | BoundForRangeStmt | BoundForStmt | BoundGotoStmt |
-	BoundIfStmt | BoundLabelStmt | BoundModuleStmt | BoundReturnStmt | BoundVarDeclStmt
+	BoundIfStmt | BoundLabelStmt | BoundModuleStmt | BoundReturnStmt | BoundVarDeclStmt |
+	BoundAssertStmt
 
 pub type BoundNode = BoundExpr | BoundStmt
 
@@ -23,6 +24,7 @@ pub enum BoundNodeKind {
 	conv_expr
 	error_expr
 	sruct_init_expr
+	none_expr
 	// Stmts
 	block_stmt
 	expr_stmt
@@ -38,6 +40,7 @@ pub enum BoundNodeKind {
 	goto_stmt
 	comment_stmt
 	module_stmt
+	assert_stmt
 }
 
 pub fn (bn &BoundNode) child_nodes() []BoundNode {
@@ -73,6 +76,7 @@ pub fn (be BoundExpr) node_str() string {
 		BoundConvExpr { return be.node_str() }
 		BoundEmptyExpr { return be.node_str() }
 		BoundStructInitExpr { return be.node_str() }
+		EmptyExpr { return be.node_str() }
 	}
 }
 
@@ -90,6 +94,7 @@ pub fn (be BoundExpr) str() string {
 		BoundConvExpr { return be.str() }
 		BoundEmptyExpr { return be.str() }
 		BoundStructInitExpr { return be.str() }
+		EmptyExpr { return be.str() }
 	}
 }
 
@@ -113,6 +118,7 @@ pub fn (bs BoundStmt) node_str() string {
 		BoundReturnStmt { return bs.node_str() }
 		BoundCommentStmt { return bs.node_str() }
 		BoundModuleStmt { return bs.node_str() }
+		BoundAssertStmt { return bs.node_str() }
 	}
 }
 
@@ -132,5 +138,6 @@ pub fn (bs BoundStmt) str() string {
 		BoundReturnStmt { return bs.str() }
 		BoundCommentStmt { return bs.str() }
 		BoundModuleStmt { return bs.str() }
+		BoundAssertStmt { return bs.str() }
 	}
 }

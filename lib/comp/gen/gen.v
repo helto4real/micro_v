@@ -6,4 +6,5 @@ import lib.comp.binding
 pub interface Generator {
 	generate(filename string, program &binding.BoundProgram) &source.Diagnostics
 	run(program &binding.BoundProgram) &source.Diagnostics
+	run_tests(program &binding.BoundProgram) &source.Diagnostics
 }

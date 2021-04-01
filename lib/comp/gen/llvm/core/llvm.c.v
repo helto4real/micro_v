@@ -38,6 +38,9 @@ pub struct C.LLVMTypeRef {}
 pub struct C.LLVMValueRef {}
 
 [typedef]
+pub struct C.LLVMGenericValueRef {}
+
+[typedef]
 pub struct C.LLVMBuilderRef {}
 
 [typedef]
@@ -99,6 +102,8 @@ fn C.LLVMAddFunction(mod &C.LLVMModuleRef, name charptr, fn_type &C.LLVMTypeRef)
 fn C.LLVMBuildCall2(builder &C.LLVMBuilderRef, typ &C.LLVMTypeRef, func &C.LLVMValueRef, args_ptr voidptr, nr_of_args int, name charptr) &C.LLVMValueRef
 fn C.LLVMBuildCall(builder &C.LLVMBuilderRef, func &C.LLVMValueRef, args_ptr voidptr, nr_of_args int, name charptr) &C.LLVMValueRef
 
+
+fn C.LLVMBuildUnreachable(builder &C.LLVMBuilderRef) &C.LLVMValueRef
 //  LLVMBuildCall2(LLVMBuilderRef, LLVMTypeRef, LLVMValueRef Fn,
 //                             LLVMValueRef *Args, unsigned NumArgs,
 //                             const char *Name); LLVMValueRef
@@ -134,6 +139,8 @@ fn C.LLVMBuildStore(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, val_ref &C.L
 fn C.LLVMConstInt(type_ref &C.LLVMTypeRef, val u64, sign_extend bool) &C.LLVMValueRef
 
 fn C.LLVMAddGlobal(mod &C.LLVMModuleRef, typ_ref &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
+fn C.LLVMGetNamedGlobal(mod &C.LLVMModuleRef, name charptr) &C.LLVMValueRef
+fn C.LLVMSetInitializer(var &C.LLVMValueRef, const_val &C.LLVMValueRef)
 fn C.LLVMBuildGlobalString(builder &C.LLVMBuilderRef, str charptr, name charptr) &C.LLVMValueRef
 fn C.LLVMBuildGlobalStringPtr(builder &C.LLVMBuilderRef, str charptr, name charptr) &C.LLVMValueRef
 fn C.LLVMSetInitializer(glob_var &C.LLVMValueRef, const_val &C.LLVMValueRef)
@@ -147,6 +154,8 @@ fn C.LLVMPointerType(element_type &C.LLVMTypeRef, address_space u32) &C.LLVMType
 
 fn C.LLVMBuildPointerCast(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, dest_type &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
 
+fn C.LLVMGenericValueToInt(gen_val &C.LLVMGenericValueRef, is_signed int) u64
+
 fn C.LLVMBuildBr(builder &C.LLVMBuilderRef, dest &C.LLVMBasicBlockRef) &C.LLVMValueRef
 fn C.LLVMBuildCondBr(builder &C.LLVMBuilderRef, cond &C.LLVMValueRef, then_block &C.LLVMBasicBlockRef, else_block &C.LLVMBasicBlockRef) &C.LLVMValueRef
 
@@ -159,7 +168,7 @@ fn C.LLVMDisposeModule(mod_ref &C.LLVMModuleRef)
 fn C.LLVMCreateBuilderInContext(ctx_ref &C.LLVMContextRef) &C.LLVMBuilderRef
 fn C.LLVMAppendBasicBlockInContext(ctx_ref &C.LLVMContextRef, func &C.LLVMValueRef, name charptr) &C.LLVMBasicBlockRef
 fn C.LLVMMoveBasicBlockAfter(block &C.LLVMBasicBlockRef, move_after_block &C.LLVMBasicBlockRef)
-
+fn C.LLVMGetLastBasicBlock(func_ref &C.LLVMValueRef) &C.LLVMBasicBlockRef
 // comparations
 
 fn C.LLVMBuildICmp(builder &C.LLVMBuilderRef, op IntPredicate, left &C.LLVMValueRef, right &C.LLVMValueRef, name charptr) &C.LLVMValueRef

@@ -37,6 +37,7 @@ mut:
 	built_in_funcs map[string]&C.LLVMValueRef
 	main_func_ref  &C.LLVMValueRef = 0
 	types          map[string]&C.LLVMTypeRef
+	jmp_buff	   &C.LLVMValueRef = 0
 
 	global_const map[GlobalVarRefType]&C.LLVMValueRef
 }
@@ -55,6 +56,18 @@ pub fn new_llvm_module(name string) Module {
 }
 
 fn (mut m Module) init_globals() {
+		// add standard structs
+
+	standard_structs := m.get_standard_struct_types()
+	for standard_struct in standard_structs {
+		typ_ref := C.LLVMStructCreateNamed(m.ctx_ref, standard_struct.name.str)
+		m.types[standard_struct.name] = typ_ref
+		mut type_refs := []&C.LLVMTypeRef{}
+		for member in standard_struct.members {
+			type_refs << get_llvm_type_ref(member.typ, m)
+		}
+		C.LLVMStructSetBody(typ_ref, type_refs.data, type_refs.len, 0)
+	}
 	m.add_standard_funcs()
 }
 
@@ -97,13 +110,49 @@ pub fn (mut m Module) init_jit_execution_engine() ? {
 	return none
 }
 
-pub fn (mut m Module) run_main() {
+pub fn (mut m Module) run_main() i64 {
 	m.init_jit_execution_engine() or { panic('error init execution enging : $err.msg') }
 	if m.exec_engine == 0 {
 		panic('unexpected, execution engine have to be initialized before calling run_main')
 	}
 	args := []&C.LLVMGenericValueRef{}
-	C.LLVMRunFunction(m.exec_engine, m.main_func_ref, 0, args.data)
+	res := C.LLVMRunFunction(m.exec_engine, m.main_func_ref, 0, args.data)
+	return i64(C.LLVMGenericValueToInt(res, 1))
+}
+
+pub fn (mut m Module) run_tests() bool {
+	m.init_jit_execution_engine() or { panic('error init execution enging : $err.msg') }
+	if m.exec_engine == 0 {
+		panic('unexpected, execution engine have to be initialized before calling run_main')
+	}
+	mut test_funcs := []Function{}
+	for _, f in m.funcs {
+		if f.func.name.starts_with('test_') {
+			test_funcs << f
+		}
+	}
+	test_funcs.sort(a.func.name < b.func.name)
+
+	// run main to be sure it is jit
+	main_args := []&C.LLVMGenericValueRef{}
+	C.LLVMRunFunction(m.exec_engine, m.main_func_ref, 0, main_args.data)
+
+
+	mut nr_of_tests := 0 
+	mut nr_of_errors := 0 
+
+	for func in test_funcs {
+		args := []&C.LLVMGenericValueRef{}
+		res := C.LLVMRunFunction(m.exec_engine, func.llvm_func, 0, args.data)
+		int_res := C.LLVMGenericValueToInt(res, 1) 
+		nr_of_tests++
+		if int_res == 0 {
+
+		} else {
+			nr_of_errors++
+		}
+	}
+	return nr_of_errors ==  0
 }
 
 pub fn (mut m Module) verify() ? {
@@ -123,11 +172,9 @@ pub fn (mut m Module) add_global_string_literal_ptr(str_val string) &C.LLVMValue
 }
 
 pub fn (mut m Module) add_global_struct_const_ptr(typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef) &C.LLVMValueRef {
-	println('typref: ${voidptr(typ_ref)} valref: ${voidptr(val_ref)}')
 	val :=  C.LLVMBuildStructGEP2(m.builder.builder_ref, typ_ref,
                                 val_ref, 0,
                                 no_name.str)
-	println('HEEEELLLOOO ${voidptr(val)}')
 	return val
 }
 
@@ -142,7 +189,10 @@ pub fn (m Module) print_to_file(path string) ? {
 	return none
 }
 
-pub fn (mut m Module) generate_module(program &binding.BoundProgram) {
+
+pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test bool) {
+
+
 	// first declare struct names
 	for _, typ in program.types {
 		if typ is symbols.StructTypeSymbol {
@@ -150,6 +200,7 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram) {
 			m.types[typ.id] = typ_ref
 		}
 	}
+
 	// then declare struct body
 	for _, typ in program.types {
 		if typ is symbols.StructTypeSymbol {
@@ -162,7 +213,19 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram) {
 		}
 	}
 
-	//					
+	if is_test == false {
+		body := program.func_bodies[program.main_func.id] or {
+			// No main defined or global statements
+			panic('unexpected, function body for $program.main_func.name ($program.main_func.id) missing')
+		}
+		lowered_body := binding.lower(body)
+		m.declare_function(program.main_func, lowered_body)
+	} else {
+		test_main := symbols.new_function_symbol('main', []symbols.ParamSymbol{}, symbols.int_symbol)
+		body := binding.new_bound_block_stmt([]binding.BoundStmt{})
+		m.declare_function(test_main, body)
+	}	
+
 	// first declare all functions except the main
 	for func in program.func_symbols {
 		if func.name != 'main' {
@@ -173,16 +236,19 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram) {
 			m.declare_function(func, lowered_body)
 		}
 	}
-	// last declare main function
-	body := program.func_bodies[program.main_func.id] or {
-		panic('unexpected, function body for $program.main_func.name ($program.main_func.id) missing')
-	}
-	lowered_body := binding.lower(body)
-	m.declare_function(program.main_func, lowered_body)
 
 	// generate bodies of all functions
+	// First generate main body
 	for _, mut func in m.funcs {
-		func.generate_function_bodies()
+		if func.func.name == 'main' {
+			func.generate_function_bodies()
+		}
+	}
+	// generate bodies of all rest of the functions
+	for _, mut func in m.funcs {
+		if func.func.name != 'main' {
+			func.generate_function_bodies()
+		}
 	}
 }
 
