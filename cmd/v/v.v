@@ -15,6 +15,7 @@ enum Command {
 	build
 	run
 	test
+	test_self
 }
 
 fn main() {
@@ -42,6 +43,11 @@ fn main() {
 				'test' {
 					command = .test
 					continue
+				}
+				'test-self' {
+					command = .test_self
+					files << get_self_test_files() ?
+					break
 				}
 				'build' {
 					command = .build
@@ -90,7 +96,7 @@ fn main() {
 	if has_errors {
 		exit(-1)
 	}
-	
+
 	if !(display_bound_stmts || display_lowered_stmts) {
 		if use_evaluator {
 			mut comp := comp.create_compilation(syntax_trees)
@@ -142,7 +148,7 @@ fn main() {
 
 				println(term.green('success'))
 				exit(0)
-			} else if command == .test {
+			} else if command == .test || command == .test_self {
 				mut comp := comp.create_test(syntax_trees)
 				llvm_backend := llvm.new_llvm_generator()
 				res := comp.run_tests(llvm_backend)
@@ -248,6 +254,16 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 		iw.writeln('')
 	}
 	println(iw.str())
+}
+
+fn get_self_test_files() ?[]string {
+	exe_directory_path := os.dir(os.executable())
+	path_to_tests := os.join_path(exe_directory_path, '../../lib/tests')
+	test_files := os.walk_ext(path_to_tests, '.v')
+	if test_files.len > 0 {
+		return test_files
+	}
+	return none
 }
 
 fn get_files(file_or_directory string) ?[]string {

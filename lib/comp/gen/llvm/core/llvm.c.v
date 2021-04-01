@@ -75,24 +75,16 @@ fn C.LLVMVoidTypeInContext(ctx_ref &C.LLVMContextRef) &C.LLVMTypeRef
 fn C.LLVMStructTypeInContext(ctx &LLVMContextRef, type_refs voidptr, elem_count u32, int Packed) &C.LLVMTypeRef
 fn C.LLVMStructCreateNamed(ctx &C.LLVMContextRef, name charptr) &C.LLVMTypeRef
 fn C.LLVMStructSetBody(struct_typ_ref &C.LLVMTypeRef, element_types voidptr, element_count u32, packed u32)
-fn C.LLVMConstStructInContext(ctx &C.LLVMContextRef,
-                                      values voidptr,
-                                      count u32, packed int) &C.LLVMValueRef
+fn C.LLVMConstStructInContext(ctx &C.LLVMContextRef, values voidptr, count u32, packed int) &C.LLVMValueRef
 
-fn C.LLVMConstNamedStruct(struct_typ &C.LLVMTypeRef,
-                                  value_refs voidptr,
-                                  count u32) &C.LLVMValueRef
+fn C.LLVMConstNamedStruct(struct_typ &C.LLVMTypeRef, value_refs voidptr, count u32) &C.LLVMValueRef
 
-fn C.LLVMBuildStructGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef,
-                                 val_ref &C.LLVMValueRef, idx u32,
-                                 name charptr) &C.LLVMValueRef
+fn C.LLVMBuildStructGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, idx u32, name charptr) &C.LLVMValueRef
 
-fn C.LLVMBuildInBoundsGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef,
-                                   val_ref &C.LLVMValueRef, indicies voidptr,
-                                   nr_indicies u32, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildInBoundsGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, indicies voidptr, nr_indicies u32, name charptr) &C.LLVMValueRef
+
 // fn C. LLVMIntType(unsigned NumBits) LLVMTypeRef
-fn C.LLVMBuildPointerCast(builder &C.LLVMBuilderRef, val &C.LLVMValueRef,
-                                  dest_typ &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildPointerCast(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, dest_typ &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
 
 fn C.LLVMModuleCreateWithName(charptr) &C.LLVMModuleRef
 fn C.LLVMFunctionType(ReturnType &C.LLVMTypeRef, param_types voidptr, param_count int, is_var_arg int) &C.LLVMTypeRef
@@ -102,8 +94,8 @@ fn C.LLVMAddFunction(mod &C.LLVMModuleRef, name charptr, fn_type &C.LLVMTypeRef)
 fn C.LLVMBuildCall2(builder &C.LLVMBuilderRef, typ &C.LLVMTypeRef, func &C.LLVMValueRef, args_ptr voidptr, nr_of_args int, name charptr) &C.LLVMValueRef
 fn C.LLVMBuildCall(builder &C.LLVMBuilderRef, func &C.LLVMValueRef, args_ptr voidptr, nr_of_args int, name charptr) &C.LLVMValueRef
 
-
 fn C.LLVMBuildUnreachable(builder &C.LLVMBuilderRef) &C.LLVMValueRef
+
 //  LLVMBuildCall2(LLVMBuilderRef, LLVMTypeRef, LLVMValueRef Fn,
 //                             LLVMValueRef *Args, unsigned NumArgs,
 //                             const char *Name); LLVMValueRef
@@ -147,6 +139,7 @@ fn C.LLVMSetInitializer(glob_var &C.LLVMValueRef, const_val &C.LLVMValueRef)
 fn C.LLVMGetLastInstruction(blocl &C.LLVMBasicBlockRef) &C.LLVMValueRef
 
 fn C.LLVMBuildNeg(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildNot(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name charptr) &C.LLVMValueRef
 
 fn C.LLVMBuildLoad2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, name charptr) &C.LLVMValueRef
 
@@ -169,6 +162,7 @@ fn C.LLVMCreateBuilderInContext(ctx_ref &C.LLVMContextRef) &C.LLVMBuilderRef
 fn C.LLVMAppendBasicBlockInContext(ctx_ref &C.LLVMContextRef, func &C.LLVMValueRef, name charptr) &C.LLVMBasicBlockRef
 fn C.LLVMMoveBasicBlockAfter(block &C.LLVMBasicBlockRef, move_after_block &C.LLVMBasicBlockRef)
 fn C.LLVMGetLastBasicBlock(func_ref &C.LLVMValueRef) &C.LLVMBasicBlockRef
+
 // comparations
 
 fn C.LLVMBuildICmp(builder &C.LLVMBuilderRef, op IntPredicate, left &C.LLVMValueRef, right &C.LLVMValueRef, name charptr) &C.LLVMValueRef
