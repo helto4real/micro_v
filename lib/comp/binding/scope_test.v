@@ -17,7 +17,7 @@ fn test_single_scope() {
 		return
 	}
 	assert lookup_var.name == 'in_scope_var'
-	lookup_not_exist := scope.lookup_var('not_exist') or { return }
+	_ := scope.lookup_var('not_exist') or { return }
 
 	assert false
 }
@@ -39,7 +39,7 @@ fn test_parent_scope() {
 		return
 	}
 	assert lookup_var.name == 'in_scope_var'
-	lookup_not_exist := scope.lookup_var('not_exist') or { return }
+	_ := scope.lookup_var('not_exist') or { return }
 
 	assert false
 }

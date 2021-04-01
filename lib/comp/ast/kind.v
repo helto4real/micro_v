@@ -14,24 +14,26 @@ enum SyntaxKind {
 	if_expr
 	call_expr
 	struct_init_expr
+	empty_expr
 	// nodes
 	operator_node
 	else_node
 	else_expr_node
 	comp_node
 	syntax_type
-	node_param
-	node_type
-	node_fn_decl
-	global_stmt
+	param_node
+	type_node
+	fn_decl_node
 	comment_stmt
 	module_stmt
+	struct_decl_node
 	struct_mbr_node
 	struct_init_mbr_node
 	// statements
 	block_stmt
 	break_stmt
-	cont_stmt
+	continue_stmt
+	global_stmt
 	expr_stmt
 	var_decl_stmt
 	if_stmt

@@ -5,24 +5,25 @@ import lib.comp.util.source
 
 pub struct AssignExpr {
 pub:
+	// general ast node
 	tree        &SyntaxTree
 	kind        SyntaxKind = .assign_expr
+	pos         source.Pos
 	child_nodes []AstNode
-
-	ident  NameExpr
-	eq_tok token.Token
-	expr   Expr
-	pos    source.Pos
+	// child nodes
+	name_expr NameExpr
+	eq_tok    token.Token
+	expr      Expr
 }
 
-pub fn new_assign_expr(tree &SyntaxTree, ident NameExpr, eq_tok token.Token, expr Expr) AssignExpr {
+pub fn new_assign_expr(tree &SyntaxTree, name_expr NameExpr, eq_tok token.Token, expr Expr) AssignExpr {
 	return AssignExpr{
 		tree: tree
-		ident: ident
+		name_expr: name_expr
 		expr: expr
 		eq_tok: eq_tok
-		pos: source.new_pos_from_pos_bounds(ident.pos, expr.pos)
-		child_nodes: [AstNode(Expr(ident)), eq_tok, expr]
+		pos: source.new_pos_from_pos_bounds(name_expr.pos, expr.pos)
+		child_nodes: [AstNode(Expr(name_expr)), eq_tok, expr]
 	}
 }
 

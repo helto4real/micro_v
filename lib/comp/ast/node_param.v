@@ -5,28 +5,28 @@ import lib.comp.util.source
 
 // TypeNode represents a type identifier
 // 	parses:
-//		ident VarName	
-//		mut ident VarName	
-//		ident &VarName
+//		name_tok VarName	
+//		mut name_tok VarName	
+//		name_tok &VarName
 pub struct ParamNode {
 pub:
 	// general ast node
 	tree        &SyntaxTree
-	kind        SyntaxKind = .node_param
+	kind        SyntaxKind = .param_node
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
-	ident  token.Token
-	typ    TypeNode
-	is_mut bool
+	name_tok token.Token
+	typ      TypeNode
+	is_mut   bool
 }
 
-pub fn new_param_node(tree &SyntaxTree, ident token.Token, typ TypeNode, is_mut bool) ParamNode {
+pub fn new_param_node(tree &SyntaxTree, name_tok token.Token, typ TypeNode, is_mut bool) ParamNode {
 	return ParamNode{
 		tree: tree
-		pos: source.new_pos_from_pos_bounds(ident.pos, typ.ident.pos)
-		child_nodes: [AstNode(ident), typ]
-		ident: ident
+		pos: source.new_pos_from_pos_bounds(name_tok.pos, typ.name_tok.pos)
+		child_nodes: [AstNode(name_tok), typ]
+		name_tok: name_tok
 		typ: typ
 		is_mut: is_mut
 	}

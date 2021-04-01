@@ -7,24 +7,25 @@ import lib.comp.util.source
 //	ex: 1..10
 pub struct RangeExpr {
 pub:
+	// general ast node
 	tree        &SyntaxTree
 	kind        SyntaxKind = .range_expr
 	pos         source.Pos
 	child_nodes []AstNode
-
-	range token.Token
-	from  Expr
-	to    Expr
+	// child nodes
+	range     token.Token
+	from_expr Expr
+	to_expr   Expr
 }
 
-pub fn new_range_expr(tree &SyntaxTree, from Expr, range token.Token, to Expr) RangeExpr {
+pub fn new_range_expr(tree &SyntaxTree, from_expr Expr, range token.Token, to_expr Expr) RangeExpr {
 	return RangeExpr{
 		tree: tree
 		range: range
-		from: from
-		to: to
-		pos: source.new_pos_from_pos_bounds(range.pos, to.pos)
-		child_nodes: [AstNode(from), range, to]
+		from_expr: from_expr
+		to_expr: to_expr
+		pos: source.new_pos_from_pos_bounds(range.pos, to_expr.pos)
+		child_nodes: [AstNode(from_expr), range, to_expr]
 	}
 }
 
@@ -41,5 +42,5 @@ pub fn (ex RangeExpr) node_str() string {
 }
 
 pub fn (ex RangeExpr) str() string {
-	return '${ex.from}..$ex.to'
+	return '${ex.from_expr}..$ex.to_expr'
 }

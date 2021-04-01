@@ -11,15 +11,15 @@ pub:
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
-	break_tok token.Token
+	break_key token.Token
 }
 
-pub fn new_break_stmt(tree &SyntaxTree, break_tok token.Token) BreakStmt {
+pub fn new_break_stmt(tree &SyntaxTree, break_key token.Token) BreakStmt {
 	return BreakStmt{
 		tree: tree
-		pos: break_tok.pos
-		child_nodes: [AstNode(break_tok)]
-		break_tok: break_tok
+		pos: break_key.pos
+		child_nodes: [AstNode(break_key)]
+		break_key: break_key
 	}
 }
 

@@ -4,9 +4,10 @@ import lib.comp.symbols
 
 pub struct BoundForRangeStmt {
 pub:
+	// general bound stmt
 	kind        BoundNodeKind = .for_range_stmt
-	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
+	// child nodes
 	ident       symbols.VariableSymbol
 	range_expr  BoundExpr
 	body_stmt   BoundStmt
@@ -31,11 +32,11 @@ pub fn (ex BoundForRangeStmt) str() string {
 
 pub struct BoundForStmt {
 pub:
-	kind        BoundNodeKind = .for_stmt
-	typ         symbols.TypeSymbol
-	child_nodes []BoundNode
 	has_cond    bool
-
+	// general bound stmt
+	kind        BoundNodeKind = .for_stmt
+	child_nodes []BoundNode
+	// child nodes
 	cond_expr BoundExpr
 	body_stmt BoundStmt
 }

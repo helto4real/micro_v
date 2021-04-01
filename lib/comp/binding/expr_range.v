@@ -4,19 +4,21 @@ import lib.comp.symbols
 
 pub struct BoundRangeExpr {
 pub:
+	// general bound node
 	kind        BoundNodeKind = .range_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	from_exp    BoundExpr
-	to_exp      BoundExpr
+	// child nodes
+	from_expr BoundExpr
+	to_expr   BoundExpr
 }
 
-fn new_range_expr(from_exp BoundExpr, to_exp BoundExpr) BoundExpr {
+fn new_range_expr(from_expr BoundExpr, to_expr BoundExpr) BoundExpr {
 	return BoundRangeExpr{
-		child_nodes: [BoundNode(from_exp), to_exp]
-		typ: from_exp.typ
-		from_exp: from_exp
-		to_exp: to_exp
+		child_nodes: [BoundNode(from_expr), to_expr]
+		typ: from_expr.typ
+		from_expr: from_expr
+		to_expr: to_expr
 	}
 }
 
@@ -25,5 +27,5 @@ pub fn (ex BoundRangeExpr) node_str() string {
 }
 
 pub fn (ex BoundRangeExpr) str() string {
-	return '${ex.from_exp}..$ex.to_exp'
+	return '${ex.from_expr}..$ex.to_expr'
 }

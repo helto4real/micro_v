@@ -40,7 +40,7 @@ pub fn variable_exp(var BoundVariableExpr) BoundVariableExpr {
 }
 
 pub fn variable(var_decl BoundVarDeclStmt) BoundVariableExpr {
-	return new_bound_variable_expr(var_decl.var, var_decl.typ) as BoundVariableExpr
+	return new_bound_variable_expr(var_decl.var, var_decl.var.typ) as BoundVariableExpr
 }
 
 pub fn binary(left BoundExpr, kind token.Kind, right BoundExpr) BoundExpr {

@@ -5,22 +5,23 @@ import lib.comp.token
 
 pub struct BoundBinaryExpr {
 pub:
-	kind        BoundNodeKind
+	// general bound node
+	kind        BoundNodeKind = .binary_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	left        BoundExpr
-	op          BoundBinaryOperator
-	right       BoundExpr
+	// child nodes
+	left_expr  BoundExpr
+	op         BoundBinaryOperator
+	right_expr BoundExpr
 }
 
-pub fn new_bound_binary_expr(left BoundExpr, op BoundBinaryOperator, right BoundExpr) BoundExpr {
+pub fn new_bound_binary_expr(left_expr BoundExpr, op BoundBinaryOperator, right_expr BoundExpr) BoundExpr {
 	return BoundBinaryExpr{
-		child_nodes: [BoundNode(left), right]
-		kind: .binary_expr
 		typ: op.res_typ
 		op: op
-		left: left
-		right: right
+		left_expr: left_expr
+		right_expr: right_expr
+		child_nodes: [BoundNode(left_expr), right_expr]
 	}
 }
 
@@ -29,5 +30,5 @@ pub fn (ex BoundBinaryExpr) node_str() string {
 }
 
 pub fn (ex BoundBinaryExpr) str() string {
-	return '$ex.left ${token.token_str[ex.op.kind]} $ex.right'
+	return '$ex.left_expr ${token.token_str[ex.op.kind]} $ex.right_expr'
 }

@@ -2,10 +2,12 @@ module binding
 
 pub struct BoundReturnStmt {
 pub:
+	has_expr bool
+	// general bound stmt
 	kind        BoundNodeKind = .return_stmt
 	child_nodes []BoundNode
-	has_expr    bool
-	expr        BoundExpr
+	// child nodes
+	expr BoundExpr
 }
 
 pub fn new_bound_return_with_expr_stmt(expr BoundExpr) BoundStmt {

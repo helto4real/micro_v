@@ -1,6 +1,6 @@
 module ast
-import strings
 
+import strings
 import lib.comp.token
 import lib.comp.symbols
 import lib.comp.util.source
@@ -8,11 +8,13 @@ import lib.comp.util.source
 pub struct LiteralExpr {
 	tok token.Token
 pub:
+	// general ast node
 	tree        &SyntaxTree
 	kind        SyntaxKind = .literal_expr
-	val         symbols.LitVal
 	pos         source.Pos
 	child_nodes []AstNode
+	// child nodes
+	val symbols.LitVal
 }
 
 pub fn new_literal_expr(tree &SyntaxTree, tok token.Token, val symbols.LitVal) LiteralExpr {
@@ -46,22 +48,24 @@ pub fn (ex LiteralExpr) str() string {
 
 pub struct NameExpr {
 pub:
+	// general ast node
 	tree        &SyntaxTree
 	kind        SyntaxKind = .name_expr
-	ident       token.Token
-	names 		[]token.Token
 	pos         source.Pos
 	child_nodes []AstNode
+	// child nodes
+	name_tok token.Token
+	names    []token.Token
 }
 
 pub fn new_name_expr(tree &SyntaxTree, names []token.Token) NameExpr {
-	ident := merge_names(names)
+	name_tok := merge_names(names)
 	return NameExpr{
 		tree: tree
-		ident: ident
+		name_tok: name_tok
 		names: names
-		pos: ident.pos
-		child_nodes: [AstNode(ident)]
+		pos: name_tok.pos
+		child_nodes: [AstNode(name_tok)]
 	}
 }
 
@@ -78,7 +82,7 @@ pub fn (ex NameExpr) node_str() string {
 }
 
 pub fn (ex NameExpr) str() string {
-	return '$ex.ident.lit'
+	return '$ex.name_tok.lit'
 }
 
 fn merge_names(names []token.Token) token.Token {
@@ -92,13 +96,10 @@ fn merge_names(names []token.Token) token.Token {
 		}
 		b.write_string(tok.lit)
 	}
-	return token.Token {
+	return token.Token{
 		source: names[0].source
 		kind: .name
 		lit: b.str()
-		pos: source.new_pos_from_pos_bounds(
-			names[0].pos,
-			names[names.len-1].pos
-		)
+		pos: source.new_pos_from_pos_bounds(names[0].pos, names[names.len - 1].pos)
 	}
 }

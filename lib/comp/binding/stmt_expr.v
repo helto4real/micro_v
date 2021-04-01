@@ -2,15 +2,17 @@ module binding
 
 pub struct BoundExprStmt {
 pub:
+	// general bound stmt
 	kind        BoundNodeKind = .expr_stmt
 	child_nodes []BoundNode
-	bound_expr  BoundExpr
+	// child nodes
+	expr BoundExpr
 }
 
-pub fn new_bound_expr_stmt(bound_expr BoundExpr) BoundExprStmt {
+pub fn new_bound_expr_stmt(expr BoundExpr) BoundExprStmt {
 	return BoundExprStmt{
-		bound_expr: bound_expr
-		child_nodes: [BoundNode(bound_expr)]
+		expr: expr
+		child_nodes: [BoundNode(expr)]
 	}
 }
 
@@ -19,5 +21,5 @@ pub fn (ex BoundExprStmt) node_str() string {
 }
 
 pub fn (ex BoundExprStmt) str() string {
-	return '$ex.bound_expr'
+	return '$ex.expr'
 }

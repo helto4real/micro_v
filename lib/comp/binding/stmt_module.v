@@ -4,8 +4,10 @@ import lib.comp.token
 
 pub struct BoundModuleStmt {
 pub:
+	// general bound stmt
 	kind        BoundNodeKind = .module_stmt
 	child_nodes []BoundNode
+	// child nodes
 	name        string
 }
 

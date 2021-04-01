@@ -158,7 +158,7 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 				//   setjmp() 
 				// continue:
 				// 	 <rest_of_body> 
-				cond_expr := node.bound_expr
+				cond_expr := node.expr
 				c.emit_node(cond_expr)
 				cond_expr_ref := c.value_refs.pop()
 
@@ -180,7 +180,7 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 
 				C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, continue_block)
 			} else if node is binding.BoundExprStmt {
-				c.emit_node(node.bound_expr)
+				c.emit_node(node.expr)
 			} else if node is binding.BoundLabelStmt {
 				// is_term_instruction := C.LLVMIsATerminatorInst(last_instruction)
 				// if C.LLVMIsNull(is_term_instruction) == 0 {
@@ -191,7 +191,7 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 				c.current_block = c.blocks[node.name]
 				C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, c.current_block)
 			} else if node is binding.BoundCondGotoStmt {
-				cond_expr := node.cond
+				cond_expr := node.cond_expr
 				c.emit_node(cond_expr)
 				cond_expr_ref := c.value_refs.pop()
 
@@ -220,7 +220,7 @@ fn (mut c Context) emit_node(node binding.BoundNode) {
 					C.LLVMBuildBr(c.mod.builder.builder_ref, goto_block)
 				}
 			} else if node is binding.BoundBlockStmt {
-				for stmt in node.bound_stmts {
+				for stmt in node.stmts {
 					c.emit_node(stmt)
 				}
 			} else {
@@ -384,9 +384,9 @@ fn (mut c Context) emit_var_decl(node binding.BoundVarDeclStmt) {
 fn (mut c Context) emit_binary_expr(binary_expr binding.BoundBinaryExpr) {
 	// Handle left side
 	// typ := binary_expr.typ
-	c.emit_node(binary_expr.left)
+	c.emit_node(binary_expr.left_expr)
 	ref_left := c.value_refs.pop()
-	c.emit_node(binary_expr.right)
+	c.emit_node(binary_expr.right_expr)
 	ref_right := c.value_refs.pop()
 	match binary_expr.op.op_kind {
 		.addition {
@@ -446,7 +446,7 @@ fn (mut c Context) emit_binary_expr(binary_expr binding.BoundBinaryExpr) {
 }
 
 fn (mut c Context) emit_unary_expr(unary_expr binding.BoundUnaryExpr) {
-	c.emit_node(unary_expr.operand)
+	c.emit_node(unary_expr.operand_expr)
 	typ := unary_expr.typ
 	match unary_expr.op.op_kind {
 		.negation {
@@ -516,7 +516,7 @@ fn (mut c Context) emit_struct_init_expr(si binding.BoundStructInitExpr) {
 	typ_ref := get_llvm_type_ref(si.typ, c.mod)
 	mut value_refs := []&C.LLVMValueRef{}
 	for member in si.members {
-		c.emit_node(member.bound_expr)
+		c.emit_node(member.expr)
 		expr_val_ref := c.value_refs.pop()
 		value_refs << expr_val_ref
 	}

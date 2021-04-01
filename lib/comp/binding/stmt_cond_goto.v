@@ -1,23 +1,22 @@
 module binding
 
-import lib.comp.symbols
-
 pub struct BoundCondGotoStmt {
 pub:
-	kind         BoundNodeKind = .cond_goto_stmt
-	typ          symbols.TypeSymbol
-	child_nodes  []BoundNode
-	cond         BoundExpr
-	true_label        string
-	false_label        string
+	// general bound stmt
+	kind        BoundNodeKind = .cond_goto_stmt
+	child_nodes []BoundNode
+	// child nodes
+	cond_expr   BoundExpr
+	true_label  string
+	false_label string
 }
 
-pub fn new_bound_cond_goto_stmt(cond BoundExpr, true_label string, false_label string) BoundStmt {
+pub fn new_bound_cond_goto_stmt(cond_expr BoundExpr, true_label string, false_label string) BoundStmt {
 	return BoundCondGotoStmt{
-		cond: cond
+		cond_expr: cond_expr
 		true_label: true_label
 		false_label: false_label
-		child_nodes: [BoundNode(cond)]
+		child_nodes: [BoundNode(cond_expr)]
 	}
 }
 

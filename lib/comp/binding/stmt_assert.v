@@ -2,14 +2,16 @@ module binding
 
 pub struct BoundAssertStmt {
 pub:
+	// general bound stmt
 	kind        BoundNodeKind = .assert_stmt
 	child_nodes []BoundNode
-	bound_expr        BoundExpr
+	// child nodes
+	expr BoundExpr
 }
 
-pub fn new_bound_assert_stmt(bound_expr BoundExpr) BoundStmt {
+pub fn new_bound_assert_stmt(expr BoundExpr) BoundStmt {
 	return BoundAssertStmt{
-		bound_expr: bound_expr
+		expr: expr
 	}
 }
 
@@ -18,5 +20,5 @@ pub fn (ex BoundAssertStmt) node_str() string {
 }
 
 pub fn (ex BoundAssertStmt) str() string {
-	return 'assert ${ex.bound_expr.str()}'
+	return 'assert $ex.expr.str()'
 }

@@ -4,11 +4,13 @@ import lib.comp.symbols
 
 pub struct BoundCallExpr {
 pub:
+	// general bound node
 	kind        BoundNodeKind = .call_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	func        symbols.FunctionSymbol
-	params      []BoundExpr
+	// child nodes
+	func   symbols.FunctionSymbol
+	params []BoundExpr
 }
 
 pub fn new_bound_call_expr(func symbols.FunctionSymbol, params []BoundExpr) BoundExpr {

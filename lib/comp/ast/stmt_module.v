@@ -11,17 +11,17 @@ pub:
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
-	tok_module token.Token
-	tok_name   token.Token
+	module_key token.Token
+	name_tok   token.Token
 }
 
-pub fn new_module_stmt(tree &SyntaxTree, tok_module token.Token, tok_name token.Token) ModuleStmt {
+pub fn new_module_stmt(tree &SyntaxTree, module_key token.Token, name_tok token.Token) ModuleStmt {
 	return ModuleStmt{
 		tree: tree
-		pos: source.new_pos_from_pos_bounds(tok_module.pos, tok_name.pos)
-		child_nodes: [AstNode(tok_module)]
-		tok_module: tok_module
-		tok_name: tok_name
+		pos: source.new_pos_from_pos_bounds(module_key.pos, name_tok.pos)
+		child_nodes: [AstNode(module_key)]
+		module_key: module_key
+		name_tok: name_tok
 	}
 }
 
