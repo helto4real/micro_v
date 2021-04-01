@@ -4,16 +4,17 @@ import lib.comp.symbols
 
 pub struct BoundLiteralExpr {
 pub:
-	kind        BoundNodeKind
+	// general bound node
+	kind        BoundNodeKind = .literal_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
+	// child nodes
 	const_val	symbols.ConstSymbol
 }
 
 pub fn new_bound_literal_expr(val symbols.LitVal) BoundExpr {
 	return BoundLiteralExpr{
 		typ: val.typ()
-		kind: .literal_expr
 		const_val: symbols.new_const_symbol(val)
 	}
 }

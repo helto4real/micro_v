@@ -104,14 +104,14 @@ fn write_expr(writer io.CodeWriter, node binding.BoundExpr) {
 		binding.BoundVariableExpr {
 			writer.write(node.var.name)
 		}
-		binding.BoundEmptyExpr {
+		binding.BoundNoneExpr {
 			writer.write(node.str())
 		}
 	}
 }
 
 fn write_block_stmt_one_line(writer io.CodeWriter, node binding.BoundBlockStmt, new_line bool) {
-	for i, stmt in node.bound_stmts {
+	for i, stmt in node.stmts {
 		if i!=0 {
 			writer.write('; ')
 		}
@@ -123,7 +123,7 @@ fn write_block_stmt(writer io.CodeWriter, node binding.BoundBlockStmt, new_line 
 	writer.write('{')
 	writer.writeln('')
 	writer.indent_add(1)
-	for stmt in node.bound_stmts {
+	for stmt in node.stmts {
 		write_stmt(writer, stmt)
 	}
 	writer.indent_add(-1)
@@ -149,11 +149,11 @@ fn write_stmt_ex(writer io.CodeWriter, node binding.BoundStmt, new_line bool) {
 			cond_str := if node.jump_if_true { 'if' } else { 'unless' }
 			writer.write(cond_str)
 			writer.write_space()
-			write_expr(writer, node.cond)
+			write_expr(writer, node.cond_expr)
 			if new_line {writer.writeln('')}
 		}
 		binding.BoundExprStmt {
-			write_expr(writer, node.bound_expr)
+			write_expr(writer, node.expr)
 			if new_line {writer.writeln('')}
 		}
 		binding.BoundForRangeStmt {
@@ -192,7 +192,7 @@ fn write_stmt_ex(writer io.CodeWriter, node binding.BoundStmt, new_line bool) {
 			if node.has_else {
 				writer.write('else')
 				writer.write_space()
-				write_nested_stmt(writer, node.else_clause as binding.BoundBlockStmt,
+				write_nested_stmt(writer, node.else_stmt as binding.BoundBlockStmt,
 					true)
 			}
 		}

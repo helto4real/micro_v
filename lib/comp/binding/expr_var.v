@@ -5,9 +5,11 @@ import lib.comp.token
 
 pub struct BoundVariableExpr {
 pub:
+	// general bound node
 	kind        BoundNodeKind = .variable_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
+	// child nodes
 	names 		[]token.Token
 	var         symbols.VariableSymbol
 }

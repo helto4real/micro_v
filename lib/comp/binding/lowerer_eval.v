@@ -92,7 +92,7 @@ pub fn (mut l Lowerer) rewrite_stmt(stmt BoundStmt) BoundStmt {
 }
 
 fn (mut l Lowerer) rewrite_assert_stmt(stmt BoundAssertStmt) BoundStmt {
-	lowered_expr := l.rewrite_expr(stmt.bound_expr)
+	lowered_expr := l.rewrite_expr(stmt.expr)
 	return binding.new_bound_assert_stmt(lowered_expr)
 }
 fn (mut l Lowerer) rewrite_return_stmt(stmt BoundReturnStmt) BoundStmt {
@@ -133,7 +133,7 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt BoundIfStmt) BoundStmt {
 		res := block(
 				goto_cond(stmt.cond_expr, end_then_name, end_label_name), 
 				label(end_then_name),
-				stmt.block_stmt, 
+				stmt.then_stmt, 
 				goto_label(end_label_name),
 				label(end_label_name))
 
@@ -173,10 +173,10 @@ fn (mut l Lowerer) rewrite_if_stmt(stmt BoundIfStmt) BoundStmt {
 		res := block(
 			goto_cond(stmt.cond_expr, then_label, else_label), 
 			label(then_label), 
-			stmt.block_stmt, 
+			stmt.then_stmt, 
 			goto_label(end_label),
 			label(else_label), 
-			stmt.else_clause, 
+			stmt.else_stmt, 
 			goto_label(end_label),
 			label(end_label))
 
@@ -293,8 +293,8 @@ fn (mut l Lowerer) rewrite_for_range_stmt(stmt BoundForRangeStmt) BoundStmt {
 
 	range := stmt.range_expr as BoundRangeExpr
 	// mut var := lower
-	lower_decl := var_decl(stmt.ident, range.from_exp, true)
-	upper_decl := var_decl_local('upper', symbols.int_symbol, range.to_exp, false)
+	lower_decl := var_decl(stmt.ident, range.from_expr, true)
+	upper_decl := var_decl_local('upper', symbols.int_symbol, range.to_expr, false)
 
 	continue_label := l.gen_continue_label()
 	body_label := l.gen_body_label()
@@ -337,7 +337,7 @@ pub fn flatten(stmt BoundStmt) BoundBlockStmt {
 	for !stack.is_empty() {
 		current := stack.pop() or { panic('as') }
 		if current is BoundBlockStmt {
-			rev_stmts := current.bound_stmts.reverse()
+			rev_stmts := current.stmts.reverse()
 			for s in rev_stmts {
 				stack.push(s)
 			}
@@ -354,10 +354,10 @@ Not lowered
 
 fn (mut l Lowerer) rewrite_block_stmt(stmt BoundBlockStmt) BoundStmt {
 	mut ret_block_stmt := []BoundStmt{}
-	for old_stmt in stmt.bound_stmts {
+	for old_stmt in stmt.stmts {
 		new_stmt := l.rewrite_stmt(old_stmt)
 		// for j := 0; j < i; j++ {
-		// 	ret_block_stmt << stmt.bound_stmts[j]
+		// 	ret_block_stmt << stmt.stmts[j]
 		// }
 		ret_block_stmt << new_stmt
 	}
@@ -368,7 +368,7 @@ fn (mut l Lowerer) rewrite_block_stmt(stmt BoundBlockStmt) BoundStmt {
 }
 
 fn (mut l Lowerer) rewrite_expr_stmt(stmt BoundExprStmt) BoundStmt {
-	new_expr := l.rewrite_expr(stmt.bound_expr)
+	new_expr := l.rewrite_expr(stmt.expr)
 	return new_bound_expr_stmt(new_expr)
 }
 
@@ -386,7 +386,7 @@ fn (mut l Lowerer) rewrite_goto_stmt(stmt BoundGotoStmt) BoundStmt {
 }
 
 fn (mut l Lowerer) rewrite_cond_goto_stmt(stmt BoundCondGotoStmt) BoundStmt {
-	cond := l.rewrite_expr(stmt.cond)
+	cond := l.rewrite_expr(stmt.cond_expr)
 	return new_bound_cond_goto_stmt(cond, stmt.true_label, stmt.false_label)
 }
 
@@ -402,9 +402,9 @@ pub fn (mut l Lowerer) rewrite_expr(expr BoundExpr) BoundExpr {
 		BoundErrorExpr { return l.rewrite_error_expr(expr) }
 		BoundCallExpr { return l.rewrite_call_expr(expr) }
 		BoundConvExpr { return l.rewrite_conv_expr(expr) }
-		BoundEmptyExpr { return expr }
+		BoundNoneExpr { return expr }
 		BoundStructInitExpr { return expr }
-		EmptyExpr { return expr }
+		NoneExpr { return expr }
 	}
 }
 
@@ -436,13 +436,13 @@ pub fn (mut l Lowerer) rewrite_literal_expr(expr BoundLiteralExpr) BoundExpr {
 }
 
 pub fn (mut l Lowerer) rewrite_unary_expr(expr BoundUnaryExpr) BoundExpr {
-	operand := l.rewrite_expr(expr.operand)
+	operand := l.rewrite_expr(expr.operand_expr)
 	return new_bound_unary_expr(expr.op, operand)
 }
 
 pub fn (mut l Lowerer) rewrite_binary_expr(expr BoundBinaryExpr) BoundExpr {
-	left := l.rewrite_expr(expr.left)
-	right := l.rewrite_expr(expr.right)
+	left := l.rewrite_expr(expr.left_expr)
+	right := l.rewrite_expr(expr.right_expr)
 	return new_bound_binary_expr(left, expr.op, right)
 }
 

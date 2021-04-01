@@ -103,7 +103,7 @@ fn (mut f Function) generate_function_bodies() {
 	}
 	mut current_block := main_block
 	// generate all blocks
-	for stmt in f.body.bound_stmts {
+	for stmt in f.body.stmts {
 		if stmt is binding.BoundLabelStmt {
 			label_block := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.llvm_func,
 				stmt.name.str)
@@ -115,7 +115,7 @@ fn (mut f Function) generate_function_bodies() {
 
 	// Generate the statements at entry
 	C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, main_block)
-	for stmt in f.body.bound_stmts {
+	for stmt in f.body.stmts {
 		ctx.emit_node(stmt)
 	}
 	if f.func.name == 'main' {

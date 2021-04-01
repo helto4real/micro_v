@@ -1,13 +1,12 @@
 module binding
 
-import lib.comp.symbols
-
 pub struct BoundLabelStmt {
 pub:
+	// general bound stmt
 	kind        BoundNodeKind = .label_stmt
-	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	name        string
+	// child nodes
+	name string
 }
 
 pub fn new_bound_label_stmt(name string) BoundStmt {

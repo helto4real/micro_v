@@ -38,7 +38,7 @@ pub fn new_evaluator(program &binding.BoundProgram, glob_vars &binding.EvalVaria
 	// If you want to display the control flow graph, uncomment following lines
 
 	// mut cfg_stmt := binding.BoundBlockStmt{}
-	// if program.stmt.bound_stmts.len == 0 && program.func_bodies.len > 0 {
+	// if program.stmt.stmts.len == 0 && program.func_bodies.len > 0 {
 	// 	cfg_stmt = binding.lower(program.func_bodies[program.func_bodies.keys().last()])
 	// } else {
 	// 	cfg_stmt = lowered_stmt
@@ -106,7 +106,7 @@ pub fn (mut e Evaluator) evaluate_stmt(block binding.BoundBlockStmt) ?symbols.Li
 						index = label_to_index[stmt.label]
 					}
 					binding.BoundCondGotoStmt {
-						cond := e.eval_expr(stmt.cond) ?
+						cond := e.eval_expr(stmt.cond_expr) ?
 						if cond is bool {
 							if cond {
 								index = label_to_index[stmt.true_label]
@@ -158,8 +158,8 @@ fn (mut e Evaluator) eval_bound_var_decl_stmt(node binding.BoundVarDeclStmt) {
 }
 
 fn (mut e Evaluator) eval_bound_expr_stmt(stmt binding.BoundExprStmt) {
-	e.last_val = e.eval_expr(stmt.bound_expr) or {
-		panic('unexpected error evaluate expresseion $stmt.bound_expr')
+	e.last_val = e.eval_expr(stmt.expr) or {
+		panic('unexpected error evaluate expresseion $stmt.expr')
 	}
 }
 
@@ -265,8 +265,8 @@ fn (mut e Evaluator) eval_bound_call_expr(node binding.BoundCallExpr) ?symbols.L
 }
 
 fn (mut e Evaluator) eval_bound_range_expr(node binding.BoundRangeExpr) ?symbols.LitVal {
-	from_val := e.eval_expr(node.from_exp) ?
-	to_val := e.eval_expr(node.to_exp) ?
+	from_val := e.eval_expr(node.from_expr) ?
+	to_val := e.eval_expr(node.to_expr) ?
 	return '${from_val as int}..${to_val as int}'
 }
 
@@ -302,7 +302,7 @@ fn (mut e Evaluator) eval_bound_assign_expr(node binding.BoundAssignExpr) ?symbo
 }
 
 fn (mut e Evaluator) eval_bound_unary_expr(node binding.BoundUnaryExpr) ?symbols.LitVal {
-	operand := e.eval_expr(node.operand) ?
+	operand := e.eval_expr(node.operand_expr) ?
 	match node.op.op_kind {
 		.identity { return operand as int }
 		.negation { return -(operand as int) }
@@ -313,8 +313,8 @@ fn (mut e Evaluator) eval_bound_unary_expr(node binding.BoundUnaryExpr) ?symbols
 }
 
 fn (mut e Evaluator) eval_bound_binary_expr(node binding.BoundBinaryExpr) ?symbols.LitVal {
-	left := e.eval_expr(node.left) ?
-	right := e.eval_expr(node.right) ?
+	left := e.eval_expr(node.left_expr) ?
+	right := e.eval_expr(node.right_expr) ?
 	// compiler bug does exl_mark work with normal cast
 	match node.op.op_kind {
 		.addition { return (left as int) + (right as int) }

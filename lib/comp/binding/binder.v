@@ -63,11 +63,11 @@ pub fn bind_program(is_test bool, is_script bool, previous &BoundProgram, global
 			last_statement := valid_statements.last()
 			if last_statement.kind != .return_stmt {
 				if last_statement.kind == .expr_stmt
-					&& (last_statement as BoundExprStmt).bound_expr.typ.kind != .void_symbol {
+					&& (last_statement as BoundExprStmt).expr.typ.kind != .void_symbol {
 					for i, stmt in valid_statements {
 						if i == valid_statements.len - 1 {
 							// last statement
-							stmts << new_bound_return_with_expr_stmt((stmt as BoundExprStmt).bound_expr)
+							stmts << new_bound_return_with_expr_stmt((stmt as BoundExprStmt).expr)
 						} else {
 							stmts << stmt
 						}
@@ -278,9 +278,9 @@ pub fn (mut b Binder) bind_stmt(stmt ast.Stmt) BoundStmt {
 
 	if !b.allow_expr && (!b.is_script || !b.current_is_global) {
 		if result is BoundExprStmt {
-			allowed_expression := result.bound_expr.kind == .call_expr
-				|| result.bound_expr.kind == .if_expr || result.bound_expr.kind == .assign_expr
-				|| result.bound_expr.kind == .error_expr
+			allowed_expression := result.expr.kind == .call_expr
+				|| result.expr.kind == .if_expr || result.expr.kind == .assign_expr
+				|| result.expr.kind == .error_expr
 
 			if !allowed_expression {
 				b.log.error_invalid_expression_statement(stmt.text_location())
@@ -312,12 +312,12 @@ pub fn (mut b Binder) bind_stmt_internal(stmt ast.Stmt) BoundStmt {
 }
 
 pub fn (mut b Binder) bind_assert_stmt(assert_stmt ast.AssertStmt) BoundStmt {
-	bound_expr := b.bind_expr(assert_stmt.expr)
-	if bound_expr.kind == .error_expr {
+	expr := b.bind_expr(assert_stmt.expr)
+	if expr.kind == .error_expr {
 		// We got an error allready
 		return new_bound_expr_stmt(new_bound_error_expr())
 	}
-	converted_expr := b.bind_convertion_diag(assert_stmt.expr.text_location(), bound_expr,
+	converted_expr := b.bind_convertion_diag(assert_stmt.expr.text_location(), expr,
 					symbols.bool_symbol)
 	
 	return new_bound_assert_stmt(converted_expr)
@@ -628,9 +628,9 @@ pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
 }
 
 fn bind_block_type(block BoundBlockStmt) ?symbols.TypeSymbol {
-	last_block_node := block.bound_stmts.last()
+	last_block_node := block.stmts.last()
 	if last_block_node is BoundExprStmt {
-		return last_block_node.bound_expr.typ
+		return last_block_node.expr.typ
 	}
 	return none
 }
@@ -692,16 +692,16 @@ pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 		b.log.error_structs_fields_declared_on_init(syntax.ident.names[1].text_location())
 		return new_bound_expr_stmt(new_bound_error_expr()) 
 	}
-	bound_expr := b.bind_expr(syntax.expr)
-	var := b.bind_variable(syntax.ident.name_tok, bound_expr.typ, syntax.is_mut)
-	return new_var_decl_stmt(var, bound_expr, syntax.is_mut)
+	expr := b.bind_expr(syntax.expr)
+	var := b.bind_variable(syntax.ident.name_tok, expr.typ, syntax.is_mut)
+	return new_var_decl_stmt(var, expr, syntax.is_mut)
 }
 
 fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
-	bound_expr := b.bind_expr(syntax.expr)
+	expr := b.bind_expr(syntax.expr)
 
-	if bound_expr.typ.kind == .error_symbol {
-		return bound_expr
+	if expr.typ.kind == .error_symbol {
+		return expr
 	}
 
 	// todo: when modules is supported, lookup here
@@ -716,7 +716,7 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 
 	if syntax.name_expr.names.len == 1 {
 		// non struct, just return the bound variable
-		conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, base_var.typ)
+		conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), expr, base_var.typ)
 		return new_bound_assign_expr(base_var, conv_expr)
 	}
 
@@ -739,7 +739,7 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 		return new_bound_error_expr()
 	}
 
-	conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, current_typ)
+	conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), expr, current_typ)
 
 	return new_bound_assign_with_names_expr(base_var, syntax.name_expr.names, conv_expr)
 }
@@ -760,8 +760,8 @@ fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
 		if members_result.len == 0 {
 			bound_expr = b.bind_default_value_expr(struct_member_typ)
 		} else {
-			expr := b.bind_expr(members_result[0].expr)
-			bound_expr = b.bind_convertion_diag(members_result[0].expr.text_location(), expr, struct_member_typ)
+			bound_expr = b.bind_expr(members_result[0].expr)
+			bound_expr = b.bind_convertion_diag(members_result[0].expr.text_location(), bound_expr, struct_member_typ)
 		}
 		bound_member := new_bound_struct_init_member(struct_member.ident, bound_expr)
 		members << bound_member

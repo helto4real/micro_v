@@ -4,9 +4,11 @@ import lib.comp.symbols
 
 pub struct BoundConvExpr {
 pub:
+	// general bound node
 	kind        BoundNodeKind = .conv_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
+	// child nodes
 	expr        BoundExpr
 }
 

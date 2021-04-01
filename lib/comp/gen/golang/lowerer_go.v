@@ -36,9 +36,9 @@ fn lower_for_range(for_range_stmt bi.BoundForRangeStmt) []bi.BoundStmt {
 
 	// add a ending statement that will increase the index
 	for_body := for_range_stmt.body_stmt as bi.BoundBlockStmt
-	mut body_stmts := []bi.BoundStmt{cap: for_body.bound_stmts.len+1}
+	mut body_stmts := []bi.BoundStmt{cap: for_body.stmts.len+1}
 	
-	body_stmts << for_body.bound_stmts
+	body_stmts << for_body.stmts
 	// i = i + 1
 	body_stmts << bi.increment(bi.variable(index_decl))
 

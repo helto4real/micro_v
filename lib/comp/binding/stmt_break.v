@@ -2,6 +2,7 @@ module binding
 
 pub struct BoundBreakStmt {
 pub:
+	// general bound node
 	kind        BoundNodeKind = .break_stmt
 	child_nodes []BoundNode
 }

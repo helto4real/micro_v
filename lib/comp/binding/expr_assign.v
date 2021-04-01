@@ -5,12 +5,14 @@ import lib.comp.symbols
 
 pub struct BoundAssignExpr {
 pub:
+	// general bound node
 	kind        BoundNodeKind = .assign_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	var         symbols.VariableSymbol
-	names 		[]token.Token
-	expr        BoundExpr
+	// child nodes
+	var   symbols.VariableSymbol
+	names []token.Token
+	expr  BoundExpr
 }
 
 pub fn new_bound_assign_expr(var symbols.VariableSymbol, expr BoundExpr) BoundExpr {
@@ -31,7 +33,6 @@ pub fn new_bound_assign_with_names_expr(var symbols.VariableSymbol, names []toke
 		expr: expr
 	}
 }
-
 
 pub fn (ex BoundAssignExpr) node_str() string {
 	return typeof(ex).name

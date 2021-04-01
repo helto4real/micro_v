@@ -2,6 +2,7 @@ module binding
 
 pub struct BoundContinueStmt {
 pub:
+	// general bound stmt
 	kind        BoundNodeKind = .continue_stmt
 	child_nodes []BoundNode
 }

@@ -4,6 +4,7 @@ import lib.comp.symbols
 
 pub struct BoundErrorExpr {
 pub:
+	// general bound node
 	kind        BoundNodeKind = .error_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode

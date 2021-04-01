@@ -23,11 +23,11 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 		}
 		BoundBinaryExpr {
 			prec := ast.binary_operator_precedence(node.op.kind)
-			write_nested_expr(writer, prec, node.left)
+			write_nested_expr(writer, prec, node.left_expr)
 			writer.write_space()
 			writer.write_punctuation(token.token_str[node.op.kind])
 			writer.write_space()
-			write_nested_expr(writer, prec, node.right)
+			write_nested_expr(writer, prec, node.right_expr)
 		}
 		BoundCallExpr {
 			writer.write_identifier(node.func.name)
@@ -79,25 +79,25 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 			}
 		}
 		BoundRangeExpr {
-			write_expr(writer, node.from_exp)
+			write_expr(writer, node.from_expr)
 			writer.write_punctuation('..')
-			write_expr(writer, node.to_exp)
+			write_expr(writer, node.to_expr)
 		}
 		BoundUnaryExpr {
 			prec := ast.unary_operator_precedence(node.op.kind)
 			writer.write_punctuation(token.token_str[node.op.kind])
-			write_nested_expr(writer, prec, node.operand)
+			write_nested_expr(writer, prec, node.operand_expr)
 		}
 		BoundVariableExpr {
 			writer.write_identifier(node.var.name)
 		}
-		BoundEmptyExpr {
+		BoundNoneExpr {
 			writer.write_identifier(node.str())
 		}
 		BoundStructInitExpr {
 			writer.write_identifier(node.str())
 		}
-		EmptyExpr {
+		NoneExpr {
 			writer.write_identifier(node.str())
 		}
 	}
@@ -109,7 +109,7 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			writer.write_punctuation('{')
 			writer.writeln('')
 			writer.indent_add(1)
-			for stmt in node.bound_stmts {
+			for stmt in node.stmts {
 				write_stmt(writer, stmt)
 			}
 			writer.indent_add(-1)
@@ -123,7 +123,7 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			writer.write_space()
 			writer.write('if')
 			writer.write_space()
-			write_expr(writer, node.cond)
+			write_expr(writer, node.cond_expr)
 			writer.write_space()
 			writer.write('else')
 			writer.write_space()
@@ -131,7 +131,7 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			writer.writeln('')
 		}
 		BoundExprStmt {
-			write_expr(writer, node.bound_expr)
+			write_expr(writer, node.expr)
 			writer.writeln('')
 		}
 		BoundForRangeStmt {
@@ -169,7 +169,7 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 		BoundAssertStmt {
 			writer.write_keyword('assert')
 			writer.write_space()
-			write_expr(writer, node.bound_expr)
+			write_expr(writer, node.expr)
 			writer.writeln('')
 		}
 		BoundIfStmt {
@@ -177,11 +177,11 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			writer.write_space()
 			write_expr(writer, node.cond_expr)
 			writer.write_space()
-			write_nested_stmt(writer, node.block_stmt)
+			write_nested_stmt(writer, node.then_stmt)
 			if node.has_else {
 				writer.write_keyword('else')
 				writer.write_space()
-				write_nested_stmt(writer, node.else_clause)
+				write_nested_stmt(writer, node.else_stmt)
 			}
 		}
 		BoundLabelStmt {

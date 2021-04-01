@@ -2,24 +2,24 @@ module binding
 
 import lib.comp.symbols
 
-pub struct EmptyExpr {
+pub struct NoneExpr {
 pub:
-	kind        BoundNodeKind
+	// general bound node
+	kind        BoundNodeKind = .none_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 }
 
 pub fn new_empty_expr() BoundExpr {
-	return EmptyExpr{
+	return NoneExpr{
 		typ: symbols.none_symbol
-		kind: .none_expr
 	}
 }
 
-pub fn (ex EmptyExpr) node_str() string {
+pub fn (ex NoneExpr) node_str() string {
 	return 'typeof(ex).name'
 }
 
-pub fn (ex EmptyExpr) str() string {
-	return '<empty>'
+pub fn (ex NoneExpr) str() string {
+	return '<none>'
 }

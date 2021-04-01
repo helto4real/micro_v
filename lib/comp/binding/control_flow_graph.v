@@ -70,7 +70,7 @@ pub fn (ex BasicBlock) str() string {
 
 struct BasicBlockBranch {
 	has_expr bool
-	cond     BoundExpr
+	cond_expr     BoundExpr
 mut:
 	from &BasicBlock
 	to   &BasicBlock
@@ -90,14 +90,14 @@ pub fn (bbb BasicBlockBranch) str() string {
 	if bbb.has_expr == false {
 		return ''
 	}
-	return bbb.cond.str()
+	return bbb.cond_expr.str()
 }
 
-pub fn new_branch_with_cond_block(from &BasicBlock, to &BasicBlock, cond BoundExpr) BasicBlockBranch {
+pub fn new_branch_with_cond_block(from &BasicBlock, to &BasicBlock, cond_expr BoundExpr) BasicBlockBranch {
 	return BasicBlockBranch{
 		to: to
 		from: from
-		cond: cond
+		cond_expr: cond_expr
 		has_expr: true
 	}
 }
@@ -128,7 +128,7 @@ pub fn new_basic_block_builder() &BasicBlockBuilder {
 }
 
 pub fn (mut bbb BasicBlockBuilder) build(block BoundBlockStmt) []&BasicBlock {
-	for stmt in block.bound_stmts {
+	for stmt in block.stmts {
 		match stmt {
 			BoundBlockStmt {}
 			BoundVarDeclStmt {
@@ -272,9 +272,9 @@ pub fn (mut gb GraphBuilder) connect(mut from BasicBlock, mut to BasicBlock) {
 	// panic('hello: $gb.branches.len')
 }
 
-pub fn (mut gb GraphBuilder) connect_cond(mut from BasicBlock, mut to BasicBlock, cond BoundExpr) {
-	if cond is BoundLiteralExpr {
-		val := cond.const_val.val as bool
+pub fn (mut gb GraphBuilder) connect_cond(mut from BasicBlock, mut to BasicBlock, cond_expr BoundExpr) {
+	if cond_expr is BoundLiteralExpr {
+		val := cond_expr.const_val.val as bool
 		if val {
 			branch := new_branch_block(from, to)
 			from.add_outgoing(branch)
@@ -285,7 +285,7 @@ pub fn (mut gb GraphBuilder) connect_cond(mut from BasicBlock, mut to BasicBlock
 			return
 		}
 	}
-	branch := new_branch_with_cond_block(from, to, cond)
+	branch := new_branch_with_cond_block(from, to, cond_expr)
 	from.add_outgoing(branch)
 	to.add_incoming(branch)
 	gb.branches << branch
@@ -346,8 +346,8 @@ pub fn (mut gb GraphBuilder) build_graph(mut blocks []&BasicBlock) ControlFlowGr
 				}
 				BoundCondGotoStmt {
 					mut then_block := gb.block_from_label[stmt.true_label]
-					negated_cond := gb.negate(stmt.cond)
-					then_cond := stmt.cond 
+					negated_cond := gb.negate(stmt.cond_expr)
+					then_cond := stmt.cond_expr 
 					else_cond := negated_cond
 					mut else_block := next
 					gb.connect_cond(mut current, mut then_block, then_cond)
