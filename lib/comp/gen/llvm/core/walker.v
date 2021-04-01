@@ -4,7 +4,7 @@ import lib.comp.binding
 pub type EmitNodeFn = fn (node binding.BoundNode, data voidptr) 
 
 pub interface NodeEmitter {
-	emit_node(node binding.BoundNode)
+	emit_stmt(node binding.BoundNode)
 }
 
 // struct EmitNodeInfo {
@@ -20,13 +20,13 @@ pub interface NodeEmitter {
 // 	return none
 // }
 
-// pub fn emit_node(node binding.BoundNode, data voidptr, inspector_callback InspectorFn) {
+// pub fn emit_stmt(node binding.BoundNode, data voidptr, inspector_callback InspectorFn) {
 // 	walk(Inspector{inspector_callback, data}, node)
 // }
 
 // walk traverses the AST using the given visitor
 pub fn emit_nodes(emitter NodeEmitter, node binding.BoundNode) {
-	emitter.emit_node(node)
+	emitter.emit_stmt(node)
 	children := node.child_nodes()
 	for child_node in children {
 		emit_nodes(emitter, child_node)

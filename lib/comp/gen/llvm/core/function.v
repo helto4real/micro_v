@@ -5,7 +5,7 @@ import lib.comp.binding
 
 pub struct Function {
 	mod           Module
-	llvm_func_typ C.LLVMTypeRef
+	llvm_func_typ &C.LLVMTypeRef
 	llvm_func     &C.LLVMValueRef
 	func          symbols.FunctionSymbol
 	body          binding.BoundBlockStmt
@@ -116,7 +116,7 @@ fn (mut f Function) generate_function_bodies() {
 	// Generate the statements at entry
 	C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, main_block)
 	for stmt in f.body.stmts {
-		ctx.emit_node(stmt)
+		ctx.emit_stmt(stmt)
 	}
 	if f.func.name == 'main' {
 		// C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, continue_block)

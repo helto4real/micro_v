@@ -72,7 +72,6 @@ fn main() {
 					if command == .test {
 						files << v_file
 					} else if !v_file.ends_with('_test.v') {
-						println('NOT END WITH TEST: $v_file')
 						files << v_file
 					}
 				}
