@@ -4,10 +4,10 @@ import lib.comp.binding
 import lib.comp.symbols
 
 pub struct CallBuilder {
-	name string
+	name        string
 	fn_ref      &C.LLVMValueRef
 	is_built_in bool
-	func Function
+	func        Function
 pub mut:
 	ctx    &Emitter
 	params []&C.LLVMValueRef
@@ -22,9 +22,9 @@ fn new_builtin_call(name string, ctx &Emitter) CallBuilder {
 	}
 }
 
-fn emit_call(call_expr binding.BoundCallExpr, mut ctx &Emitter) &C.LLVMValueRef {
+fn emit_call(call_expr binding.BoundCallExpr, mut ctx Emitter) &C.LLVMValueRef {
 	func := ctx.mod.funcs[call_expr.func.id] or {
-			panic('unexpected, $call_expr.func.name ($call_expr.func.id) func not declared')
+		panic('unexpected, $call_expr.func.name ($call_expr.func.id) func not declared')
 	}
 	mut params := []&C.LLVMValueRef{cap: call_expr.params.len}
 	for param in call_expr.params {
@@ -55,7 +55,7 @@ pub fn (mut cb CallBuilder) add_param(val_ref &C.LLVMValueRef) {
 
 pub fn (mut cb CallBuilder) add_lit_param(val symbols.LitVal) {
 	lit_expr := binding.new_bound_literal_expr(val) as binding.BoundLiteralExpr
-	cb.params << cb.ctx.emit_bound_litera_expr(lit_expr)
+	cb.params << cb.ctx.emit_literal_expr(lit_expr)
 }
 
 pub fn (mut cb CallBuilder) emit() &C.LLVMValueRef {
@@ -65,8 +65,7 @@ pub fn (mut cb CallBuilder) emit() &C.LLVMValueRef {
 	} else {
 		fn_ref := cb.func.func_ref
 		fn_typ_ref := cb.func.func_typ_ref
-		return C.LLVMBuildCall2(cb.ctx.mod.builder.builder_ref, fn_typ_ref, fn_ref, cb.params.data, cb.params.len,
-				no_name.str)
-		
+		return C.LLVMBuildCall2(cb.ctx.mod.builder.builder_ref, fn_typ_ref, fn_ref, cb.params.data,
+			cb.params.len, no_name.str)
 	}
 }

@@ -10,6 +10,11 @@ const (
 pub enum GlobalVarRefType {
 	printf_str
 	printf_str_nl
+	printf_num
+	sprintf_buff
+	str_true
+	str_false
+	nl
 }
 
 pub struct Builder {
@@ -37,9 +42,11 @@ mut:
 	built_in_funcs map[string]&C.LLVMValueRef
 	main_func_ref  &C.LLVMValueRef = 0
 	types          map[string]&C.LLVMTypeRef
-	jmp_buff	   &C.LLVMValueRef = 0
+	jmp_buff       &C.LLVMValueRef = 0
 
 	global_const map[GlobalVarRefType]&C.LLVMValueRef
+pub mut:
+	is_test bool
 }
 
 pub fn new_llvm_module(name string) Module {
@@ -56,7 +63,7 @@ pub fn new_llvm_module(name string) Module {
 }
 
 fn (mut m Module) init_globals() {
-		// add standard structs
+	// add standard structs
 
 	standard_structs := m.get_standard_struct_types()
 	for standard_struct in standard_structs {
@@ -137,22 +144,20 @@ pub fn (mut m Module) run_tests() bool {
 	main_args := []&C.LLVMGenericValueRef{}
 	C.LLVMRunFunction(m.exec_engine, m.main_func_ref, 0, main_args.data)
 
-
-	mut nr_of_tests := 0 
-	mut nr_of_errors := 0 
+	mut nr_of_tests := 0
+	mut nr_of_errors := 0
 
 	for func in test_funcs {
 		args := []&C.LLVMGenericValueRef{}
 		res := C.LLVMRunFunction(m.exec_engine, func.func_ref, 0, args.data)
-		int_res := C.LLVMGenericValueToInt(res, 1) 
+		int_res := C.LLVMGenericValueToInt(res, 1)
 		nr_of_tests++
 		if int_res == 0 {
-
 		} else {
 			nr_of_errors++
 		}
 	}
-	return nr_of_errors ==  0
+	return nr_of_errors == 0
 }
 
 pub fn (mut m Module) verify() ? {
@@ -172,9 +177,7 @@ pub fn (mut m Module) add_global_string_literal_ptr(str_val string) &C.LLVMValue
 }
 
 pub fn (mut m Module) add_global_struct_const_ptr(typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef) &C.LLVMValueRef {
-	val :=  C.LLVMBuildStructGEP2(m.builder.builder_ref, typ_ref,
-                                val_ref, 0,
-                                no_name.str)
+	val := C.LLVMBuildStructGEP2(m.builder.builder_ref, typ_ref, val_ref, 0, core.no_name.str)
 	return val
 }
 
@@ -189,9 +192,8 @@ pub fn (m Module) print_to_file(path string) ? {
 	return none
 }
 
-
 pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test bool) {
-
+	m.is_test = is_test
 
 	// first declare struct names
 	for _, typ in program.types {
@@ -224,7 +226,7 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 		test_main := symbols.new_function_symbol('main', []symbols.ParamSymbol{}, symbols.int_symbol)
 		body := binding.new_bound_block_stmt([]binding.BoundStmt{})
 		m.declare_function(test_main, body)
-	}	
+	}
 
 	// first declare all functions except the main
 	for func in program.func_symbols {

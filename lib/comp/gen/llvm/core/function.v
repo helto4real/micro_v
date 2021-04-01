@@ -4,11 +4,11 @@ import lib.comp.symbols
 import lib.comp.binding
 
 pub struct Function {
-	mod           Module
+	mod          Module
 	func_typ_ref &C.LLVMTypeRef
 	func_ref     &C.LLVMValueRef
-	func          symbols.FunctionSymbol
-	body          binding.BoundBlockStmt
+	func         symbols.FunctionSymbol
+	body         binding.BoundBlockStmt
 mut:
 	llvm_entry_block &C.LLVMBasicBlockRef = 0
 pub:
@@ -18,7 +18,7 @@ pub:
 fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBlockStmt) Function {
 	llvm_params := get_params(func.params, mod)
 
-	return_typ := if func.name == 'main' {
+	return_typ := if func.name == 'main' || (mod.is_test && func.name.starts_with('test_')) {
 		C.LLVMInt32TypeInContext(mod.ctx_ref)
 	} else {
 		get_llvm_type_ref(func.typ, mod)
@@ -69,28 +69,26 @@ fn (mut f Function) generate_function_bodies() {
 		// error_exit:
 		//   ret 1 
 		continue_str := 'continue'
-		continue_block := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.func_ref,
-				continue_str.str)
+		continue_block := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.func_ref, continue_str.str)
 
 		C.LLVMMoveBasicBlockAfter(continue_block, entry)
 
 		error_exit_str := 'error_exit'
 		error_exit_block := C.LLVMAppendBasicBlockInContext(f.mod.ctx_ref, f.func_ref,
-				error_exit_str.str)
+			error_exit_str.str)
 
 		C.LLVMMoveBasicBlockAfter(error_exit_block, continue_block)
 
 		mut cb := ctx.new_builtin_call('setjmp')
 		cb.add_param(f.mod.jmp_buff)
 		res := cb.emit()
-		cmp_ref := C.LLVMBuildICmp(f.mod.builder.builder_ref, .int_eq, res, C.LLVMConstInt(get_llvm_type_ref(symbols.i64_symbol, f.mod),
-						i64(0), false),	no_name.str)
-		C.LLVMBuildCondBr(ctx.mod.builder.builder_ref, cmp_ref, continue_block,
-					error_exit_block)
-		
+		cmp_ref := C.LLVMBuildICmp(f.mod.builder.builder_ref, .int_eq, res, C.LLVMConstInt(get_llvm_type_ref(symbols.i64_symbol,
+			f.mod), i64(0), false), no_name.str)
+		C.LLVMBuildCondBr(ctx.mod.builder.builder_ref, cmp_ref, continue_block, error_exit_block)
+
 		C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, error_exit_block)
 		// fn_ref := f.mod.built_in_funcs['exit'] or { panic('built in function exit not found') }
-		
+
 		error_code := C.LLVMConstInt(get_llvm_type_ref(symbols.int_symbol, f.mod), 1,
 			false)
 		// mut params := []&C.LLVMValueRef{cap: 1}
@@ -118,14 +116,12 @@ fn (mut f Function) generate_function_bodies() {
 	for stmt in f.body.stmts {
 		ctx.emit_stmt(stmt)
 	}
-	if f.func.name == 'main' {
+	if f.func.name == 'main' || (f.mod.is_test && f.func.name.starts_with('test_')) {
 		// C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, continue_block)
 		// Normal return code exit
 		return_code := C.LLVMConstInt(get_llvm_type_ref(symbols.int_symbol, f.mod), 0,
-			false)
+			0)
 		C.LLVMBuildRet(f.mod.builder.builder_ref, return_code)
-		
-
 	} else {
 		if f.func.typ.kind == .void_symbol {
 			C.LLVMBuildRetVoid(f.mod.builder.builder_ref)

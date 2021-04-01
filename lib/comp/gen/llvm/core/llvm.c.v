@@ -38,9 +38,6 @@ pub struct C.LLVMTypeRef {}
 pub struct C.LLVMValueRef {}
 
 [typedef]
-pub struct C.LLVMGenericValueRef {}
-
-[typedef]
 pub struct C.LLVMBuilderRef {}
 
 [typedef]
@@ -71,6 +68,8 @@ fn C.LLVMInt128TypeInContext(ctx_ref &C.LLVMContextRef) &C.LLVMTypeRef
 fn C.LLVMIntTypeInContext(ctx_ref &C.LLVMContextRef, nr_bits int) &C.LLVMTypeRef
 fn C.LLVMVoidTypeInContext(ctx_ref &C.LLVMContextRef) &C.LLVMTypeRef
 
+fn C.LLVMArrayType(elem_typ &C.LLVMTypeRef, len u32) &C.LLVMTypeRef
+
 // structs
 fn C.LLVMStructTypeInContext(ctx &LLVMContextRef, type_refs voidptr, elem_count u32, int Packed) &C.LLVMTypeRef
 fn C.LLVMStructCreateNamed(ctx &C.LLVMContextRef, name charptr) &C.LLVMTypeRef
@@ -78,12 +77,12 @@ fn C.LLVMStructSetBody(struct_typ_ref &C.LLVMTypeRef, element_types voidptr, ele
 fn C.LLVMConstStructInContext(ctx &C.LLVMContextRef, values voidptr, count u32, packed int) &C.LLVMValueRef
 
 fn C.LLVMConstNamedStruct(struct_typ &C.LLVMTypeRef, value_refs voidptr, count u32) &C.LLVMValueRef
-
+fn C.LLVMConstNull(typ_ref &C.LLVMTypeRef) &C.LLVMValueRef
 fn C.LLVMBuildStructGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, idx u32, name charptr) &C.LLVMValueRef
 
 fn C.LLVMBuildInBoundsGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, indicies voidptr, nr_indicies u32, name charptr) &C.LLVMValueRef
 
-fn C.LLVMBuildPointerCast(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, dest_typ &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
+// fn C.LLVMBuildPointerCast(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, dest_typ &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
 
 fn C.LLVMModuleCreateWithName(charptr) &C.LLVMModuleRef
 fn C.LLVMFunctionType(ReturnType &C.LLVMTypeRef, param_types voidptr, param_count int, is_var_arg int) &C.LLVMTypeRef
@@ -132,6 +131,7 @@ fn C.LLVMConstInt(type_ref &C.LLVMTypeRef, val u64, sign_extend bool) &C.LLVMVal
 fn C.LLVMAddGlobal(mod &C.LLVMModuleRef, typ_ref &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
 fn C.LLVMGetNamedGlobal(mod &C.LLVMModuleRef, name charptr) &C.LLVMValueRef
 fn C.LLVMSetInitializer(var &C.LLVMValueRef, const_val &C.LLVMValueRef)
+
 fn C.LLVMBuildGlobalString(builder &C.LLVMBuilderRef, str charptr, name charptr) &C.LLVMValueRef
 fn C.LLVMBuildGlobalStringPtr(builder &C.LLVMBuilderRef, str charptr, name charptr) &C.LLVMValueRef
 fn C.LLVMSetInitializer(glob_var &C.LLVMValueRef, const_val &C.LLVMValueRef)
@@ -147,7 +147,7 @@ fn C.LLVMPointerType(element_type &C.LLVMTypeRef, address_space u32) &C.LLVMType
 
 fn C.LLVMBuildPointerCast(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, dest_type &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
 
-fn C.LLVMGenericValueToInt(gen_val &C.LLVMGenericValueRef, is_signed int) u64
+fn C.LLVMGenericValueToInt(gen_val &C.LLVMGenericValueRef, is_signed int) i64
 
 fn C.LLVMBuildBr(builder &C.LLVMBuilderRef, dest &C.LLVMBasicBlockRef) &C.LLVMValueRef
 fn C.LLVMBuildCondBr(builder &C.LLVMBuilderRef, cond &C.LLVMValueRef, then_block &C.LLVMBasicBlockRef, else_block &C.LLVMBasicBlockRef) &C.LLVMValueRef

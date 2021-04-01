@@ -7,11 +7,13 @@ pub:
 	child_nodes []BoundNode
 	// child nodes
 	expr BoundExpr
+	code string
 }
 
-pub fn new_bound_assert_stmt(expr BoundExpr) BoundStmt {
+pub fn new_bound_assert_stmt(expr BoundExpr, code string) BoundStmt {
 	return BoundAssertStmt{
 		expr: expr
+		code: code
 	}
 }
 
