@@ -4,15 +4,16 @@ import lib.comp.token
 import lib.comp.util.source
 
 // Sumtype statements
-pub type Stmt = BlockStmt | BreakStmt | CommentStmt | ContinueStmt | ExprStmt | ForRangeStmt |
-	ForStmt | IfStmt | ModuleStmt | ReturnStmt | VarDeclStmt | AssertStmt
+pub type Stmt = AssertStmt | BlockStmt | BreakStmt | CommentStmt | ContinueStmt | ExprStmt |
+	ForRangeStmt | ForStmt | IfStmt | ModuleStmt | ReturnStmt | VarDeclStmt
 
 // Sumtype expressions
 pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | EmptyExpr | IfExpr | LiteralExpr |
-	NameExpr | ParaExpr | RangeExpr | UnaryExpr | StructInitExpr
+	NameExpr | ParaExpr | RangeExpr | StructInitExpr | UnaryExpr
 
 // Nodes in syntax tree
-pub type AstNode = Expr | MemberNode | ParamNode | Stmt | TypeNode | StructMemberNode | StructInitMemberNode | token.Token
+pub type AstNode = Expr | MemberNode | ParamNode | Stmt | StructInitMemberNode | StructMemberNode |
+	TypeNode | token.Token
 
 // top level members like top level statements or function declarations
 pub type MemberNode = FnDeclNode | GlobStmt | StructDeclNode
@@ -21,10 +22,6 @@ pub interface Node {
 	child_nodes() []AstNode
 	node_str() string
 }
-
-// pub fn (ex &AstNode) pos() source.Pos {
-// 	return ex.pos
-// }
 
 pub fn (ex &AstNode) child_nodes() []AstNode {
 	match ex {

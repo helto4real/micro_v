@@ -9,7 +9,7 @@ fn test_bound_global_scope_stack_basic() {
 	bound_stmts := []BoundStmt{}
 
 	scope := new_bound_global_scope(&BoundGlobalScope(0), &source.Diagnostics(0), symbols.FunctionSymbol{}, symbols.FunctionSymbol{}, []symbols.FunctionSymbol{},
-		[]ast.FnDeclNode{}, []symbols.VariableSymbol{}, bound_stmts)
+		[]ast.FnDeclNode{}, []symbols.VariableSymbol{}, bound_stmts, map[string]symbols.TypeSymbol{})
 
 	stack.push(scope)
 

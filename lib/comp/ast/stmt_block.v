@@ -6,28 +6,29 @@ import strings
 
 pub struct BlockStmt {
 pub:
-	// Node
+	// general ast node
 	tree        &SyntaxTree
 	kind        SyntaxKind = .block_stmt
-	child_nodes []AstNode
 	pos         source.Pos
-	open_brc    token.Token
-	stmts       []Stmt
-	close_brc   token.Token
+	child_nodes []AstNode
+	// child nodes
+	open_brc_tok  token.Token
+	stmts         []Stmt
+	close_brc_tok token.Token
 }
 
-pub fn new_block_stmt(tree &SyntaxTree, open_brc token.Token, stmts []Stmt, close_brc token.Token) BlockStmt {
-	mut child_nodes := [AstNode(open_brc)]
+pub fn new_block_stmt(tree &SyntaxTree, open_brc_tok token.Token, stmts []Stmt, close_brc_tok token.Token) BlockStmt {
+	mut child_nodes := [AstNode(open_brc_tok)]
 	child_nodes.insert(1, stmts.map(AstNode(it)))
-	child_nodes << close_brc
+	child_nodes << close_brc_tok
 
 	return BlockStmt{
 		tree: tree
-		open_brc: open_brc
+		open_brc_tok: open_brc_tok
 		stmts: stmts
-		close_brc: close_brc
+		close_brc_tok: close_brc_tok
 		child_nodes: child_nodes
-		pos: source.new_pos_from_pos_bounds(open_brc.pos, close_brc.pos)
+		pos: source.new_pos_from_pos_bounds(open_brc_tok.pos, close_brc_tok.pos)
 	}
 }
 

@@ -11,21 +11,21 @@ pub struct TypeNode {
 pub:
 	// general ast node
 	tree        &SyntaxTree
-	kind        SyntaxKind = .node_type
+	kind        SyntaxKind = .type_node
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
-	ident   token.Token
-	is_ref  bool
-	is_void bool
+	name_tok token.Token
+	is_ref   bool
+	is_void  bool
 }
 
-pub fn new_type_node(tree &SyntaxTree, ident token.Token, is_ref bool, is_void bool) TypeNode {
+pub fn new_type_node(tree &SyntaxTree, name_tok token.Token, is_ref bool, is_void bool) TypeNode {
 	return TypeNode{
 		tree: tree
-		pos: ident.pos
-		child_nodes: [AstNode(ident)]
-		ident: ident
+		pos: name_tok.pos
+		child_nodes: [AstNode(name_tok)]
+		name_tok: name_tok
 		is_ref: is_ref
 		is_void: is_void
 	}

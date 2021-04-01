@@ -12,27 +12,27 @@ pub:
 	child_nodes []AstNode
 	// child nodes
 	has_expr   bool
-	return_tok token.Token
+	return_key token.Token
 	expr       Expr
 }
 
-pub fn new_return_with_expr_stmt(tree &SyntaxTree, return_tok token.Token, expr Expr) ReturnStmt {
+pub fn new_return_with_expr_stmt(tree &SyntaxTree, return_key token.Token, expr Expr) ReturnStmt {
 	return ReturnStmt{
 		tree: tree
-		pos: return_tok.pos
-		child_nodes: [AstNode(return_tok), expr]
-		return_tok: return_tok
+		pos: return_key.pos
+		child_nodes: [AstNode(return_key), expr]
+		return_key: return_key
 		expr: expr
 		has_expr: true
 	}
 }
 
-pub fn new_return_stmt(tree &SyntaxTree, return_tok token.Token) ReturnStmt {
+pub fn new_return_stmt(tree &SyntaxTree, return_key token.Token) ReturnStmt {
 	return ReturnStmt{
 		tree: tree
-		pos: return_tok.pos
-		child_nodes: [AstNode(return_tok)]
-		return_tok: return_tok
+		pos: return_key.pos
+		child_nodes: [AstNode(return_key)]
+		return_key: return_key
 		has_expr: false
 	}
 }

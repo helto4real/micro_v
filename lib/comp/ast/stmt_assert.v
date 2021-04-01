@@ -11,16 +11,16 @@ pub:
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
-	tok_assert token.Token
-	expr   		Expr
+	assert_key token.Token
+	expr       Expr
 }
 
-pub fn new_assert_stmt(tree &SyntaxTree, tok_assert token.Token, expr Expr) AssertStmt {
+pub fn new_assert_stmt(tree &SyntaxTree, assert_key token.Token, expr Expr) AssertStmt {
 	return AssertStmt{
 		tree: tree
-		pos: source.new_pos_from_pos_bounds(tok_assert.pos, expr.pos)
-		child_nodes: [AstNode(tok_assert), expr]
-		tok_assert: tok_assert
+		pos: source.new_pos_from_pos_bounds(assert_key.pos, expr.pos)
+		child_nodes: [AstNode(assert_key), expr]
+		assert_key: assert_key
 		expr: expr
 	}
 }

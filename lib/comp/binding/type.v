@@ -33,7 +33,7 @@ pub enum BoundNodeKind {
 	for_stmt
 	label_stmt
 	break_stmt
-	cont_stmt
+	continue_stmt
 	return_stmt
 	for_range_stmt
 	cond_goto_stmt

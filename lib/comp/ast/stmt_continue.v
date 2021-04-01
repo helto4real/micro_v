@@ -7,19 +7,19 @@ pub struct ContinueStmt {
 pub:
 	// general ast node
 	tree        &SyntaxTree
-	kind        SyntaxKind = .cont_stmt
+	kind        SyntaxKind = .continue_stmt
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
-	cont_tok token.Token
+	cont_key token.Token
 }
 
-pub fn new_continue_stmt(tree &SyntaxTree, cont_tok token.Token) ContinueStmt {
+pub fn new_continue_stmt(tree &SyntaxTree, cont_key token.Token) ContinueStmt {
 	return ContinueStmt{
 		tree: tree
-		pos: cont_tok.pos
-		child_nodes: [AstNode(cont_tok)]
-		cont_tok: cont_tok
+		pos: cont_key.pos
+		child_nodes: [AstNode(cont_key)]
+		cont_key: cont_key
 	}
 }
 

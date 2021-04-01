@@ -7,12 +7,12 @@ pub struct FnDeclNode {
 pub:
 	// general ast node
 	tree        &SyntaxTree
-	kind        SyntaxKind = .node_fn_decl
+	kind        SyntaxKind = .fn_decl_node
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
 	fn_key   token.Token
-	ident    token.Token
+	name_tok token.Token
 	lpar_tok token.Token
 	params   SeparatedSyntaxList
 	rpar_tok token.Token
@@ -27,8 +27,8 @@ pub fn new_empty_fn_decl_node(tree &SyntaxTree) FnDeclNode {
 	}
 }
 
-pub fn new_fn_decl_node(tree &SyntaxTree, fn_key token.Token, ident token.Token, lpar_tok token.Token, params SeparatedSyntaxList, rpar_tok token.Token, typ_node TypeNode, block BlockStmt) FnDeclNode {
-	mut child_nodes := [AstNode(fn_key), ident, lpar_tok]
+pub fn new_fn_decl_node(tree &SyntaxTree, fn_key token.Token, name_tok token.Token, lpar_tok token.Token, params SeparatedSyntaxList, rpar_tok token.Token, typ_node TypeNode, block BlockStmt) FnDeclNode {
+	mut child_nodes := [AstNode(fn_key), name_tok, lpar_tok]
 	for i := 0; i < params.len(); i++ {
 		child_nodes << params.at(i)
 	}
@@ -40,7 +40,7 @@ pub fn new_fn_decl_node(tree &SyntaxTree, fn_key token.Token, ident token.Token,
 		pos: source.new_pos_from_pos_bounds(fn_key.pos, block.pos)
 		child_nodes: child_nodes
 		fn_key: fn_key
-		ident: ident
+		name_tok: name_tok
 		lpar_tok: lpar_tok
 		params: params
 		rpar_tok: rpar_tok

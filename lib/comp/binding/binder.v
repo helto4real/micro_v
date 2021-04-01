@@ -48,7 +48,7 @@ pub fn bind_program(is_test bool, is_script bool, previous &BoundProgram, global
 		}
 		body := binder.bind_stmt(fn_decl.block)
 		if func.typ.kind != .void_symbol && !all_path_return_in_body(body as BoundBlockStmt) {
-			binder.log.error_all_paths_must_return(fn_decl.ident.text_location())
+			binder.log.error_all_paths_must_return(fn_decl.name_tok.text_location())
 		}
 		func_bodies[func.id] = body as BoundBlockStmt
 		log.all << binder.log.all
@@ -175,7 +175,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 				func_decl := binder.scope.lookup_fn_decl(main_func.name) or {
 					panic('unexpected error, function declaration not found')
 				}
-				binder.log.error_main_function_must_have_correct_signature(func_decl.ident.text_location())
+				binder.log.error_main_function_must_have_correct_signature(func_decl.name_tok.text_location())
 			}
 		}
 
@@ -206,7 +206,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 				func_decl := binder.scope.lookup_fn_decl(main_func.name) or {
 					panic('unexpected error, function declaration not found')
 				}
-				binder.log.error_cannot_mix_global_statements_and_main_function(func_decl.ident.text_location())
+				binder.log.error_cannot_mix_global_statements_and_main_function(func_decl.name_tok.text_location())
 			} else {
 				main_func = symbols.new_function_symbol('main', []symbols.ParamSymbol{},
 					symbols.void_symbol)
@@ -301,7 +301,7 @@ pub fn (mut b Binder) bind_stmt_internal(stmt ast.Stmt) BoundStmt {
 		.expr_stmt { return b.bind_expr_stmt(stmt as ast.ExprStmt) }
 		.var_decl_stmt { return b.bind_var_decl_stmt(stmt as ast.VarDeclStmt) }
 		.for_stmt { return b.bind_for_stmt(stmt as ast.ForStmt) }
-		.cont_stmt { return b.bind_continue_stmt(stmt as ast.ContinueStmt) }
+		.continue_stmt { return b.bind_continue_stmt(stmt as ast.ContinueStmt) }
 		.break_stmt { return b.bind_break_stmt(stmt as ast.BreakStmt) }
 		.return_stmt { return b.bind_return_stmt(stmt as ast.ReturnStmt) }
 		.comment_stmt { return new_bound_comment_stmt((stmt as ast.CommentStmt).comment_tok) }
@@ -332,20 +332,20 @@ pub fn (mut b Binder) bind_module_stmt(module_stmt ast.ModuleStmt) BoundStmt {
 		b.log.error_module_can_only_be_defined_as_first_statement(module_stmt.text_location())
 		return new_bound_expr_stmt(new_bound_error_expr())
 	}
-	b.mod = module_stmt.tok_name.lit
-	return new_bound_module_stmt(module_stmt.tok_name)
+	b.mod = module_stmt.name_tok.lit
+	return new_bound_module_stmt(module_stmt.name_tok)
 }
 
 pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 	// binds the members after all structs has been declared
-	struct_name := struct_decl.ident.lit
+	struct_name := struct_decl.name_tok.lit
 
 	symbol := b.scope.lookup_type(struct_name) or {
 		panic('unexpected: struct symbol table missing member $struct_name')
 	}
 	mut struct_symbol := symbol as symbols.StructTypeSymbol
 	for member in struct_decl.members {
-		member_name := member.ident.lit
+		member_name := member.name_tok.lit
 		member_type := b.lookup_type(member.type_name.lit)
 		member_symbol := symbols.new_struct_type_member(member_name, member_type)
 		struct_symbol.members << member_symbol
@@ -357,9 +357,9 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 }
 
 pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
-	struct_symbol := symbols.new_struct_symbol(struct_decl.ident.lit)
+	struct_symbol := symbols.new_struct_symbol(struct_decl.name_tok.lit)
 	if !b.scope.try_declare_type(struct_symbol) {
-		b.log.error_struct_allready_declared(struct_decl.ident.lit, struct_decl.ident.text_location())
+		b.log.error_struct_allready_declared(struct_decl.name_tok.lit, struct_decl.name_tok.text_location())
 	}
 }
 
@@ -368,10 +368,10 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 	mut seen_param_names := []string{}
 	for i := 0; i < fn_decl.params.len(); i++ {
 		param_node := fn_decl.params.at(i) as ast.ParamNode
-		name := param_node.ident.lit
+		name := param_node.name_tok.lit
 		param_typ := b.bind_type(param_node.typ)
 		if name in seen_param_names {
-			b.log.error_param_allready_declared(name, param_node.ident.text_location())
+			b.log.error_param_allready_declared(name, param_node.name_tok.text_location())
 		} else {
 			param_symbol := symbols.new_param_symbol(name, param_typ, param_node.is_mut)
 			params << param_symbol
@@ -384,12 +384,12 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 		symbols.TypeSymbol(symbols.void_symbol)
 	}
 
-	func := symbols.new_function_symbol(fn_decl.ident.lit, params, typ)
+	func := symbols.new_function_symbol(fn_decl.name_tok.lit, params, typ)
 
 	// TODO: refactor this. Due to V bug the func could not
 	//		 include the decl
 	if !b.scope.try_declare_fn(func, fn_decl) {
-		b.log.error_function_allready_declared(fn_decl.ident.lit, fn_decl.ident.text_location())
+		b.log.error_function_allready_declared(fn_decl.name_tok.lit, fn_decl.name_tok.text_location())
 	}
 }
 
@@ -408,7 +408,7 @@ pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
 			}
 		} else if return_stmt.has_expr {
 			// main does not support return values
-			b.log.error_invalid_return(return_stmt.return_tok.text_location())
+			b.log.error_invalid_return(return_stmt.return_key.text_location())
 		}
 		return new_bound_return_with_expr_stmt(expr)
 	} else {
@@ -424,16 +424,16 @@ pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
 			return new_bound_return_with_expr_stmt(expr)
 		} else {
 			if b.func.typ.kind != .void_symbol {
-				b.log.error_expected_return_value(b.func.typ.name, return_stmt.return_tok.text_location())
+				b.log.error_expected_return_value(b.func.typ.name, return_stmt.return_key.text_location())
 			}
 			return new_bound_return_stmt()
 		}
 	}
 }
 
-pub fn (mut b Binder) bind_continue_stmt(cont_stmt ast.ContinueStmt) BoundStmt {
+pub fn (mut b Binder) bind_continue_stmt(continue_stmt ast.ContinueStmt) BoundStmt {
 	if b.is_loop == false {
-		b.log.error_keyword_are_only_allowed_inside_a_loop('continue', cont_stmt.text_location())
+		b.log.error_keyword_are_only_allowed_inside_a_loop('continue', continue_stmt.text_location())
 	}
 	return new_bound_continue_stmt()
 }
@@ -477,7 +477,7 @@ pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) Bound
 	range_expr := b.bind_expr(for_range_stmt.range_expr)
 	b.scope = new_bound_scope(b.scope)
 
-	ident := b.bind_variable(for_range_stmt.ident, range_expr.typ, false)
+	ident := b.bind_variable(for_range_stmt.name_tok, range_expr.typ, false)
 	body_stmt := b.bind_loop_block_stmt(for_range_stmt.body_stmt as ast.BlockStmt)
 	b.scope = b.scope.parent
 	return new_for_range_stmt(ident, range_expr, body_stmt)
@@ -576,7 +576,7 @@ pub fn (mut b Binder) bind_convertion_explicit(typ symbols.TypeSymbol, expr ast.
 }
 
 pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
-	func_name := expr.ident.lit
+	func_name := expr.name_tok.lit
 	// handle convertions as special functions
 	if expr.params.len() == 1 {
 		typ := b.lookup_type(func_name)
@@ -598,7 +598,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	}
 
 	func := b.scope.lookup_fn(func_name) or {
-		b.log.error_undefined_function(func_name, expr.ident.text_location())
+		b.log.error_undefined_function(func_name, expr.name_tok.text_location())
 		return new_bound_error_expr()
 	}
 
@@ -618,11 +618,11 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 }
 
 pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
-	from_expr := b.bind_expr(range_expr.from)
-	to_expr := b.bind_expr(range_expr.to)
+	from_expr := b.bind_expr(range_expr.from_expr)
+	to_expr := b.bind_expr(range_expr.to_expr)
 
 	if from_expr.typ != to_expr.typ {
-		b.log.error_expected_same_type_in_range_expr(from_expr.typ.name, range_expr.to.text_location())
+		b.log.error_expected_same_type_in_range_expr(from_expr.typ.name, range_expr.to_expr.text_location())
 	}
 	return new_range_expr(from_expr, to_expr)
 }
@@ -677,9 +677,9 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 }
 
 pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
-	bound_typ := b.lookup_type(typ.ident.lit)
+	bound_typ := b.lookup_type(typ.name_tok.lit)
 	if bound_typ.kind == .none_symbol {
-		b.log.error_undefined_type(typ.ident.lit, typ.text_location())
+		b.log.error_undefined_type(typ.name_tok.lit, typ.text_location())
 	}
 	return bound_typ
 }
@@ -693,7 +693,7 @@ pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 		return new_bound_expr_stmt(new_bound_error_expr()) 
 	}
 	bound_expr := b.bind_expr(syntax.expr)
-	var := b.bind_variable(syntax.ident.ident, bound_expr.typ, syntax.is_mut)
+	var := b.bind_variable(syntax.ident.name_tok, bound_expr.typ, syntax.is_mut)
 	return new_var_decl_stmt(var, bound_expr, syntax.is_mut)
 }
 
@@ -706,7 +706,7 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 
 	// todo: when modules is supported, lookup here
 	// then it can be a global constant
-	base_ident := syntax.ident.names[0]
+	base_ident := syntax.name_expr.names[0]
 	base_name :=  base_ident.lit
 	// check is variable exist in scope
 	base_var := b.scope.lookup_var(base_name) or {
@@ -714,15 +714,15 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 		return new_bound_error_expr()
 	}
 
-	if syntax.ident.names.len == 1 {
+	if syntax.name_expr.names.len == 1 {
 		// non struct, just return the bound variable
 		conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, base_var.typ)
 		return new_bound_assign_expr(base_var, conv_expr)
 	}
 
 	mut current_typ := base_var.typ
-	for i := 1; i < syntax.ident.names.len; i++ {
-		name_tok := syntax.ident.names[i]
+	for i := 1; i < syntax.name_expr.names.len; i++ {
+		name_tok := syntax.name_expr.names[i]
 		member_name := name_tok.lit
 		member_typ := current_typ.lookup_member_type(member_name)
 		if member_typ.kind == .error_symbol {
@@ -741,7 +741,7 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 
 	conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), bound_expr, current_typ)
 
-	return new_bound_assign_with_names_expr(base_var, syntax.ident.names, conv_expr)
+	return new_bound_assign_with_names_expr(base_var, syntax.name_expr.names, conv_expr)
 }
 
 fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {
@@ -749,7 +749,7 @@ fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {
 }
 
 fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
-	typ := b.lookup_type(syntax.typ_token.lit)
+	typ := b.lookup_type(syntax.typ_tok.lit)
 	struct_typ := typ as symbols.StructTypeSymbol
 
 	mut members := []BoundStructInitMember{}

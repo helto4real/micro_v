@@ -5,29 +5,30 @@ import lib.comp.util.source
 
 pub struct StructInitExpr {
 pub:
+	// general ast node
 	tree        &SyntaxTree
 	kind        SyntaxKind = .struct_init_expr
 	pos         source.Pos
 	child_nodes []AstNode
-
-	typ_token   token.Token
-	lcbr_token 	token.Token
-	members 	[]StructInitMemberNode
-	rcbr_token 	token.Token
+	// child nodes
+	typ_tok  token.Token
+	lcbr_tok token.Token
+	members  []StructInitMemberNode
+	rcbr_tok token.Token
 }
 
-pub fn new_struct_init_expr(tree &SyntaxTree, typ_token   token.Token, lcbr_token 	token.Token, members []StructInitMemberNode, rcbr_token 	token.Token) StructInitExpr {
-	mut child_nodes := [AstNode(typ_token), lcbr_token]
+pub fn new_struct_init_expr(tree &SyntaxTree, typ_tok token.Token, lcbr_tok token.Token, members []StructInitMemberNode, rcbr_tok token.Token) StructInitExpr {
+	mut child_nodes := [AstNode(typ_tok), lcbr_tok]
 	for member in members {
 		child_nodes << member
 	}
-	child_nodes << rcbr_token
+	child_nodes << rcbr_tok
 	return StructInitExpr{
 		tree: tree
-		typ_token: typ_token
+		typ_tok: typ_tok
 		members: members
-		lcbr_token: lcbr_token
-		pos: source.new_pos_from_pos_bounds(typ_token.pos, lcbr_token.pos)
+		lcbr_tok: lcbr_tok
+		pos: source.new_pos_from_pos_bounds(typ_tok.pos, lcbr_tok.pos)
 		child_nodes: child_nodes
 	}
 }
@@ -35,14 +36,14 @@ pub fn new_struct_init_expr(tree &SyntaxTree, typ_token   token.Token, lcbr_toke
 pub fn new_struct_init_no_members_expr(type_name string) StructInitExpr {
 	return StructInitExpr{
 		tree: &SyntaxTree(0)
-		typ_token: token.Token{
+		typ_tok: token.Token{
 			kind: .name
 			lit: type_name
 			source: &source.SourceText(0)
 		}
 		// members: members
-		// lcbr_token: lcbr_token
-		// pos: source.new_pos_from_pos_bounds(typ_token.pos, lcbr_token.pos)
+		// lcbr_tok: lcbr_tok
+		// pos: source.new_pos_from_pos_bounds(typ_tok.pos, lcbr_tok.pos)
 		// child_nodes: child_nodes
 	}
 }
@@ -59,7 +60,6 @@ pub fn (ex StructInitExpr) node_str() string {
 	return typeof(ex).name
 }
 
-
 pub struct StructInitMemberNode {
 pub:
 	// general ast node
@@ -68,9 +68,9 @@ pub:
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
-	ident       token.Token
-	colon		token.Token
-	expr	  	Expr
+	ident token.Token
+	colon token.Token
+	expr  Expr
 }
 
 pub fn new_init_struct_member_node(tree &SyntaxTree, ident token.Token, colon token.Token, expr Expr) StructInitMemberNode {

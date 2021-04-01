@@ -7,11 +7,12 @@ import lib.comp.util.source
 //	x := if i < 100 {10} else {20}
 pub struct IfExpr {
 pub:
+	// general ast node
 	tree        &SyntaxTree
 	kind        SyntaxKind = .if_expr
 	pos         source.Pos
 	child_nodes []AstNode
-
+	// child nodes
 	key_if    token.Token
 	key_else  token.Token
 	cond_expr Expr

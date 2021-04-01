@@ -40,18 +40,18 @@ fn (mut p NodePrinter) visit_tree(node ast.Node, last_child bool, indent string)
 			if node is ast.LiteralExpr {
 				b.writeln(term.bright_cyan(' $node.val'))
 			} else if node is ast.BinaryExpr {
-				b.writeln(term.bright_cyan(' $node.op.kind'))
+				b.writeln(term.bright_cyan(' $node.op_tok.kind'))
 			} else if node is ast.NameExpr {
-				b.writeln(term.bright_cyan(' ${node.ident}'))
+				b.writeln(term.bright_cyan(' ${node.name_tok}'))
 			} else if node is ast.UnaryExpr {
-				b.writeln(term.bright_cyan(' $node.op.kind'))
+				b.writeln(term.bright_cyan(' $node.op_tok.kind'))
 			} else {
 				b.writeln('')
 			}
 		}
 		ast.Stmt {
 			if node is ast.VarDeclStmt {
-				b.writeln(term.bright_cyan(' $node.ident.ident.lit'))
+				b.writeln(term.bright_cyan(' $node.ident.name_tok.lit'))
 			} else {
 				b.writeln('')
 			}

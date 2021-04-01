@@ -11,28 +11,29 @@ pub const (
 
 pub struct BinaryExpr {
 pub:
-	tree        &SyntaxTree
-	left        Expr
-	op          token.Token
-	right       Expr
 	kind        SyntaxKind = .binary_expr
 	pos         source.Pos
+	tree        &SyntaxTree
 	child_nodes []AstNode
+
+	left_expr  Expr
+	op_tok     token.Token
+	right_expr Expr
 }
 
 // new_binary_expr instance an binary expression 
-// with a left side, right side and operator
-pub fn new_binary_expr(tree &SyntaxTree, left Expr, op token.Token, right Expr) BinaryExpr {
-	if !(op.kind in ast.binary_expr_tokens) {
-		panic('Expected a binary expresson token, got ($op.kind)')
+// with a left_expr side, right_expr side and operator
+pub fn new_binary_expr(tree &SyntaxTree, left_expr Expr, op_tok token.Token, right_expr Expr) BinaryExpr {
+	if !(op_tok.kind in ast.binary_expr_tokens) {
+		panic('Expected a binary expresson token, got ($op_tok.kind)')
 	}
 	return BinaryExpr{
 		tree: tree
-		left: left
-		op: op
-		right: right
-		pos: source.new_pos_from_pos_bounds(left.pos, right.pos)
-		child_nodes: [AstNode(left), op, right]
+		left_expr: left_expr
+		op_tok: op_tok
+		right_expr: right_expr
+		pos: source.new_pos_from_pos_bounds(left_expr.pos, right_expr.pos)
+		child_nodes: [AstNode(left_expr), op_tok, right_expr]
 	}
 }
 
@@ -49,31 +50,33 @@ pub fn (ex BinaryExpr) node_str() string {
 }
 
 pub fn (ex BinaryExpr) str() string {
-	return '$ex.left $ex.op.lit $ex.right'
+	return '$ex.left_expr $ex.op_tok.lit $ex.right_expr'
 }
 
 pub struct UnaryExpr {
 pub:
+	// general ast node
 	tree        &SyntaxTree
-	op          token.Token
-	operand     Expr
 	kind        SyntaxKind = .unary_expr
 	pos         source.Pos
 	child_nodes []AstNode
+	// child nodes
+	op_tok       token.Token
+	operand_expr Expr
 }
 
 // new_binary_expr instance an binary expression 
-// with a left side, right side and operator
-pub fn new_unary_expr(tree &SyntaxTree, op token.Token, operand Expr) UnaryExpr {
-	if !(op.kind in ast.unary_expr_tokens) {
-		panic('Expected a unary expresson token, got ($op.kind)')
+// with a left_expr side, right_expr side and operator
+pub fn new_unary_expr(tree &SyntaxTree, op_tok token.Token, operand_expr Expr) UnaryExpr {
+	if !(op_tok.kind in ast.unary_expr_tokens) {
+		panic('Expected a unary expresson token, got ($op_tok.kind)')
 	}
 	return UnaryExpr{
 		tree: tree
-		op: op
-		operand: operand
-		pos: source.new_pos_from_pos_bounds(op.pos, operand.pos)
-		child_nodes: [AstNode(op), operand]
+		op_tok: op_tok
+		operand_expr: operand_expr
+		pos: source.new_pos_from_pos_bounds(op_tok.pos, operand_expr.pos)
+		child_nodes: [AstNode(op_tok), operand_expr]
 	}
 }
 
@@ -90,26 +93,28 @@ pub fn (ex UnaryExpr) node_str() string {
 }
 
 pub fn (ex UnaryExpr) str() string {
-	return '$ex.op.lit$ex.operand'
+	return '$ex.op_tok.lit$ex.operand_expr'
 }
 
 pub struct ParaExpr {
 pub:
-	tree             &SyntaxTree
-	kind             SyntaxKind = .para_expr
+	// general ast node
+	tree        &SyntaxTree
+	kind        SyntaxKind = .fn_decl_node
+	pos         source.Pos
+	child_nodes []AstNode
+	// child nodes
 	open_para_token  token.Token
-	close_para_token token.Token
 	expr             Expr
-	pos              source.Pos
-	child_nodes      []AstNode
+	close_para_token token.Token
 }
 
 pub fn new_paranthesis_expr(tree &SyntaxTree, open_para_token token.Token, expr Expr, close_para_token token.Token) ParaExpr {
 	return ParaExpr{
 		tree: tree
 		open_para_token: open_para_token
-		close_para_token: close_para_token
 		expr: expr
+		close_para_token: close_para_token
 		pos: source.new_pos_from_pos_bounds(open_para_token.pos, close_para_token.pos)
 		child_nodes: [AstNode(open_para_token), expr, close_para_token]
 	}
