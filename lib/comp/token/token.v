@@ -49,6 +49,7 @@ pub enum Kind {
 	semcol // ';'
 	dot // '.'
 	dot_dot // '..'
+	dot_dot_dot // '...'
 	comma // ','
 	eq // '='
 	gt // '>'
@@ -87,6 +88,7 @@ pub enum Kind {
 	key_mut // 'mut'
 	key_for // 'for'
 	key_in // 'in'
+	key_pub // 'pub'
 	keyword_end // end of keywords
 	_end_ // end of enum
 }
@@ -129,6 +131,7 @@ fn build_token_str() []string {
 	s[Kind.tilde] = '~'
 	s[Kind.hat] = '^'
 	s[Kind.dot_dot] = '..'
+	s[Kind.dot_dot_dot] = '...'
 	s[Kind.comma] = ','
 	s[Kind.colon] = ':'
 	s[Kind.semcol] = ';'
@@ -150,5 +153,6 @@ fn build_token_str() []string {
 	s[Kind.key_assert] = 'assert'
 	s[Kind.key_for] = 'for'
 	s[Kind.key_in] = 'in'
+	s[Kind.key_pub] = 'pub'
 	return s
 }

@@ -17,6 +17,12 @@ pub:
 	close_brc_tok token.Token
 }
 
+pub fn new_void_block_stmt(tree &SyntaxTree) BlockStmt {
+	return BlockStmt{
+		tree: tree
+	}
+}
+
 pub fn new_block_stmt(tree &SyntaxTree, open_brc_tok token.Token, stmts []Stmt, close_brc_tok token.Token) BlockStmt {
 	mut child_nodes := [AstNode(open_brc_tok)]
 	child_nodes.insert(1, stmts.map(AstNode(it)))

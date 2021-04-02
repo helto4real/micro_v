@@ -1,9 +1,9 @@
 module source
+
 import strings
 import term
 
 pub fn write_diagnostic(mut sw SourceWriter, location &TextLocation, text string, nr_lines_to_show int) {
-
 	source := location.source
 	src := source.str()
 	error_line_nr := source.line_nr(location.pos.pos)

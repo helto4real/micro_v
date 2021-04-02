@@ -14,10 +14,13 @@ pub mut:
 }
 
 fn new_builtin_call(name string, ctx &Emitter) CallBuilder {
+	fn_ref := ctx.mod.built_in_funcs[name] or {
+		panic('the builtin function $name is not declared')
+	}
 	return CallBuilder{
 		name: name
 		ctx: ctx
-		fn_ref: ctx.mod.built_in_funcs[name]
+		fn_ref: fn_ref
 		is_built_in: true
 	}
 }

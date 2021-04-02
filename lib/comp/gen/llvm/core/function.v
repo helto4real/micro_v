@@ -5,6 +5,7 @@ import lib.comp.binding
 
 pub struct Function {
 	mod          Module
+	name         string
 	func_typ_ref &C.LLVMTypeRef
 	func_ref     &C.LLVMValueRef
 	func         symbols.FunctionSymbol
@@ -16,18 +17,20 @@ pub:
 }
 
 fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBlockStmt) Function {
-	llvm_params := get_params(func.params, mod)
+	func_name := if !func.is_c_decl { func.name } else { func.name[2..] }
 
-	return_typ := if func.name == 'main' || (mod.is_test && func.name.starts_with('test_')) {
+	llvm_params, is_variadic := get_params(func.params, mod)
+
+	return_typ := if func_name == 'main' || (mod.is_test && func_name.starts_with('test_')) {
 		C.LLVMInt32TypeInContext(mod.ctx_ref)
 	} else {
 		get_llvm_type_ref(func.typ, mod)
 	}
+	variadic_val := if is_variadic { 1 } else { 0 }
 
 	func_typ_ref := C.LLVMFunctionType(return_typ, llvm_params.data, llvm_params.len,
-		0)
+		variadic_val)
 
-	func_name := func.name
 	func_ref := C.LLVMAddFunction(mod.mod_ref, func_name.str, func_typ_ref)
 
 	return Function{
@@ -35,6 +38,7 @@ fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBloc
 		func_typ_ref: func_typ_ref
 		func_ref: func_ref
 		llvm_entry_block: 0
+		name: func_name
 		func: func
 		body: body
 	}
@@ -129,12 +133,16 @@ fn (mut f Function) generate_function_bodies() {
 	}
 }
 
-fn get_params(params []symbols.ParamSymbol, mod Module) []&C.LLVMTypeRef {
+fn get_params(params []symbols.ParamSymbol, mod Module) ([]&C.LLVMTypeRef, bool) {
 	mut res := []&C.LLVMTypeRef{cap: params.len}
-
+	mut is_variadic := false
 	for param in params {
-		res << get_llvm_type_ref(param.typ, mod)
+		if !param.is_variadic {
+			res << get_llvm_type_ref(param.typ, mod)
+		} else {
+			is_variadic = true
+		}
 	}
 
-	return res
+	return res, is_variadic
 }

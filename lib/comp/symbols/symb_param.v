@@ -7,6 +7,7 @@ pub:
 	name   string
 	typ    TypeSymbol
 	is_mut bool
+	is_variadic bool
 	id     string
 }
 
@@ -24,11 +25,12 @@ pub fn (ts ParamSymbol) str_ident(level int) string {
 	return '${ident}var: $mut_str <$ts.name> ($ts.typ.name)'
 }
 
-pub fn new_param_symbol(name string, typ TypeSymbol, is_mut bool) ParamSymbol {
+pub fn new_param_symbol(name string, typ TypeSymbol, is_mut bool, is_variadic bool) ParamSymbol {
 	return ParamSymbol{
 		name: name
 		typ: typ
 		is_mut: is_mut
+		is_variadic: is_variadic
 		id: rand.uuid_v4()
 	}
 }

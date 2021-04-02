@@ -324,6 +324,8 @@ fn test_single_token() {
 	check_parse_token(.exl_mark, '!')
 	check_parse_token(.pipe_pipe, '||')
 	check_parse_token(.amp_amp, '&&')
+	check_parse_token(.dot_dot, '..')
+	check_parse_token(.dot_dot_dot, '...')
 }
 
 fn test_single_keyword() {

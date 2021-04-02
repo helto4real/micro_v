@@ -48,6 +48,7 @@ pub fn (ex LiteralExpr) str() string {
 
 pub struct NameExpr {
 pub:
+	is_c_name bool
 	// general ast node
 	tree        &SyntaxTree
 	kind        SyntaxKind = .name_expr
@@ -58,7 +59,7 @@ pub:
 	names    []token.Token
 }
 
-pub fn new_name_expr(tree &SyntaxTree, names []token.Token) NameExpr {
+pub fn new_name_expr(tree &SyntaxTree, names []token.Token, is_c_name bool) NameExpr {
 	name_tok := merge_names(names)
 	return NameExpr{
 		tree: tree
@@ -66,6 +67,7 @@ pub fn new_name_expr(tree &SyntaxTree, names []token.Token) NameExpr {
 		names: names
 		pos: name_tok.pos
 		child_nodes: [AstNode(name_tok)]
+		is_c_name: is_c_name
 	}
 }
 

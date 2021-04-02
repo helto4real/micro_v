@@ -627,6 +627,9 @@ fn get_llvm_type_ref(typ symbols.TypeSymbol, mod Module) &C.LLVMTypeRef {
 				'string' {
 					return C.LLVMPointerType(C.LLVMInt8TypeInContext(mod.ctx_ref), 0)
 				}
+				'byteptr', 'charptr' {
+					return C.LLVMPointerType(C.LLVMInt8TypeInContext(mod.ctx_ref), 0)
+				}
 				else {
 					panic('unexpected, unsupported built-in type: $typ')
 				}

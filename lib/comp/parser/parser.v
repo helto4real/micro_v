@@ -121,20 +121,29 @@ fn (mut p Parser) parse_struct_members() []ast.StructMemberNode {
 }
 
 pub fn (mut p Parser) parse_function() ast.FnDeclNode {
-	// mut is_pub := false
-	// if p.current_token().kind == .key_pub {
-	// 	is_pub = true
-	// 	p.next_token()
-	// }
+	mut pub_key := token.tok_void
+
+	if p.current_token().kind == .key_pub {
+		pub_key = p.match_token(.key_pub)
+	}
 	fn_key := p.match_token(.key_fn)
-	ident := p.match_token(.name)
+	expr := p.parse_name_expr()
+	name_expr := expr as ast.NameExpr
+
 	lpar_tok := p.match_token(.lpar)
 	params := p.parse_fn_params()
 	rpar_tok := p.match_token(.rpar)
 	ret_type := p.parse_return_type_node()
-	fn_block := p.parse_block_stmt()
-	return ast.new_fn_decl_node(p.syntax_tree, fn_key, ident, lpar_tok, params, rpar_tok,
-		ret_type, (fn_block as ast.BlockStmt))
+
+	if p.current_token().kind == .lcbr {
+		block := p.parse_block_stmt()
+		return ast.new_fn_decl_node(p.syntax_tree, pub_key, fn_key, name_expr, lpar_tok,
+			params, rpar_tok, ret_type, block as ast.BlockStmt)
+	}
+	// empty block, some declarations is ok with this, like C
+	void_block := ast.new_void_block_stmt(p.syntax_tree)
+	return ast.new_fn_decl_node(p.syntax_tree, pub_key, fn_key, name_expr, lpar_tok, params,
+		rpar_tok, ret_type, void_block)
 }
 
 fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
@@ -156,22 +165,22 @@ fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
 }
 
 fn (mut p Parser) parse_return_type_node() ast.TypeNode {
-	if p.current_token().kind == .lcbr {
+	if p.current_token().kind != .name {
 		// this is a procedure without return type
-		return ast.new_type_node(p.syntax_tree, token.tok_void, false, true)
+		return ast.new_type_node(p.syntax_tree, token.tok_void, token.tok_void, token.tok_void)
 	}
-	mut is_ref := false
+	mut ref_tok := token.tok_void
 	if p.current_token().kind == .amp {
-		is_ref = true
-		p.next_token()
+		ref_tok = p.match_token(.amp)
 	}
 	name := p.match_token(.name)
 
-	return ast.new_type_node(p.syntax_tree, name, is_ref, false)
+	return ast.new_type_node(p.syntax_tree, name, ref_tok, token.tok_void)
 }
 
 fn (mut p Parser) parse_param_node() ast.ParamNode {
 	mut is_mut := false
+
 	if p.current_token().kind == .key_mut {
 		is_mut = true
 		p.next_token()
@@ -182,14 +191,18 @@ fn (mut p Parser) parse_param_node() ast.ParamNode {
 }
 
 fn (mut p Parser) parse_type_node() ast.TypeNode {
-	mut is_ref := false
+	mut ref_tok := token.tok_void
+	mut variadic_tok := token.tok_void
+
+	if p.current_token().kind == .dot_dot_dot {
+		variadic_tok = p.match_token(.dot_dot_dot)
+	}
 	if p.current_token().kind == .amp {
-		is_ref = true
-		p.next_token()
+		ref_tok = p.match_token(.amp)
 	}
 	name := p.match_token(.name)
 
-	return ast.new_type_node(p.syntax_tree, name, is_ref, false)
+	return ast.new_type_node(p.syntax_tree, name, ref_tok, variadic_tok)
 }
 
 // peek, returns a token at offset from current postion
@@ -613,9 +626,14 @@ fn (mut p Parser) parse_name_or_call_expr() ast.Expr {
 }
 
 fn (mut p Parser) parse_name_expr() ast.Expr {
+	mut is_c_name := false
 	name := p.match_token(.name)
 	mut names := [name]
 	if p.peek_token(0).kind == .dot {
+		if name.lit == 'C' {
+			is_c_name = true
+		}
+		// starts with 'C.'
 		for p.peek_token(0).kind != .eof && p.peek_token(0).kind == .dot {
 			start_tok := p.current_token()
 
@@ -635,5 +653,5 @@ fn (mut p Parser) parse_name_expr() ast.Expr {
 			}
 		}
 	}
-	return ast.new_name_expr(p.syntax_tree, names)
+	return ast.new_name_expr(p.syntax_tree, names, is_c_name)
 }

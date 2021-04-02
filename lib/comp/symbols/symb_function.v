@@ -12,11 +12,13 @@ pub const (
 
 pub struct FunctionSymbol {
 pub:
-	location source.TextLocation
-	name     string
-	typ      TypeSymbol
-	params   []ParamSymbol
-	id       string
+	is_c_decl bool
+	is_pub    bool
+	location  source.TextLocation
+	name      string
+	typ       TypeSymbol
+	params    []ParamSymbol
+	id        string
 }
 
 pub fn (ts FunctionSymbol) == (rts FunctionSymbol) bool {
@@ -36,9 +38,11 @@ pub fn new_function_symbol(name string, params []ParamSymbol, typ TypeSymbol) Fu
 	}
 }
 
-pub fn new_function_symbol_from_decl(location source.TextLocation, name string, params []ParamSymbol, typ TypeSymbol) FunctionSymbol {
+pub fn new_function_symbol_from_decl(location source.TextLocation, name string, params []ParamSymbol, typ TypeSymbol, is_pub bool, is_c_decl bool) FunctionSymbol {
 	return FunctionSymbol{
 		location: location
+		is_pub: is_pub
+		is_c_decl: is_c_decl
 		name: name
 		params: params
 		typ: typ
