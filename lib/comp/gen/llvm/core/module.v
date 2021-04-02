@@ -259,6 +259,13 @@ pub fn (m Module) print_to_file(path string) ? {
 pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test bool) {
 	m.is_test = is_test
 
+	// first declare all C function declares
+	for func in program.func_symbols {
+		if func.is_c_decl {
+			m.declare_function(func, binding.new_empty_block_stmt())
+		}
+	}
+
 	// first declare struct names
 	for _, typ in program.types {
 		if typ is symbols.StructTypeSymbol {
@@ -292,9 +299,10 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 		m.declare_function(test_main, body)
 	}
 
-	// first declare all functions except the main
+	// first declare all functions except the main and C declares
 	for func in program.func_symbols {
-		if func.name != 'main' {
+		if func.name != 'main' && !func.is_c_decl {
+			// this is a normal function, expect a body
 			body := program.func_bodies[func.id] or {
 				panic('unexpected, function body for $func.name ($func.id) missing')
 			}
@@ -312,7 +320,7 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 	}
 	// generate bodies of all rest of the functions
 	for _, mut func in m.funcs {
-		if func.func.name != 'main' {
+		if func.func.name != 'main' && !func.func.is_c_decl {
 			func.generate_function_bodies()
 		}
 	}
@@ -320,7 +328,12 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 
 pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding.BoundBlockStmt) {
 	f := new_llvm_func(m, func, body)
-	m.funcs[func.id] = f
+	if func.is_c_decl {
+		// if it is a C decl, add it to built_in_funcs
+		m.built_in_funcs[f.name] = f.func_ref
+	} else {
+		m.funcs[func.id] = f
+	}
 
 	if func.name == 'main' {
 		m.main_func_ref = f.func_ref

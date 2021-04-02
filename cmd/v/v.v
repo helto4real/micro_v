@@ -28,6 +28,7 @@ fn main() {
 		exit(0)
 	}
 	mut files := []string{}
+
 	mut display_bound_stmts := false
 	mut display_lowered_stmts := false
 	mut use_evaluator := false
@@ -81,6 +82,10 @@ fn main() {
 		eprintln(term.red('no file specified'))
 		exit(-1)
 	}
+	// add the runtime files
+	runtime_files := get_runtime_files() ?
+	files << runtime_files
+
 	mut syntax_trees := []&ast.SyntaxTree{cap: files.len}
 	mut has_errors := false
 	for file in files {
@@ -112,16 +117,16 @@ fn main() {
 		} else {
 			if command == .build {
 				mut comp := comp.create_compilation(syntax_trees)
-				is_compiled_in_folder := syntax_trees.len > 1
+				is_compiled_in_folder := syntax_trees.len - runtime_files.len > 1
 				file := files[0]
 				folder := os.dir(file)
 				filename := os.file_name(file)
-
 				out_filename := if is_compiled_in_folder {
 					filename
 				} else {
 					filename[..filename.len - 2]
 				}
+
 				out_path := os.join_path(folder, out_filename)
 
 				llvm_backend := llvm.new_llvm_generator()
@@ -200,6 +205,17 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 	println(sw.str())
 }
 
+fn get_runtime_files() ?[]string {
+	exe_directory_path := os.dir(os.executable())
+	base_dir := exe_directory_path[..exe_directory_path.len - 6]
+	path_to_runtime := os.join_path(base_dir, 'lib/runtime')
+	test_files := os.walk_ext(path_to_runtime, '.v')
+	if test_files.len > 0 {
+		return test_files
+	}
+	return error('no runtime files found in path $path_to_runtime')
+}
+
 fn get_self_test_files() ?[]string {
 	exe_directory_path := os.dir(os.executable())
 	base_dir := exe_directory_path[..exe_directory_path.len - 6]
@@ -208,7 +224,7 @@ fn get_self_test_files() ?[]string {
 	if test_files.len > 0 {
 		return test_files
 	}
-	return none
+	return error('no self test files found in path $path_to_tests')
 }
 
 fn get_files(file_or_directory string) ?[]string {

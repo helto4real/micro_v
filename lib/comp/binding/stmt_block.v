@@ -18,6 +18,10 @@ pub fn new_bound_block_stmt(stmts []BoundStmt) BoundBlockStmt {
 	}
 }
 
+pub fn new_empty_block_stmt() BoundBlockStmt {
+	return BoundBlockStmt{}
+}
+
 pub fn (ex BoundBlockStmt) node_str() string {
 	return typeof(ex).name
 }

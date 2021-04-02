@@ -116,6 +116,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 	binder.scope.try_declare_type(symbols.bool_symbol)
 	binder.scope.try_declare_type(symbols.string_symbol)
 	binder.scope.try_declare_type(symbols.charptr_symbol)
+	binder.scope.try_declare_type(symbols.byteptr_symbol)
 	binder.scope.try_declare_type(symbols.voidptr_symbol)
 
 	// first bind the types
@@ -380,7 +381,8 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 		if name in seen_param_names {
 			b.log.error_param_allready_declared(name, param_node.name_tok.text_location())
 		} else {
-			param_symbol := symbols.new_param_symbol(name, param_typ, param_node.is_mut)
+			param_symbol := symbols.new_param_symbol(name, param_typ, param_node.is_mut,
+				param_node.is_variadic)
 			params << param_symbol
 			seen_param_names << name
 		}
@@ -392,7 +394,7 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 	}
 
 	func := symbols.new_function_symbol_from_decl(fn_decl.text_location(), fn_decl.name_expr.name_tok.lit,
-		params, typ)
+		params, typ, fn_decl.is_pub, fn_decl.is_c_decl)
 
 	// TODO: refactor this. Due to V bug the func could not
 	//		 include the decl

@@ -1,8 +1,8 @@
 
-fn variadic(x int, y ...string) {
+fn variadic(x int, y string) {
 	
 }
 
 fn main() {
-
+	println('hello')
 }

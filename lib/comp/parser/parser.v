@@ -165,7 +165,7 @@ fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
 }
 
 fn (mut p Parser) parse_return_type_node() ast.TypeNode {
-	if p.current_token().kind == .lcbr {
+	if p.current_token().kind != .name {
 		// this is a procedure without return type
 		return ast.new_type_node(p.syntax_tree, token.tok_void, token.tok_void, token.tok_void)
 	}
