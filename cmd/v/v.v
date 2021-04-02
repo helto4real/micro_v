@@ -158,6 +158,7 @@ fn main() {
 				}
 
 				println(term.green('test success'))
+				println('')
 				exit(0)
 			}
 		}
@@ -257,7 +258,8 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 
 fn get_self_test_files() ?[]string {
 	exe_directory_path := os.dir(os.executable())
-	path_to_tests := os.join_path(exe_directory_path, '../../lib/tests')
+	base_dir := exe_directory_path[..exe_directory_path.len - 6]
+	path_to_tests := os.join_path(base_dir, 'lib/tests')
 	test_files := os.walk_ext(path_to_tests, '.v')
 	if test_files.len > 0 {
 		return test_files

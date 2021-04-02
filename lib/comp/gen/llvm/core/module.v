@@ -1,5 +1,6 @@
 module core
 
+import term
 import lib.comp.symbols
 import lib.comp.binding
 
@@ -127,6 +128,21 @@ pub fn (mut m Module) run_main() i64 {
 	return i64(C.LLVMGenericValueToInt(res, 1))
 }
 
+fn compare_function_by_file_and_name(a &Function, b &Function) int {
+	if a.func.location.source.filename == b.func.location.source.filename {
+		if a.func.name < b.func.name {
+			return -1
+		} else {
+			return 1
+		}
+	}
+
+	if a.func.location.source.filename < b.func.location.source.filename {
+		return -1
+	}
+	return 1
+}
+
 pub fn (mut m Module) run_tests() bool {
 	m.init_jit_execution_engine() or { panic('error init execution enging : $err.msg') }
 	if m.exec_engine == 0 {
@@ -138,7 +154,7 @@ pub fn (mut m Module) run_tests() bool {
 			test_funcs << f
 		}
 	}
-	test_funcs.sort(a.func.name < b.func.name)
+	test_funcs.sort_with_compare(compare_function_by_file_and_name)
 
 	// run main to be sure it is jit
 	main_args := []&C.LLVMGenericValueRef{}
@@ -146,18 +162,66 @@ pub fn (mut m Module) run_tests() bool {
 
 	mut nr_of_tests := 0
 	mut nr_of_errors := 0
+	mut current_file_has_errors := false
+	mut current_file := ''
+	mut total_nr_of_test_files := 0
 
 	for func in test_funcs {
+		if func.func.location.source.filename != current_file {
+			total_nr_of_test_files++
+			current_file = func.func.location.source.filename
+		}
+	}
+	current_file = ''
+	println('------------------------------ test ------------------------------')
+	for func in test_funcs {
+		if func.func.location.source.filename != current_file {
+			if current_file.len > 0 {
+				print_result(current_file, current_file_has_errors, nr_of_tests, total_nr_of_test_files)
+			}
+			current_file = func.func.location.source.filename
+			current_file_has_errors = false
+			nr_of_tests++
+		}
 		args := []&C.LLVMGenericValueRef{}
 		res := C.LLVMRunFunction(m.exec_engine, func.func_ref, 0, args.data)
 		int_res := C.LLVMGenericValueToInt(res, 1)
-		nr_of_tests++
 		if int_res == 0 {
 		} else {
+			current_file_has_errors = true
 			nr_of_errors++
 		}
 	}
+	print_result(current_file, !current_file_has_errors, nr_of_tests, total_nr_of_test_files)
+
+	println('------------------------------------------------------------------')
 	return nr_of_errors == 0
+}
+
+fn print_result(filename string, is_ok bool, test_nr int, total_nr_of_tests int) {
+	print('   ')
+	if is_ok {
+		print(term.green('  OK  '))
+	} else {
+		print(term.fail_message(' FAIL '))
+	}
+	print('   [')
+	total_nr_of_digits_total := nr_of_digits(total_nr_of_tests)
+	total_nr_of_digits_test_nr := nr_of_digits(test_nr)
+	leading_zeros := total_nr_of_digits_total - total_nr_of_digits_test_nr
+	if leading_zeros > 0 {
+		print('0'.repeat(leading_zeros))
+	}
+	print('$test_nr/$total_nr_of_tests]  ')
+	println(filename)
+}
+
+fn nr_of_digits(n int) int {
+	mut total := 0
+	for i := 1; i <= n; i *= 10 {
+		total += (1 + n - i)
+	}
+	return total
 }
 
 pub fn (mut m Module) verify() ? {

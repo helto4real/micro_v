@@ -383,7 +383,8 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 		symbols.TypeSymbol(symbols.void_symbol)
 	}
 
-	func := symbols.new_function_symbol(fn_decl.name_tok.lit, params, typ)
+	func := symbols.new_function_symbol_from_decl(fn_decl.text_location(), fn_decl.name_tok.lit,
+		params, typ)
 
 	// TODO: refactor this. Due to V bug the func could not
 	//		 include the decl
