@@ -319,7 +319,7 @@ pub fn (mut b Binder) bind_assert_stmt(assert_stmt ast.AssertStmt) BoundStmt {
 	converted_expr := b.bind_convertion_diag(assert_stmt.expr.text_location(), expr, symbols.bool_symbol)
 	// get the code for the assert
 	assert_code := assert_stmt.expr.str()
-	return new_bound_assert_stmt(converted_expr, assert_code)
+	return new_bound_assert_stmt(assert_stmt.text_location(), converted_expr, assert_code)
 }
 
 pub fn (mut b Binder) bind_module_stmt(module_stmt ast.ModuleStmt) BoundStmt {

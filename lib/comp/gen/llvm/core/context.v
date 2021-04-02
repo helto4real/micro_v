@@ -3,6 +3,7 @@ module core
 import lib.comp.binding
 import lib.comp.symbols
 import lib.comp.token
+import lib.comp.util.source
 
 pub struct Emitter {
 	current_func &C.LLVMValueRef
@@ -143,8 +144,10 @@ fn (mut c Emitter) emit_assert_stmt(node binding.BoundAssertStmt) {
 	C.LLVMBuildCondBr(c.mod.builder.builder_ref, cond_expr_ref, continue_block, assert_block)
 	C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, assert_block)
 	// insert to print assert information
-	c.println('assert $node.code')
-	c.println('')
+
+	mut sw := source.SourceWriter{}
+	source.write_diagnostic(mut sw, node.location, 'assert error', 1)
+	c.println(sw.str())
 
 	// then do longjmp to exit
 	mut cb := c.new_builtin_call('longjmp')

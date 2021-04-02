@@ -94,7 +94,7 @@ pub fn (mut l Lowerer) rewrite_stmt(stmt BoundStmt) BoundStmt {
 
 fn (mut l Lowerer) rewrite_assert_stmt(stmt BoundAssertStmt) BoundStmt {
 	lowered_expr := l.rewrite_expr(stmt.expr)
-	return new_bound_assert_stmt(lowered_expr, stmt.code)
+	return new_bound_assert_stmt(stmt.location, lowered_expr, stmt.code)
 }
 
 fn (mut l Lowerer) rewrite_return_stmt(stmt BoundReturnStmt) BoundStmt {

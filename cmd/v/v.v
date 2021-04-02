@@ -1,5 +1,4 @@
 import term
-import strings
 import lib.repl
 import os
 import lib.comp
@@ -189,71 +188,16 @@ pub fn write_diagnostics(diagnostics []&source.Diagnostic) {
 	mut sorted_diagnosics := []&source.Diagnostic{cap: diagnostics.len}
 	sorted_diagnosics << diagnostics
 	sorted_diagnosics.sort(a.location.pos.pos < b.location.pos.pos)
-	mut iw := repl.IdentWriter{}
+	mut sw := source.SourceWriter{}
 	for err in sorted_diagnosics {
 		if err.has_loc == false {
-			iw.write(term.red('error: '))
-			iw.writeln(err.text)
+			sw.write(term.red('error: '))
+			sw.writeln(err.text)
 			continue
 		}
-		source := err.location.source
-		src := source.str()
-		error_line_nr := source.line_nr(err.location.pos.pos)
-		error_line := source.lines[error_line_nr - 1]
-		error_col := err.location.pos.pos - error_line.start + 1
-
-		mut line_nr_start := error_line_nr - 2
-		if line_nr_start < 1 {
-			line_nr_start = 1
-		}
-
-		error_line_nr_end := source.line_nr(err.location.pos.pos + err.location.pos.len)
-		mut line_nr_end := error_line_nr_end + 2
-		if line_nr_end > source.lines.len {
-			line_nr_end = source.lines.len
-		}
-
-		mut err_end_pos := err.location.pos.pos + err.location.pos.len
-		if err_end_pos > src.len {
-			err_end_pos = src.len
-		}
-
-		iw.write('$err.location.source.filename:$error_line_nr:$error_col: ')
-		iw.write(term.red('error: '))
-		iw.writeln(err.text)
-
-		mut b := strings.new_builder(0)
-		nr_of_digits := line_nr_end.str().len
-		for i in line_nr_start .. line_nr_end + 1 {
-			line := source.lines[i - 1]
-			nr_of_zeros_to_add := nr_of_digits - i.str().len
-			if nr_of_zeros_to_add > 0 {
-				b.write_string(' 0'.repeat(nr_of_zeros_to_add))
-			} else {
-				b.write_string(' ')
-			}
-			b.write_string('$i')
-			b.write_string(' | ')
-			if i == error_line_nr {
-				prefix := src[line.start..err.location.pos.pos].replace('\t', '  ')
-				error := src[err.location.pos.pos..err_end_pos].replace('\t', '  ')
-				postfix := src[err.location.pos.pos + err.location.pos.len..line.start + line.len].replace('\t',
-					'  ')
-
-				b.write_string(prefix)
-				b.write_string(term.red(error))
-				b.writeln(postfix)
-				b.write_string(' '.repeat(nr_of_digits + 1))
-				b.write_string(' | ')
-				b.writeln(term.red('${' '.repeat(prefix.len)}${'~'.repeat(err.location.pos.len)}'))
-			} else {
-				b.writeln(src[line.start..line.start + line.len].replace('\t', '  '))
-			}
-		}
-		iw.writeln(b.str())
-		iw.writeln('')
+		source.write_diagnostic(mut sw, err.location, err.text, 2)
 	}
-	println(iw.str())
+	println(sw.str())
 }
 
 fn get_self_test_files() ?[]string {

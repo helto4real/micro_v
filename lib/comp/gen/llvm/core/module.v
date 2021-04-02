@@ -177,7 +177,7 @@ pub fn (mut m Module) run_tests() bool {
 	for func in test_funcs {
 		if func.func.location.source.filename != current_file {
 			if current_file.len > 0 {
-				print_result(current_file, current_file_has_errors, nr_of_tests, total_nr_of_test_files)
+				print_result(current_file, !current_file_has_errors, nr_of_tests, total_nr_of_test_files)
 			}
 			current_file = func.func.location.source.filename
 			current_file_has_errors = false
@@ -201,11 +201,11 @@ pub fn (mut m Module) run_tests() bool {
 fn print_result(filename string, is_ok bool, test_nr int, total_nr_of_tests int) {
 	print('   ')
 	if is_ok {
-		print(term.green('  OK  '))
+		print(term.green(' OK   '))
 	} else {
-		print(term.fail_message(' FAIL '))
+		print(term.fail_message('FAIL'))
 	}
-	print('   [')
+	print(' [')
 	total_nr_of_digits_total := nr_of_digits(total_nr_of_tests)
 	total_nr_of_digits_test_nr := nr_of_digits(test_nr)
 	leading_zeros := total_nr_of_digits_total - total_nr_of_digits_test_nr
@@ -219,7 +219,7 @@ fn print_result(filename string, is_ok bool, test_nr int, total_nr_of_tests int)
 fn nr_of_digits(n int) int {
 	mut total := 0
 	for i := 1; i <= n; i *= 10 {
-		total += (1 + n - i)
+		total++
 	}
 	return total
 }
