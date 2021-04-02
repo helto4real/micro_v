@@ -86,6 +86,10 @@ pub fn (mut d Diagnostics) error_param_allready_declared(ident string, loc TextL
 	d.error('parameter <$ident> already declared', loc)
 }
 
+pub fn (mut d Diagnostics) error_variadic_parameters_can_only_be_last(ident string, loc TextLocation) {
+	d.error('variadic parameter <$ident> can only be last parameter', loc)
+}
+
 pub fn (mut d Diagnostics) error_function_allready_declared(ident string, loc TextLocation) {
 	d.error('function <$ident> already declared', loc)
 }

@@ -158,20 +158,20 @@ fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
 fn (mut p Parser) parse_return_type_node() ast.TypeNode {
 	if p.current_token().kind == .lcbr {
 		// this is a procedure without return type
-		return ast.new_type_node(p.syntax_tree, token.tok_void, false, true)
+		return ast.new_type_node(p.syntax_tree, token.tok_void, token.tok_void, token.tok_void)
 	}
-	mut is_ref := false
+	mut ref_tok := token.tok_void
 	if p.current_token().kind == .amp {
-		is_ref = true
-		p.next_token()
+		ref_tok = p.match_token(.amp)
 	}
 	name := p.match_token(.name)
 
-	return ast.new_type_node(p.syntax_tree, name, is_ref, false)
+	return ast.new_type_node(p.syntax_tree, name, ref_tok, token.tok_void)
 }
 
 fn (mut p Parser) parse_param_node() ast.ParamNode {
 	mut is_mut := false
+
 	if p.current_token().kind == .key_mut {
 		is_mut = true
 		p.next_token()
@@ -182,14 +182,18 @@ fn (mut p Parser) parse_param_node() ast.ParamNode {
 }
 
 fn (mut p Parser) parse_type_node() ast.TypeNode {
-	mut is_ref := false
+	mut ref_tok := token.tok_void
+	mut variadic_tok := token.tok_void
+	
+	if p.current_token().kind == .dot_dot_dot {
+		variadic_tok = p.match_token(.dot_dot_dot)
+	} 
 	if p.current_token().kind == .amp {
-		is_ref = true
-		p.next_token()
+		ref_tok = p.match_token(.amp)
 	}
 	name := p.match_token(.name)
 
-	return ast.new_type_node(p.syntax_tree, name, is_ref, false)
+	return ast.new_type_node(p.syntax_tree, name, ref_tok, variadic_tok)
 }
 
 // peek, returns a token at offset from current postion

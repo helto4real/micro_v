@@ -17,8 +17,10 @@ pub:
 	child_nodes []AstNode
 	// child nodes
 	name_tok token.Token
+	variadic_tok token.Token
 	typ      TypeNode
 	is_mut   bool
+	is_variadic bool
 }
 
 pub fn new_param_node(tree &SyntaxTree, name_tok token.Token, typ TypeNode, is_mut bool) ParamNode {
@@ -29,6 +31,7 @@ pub fn new_param_node(tree &SyntaxTree, name_tok token.Token, typ TypeNode, is_m
 		name_tok: name_tok
 		typ: typ
 		is_mut: is_mut
+		is_variadic: typ.is_variadic
 	}
 }
 

@@ -45,6 +45,9 @@ pub fn write_diagnostic(mut sw SourceWriter, location &TextLocation, text string
 		if i == error_line_nr {
 			prefix := src[line.start..location.pos.pos].replace('\t', '  ')
 			error := src[location.pos.pos..err_end_pos].replace('\t', '  ')
+			println('$line')
+			println('src_pos: $location.pos.pos ($location.pos.len), $line.start ($line.len)')
+			println(text)
 			postfix := src[location.pos.pos + location.pos.len..line.start + line.len].replace('\t',
 				'  ')
 

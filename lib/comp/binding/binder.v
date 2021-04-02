@@ -112,6 +112,8 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 	binder.scope.try_declare_type(symbols.i64_symbol)
 	binder.scope.try_declare_type(symbols.bool_symbol)
 	binder.scope.try_declare_type(symbols.string_symbol)
+	binder.scope.try_declare_type(symbols.charptr_symbol)
+	binder.scope.try_declare_type(symbols.voidptr_symbol)
 
 	// first bind the types
 	for syntax_tree in syntax_trees {
@@ -369,6 +371,9 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 		param_node := fn_decl.params.at(i) as ast.ParamNode
 		name := param_node.name_tok.lit
 		param_typ := b.bind_type(param_node.typ)
+		if param_node.is_variadic && i != fn_decl.params.len()-1 {
+			b.log.error_variadic_parameters_can_only_be_last(name, param_node.name_tok.text_location())
+		}
 		if name in seen_param_names {
 			b.log.error_param_allready_declared(name, param_node.name_tok.text_location())
 		} else {

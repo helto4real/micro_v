@@ -8,6 +8,9 @@ pub const (
 	string_symbol      = new_builtin_type_symbol('string')
 	undefined_symbol   = new_builtin_type_symbol('undefined')
 	none_symbol   	   = new_builtin_type_symbol('none')
+	// C interop
+	charptr_symbol      = new_builtin_type_symbol('charptr')
+	voidptr_symbol      = new_builtin_type_symbol('voidptr')
 
 	any_symbol         = new_any_type_symbol()
 	error_symbol       = new_error_type_symbol()

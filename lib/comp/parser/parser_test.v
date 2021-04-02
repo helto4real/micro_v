@@ -237,6 +237,10 @@ fn test_fn_node_parser() {
 	assert param.name_tok.lit == 'param'
 	assert param.typ.name_tok.lit == 'RefStruct'
 	assert param.typ.is_ref == true
+
+	p = new_parser_from_text('fn variadic(vari ...string) {}')
+	fn_p = p.parse_function()
+	assert p.log.all.len == 0
 }
 
 /*
