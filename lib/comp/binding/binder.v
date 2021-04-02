@@ -46,13 +46,16 @@ pub fn bind_program(is_test bool, is_script bool, previous &BoundProgram, global
 		fn_decl := binder.scope.lookup_fn_decl(func.name) or {
 			panic('unexpected missing fn_decl in scope')
 		}
-		body := binder.bind_stmt(fn_decl.block)
-		if func.typ.kind != .void_symbol && !all_path_return_in_body(body as BoundBlockStmt) {
-			binder.log.error_all_paths_must_return(fn_decl.name_tok.text_location())
+		if !fn_decl.is_c_decl {
+			body := binder.bind_stmt(fn_decl.block)
+			if func.typ.kind != .void_symbol && !all_path_return_in_body(body as BoundBlockStmt) {
+				binder.log.error_all_paths_must_return(fn_decl.name_expr.name_tok.text_location())
+			}
+			func_bodies[func.id] = body as BoundBlockStmt
+			log.all << binder.log.all
 		}
-		func_bodies[func.id] = body as BoundBlockStmt
-		log.all << binder.log.all
 	}
+
 	valid_statements := global_scope.stmts.filter(it.kind != .comment_stmt)
 	if global_scope.main_func != symbols.undefined_fn && valid_statements.len > 0 {
 		body := new_bound_block_stmt(valid_statements)
@@ -177,7 +180,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 				func_decl := binder.scope.lookup_fn_decl(main_func.name) or {
 					panic('unexpected error, function declaration not found')
 				}
-				binder.log.error_main_function_must_have_correct_signature(func_decl.name_tok.text_location())
+				binder.log.error_main_function_must_have_correct_signature(func_decl.name_expr.name_tok.text_location())
 			}
 		}
 
@@ -208,7 +211,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 				func_decl := binder.scope.lookup_fn_decl(main_func.name) or {
 					panic('unexpected error, function declaration not found')
 				}
-				binder.log.error_cannot_mix_global_statements_and_main_function(func_decl.name_tok.text_location())
+				binder.log.error_cannot_mix_global_statements_and_main_function(func_decl.name_expr.name_tok.text_location())
 			} else {
 				main_func = symbols.new_function_symbol('main', []symbols.ParamSymbol{},
 					symbols.void_symbol)
@@ -371,7 +374,7 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 		param_node := fn_decl.params.at(i) as ast.ParamNode
 		name := param_node.name_tok.lit
 		param_typ := b.bind_type(param_node.typ)
-		if param_node.is_variadic && i != fn_decl.params.len()-1 {
+		if param_node.is_variadic && i != fn_decl.params.len() - 1 {
 			b.log.error_variadic_parameters_can_only_be_last(name, param_node.name_tok.text_location())
 		}
 		if name in seen_param_names {
@@ -388,13 +391,13 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 		symbols.TypeSymbol(symbols.void_symbol)
 	}
 
-	func := symbols.new_function_symbol_from_decl(fn_decl.text_location(), fn_decl.name_tok.lit,
+	func := symbols.new_function_symbol_from_decl(fn_decl.text_location(), fn_decl.name_expr.name_tok.lit,
 		params, typ)
 
 	// TODO: refactor this. Due to V bug the func could not
 	//		 include the decl
 	if !b.scope.try_declare_fn(func, fn_decl) {
-		b.log.error_function_allready_declared(fn_decl.name_tok.lit, fn_decl.name_tok.text_location())
+		b.log.error_function_allready_declared(fn_decl.name_expr.name_tok.lit, fn_decl.name_expr.name_tok.text_location())
 	}
 }
 

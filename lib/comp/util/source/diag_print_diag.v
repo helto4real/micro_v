@@ -1,9 +1,9 @@
 module source
+
 import strings
 import term
 
 pub fn write_diagnostic(mut sw SourceWriter, location &TextLocation, text string, nr_lines_to_show int) {
-
 	source := location.source
 	src := source.str()
 	error_line_nr := source.line_nr(location.pos.pos)
@@ -45,9 +45,6 @@ pub fn write_diagnostic(mut sw SourceWriter, location &TextLocation, text string
 		if i == error_line_nr {
 			prefix := src[line.start..location.pos.pos].replace('\t', '  ')
 			error := src[location.pos.pos..err_end_pos].replace('\t', '  ')
-			println('$line')
-			println('src_pos: $location.pos.pos ($location.pos.len), $line.start ($line.len)')
-			println(text)
 			postfix := src[location.pos.pos + location.pos.len..line.start + line.len].replace('\t',
 				'  ')
 
