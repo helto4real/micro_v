@@ -1,17 +1,22 @@
 module symbols
 
 import rand
+import lib.comp.util.source
 
 pub const (
-	undefined_fn = FunctionSymbol{name: '' id: 'undefined'}
+	undefined_fn = FunctionSymbol{
+		name: ''
+		id: 'undefined'
+	}
 )
 
 pub struct FunctionSymbol {
 pub:
-	name   string
-	typ    TypeSymbol
-	params []ParamSymbol
-	id     string
+	location source.TextLocation
+	name     string
+	typ      TypeSymbol
+	params   []ParamSymbol
+	id       string
 }
 
 pub fn (ts FunctionSymbol) == (rts FunctionSymbol) bool {
@@ -24,6 +29,16 @@ pub fn (ts FunctionSymbol) str() string {
 
 pub fn new_function_symbol(name string, params []ParamSymbol, typ TypeSymbol) FunctionSymbol {
 	return FunctionSymbol{
+		name: name
+		params: params
+		typ: typ
+		id: rand.uuid_v4()
+	}
+}
+
+pub fn new_function_symbol_from_decl(location source.TextLocation, name string, params []ParamSymbol, typ TypeSymbol) FunctionSymbol {
+	return FunctionSymbol{
+		location: location
 		name: name
 		params: params
 		typ: typ

@@ -3,6 +3,7 @@ module core
 import lib.comp.binding
 import lib.comp.symbols
 import lib.comp.token
+import lib.comp.util.source
 
 pub struct Emitter {
 	current_func &C.LLVMValueRef
@@ -41,7 +42,8 @@ fn (mut c Emitter) next_ref_name() string {
 
 fn (mut c Emitter) emit_expr(node binding.BoundExpr) &C.LLVMValueRef {
 	match node {
-		binding.BoundLiteralExpr { return c.emit_bound_litera_expr(node) }
+		binding.BoundConvExpr { return c.emit_convert_expr(node) }
+		binding.BoundLiteralExpr { return c.emit_literal_expr(node) }
 		binding.BoundBinaryExpr { return c.emit_binary_expr(node) }
 		binding.BoundVariableExpr { return c.emit_variable_expr(node) }
 		binding.BoundUnaryExpr { return c.emit_unary_expr(node) }
@@ -141,6 +143,13 @@ fn (mut c Emitter) emit_assert_stmt(node binding.BoundAssertStmt) {
 
 	C.LLVMBuildCondBr(c.mod.builder.builder_ref, cond_expr_ref, continue_block, assert_block)
 	C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, assert_block)
+	// insert to print assert information
+
+	mut sw := source.SourceWriter{}
+	source.write_diagnostic(mut sw, node.location, 'assert error', 1)
+	c.println(sw.str())
+
+	// then do longjmp to exit
 	mut cb := c.new_builtin_call('longjmp')
 	cb.add_param(c.mod.jmp_buff)
 	cb.add_lit_param(i64(1))
@@ -148,6 +157,113 @@ fn (mut c Emitter) emit_assert_stmt(node binding.BoundAssertStmt) {
 	C.LLVMBuildUnreachable(c.mod.builder.builder_ref)
 
 	C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, continue_block)
+}
+
+// TODO: refactor this into several smaller functions
+fn (mut c Emitter) emit_convert_expr(node binding.BoundConvExpr) &C.LLVMValueRef {
+	expr := node.expr
+	expr_val_ref := c.emit_expr(expr)
+	from_typ := expr.typ
+	to_typ := node.typ
+	match from_typ {
+		symbols.BuiltInTypeSymbol {
+			match from_typ.name {
+				'int' {
+					match to_typ.name {
+						'string' {
+							glob_num_println := c.mod.global_const[GlobalVarRefType.printf_num] or {
+								number_str := c.mod.add_global_string_literal_ptr('%d')
+								c.mod.global_const[GlobalVarRefType.printf_num] = number_str
+								number_str
+							}
+							cast := C.LLVMBuildPointerCast(c.mod.builder.builder_ref,
+								c.mod.global_const[GlobalVarRefType.sprintf_buff], C.LLVMPointerType(C.LLVMInt8TypeInContext(c.mod.ctx_ref),
+								0), no_name.str)
+							mut cb := c.new_builtin_call('sprintf')
+							cb.add_param(cast)
+							cb.add_param(glob_num_println)
+							cb.add_param(expr_val_ref)
+							cb.emit()
+							return cast
+						}
+						else {
+							panic('convertion from int to $to_typ.name is not supported yet')
+						}
+					}
+				}
+				'bool' {
+					match to_typ.name {
+						'string' {
+							// CondBr <expr> true_block, false_block
+							// true_block:
+							//	 %res_var = 'true'
+							//   Br %result_block
+							// false_block:
+							//   %res_var = 'true'
+							//   Br %result_block
+							// result_block:
+							// 	 load %res_var
+
+							// get the global strings for 'true' and 'false'
+							glob_str_true := c.mod.global_const[GlobalVarRefType.str_true] or {
+								print_str := c.mod.add_global_string_literal_ptr('true')
+								c.mod.global_const[GlobalVarRefType.str_true] = print_str
+								print_str
+							}
+							glob_str_false := c.mod.global_const[GlobalVarRefType.str_false] or {
+								print_str := c.mod.add_global_string_literal_ptr('false')
+								c.mod.global_const[GlobalVarRefType.str_false] = print_str
+								print_str
+							}
+
+							res_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, get_llvm_type_ref(to_typ,
+								c.mod), no_name.str)
+
+							true_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref,
+								c.current_func, no_name.str)
+							false_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref,
+								c.current_func, no_name.str)
+							result_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref,
+								c.current_func, no_name.str)
+							C.LLVMMoveBasicBlockAfter(true_block, c.current_block)
+							C.LLVMMoveBasicBlockAfter(false_block, true_block)
+
+							C.LLVMBuildCondBr(c.mod.builder.builder_ref, expr_val_ref,
+								true_block, false_block)
+
+							// handle the logic for then block
+							C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, true_block)
+							c.current_block = true_block
+							C.LLVMBuildStore(c.mod.builder.builder_ref, glob_str_true,
+								res_var)
+							C.LLVMBuildBr(c.mod.builder.builder_ref, result_block)
+
+							// handle the logic for then block
+							C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, false_block)
+							c.current_block = false_block
+							C.LLVMBuildStore(c.mod.builder.builder_ref, glob_str_false,
+								res_var)
+							C.LLVMBuildBr(c.mod.builder.builder_ref, result_block)
+
+							C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, result_block)
+							return C.LLVMBuildLoad2(c.mod.builder.builder_ref, get_llvm_type_ref(to_typ,
+								c.mod), res_var, no_name.str)
+						}
+						else {
+							panic('convertion from bool to $to_typ.name is not supported yet')
+						}
+					}
+				}
+				else {
+					panic('from type $from_typ.name conversion not supported yet')
+				}
+			}
+		}
+		else {
+			panic('from type $from_typ conversion not supported yet')
+		}
+	}
+	panic('from type $from_typ conversion not supported yet')
 }
 
 fn (mut c Emitter) emit_if_expr(node binding.BoundIfExpr) &C.LLVMValueRef {
@@ -380,7 +496,7 @@ fn (mut c Emitter) emit_unary_expr(unary_expr binding.BoundUnaryExpr) &C.LLVMVal
 	}
 }
 
-fn (mut c Emitter) emit_bound_litera_expr(lit binding.BoundLiteralExpr) &C.LLVMValueRef {
+fn (mut c Emitter) emit_literal_expr(lit binding.BoundLiteralExpr) &C.LLVMValueRef {
 	// id := lit.const_val.id
 	typ := lit.const_val.typ
 	match typ {
@@ -427,6 +543,71 @@ fn (mut c Emitter) emit_struct_init_expr(si binding.BoundStructInitExpr) &C.LLVM
 	}
 
 	return C.LLVMConstNamedStruct(typ_ref, value_refs.data, value_refs.len)
+}
+
+fn (mut c Emitter) println(text string) {
+	lit_expr := binding.new_bound_literal_expr(text) as binding.BoundLiteralExpr
+	lit_expr_ref := c.emit_literal_expr(lit_expr)
+	glob_str_println := c.get_global_string(.printf_str_nl)
+
+	mut builder := c.new_builtin_call('printf')
+	if text.len > 0 {
+		builder.add_param(glob_str_println)
+		builder.add_param(lit_expr_ref)
+	} else {
+		// empty string
+		builder.add_param(c.get_global_string(.nl))
+	}
+	builder.emit()
+}
+
+fn (mut c Emitter) get_global_string(ref_typ GlobalVarRefType) &C.LLVMValueRef {
+	match ref_typ {
+		.printf_str {
+			return c.mod.global_const[ref_typ] or {
+				str_ref := c.mod.add_global_string_literal_ptr('%s')
+				c.mod.global_const[ref_typ] = str_ref
+				str_ref
+			}
+		}
+		.printf_str_nl {
+			return c.mod.global_const[ref_typ] or {
+				str_ref := c.mod.add_global_string_literal_ptr('%s\n')
+				c.mod.global_const[ref_typ] = str_ref
+				str_ref
+			}
+		}
+		.printf_num {
+			return c.mod.global_const[ref_typ] or {
+				str_ref := c.mod.add_global_string_literal_ptr('%d')
+				c.mod.global_const[ref_typ] = str_ref
+				str_ref
+			}
+		}
+		.str_true {
+			return c.mod.global_const[ref_typ] or {
+				str_ref := c.mod.add_global_string_literal_ptr('true')
+				c.mod.global_const[ref_typ] = str_ref
+				str_ref
+			}
+		}
+		.str_false {
+			return c.mod.global_const[ref_typ] or {
+				str_ref := c.mod.add_global_string_literal_ptr('false')
+				c.mod.global_const[ref_typ] = str_ref
+				str_ref
+			}
+		}
+		.nl {
+			return c.mod.global_const[ref_typ] or {
+				str_ref := c.mod.add_global_string_literal_ptr('\n')
+				c.mod.global_const[ref_typ] = str_ref
+				str_ref
+			}
+		}
+		else {}
+	}
+	panic('unexepected, missing handle of global string')
 }
 
 [inline]

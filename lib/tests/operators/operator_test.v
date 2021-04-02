@@ -11,6 +11,5 @@ fn test_basic_logical_operators() {
 	assert false == false
 	assert !false == true
 	assert !true == false
-
 	assert !(1 == 1) == false
 }
