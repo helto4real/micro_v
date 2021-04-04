@@ -102,6 +102,16 @@ pub fn (mut d Diagnostics) error_struct_allready_declared(name string, loc TextL
 	d.error('struct <$name> already declared', loc)
 }
 
+pub fn (mut d Diagnostics) error_elements_in_array_needs_to_be_of_same_type(first_elem_typ string, first_elem_is_ref bool, loc TextLocation) {
+	if !first_elem_is_ref {
+		d.error('element needs to be of the same type ($first_elem_typ) and not a reference type',
+			loc)
+	} else {
+		d.error('element needs to be of the same type ($first_elem_typ) and a reference type',
+			loc)
+	}
+}
+
 pub fn (mut d Diagnostics) error_keyword_are_only_allowed_inside_a_loop(keyword string, loc TextLocation) {
 	d.error('statment <$keyword> are only allowed inside a loop', loc)
 }
@@ -125,6 +135,10 @@ pub fn (mut d Diagnostics) error_all_paths_must_return(loc TextLocation) {
 
 pub fn (mut d Diagnostics) error_module_can_only_be_defined_once(loc TextLocation) {
 	d.error('a module can only be definded once', loc)
+}
+
+pub fn (mut d Diagnostics) error_a_fixed_value_array_cannot_be_muted(loc TextLocation) {
+	d.error('fixed value array cannot be mut', loc)
 }
 
 pub fn (mut d Diagnostics) error_module_can_only_be_defined_as_first_statement(loc TextLocation) {

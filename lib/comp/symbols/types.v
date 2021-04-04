@@ -3,7 +3,7 @@ module symbols
 pub type VariableSymbol = GlobalVariableSymbol | LocalVariableSymbol | ParamSymbol
 
 pub type TypeSymbol = AnyTypeSymbol | BuiltInTypeSymbol | ErrorTypeSymbol | StructTypeSymbol |
-	VoidTypeSymbol
+	VoidTypeSymbol | ArrayTypeSymbol
 
 pub type Symbol = ConstSymbol | FunctionSymbol | TypeSymbol | VariableSymbol
 
@@ -15,6 +15,7 @@ pub type LitVal = None | bool | i64 | int | string
 
 pub enum TypeSymbolKind {
 	built_in_symbol
+	array_symbol
 	struct_symbol
 	void_symbol
 	error_symbol
@@ -93,6 +94,9 @@ pub fn (t TypeSymbol) str() string {
 			return t.str()
 		}
 		BuiltInTypeSymbol {
+			return t.str()
+		}
+		ArrayTypeSymbol {
 			return t.str()
 		}
 		VoidTypeSymbol {

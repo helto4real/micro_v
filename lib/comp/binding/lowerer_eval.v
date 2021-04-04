@@ -369,6 +369,7 @@ pub fn (mut l Lowerer) rewrite_expr(expr BoundExpr) BoundExpr {
 		BoundCallExpr { return l.rewrite_call_expr(expr) }
 		BoundConvExpr { return l.rewrite_conv_expr(expr) }
 		BoundNoneExpr { return expr }
+		BoundArrayInitExpr { return expr }
 		BoundStructInitExpr { return expr }
 		NoneExpr { return expr }
 	}

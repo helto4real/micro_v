@@ -541,6 +541,7 @@ pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 		ast.BinaryExpr { return b.bind_binary_expr(expr) }
 		ast.ParaExpr { return b.bind_para_expr(expr) }
 		ast.NameExpr { return b.bind_name_expr(expr) }
+		ast.ArrayInitExpr { return b.bind_array_init_expr(expr) }
 		ast.StructInitExpr { return b.bind_struct_init_expr(expr) }
 		ast.AssignExpr { return b.bind_assign_expr(expr) }
 		ast.IfExpr { return b.bind_if_expr(expr) }
@@ -711,6 +712,14 @@ pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 		return new_bound_expr_stmt(new_bound_error_expr())
 	}
 	expr := b.bind_expr(syntax.expr)
+	expr_typ := expr.typ
+	if expr_typ.kind == .array_symbol {
+		arr_typ := expr_typ as symbols.ArrayTypeSymbol
+		if arr_typ.is_val_array && arr_typ.is_fixed && syntax.is_mut {
+			b.log.error_a_fixed_value_array_cannot_be_muted(syntax.mut_tok.text_location())
+		}
+	}
+
 	var := b.bind_variable(syntax.ident.name_tok, expr.typ, syntax.is_mut)
 	return new_var_decl_stmt(var, expr, syntax.is_mut)
 }
@@ -766,6 +775,40 @@ fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {
 	return b.bind_expr(syntax.expr)
 }
 
+fn (mut b Binder) bind_array_init_expr(syntax ast.ArrayInitExpr) BoundExpr {
+	if syntax.is_val_array && syntax.is_fixed {
+		mut array_elements := []BoundExpr{cap: syntax.exprs.len}
+		mut first_elem_typ := symbols.TypeSymbol(symbols.void_symbol)
+		mut first_elem_is_ref := false
+		for i, expr in syntax.exprs {
+			bound_expr := b.bind_expr(expr)
+			if bound_expr.kind == .error_expr {
+				return bound_expr
+			}
+			if i > 0 {
+				conv_expr := b.bind_convertion_diag(expr.text_location(), bound_expr,
+					first_elem_typ)
+				if conv_expr.kind == .error_expr {
+					return conv_expr
+				}
+				if first_elem_is_ref != bound_expr.is_ref {
+					b.log.error_elements_in_array_needs_to_be_of_same_type(first_elem_typ.name,
+						first_elem_is_ref, expr.text_location())
+				}
+				array_elements << conv_expr
+			} else {
+				first_elem_typ = bound_expr.typ
+				first_elem_is_ref = bound_expr.is_ref
+				array_elements << bound_expr
+			}
+		}
+		array_typ := symbols.new_fixed_val_array_symbol(first_elem_typ, array_elements.len,
+			first_elem_is_ref)
+		return new_bound_val_array_init_expr(array_typ, array_elements)
+	}
+	panic('not supported array yet')
+}
+
 fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
 	typ := b.lookup_type(syntax.typ_tok.lit)
 	struct_typ := typ as symbols.StructTypeSymbol
@@ -799,6 +842,9 @@ fn (mut b Binder) bind_default_value_expr(typ symbols.TypeSymbol) BoundExpr {
 		}
 		symbols.AnyTypeSymbol {
 			panic('unexpected any type')
+		}
+		symbols.ArrayTypeSymbol {
+			panic('unexpected array type')
 		}
 		symbols.VoidTypeSymbol {
 			panic('unexpected void type')

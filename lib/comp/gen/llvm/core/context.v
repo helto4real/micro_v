@@ -89,6 +89,7 @@ fn (mut c Emitter) emit_expr(node binding.BoundExpr) &C.LLVMValueRef {
 		binding.BoundUnaryExpr { return c.emit_unary_expr(node) }
 		binding.BoundCallExpr { return c.emit_call_expr(node) }
 		binding.BoundStructInitExpr { return c.emit_struct_init_expr(node) }
+		binding.BoundArrayInitExpr { return c.emit_array_init_expr(node) }
 		binding.BoundIfExpr { return c.emit_if_expr(node) }
 		binding.BoundAssignExpr { return c.emit_assignment_expr(node) }
 		else { panic('unexpected expr: $node.kind') }
@@ -470,7 +471,6 @@ fn (mut c Emitter) emit_var_decl(node binding.BoundVarDeclStmt) {
 	var_name := node.var.name
 
 	expr_val_ref := c.emit_expr(node.expr)
-
 	// Todo: only do this is not a reference
 	ref_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, typ_ref, var_name.str)
 	C.LLVMBuildStore(c.mod.builder.builder_ref, expr_val_ref, ref_var)
@@ -581,6 +581,15 @@ fn (mut c Emitter) emit_literal_expr(lit binding.BoundLiteralExpr) &C.LLVMValueR
 	panic('unexpected type $typ')
 }
 
+fn (mut c Emitter) emit_array_init_expr(ai binding.BoundArrayInitExpr) &C.LLVMValueRef {
+	arr_typ := ai.typ as symbols.ArrayTypeSymbol
+	typ_ref := get_llvm_type_ref(arr_typ.elem_typ, c.mod)
+	mut value_refs := []&C.LLVMValueRef{}
+	for expr in ai.exprs {
+		value_refs << c.emit_expr(expr)
+	}
+	return C.LLVMConstArray(typ_ref, value_refs.data, value_refs.len)
+}
 fn (mut c Emitter) emit_struct_init_expr(si binding.BoundStructInitExpr) &C.LLVMValueRef {
 	// id := lit.const_val.id
 	// typ := si.typ as symbols.StructTypeSymbol
@@ -683,6 +692,10 @@ fn get_llvm_type_ref(typ symbols.TypeSymbol, mod Module) &C.LLVMTypeRef {
 				}
 			}
 		}
+		symbols.ArrayTypeSymbol {
+			elem_typ_ref := get_llvm_type_ref(typ.elem_typ, mod)
+			return C.LLVMArrayType(elem_typ_ref, typ.len)
+		}
 		symbols.VoidTypeSymbol {
 			return C.LLVMVoidTypeInContext(mod.ctx_ref)
 		}
@@ -690,7 +703,7 @@ fn get_llvm_type_ref(typ symbols.TypeSymbol, mod Module) &C.LLVMTypeRef {
 			return mod.types[typ.id] or { panic('unexpected, type $typ not found in symols table') }
 		}
 		else {
-			panic('unexpected, unsupported type ref $typ')
+			panic('unexpected, unsupported type ref $typ, $typ.kind')
 		}
 	}
 

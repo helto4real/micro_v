@@ -9,7 +9,7 @@ pub type Stmt = AssertStmt | BlockStmt | BreakStmt | CommentStmt | ContinueStmt 
 
 // Sumtype expressions
 pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | IfExpr | LiteralExpr |
-	NameExpr | NoneExpr | ParaExpr | RangeExpr | StructInitExpr | UnaryExpr
+	NameExpr | NoneExpr | ParaExpr | RangeExpr | StructInitExpr | UnaryExpr | ArrayInitExpr
 
 // Nodes in syntax tree
 pub type AstNode = EmptyNode | Expr | MemberNode | ParamNode | Stmt | StructInitMemberNode |
@@ -97,6 +97,7 @@ pub fn (ex Expr) text_location() source.TextLocation {
 		CallExpr { return ex.text_location() }
 		NoneExpr { return ex.text_location() }
 		StructInitExpr { return ex.text_location() }
+		ArrayInitExpr { return ex.text_location() }
 	}
 }
 
@@ -114,6 +115,7 @@ pub fn (ex Expr) node_str() string {
 		CallExpr { return ex.node_str() }
 		NoneExpr { return ex.node_str() }
 		StructInitExpr { return ex.node_str() }
+		ArrayInitExpr { return ex.node_str() }
 	}
 }
 
@@ -131,6 +133,7 @@ pub fn (ex Expr) str() string {
 		CallExpr { return ex.str() }
 		NoneExpr { return ex.str() }
 		StructInitExpr { return ex.str() }
+		ArrayInitExpr { return ex.str() }
 	}
 }
 

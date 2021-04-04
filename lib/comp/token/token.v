@@ -40,6 +40,8 @@ pub enum Kind {
 	name // Any identifier name
 	number //[1-9]+
 	string // a string literal
+	lsbr // '['
+	rsbr // ']'
 	lcbr // '{'
 	rcbr // '}'
 	lpar // '('
@@ -124,6 +126,8 @@ fn build_token_str() []string {
 	s[Kind.div] = '/'
 	s[Kind.amp] = '&'
 	s[Kind.pipe] = '|'
+	s[Kind.lsbr] = '['
+	s[Kind.rsbr] = ']'
 	s[Kind.lcbr] = '{'
 	s[Kind.rcbr] = '}'
 	s[Kind.lpar] = '('

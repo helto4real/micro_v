@@ -386,18 +386,19 @@ fn (mut p Parser) parse_if_stmt() ast.Stmt {
 
 fn (mut p Parser) parse_var_decl_stmt() ast.Stmt {
 	mut is_mut := false
+	mut mut_tok := token.tok_void
 	if p.peek_token(0).kind == .key_mut {
 		if p.peek_var_decl(1) {
 			// it is a mut assignment
 			is_mut = true
-			p.next_token()
+			mut_tok = p.match_token(.key_mut)
 		}
 	}
 	ident := p.parse_name_expr()
 	op_token := p.match_token(.colon_eq)
 	right := p.parse_assign_right_expr()
-	decl_stmt := ast.new_var_decl_stmt(p.syntax_tree, ident as ast.NameExpr, op_token,
-		right, is_mut)
+	decl_stmt := ast.new_var_decl_stmt(p.syntax_tree, mut_tok, ident as ast.NameExpr,
+		op_token, right)
 	return decl_stmt
 }
 
@@ -490,6 +491,42 @@ fn (mut p Parser) parse_struct_init() ast.Expr {
 	return ast.new_struct_init_expr(p.syntax_tree, typ_tok, lcbr_tok, members, rcbr_tok)
 }
 
+fn (mut p Parser) parse_array_expr() ast.Expr {
+	lsbr_tok := p.match_token(.lsbr) //[
+	if p.peek_token(0).kind == .rsbr { //] {
+		panic('not supported')
+	} else {
+		mut exprs := []ast.Expr{}
+		// parse a value array [1, 2, 3] fixed or non fixed
+		for p.peek_token(0).kind != .eof && p.peek_token(0).kind != .rsbr {
+			start_tok := p.current_token()
+
+			if p.current_token().kind == .comma {
+				p.next_token()
+			}
+			expr := p.parse_expr()
+
+			exprs << expr
+			// if parse stmt did not consume any tokens 
+			// let's skip it and continue
+			if p.current_token() == start_tok {
+				// makes sure we not in infinite loop
+				p.next_token()
+			}
+		}
+		rsbr_tok := p.match_token(.rsbr)
+		if p.peek_token(0).kind == .exl_mark {
+			p.next_token()
+			return ast.new_value_array_init_expr(p.syntax_tree, lsbr_tok, exprs, rsbr_tok,
+				true)
+		} else {
+			return ast.new_value_array_init_expr(p.syntax_tree, lsbr_tok, exprs, rsbr_tok,
+				false)
+		}
+	}
+	panic('not supported')
+}
+
 fn (mut p Parser) parse_if_expr() ast.Expr {
 	if_key := p.match_token(.key_if)
 	cond_expr := p.parse_expr()
@@ -518,6 +555,8 @@ fn (mut p Parser) parse_assign_right_expr() ast.Expr {
 		return p.parse_if_expr()
 	} else if p.peek_struct_init(0) {
 		return p.parse_struct_init()
+	} else if p.peek_token(0).kind == .lsbr { //[
+		return p.parse_array_expr()
 	}
 	return p.parse_assign_expr()
 }
