@@ -48,7 +48,7 @@ fn (mut c Emitter) emit_call(call_expr binding.BoundCallExpr) &C.LLVMValueRef {
 		panic('unexpected, $call_expr.func.name ($call_expr.func.id) func not declared. ')
 	}
 	func := func_res[0]
-	
+
 	mut params := []&C.LLVMValueRef{cap: call_expr.params.len}
 	for i, param in call_expr.params {
 		expr := c.emit_expr(param)
