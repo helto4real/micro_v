@@ -4,9 +4,10 @@ import rand
 
 pub struct ErrorTypeSymbol {
 pub:
-	kind TypeSymbolKind
-	name string = 'error'
-	id   string
+	kind   TypeSymbolKind
+	name   string = 'error'
+	id     string
+	is_ref bool
 }
 
 pub fn (ts ErrorTypeSymbol) == (rts ErrorTypeSymbol) bool {

@@ -4,13 +4,14 @@ import lib.comp.symbols
 
 pub struct BoundVarDeclStmt {
 pub:
-	is_mut      bool
+	is_mut bool
+	is_ref bool
 	// general bound stmt
 	kind        BoundNodeKind = .var_decl_stmt
 	child_nodes []BoundNode
 	// child nodes
-	expr        BoundExpr
-	var         symbols.VariableSymbol
+	expr BoundExpr
+	var  symbols.VariableSymbol
 }
 
 pub fn new_var_decl_stmt(var symbols.VariableSymbol, expr BoundExpr, is_mut bool) BoundStmt {

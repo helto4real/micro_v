@@ -46,8 +46,7 @@
             "args": [
                 "-g",
                 "-keepc",
-                "test",
-                "."
+                "test-self",
             ],
             "presentation": {
                 "reveal": "silent"

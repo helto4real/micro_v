@@ -4,6 +4,7 @@ import lib.comp.symbols
 
 pub fn (mut m Module) add_standard_funcs() {
 	m.add_longjmp_setjmp()
+	m.declare_common_global_vars()
 }
 
 fn (mut m Module) add_longjmp_setjmp() {
@@ -47,11 +48,21 @@ fn (mut m Module) add_longjmp_setjmp() {
 	m.built_in_funcs['setjmp'] = func_typ_setjmp
 }
 
+pub fn (mut m Module) declare_common_global_vars() {
+	// add the global sprintf buffer
+	buff_typ := C.LLVMArrayType(C.LLVMInt8TypeInContext(m.ctx_ref), 21)
+	name := 'sprintf_buff'
+	buff_ref := C.LLVMAddGlobal(m.mod_ref, buff_typ, name.str)
+	null_ref := C.LLVMConstNull(buff_typ)
+	C.LLVMSetInitializer(buff_ref, null_ref)
+	m.global_const[GlobalVarRefType.sprintf_buff] = buff_ref
+}
+
 pub fn (mut m Module) get_standard_struct_types() []symbols.StructTypeSymbol {
 	// declare the jumb_buf
 	// Todo: size depending on target arch
 	mut res := []symbols.StructTypeSymbol{}
-	mut jmp_buf_symbol := symbols.new_struct_symbol('JumpBuffer')
+	mut jmp_buf_symbol := symbols.new_struct_symbol('JumpBuffer', false)
 	jmp_buf_symbol.members << symbols.new_struct_type_member('', symbols.i64_symbol)
 	res << jmp_buf_symbol
 

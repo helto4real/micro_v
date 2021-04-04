@@ -4,9 +4,10 @@ import rand
 
 pub struct VoidTypeSymbol {
 pub:
-	kind TypeSymbolKind
-	name string = 'void'
-	id   string
+	kind   TypeSymbolKind
+	name   string = 'void'
+	id     string
+	is_ref bool
 }
 
 pub fn (ts VoidTypeSymbol) == (rts VoidTypeSymbol) bool {

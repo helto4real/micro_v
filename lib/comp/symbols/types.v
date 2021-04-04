@@ -2,16 +2,16 @@ module symbols
 
 pub type VariableSymbol = GlobalVariableSymbol | LocalVariableSymbol | ParamSymbol
 
-pub type TypeSymbol = StructTypeSymbol | BuiltInTypeSymbol | VoidTypeSymbol | 
-					ErrorTypeSymbol | AnyTypeSymbol 
+pub type TypeSymbol = AnyTypeSymbol | BuiltInTypeSymbol | ErrorTypeSymbol | StructTypeSymbol |
+	VoidTypeSymbol
 
-pub type Symbol = FunctionSymbol | VariableSymbol | ConstSymbol | TypeSymbol
+pub type Symbol = ConstSymbol | FunctionSymbol | TypeSymbol | VariableSymbol
 
 pub struct NoneStruct {}
 
 pub type None = NoneStruct
 
-pub type LitVal = None | bool | int | i64 | string
+pub type LitVal = None | bool | i64 | int | string
 
 pub enum TypeSymbolKind {
 	built_in_symbol
@@ -30,6 +30,14 @@ pub fn (vs &VariableSymbol) is_mut() bool {
 	}
 }
 
+pub fn (vs &VariableSymbol) is_ref() bool {
+	match vs {
+		LocalVariableSymbol { return vs.is_ref }
+		GlobalVariableSymbol { return vs.is_ref }
+		ParamSymbol { return vs.is_ref }
+	}
+}
+
 pub fn (vs VariableSymbol) str_ident(level int) string {
 	match vs {
 		LocalVariableSymbol { return vs.str_ident(level) }
@@ -38,30 +46,43 @@ pub fn (vs VariableSymbol) str_ident(level int) string {
 	}
 }
 
+pub fn (t TypeSymbol) to_ref_type() TypeSymbol {
+	match t {
+		StructTypeSymbol { return t.to_ref_type() }
+		AnyTypeSymbol { return t.to_ref_type() }
+		BuiltInTypeSymbol { return t.to_ref_type() }
+		else { panic('the type $t.name should never be a ref type') }
+	}
+}
+
 pub fn (typ TypeSymbol) lookup_member_type(name string) TypeSymbol {
 	match typ {
-		StructTypeSymbol { 
+		StructTypeSymbol {
 			member := typ.members.filter(it.ident == name)
 			if member.len == 0 {
-				return symbols.error_symbol
+				return error_symbol
 			}
 			return member[0].typ
 		}
-		else {return symbols.error_symbol}
+		else {
+			return error_symbol
+		}
 	}
-	return symbols.error_symbol
+	return error_symbol
 }
 
 pub fn (typ TypeSymbol) lookup_member_index(name string) int {
 	match typ {
-		StructTypeSymbol { 
+		StructTypeSymbol {
 			for i, member in typ.members {
 				if member.ident == name {
 					return i
 				}
 			}
 		}
-		else {return -1}
+		else {
+			return -1
+		}
 	}
 	return -1
 }
@@ -70,7 +91,7 @@ pub fn (t TypeSymbol) str() string {
 	match t {
 		StructTypeSymbol {
 			return t.str()
-		} 
+		}
 		BuiltInTypeSymbol {
 			return t.str()
 		}
@@ -186,7 +207,6 @@ pub fn (l LitVal) typ() BuiltInTypeSymbol {
 		None {
 			none_symbol
 		}
-
 	}
 }
 

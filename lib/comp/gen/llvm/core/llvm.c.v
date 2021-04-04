@@ -103,15 +103,17 @@ fn C.LLVMCreateBuilder() &C.LLVMBuilderRef
 
 fn C.LLVMPositionBuilderAtEnd(builder &C.LLVMBuilderRef, block &C.LLVMBasicBlockRef)
 
+// binary operators
+fn C.LLVMBuildBinOp(builder &C.LLVMBuilderRef, op_code Opcode, left &C.LLVMValueRef, right &C.LLVMValueRef, name charptr) &C.LLVMValueRef
 fn C.LLVMBuildAdd(builder &C.LLVMBuilderRef, lhs &C.LLVMValueRef, rhs &C.LLVMValueRef, name charptr) &C.LLVMValueRef
 fn C.LLVMBuildSub(builder &C.LLVMBuilderRef, lhs &C.LLVMValueRef, rhs &C.LLVMValueRef, name charptr) &C.LLVMValueRef
 fn C.LLVMBuildMul(builder &C.LLVMBuilderRef, lhs &C.LLVMValueRef, rhs &C.LLVMValueRef, name charptr) &C.LLVMValueRef
 
-fn C.LLVMBuildBinOp(builder &C.LLVMBuilderRef, op_code Opcode, left &C.LLVMValueRef, right &C.LLVMValueRef, name charptr) &C.LLVMValueRef
 
 fn C.LLVMGetParams(func &C.LLVMValueRef, params &LLVMValueRef)
 fn C.LLVMGetParam(func &C.LLVMValueRef, index int) &C.LLVMValueRef
 
+// return with and without value
 fn C.LLVMBuildRet(ref &C.LLVMBuilderRef, val &C.LLVMValueRef) &C.LLVMValueRef
 fn C.LLVMBuildRetVoid(builder &C.LLVMBuilderRef) &C.LLVMValueRef
 
@@ -134,7 +136,6 @@ fn C.LLVMSetInitializer(var &C.LLVMValueRef, const_val &C.LLVMValueRef)
 
 fn C.LLVMBuildGlobalString(builder &C.LLVMBuilderRef, str charptr, name charptr) &C.LLVMValueRef
 fn C.LLVMBuildGlobalStringPtr(builder &C.LLVMBuilderRef, str charptr, name charptr) &C.LLVMValueRef
-fn C.LLVMSetInitializer(glob_var &C.LLVMValueRef, const_val &C.LLVMValueRef)
 fn C.LLVMGetLastInstruction(blocl &C.LLVMBasicBlockRef) &C.LLVMValueRef
 
 fn C.LLVMBuildNeg(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name charptr) &C.LLVMValueRef
@@ -169,6 +170,7 @@ fn C.LLVMBuildICmp(builder &C.LLVMBuilderRef, op IntPredicate, left &C.LLVMValue
 
 fn C.LLVMGetLastInstruction(block &C.LLVMBasicBlockRef) &C.LLVMValueRef
 fn C.LLVMIsATerminatorInst(inst &C.LLVMValueRef) &C.LLVMValueRef
+fn C.LLVMIsConstant(val &C.LLVMValueRef) u32
 
 // Exectution engeine and JIT
 fn C.LLVMLinkInMCJIT()

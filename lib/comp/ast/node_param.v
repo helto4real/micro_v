@@ -16,11 +16,12 @@ pub:
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
-	name_tok token.Token
+	name_tok     token.Token
 	variadic_tok token.Token
-	typ      TypeNode
-	is_mut   bool
-	is_variadic bool
+	typ          TypeNode
+	is_mut       bool
+	is_variadic  bool
+	is_ref       bool
 }
 
 pub fn new_param_node(tree &SyntaxTree, name_tok token.Token, typ TypeNode, is_mut bool) ParamNode {
@@ -32,6 +33,20 @@ pub fn new_param_node(tree &SyntaxTree, name_tok token.Token, typ TypeNode, is_m
 		typ: typ
 		is_mut: is_mut
 		is_variadic: typ.is_variadic
+		is_ref: typ.is_ref || is_mut
+	}
+}
+
+pub fn new_ref_param_node(tree &SyntaxTree, name_tok token.Token, typ TypeNode, is_mut bool) ParamNode {
+	return ParamNode{
+		tree: tree
+		pos: source.new_pos_from_pos_bounds(name_tok.pos, typ.name_tok.pos)
+		child_nodes: [AstNode(name_tok), typ]
+		name_tok: name_tok
+		typ: typ
+		is_mut: is_mut
+		is_variadic: typ.is_variadic
+		is_ref: true
 	}
 }
 

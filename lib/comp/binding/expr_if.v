@@ -8,10 +8,11 @@ pub:
 	kind        BoundNodeKind = .if_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
+	is_ref      bool
 	// child nodes
-	cond_expr   BoundExpr
-	then_stmt   BoundStmt
-	else_stmt   BoundStmt
+	cond_expr BoundExpr
+	then_stmt BoundStmt
+	else_stmt BoundStmt
 }
 
 pub fn new_if_else_expr(cond_expr BoundExpr, then_stmt BoundStmt, else_stmt BoundStmt) BoundExpr {
@@ -34,4 +35,12 @@ pub fn (ex BoundIfExpr) node_str() string {
 
 pub fn (ex BoundIfExpr) str() string {
 	return 'if $ex.cond_expr { $ex.then_stmt } else { $ex.else_stmt }'
+}
+
+pub fn (ex BoundIfExpr) to_ref_type() BoundIfExpr {
+	return BoundIfExpr{
+		...ex
+		is_ref: true
+		typ: ex.typ.to_ref_type()
+	}
 }

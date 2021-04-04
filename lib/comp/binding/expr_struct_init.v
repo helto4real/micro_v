@@ -8,6 +8,7 @@ pub:
 	kind        BoundNodeKind = .sruct_init_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
+	is_ref      bool
 	// child nodes
 	members []BoundStructInitMember
 }
@@ -27,10 +28,18 @@ pub fn (ex BoundStructInitExpr) str() string {
 	return '$ex.typ.name{}'
 }
 
+pub fn (ex BoundStructInitExpr) to_ref_type() BoundStructInitExpr {
+	return BoundStructInitExpr{
+		...ex
+		is_ref: true
+		typ: ex.typ.to_ref_type()
+	}
+}
+
 pub struct BoundStructInitMember {
 pub:
-	name       string
-	typ        symbols.TypeSymbol
+	name string
+	typ  symbols.TypeSymbol
 	expr BoundExpr
 }
 

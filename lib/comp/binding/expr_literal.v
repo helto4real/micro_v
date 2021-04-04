@@ -8,8 +8,9 @@ pub:
 	kind        BoundNodeKind = .literal_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
+	is_ref      bool
 	// child nodes
-	const_val	symbols.ConstSymbol
+	const_val symbols.ConstSymbol
 }
 
 pub fn new_bound_literal_expr(val symbols.LitVal) BoundExpr {
@@ -25,4 +26,12 @@ pub fn (ex BoundLiteralExpr) node_str() string {
 
 pub fn (ex BoundLiteralExpr) str() string {
 	return '$ex.const_val.val'
+}
+
+pub fn (ex BoundLiteralExpr) to_ref_type() BoundLiteralExpr {
+	return BoundLiteralExpr{
+		...ex
+		is_ref: true
+		typ: ex.typ.to_ref_type()
+	}
 }
