@@ -30,31 +30,30 @@ fn (mut c Emitter) new_builtin_call(name string) CallBuilder {
 	return new_builtin_call(name, c)
 }
 
+fn (mut c Emitter) handle_box_unbox(var symbols.VariableSymbol, val &C.LLVMValueRef) &C.LLVMValueRef {
+	is_const := C.LLVMIsConstant(val) == 1
+
+	if var.is_ref && is_const {
+		var_typ_ref := get_llvm_type_ref(var.typ, c.mod)
+		res_val := C.LLVMBuildAlloca(c.mod.builder.builder_ref, var_typ_ref, no_name.str)
+		C.LLVMBuildStore(c.mod.builder.builder_ref, val, res_val)
+		return res_val
+	}
+	return val
+}
+
 fn (mut c Emitter) emit_call(call_expr binding.BoundCallExpr) &C.LLVMValueRef {
 	func_res := c.mod.funcs.filter(it.func.id == call_expr.func.id)
 	if func_res.len != 1 {
 		panic('unexpected, $call_expr.func.name ($call_expr.func.id) func not declared. ')
 	}
 	func := func_res[0]
-
+	
 	mut params := []&C.LLVMValueRef{cap: call_expr.params.len}
-	// mut indicies := [C.LLVMConstInt(C.LLVMInt32TypeInContext(ctx.mod.ctx_ref), 0,
-	// 			false)]
-	for param in call_expr.params {
-		// param_var := param as binding.BoundVariableExpr
+	for i, param in call_expr.params {
 		expr := c.emit_expr(param)
-		// typ := get_llvm_type_ref(param.typ, c.mod)
-		if param.typ.is_ref {
-			// typ_ref := C.LLVMPointerType(typ, 0)
-			// val := C.LLVMBuildPointerCast(c.mod.builder.builder_ref, expr, typ, no_name.str) 
-			// val := C.LLVMBuildInBoundsGEP2(c.mod.builder.builder_ref, typ_ref, expr, indicies.data,
-			// 	indicies.len, no_name.str)
-			// params << val
-			// C.LLVMBuildStore(c.mod.builder.builder_ref, expr_val_ref, ref_var)
-			params << expr
-		} else {
-			params << expr
-		}
+		decl_param := func.func.params[i]
+		params << c.handle_box_unbox(decl_param, expr)
 	}
 
 	mut call_builder := CallBuilder{
@@ -75,11 +74,11 @@ fn (mut c Emitter) emit_call(call_expr binding.BoundCallExpr) &C.LLVMValueRef {
 	return call_builder.emit()
 }
 
-fn (mut c Emitter) next_ref_name() string {
-	name := '$c.ref_nr'
-	c.ref_nr++
-	return name
-}
+// fn (mut c Emitter) next_ref_name() string {
+// 	name := '$c.ref_nr'
+// 	c.ref_nr++
+// 	return name
+// }
 
 fn (mut c Emitter) emit_expr(node binding.BoundExpr) &C.LLVMValueRef {
 	match node {

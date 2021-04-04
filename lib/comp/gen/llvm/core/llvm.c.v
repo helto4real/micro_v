@@ -170,6 +170,7 @@ fn C.LLVMBuildICmp(builder &C.LLVMBuilderRef, op IntPredicate, left &C.LLVMValue
 
 fn C.LLVMGetLastInstruction(block &C.LLVMBasicBlockRef) &C.LLVMValueRef
 fn C.LLVMIsATerminatorInst(inst &C.LLVMValueRef) &C.LLVMValueRef
+fn C.LLVMIsConstant(val &C.LLVMValueRef) u32
 
 // Exectution engeine and JIT
 fn C.LLVMLinkInMCJIT()
