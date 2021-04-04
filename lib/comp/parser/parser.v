@@ -569,7 +569,7 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 			return p.parse_string_literal()
 		}
 		else {
-			return p.parse_name_or_call_expr()
+			return p.parse_name()
 		}
 	}
 }
@@ -628,9 +628,11 @@ fn (mut p Parser) parse_args() ast.SeparatedSyntaxList {
 	return ast.new_separated_syntax_list(sep_and_nodes)
 }
 
-fn (mut p Parser) parse_name_or_call_expr() ast.Expr {
+fn (mut p Parser) parse_name() ast.Expr {
 	if p.current_token().kind == .name && p.peek_token(1).kind == .lpar {
 		return p.parse_call_expr()
+	} else if p.peek_struct_init(0) {
+		return p.parse_struct_init()
 	} else {
 		return p.parse_name_expr()
 	}
