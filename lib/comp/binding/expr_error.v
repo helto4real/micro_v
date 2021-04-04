@@ -8,6 +8,7 @@ pub:
 	kind        BoundNodeKind = .error_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
+	is_ref      bool
 }
 
 pub fn new_bound_error_expr() BoundExpr {
@@ -22,4 +23,12 @@ pub fn (ex BoundErrorExpr) node_str() string {
 
 pub fn (ex BoundErrorExpr) str() string {
 	return '?'
+}
+
+pub fn (ex BoundErrorExpr) to_ref_type() BoundErrorExpr {
+	return BoundErrorExpr{
+		...ex
+		is_ref: true
+		typ: ex.typ.to_ref_type()
+	}
 }

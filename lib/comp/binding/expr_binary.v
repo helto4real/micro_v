@@ -9,6 +9,7 @@ pub:
 	kind        BoundNodeKind = .binary_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
+	is_ref      bool
 	// child nodes
 	left_expr  BoundExpr
 	op         BoundBinaryOperator
@@ -31,4 +32,12 @@ pub fn (ex BoundBinaryExpr) node_str() string {
 
 pub fn (ex BoundBinaryExpr) str() string {
 	return '$ex.left_expr ${token.token_str[ex.op.kind]} $ex.right_expr'
+}
+
+pub fn (ex BoundBinaryExpr) to_ref_type() BoundBinaryExpr {
+	return BoundBinaryExpr{
+		...ex
+		is_ref: true
+		typ: ex.typ.to_ref_type()
+	}
 }

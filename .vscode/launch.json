@@ -10,7 +10,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/cmd/v/v",
             "args": [
-                "../../samples/llvm/llvm.v"
+                "test-self"
+                // "../../samples/llvm/llvm.v"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}/cmd/v",

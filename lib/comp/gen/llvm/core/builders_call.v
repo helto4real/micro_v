@@ -5,52 +5,27 @@ import lib.comp.symbols
 
 pub struct CallBuilder {
 	name        string
-	fn_ref      &C.LLVMValueRef
+	fn_ref      &C.LLVMValueRef = 0
 	is_built_in bool
-	func        Function
+	func        &Function = 0
 pub mut:
-	ctx    &Emitter
+	ctx    &Emitter = 0
 	params []&C.LLVMValueRef
 }
 
 fn new_builtin_call(name string, ctx &Emitter) CallBuilder {
-	fn_ref := ctx.mod.built_in_funcs[name] or {
-		panic('the builtin function $name is not declared')
-	}
+	f_ref := ctx.mod.built_in_funcs[name] or { panic('the builtin function $name is not declared') }
 	return CallBuilder{
 		name: name
 		ctx: ctx
-		fn_ref: fn_ref
+		fn_ref: f_ref
 		is_built_in: true
 	}
 }
 
-fn emit_call(call_expr binding.BoundCallExpr, mut ctx Emitter) &C.LLVMValueRef {
-	func := ctx.mod.funcs[call_expr.func.id] or {
-		panic('unexpected, $call_expr.func.name ($call_expr.func.id) func not declared')
-	}
-	mut params := []&C.LLVMValueRef{cap: call_expr.params.len}
-	for param in call_expr.params {
-		params << ctx.emit_expr(param)
-	}
+// fn emit_call(call_expr binding.BoundCallExpr, mut ctx Emitter) &C.LLVMValueRef {
 
-	mut call_builder := CallBuilder{
-		name: func.func.name
-		ctx: ctx
-		func: func
-		params: params
-		fn_ref: func.func_ref
-		is_built_in: false
-	}
-
-	if call_expr.typ.kind == symbols.TypeSymbolKind.void_symbol {
-		// no return value
-		call_builder.emit()
-		return 0
-	}
-
-	return call_builder.emit()
-}
+// }
 
 pub fn (mut cb CallBuilder) add_param(val_ref &C.LLVMValueRef) {
 	cb.params << val_ref

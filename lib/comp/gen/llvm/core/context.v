@@ -31,7 +31,48 @@ fn (mut c Emitter) new_builtin_call(name string) CallBuilder {
 }
 
 fn (mut c Emitter) emit_call(call_expr binding.BoundCallExpr) &C.LLVMValueRef {
-	return emit_call(call_expr, mut c)
+	func_res := c.mod.funcs.filter(it.func.id == call_expr.func.id)
+	if func_res.len != 1 {
+		panic('unexpected, $call_expr.func.name ($call_expr.func.id) func not declared. ')
+	}
+	func := func_res[0]
+
+	mut params := []&C.LLVMValueRef{cap: call_expr.params.len}
+	// mut indicies := [C.LLVMConstInt(C.LLVMInt32TypeInContext(ctx.mod.ctx_ref), 0,
+	// 			false)]
+	for param in call_expr.params {
+		// param_var := param as binding.BoundVariableExpr
+		expr := c.emit_expr(param)
+		// typ := get_llvm_type_ref(param.typ, c.mod)
+		if param.typ.is_ref {
+			// typ_ref := C.LLVMPointerType(typ, 0)
+			// val := C.LLVMBuildPointerCast(c.mod.builder.builder_ref, expr, typ, no_name.str) 
+			// val := C.LLVMBuildInBoundsGEP2(c.mod.builder.builder_ref, typ_ref, expr, indicies.data,
+			// 	indicies.len, no_name.str)
+			// params << val
+			// C.LLVMBuildStore(c.mod.builder.builder_ref, expr_val_ref, ref_var)
+			params << expr
+		} else {
+			params << expr
+		}
+	}
+
+	mut call_builder := CallBuilder{
+		name: func.func.name
+		ctx: c
+		func: func
+		params: params
+		fn_ref: func.func_ref
+		is_built_in: false
+	}
+
+	if call_expr.typ.kind == symbols.TypeSymbolKind.void_symbol {
+		// no return value
+		call_builder.emit()
+		return 0
+	}
+
+	return call_builder.emit()
 }
 
 fn (mut c Emitter) next_ref_name() string {
@@ -313,7 +354,6 @@ fn (mut c Emitter) emit_assignment_expr(node binding.BoundAssignExpr) &C.LLVMVal
 	if typ is symbols.StructTypeSymbol && node.names.len > 0 {
 		ref_var = c.get_reference_to_element(ref_var, typ, node.names)
 	}
-
 	C.LLVMBuildStore(c.mod.builder.builder_ref, expr_ref, ref_var)
 	return ref_var
 }
@@ -384,7 +424,7 @@ fn (mut c Emitter) emit_variable_expr(node binding.BoundVariableExpr) &C.LLVMVal
 	var := c.var_decl[node.var.id] or { panic('unexpected, variable not declared: $node.var.name') }
 	mut current_typ_ref := typ_ref
 	mut current_typ := typ
-	// mut current_val := var
+
 	if typ is symbols.StructTypeSymbol {
 		if node.names.len > 0 {
 			mut indicies := [C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), 0,
@@ -406,11 +446,19 @@ fn (mut c Emitter) emit_variable_expr(node binding.BoundVariableExpr) &C.LLVMVal
 
 			val := C.LLVMBuildInBoundsGEP2(c.mod.builder.builder_ref, typ_ref, var, indicies.data,
 				indicies.len, no_name.str)
+
+			if current_typ.is_ref {
+				return var
+			}
+
 			loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, current_typ_ref,
 				val, no_name.str)
 
 			return loaded_var
 		}
+	}
+	if node.is_ref {
+		return var
 	}
 
 	loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, typ_ref, var, no_name.str)
@@ -424,6 +472,7 @@ fn (mut c Emitter) emit_var_decl(node binding.BoundVarDeclStmt) {
 
 	expr_val_ref := c.emit_expr(node.expr)
 
+	// Todo: only do this is not a reference
 	ref_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, typ_ref, var_name.str)
 	C.LLVMBuildStore(c.mod.builder.builder_ref, expr_val_ref, ref_var)
 	c.var_decl[node.var.id] = ref_var

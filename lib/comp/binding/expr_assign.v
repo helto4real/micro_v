@@ -9,6 +9,7 @@ pub:
 	kind        BoundNodeKind = .assign_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
+	is_ref      bool
 	// child nodes
 	var   symbols.VariableSymbol
 	names []token.Token
@@ -40,4 +41,12 @@ pub fn (ex BoundAssignExpr) node_str() string {
 
 pub fn (ex BoundAssignExpr) str() string {
 	return '$ex.var.name = $ex.expr'
+}
+
+pub fn (ex BoundAssignExpr) to_ref_type() BoundAssignExpr {
+	return BoundAssignExpr{
+		...ex
+		is_ref: true
+		typ: ex.typ.to_ref_type()
+	}
 }

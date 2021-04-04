@@ -167,7 +167,8 @@ fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
 fn (mut p Parser) parse_return_type_node() ast.TypeNode {
 	if p.current_token().kind != .name {
 		// this is a procedure without return type
-		return ast.new_type_node(p.syntax_tree, token.tok_void, token.tok_void, token.tok_void)
+		return ast.new_type_node(p.syntax_tree, token.tok_void, token.tok_void, token.tok_void,
+			false)
 	}
 	mut ref_tok := token.tok_void
 	if p.current_token().kind == .amp {
@@ -175,7 +176,11 @@ fn (mut p Parser) parse_return_type_node() ast.TypeNode {
 	}
 	name := p.match_token(.name)
 
-	return ast.new_type_node(p.syntax_tree, name, ref_tok, token.tok_void)
+	if ref_tok == token.tok_void {
+		return ast.new_type_node(p.syntax_tree, name, ref_tok, token.tok_void, false)
+	} else {
+		return ast.new_type_node(p.syntax_tree, name, ref_tok, token.tok_void, true)
+	}
 }
 
 fn (mut p Parser) parse_param_node() ast.ParamNode {
@@ -186,23 +191,29 @@ fn (mut p Parser) parse_param_node() ast.ParamNode {
 		p.next_token()
 	}
 	name := p.match_token(.name)
-	typ := p.parse_type_node()
-	return ast.new_param_node(p.syntax_tree, name, typ, is_mut)
+	if is_mut {
+		mut typ := p.parse_type_node(true)
+		return ast.new_ref_param_node(p.syntax_tree, name, typ, is_mut)
+	} else {
+		mut typ := p.parse_type_node(false)
+		return ast.new_param_node(p.syntax_tree, name, typ, is_mut)
+	}
 }
 
-fn (mut p Parser) parse_type_node() ast.TypeNode {
+fn (mut p Parser) parse_type_node(parse_ref bool) ast.TypeNode {
 	mut ref_tok := token.tok_void
 	mut variadic_tok := token.tok_void
-
+	mut is_ref := parse_ref
 	if p.current_token().kind == .dot_dot_dot {
 		variadic_tok = p.match_token(.dot_dot_dot)
 	}
 	if p.current_token().kind == .amp {
 		ref_tok = p.match_token(.amp)
+		is_ref = true
 	}
 	name := p.match_token(.name)
 
-	return ast.new_type_node(p.syntax_tree, name, ref_tok, variadic_tok)
+	return ast.new_type_node(p.syntax_tree, name, ref_tok, variadic_tok, is_ref)
 }
 
 // peek, returns a token at offset from current postion

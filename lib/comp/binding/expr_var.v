@@ -10,8 +10,9 @@ pub:
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
 	// child nodes
-	names 		[]token.Token
-	var         symbols.VariableSymbol
+	names  []token.Token
+	var    symbols.VariableSymbol
+	is_ref bool
 }
 
 pub fn new_bound_variable_expr(var symbols.VariableSymbol, typ symbols.TypeSymbol) BoundExpr {
@@ -20,6 +21,7 @@ pub fn new_bound_variable_expr(var symbols.VariableSymbol, typ symbols.TypeSymbo
 		typ: typ
 	}
 }
+
 pub fn new_bound_variable_with_names_expr(var symbols.VariableSymbol, names []token.Token, typ symbols.TypeSymbol) BoundExpr {
 	return BoundVariableExpr{
 		var: var
@@ -34,4 +36,12 @@ pub fn (ex BoundVariableExpr) node_str() string {
 
 pub fn (ex BoundVariableExpr) str() string {
 	return '$ex.var.name'
+}
+
+pub fn (ex BoundVariableExpr) to_ref_type() BoundVariableExpr {
+	return BoundVariableExpr{
+		...ex
+		is_ref: true
+		typ: ex.typ.to_ref_type()
+	}
 }

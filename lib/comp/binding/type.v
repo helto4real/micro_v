@@ -1,13 +1,13 @@
 module binding
 
 pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundConvExpr |
-	BoundNoneExpr | BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundRangeExpr |
-	BoundUnaryExpr | BoundVariableExpr | BoundStructInitExpr | NoneExpr
+	BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundNoneExpr | BoundRangeExpr |
+	BoundStructInitExpr | BoundUnaryExpr | BoundVariableExpr | NoneExpr
 
-pub type BoundStmt = BoundBlockStmt | BoundBreakStmt | BoundCommentStmt | BoundCondGotoStmt |
-	BoundContinueStmt | BoundExprStmt | BoundForRangeStmt | BoundForStmt | BoundGotoStmt |
-	BoundIfStmt | BoundLabelStmt | BoundModuleStmt | BoundReturnStmt | BoundVarDeclStmt |
-	BoundAssertStmt
+pub type BoundStmt = BoundAssertStmt | BoundBlockStmt | BoundBreakStmt | BoundCommentStmt |
+	BoundCondGotoStmt | BoundContinueStmt | BoundExprStmt | BoundForRangeStmt | BoundForStmt |
+	BoundGotoStmt | BoundIfStmt | BoundLabelStmt | BoundModuleStmt | BoundReturnStmt |
+	BoundVarDeclStmt
 
 pub type BoundNode = BoundExpr | BoundStmt
 
@@ -95,6 +95,24 @@ pub fn (be BoundExpr) str() string {
 		BoundNoneExpr { return be.str() }
 		BoundStructInitExpr { return be.str() }
 		NoneExpr { return be.str() }
+	}
+}
+
+pub fn (be BoundExpr) to_ref_type() BoundExpr {
+	match be {
+		BoundLiteralExpr { return be.to_ref_type() }
+		BoundUnaryExpr { return be.to_ref_type() }
+		BoundBinaryExpr { return be.to_ref_type() }
+		BoundVariableExpr { return be.to_ref_type() }
+		BoundAssignExpr { return be.to_ref_type() }
+		BoundIfExpr { return be.to_ref_type() }
+		BoundRangeExpr { return be.to_ref_type() }
+		BoundErrorExpr { return be.to_ref_type() }
+		BoundCallExpr { return be.to_ref_type() }
+		BoundConvExpr { return be.to_ref_type() }
+		BoundNoneExpr { return be.to_ref_type() }
+		BoundStructInitExpr { return be.to_ref_type() }
+		NoneExpr { return be.to_ref_type() }
 	}
 }
 

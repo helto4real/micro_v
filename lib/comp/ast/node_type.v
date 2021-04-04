@@ -15,19 +15,18 @@ pub:
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
-	name_tok token.Token
-	ref_tok token.Token
+	name_tok     token.Token
+	ref_tok      token.Token
 	variadic_tok token.Token
-	is_ref   bool
-	is_void  bool
-	is_variadic bool
+	is_ref       bool
+	is_void      bool
+	is_variadic  bool
 }
 
-pub fn new_type_node(tree &SyntaxTree, name_tok token.Token, ref_tok token.Token, variadic_tok token.Token) TypeNode {
+pub fn new_type_node(tree &SyntaxTree, name_tok token.Token, ref_tok token.Token, variadic_tok token.Token, is_ref bool) TypeNode {
 	is_void := name_tok.kind == .void
-	is_ref := ref_tok.kind != .void
 	is_variadic := variadic_tok.kind != .void
-	
+
 	return TypeNode{
 		tree: tree
 		pos: name_tok.pos

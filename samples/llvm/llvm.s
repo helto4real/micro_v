@@ -6,32 +6,76 @@
 main:                                   # @main
 	.cfi_startproc
 # %bb.0:                                # %entry
-	subq	$40, %rsp
-	.cfi_def_cfa_offset 48
-	movq	$.L__unnamed_1, 32(%rsp)
-	movq	$.L__unnamed_1, 24(%rsp)
-	movq	$.L__unnamed_2, 16(%rsp)
-	movq	$.L__unnamed_2, 8(%rsp)
+	pushq	%rbp
+	.cfi_def_cfa_offset 16
+	.cfi_offset %rbp, -16
+	movq	%rsp, %rbp
+	.cfi_def_cfa_register %rbp
+	pushq	%rbx
+	pushq	%rax
+	.cfi_offset %rbx, -24
+	movl	$jmp_buf, %edi
+	callq	setjmp
+	testq	%rax, %rax
+	je	.LBB0_1
+# %bb.2:                                # %error_exit
+	movl	$1, %eax
+	leaq	-8(%rbp), %rsp
+	popq	%rbx
+	popq	%rbp
+	.cfi_def_cfa %rsp, 8
+	retq
+.LBB0_1:                                # %continue
+	.cfi_def_cfa %rbp, 16
+	movq	%rsp, %rax
+	leaq	-16(%rax), %rsp
+	movq	$.L__unnamed_1, -16(%rax)
+	movq	%rsp, %rax
+	leaq	-16(%rax), %rsp
+	movq	$.L__unnamed_1, -16(%rax)
+	movq	%rsp, %rcx
+	leaq	-16(%rcx), %rsp
+	movq	$.L__unnamed_2, -16(%rcx)
+	movq	%rsp, %rbx
+	leaq	-16(%rbx), %rsp
+	movq	$.L__unnamed_2, -16(%rbx)
+	movq	-16(%rax), %rsi
 	movl	$.L__unnamed_3, %edi
-	movl	$.L__unnamed_1, %esi
 	xorl	%eax, %eax
 	callq	printf
 	movl	$.L__unnamed_3, %edi
 	movl	$.L__unnamed_4, %esi
 	xorl	%eax, %eax
 	callq	printf
-	movq	8(%rsp), %rsi
+	movq	-16(%rbx), %rsi
 	movl	$.L__unnamed_5, %edi
 	xorl	%eax, %eax
 	callq	printf
 	xorl	%eax, %eax
-	addq	$40, %rsp
-	.cfi_def_cfa_offset 8
+	leaq	-8(%rbp), %rsp
+	popq	%rbx
+	popq	%rbp
+	.cfi_def_cfa %rsp, 8
 	retq
 .Lfunc_end0:
 	.size	main, .Lfunc_end0-main
 	.cfi_endproc
                                         # -- End function
+	.type	jmp_buf,@object         # @jmp_buf
+	.bss
+	.globl	jmp_buf
+	.p2align	3
+jmp_buf:
+	.zero	8
+	.size	jmp_buf, 8
+
+	.type	sprintf_buff,@object    # @sprintf_buff
+	.globl	sprintf_buff
+	.p2align	4
+sprintf_buff:
+	.zero	21
+	.size	sprintf_buff, 21
+
 	.type	.L__unnamed_1,@object   # @0
 	.section	.rodata.str1.1,"aMS",@progbits,1
 .L__unnamed_1:

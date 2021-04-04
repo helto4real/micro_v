@@ -362,7 +362,7 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 }
 
 pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
-	struct_symbol := symbols.new_struct_symbol(struct_decl.name_tok.lit)
+	struct_symbol := symbols.new_struct_symbol(struct_decl.name_tok.lit, false)
 	if !b.scope.try_declare_type(struct_symbol) {
 		b.log.error_struct_allready_declared(struct_decl.name_tok.lit, struct_decl.name_tok.text_location())
 	}
@@ -382,7 +382,7 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 			b.log.error_param_allready_declared(name, param_node.name_tok.text_location())
 		} else {
 			param_symbol := symbols.new_param_symbol(name, param_typ, param_node.is_mut,
-				param_node.is_variadic)
+				param_node.is_variadic, param_node.is_ref)
 			params << param_symbol
 			seen_param_names << name
 		}
@@ -560,6 +560,7 @@ pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr Bo
 pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol, allow_explicit bool) BoundExpr {
 	conv := convertion.classify(expr.typ, typ)
 	if !conv.exists {
+		println('$expr.typ.name != $typ.name')
 		// convertion does not exist
 		if expr.typ.kind != .error_symbol && typ.kind != .error_symbol {
 			b.log.error_cannot_convert_type(expr.typ.str(), typ.str(), diag_loc)
@@ -570,6 +571,9 @@ pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation
 		b.log.error_cannot_convert_implicitly(expr.typ.str(), typ.str(), diag_loc)
 	}
 	if conv.is_identity {
+		if typ.is_ref {
+			return expr.to_ref_type()
+		}
 		return expr
 	}
 	return new_bound_conv_expr(typ, expr)
@@ -622,7 +626,8 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 		arg_location := expr.params.at(i).text_location()
 		bound_arg := args[i]
 		param := func.params[i]
-		args[i] = b.bind_convertion_diag(arg_location, bound_arg, param.typ)
+		conv_expr := b.bind_convertion_diag(arg_location, bound_arg, param.typ)
+		args[i] = conv_expr
 	}
 
 	return new_bound_call_expr(func, args)
@@ -691,6 +696,9 @@ pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
 	bound_typ := b.lookup_type(typ.name_tok.lit)
 	if bound_typ.kind == .none_symbol {
 		b.log.error_undefined_type(typ.name_tok.lit, typ.text_location())
+	}
+	if typ.is_ref {
+		return bound_typ.to_ref_type()
 	}
 	return bound_typ
 }

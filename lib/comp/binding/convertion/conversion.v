@@ -33,7 +33,7 @@ pub fn classify(from symbols.TypeSymbol, to symbols.TypeSymbol) Convertion {
 	if from.kind == .any_symbol && to.kind != .void_symbol {
 		return convertion.conv_explicit
 	}
-	
+
 	if from is symbols.BuiltInTypeSymbol {
 		if to is symbols.BuiltInTypeSymbol {
 			if from == to {
@@ -57,5 +57,6 @@ pub fn classify(from symbols.TypeSymbol, to symbols.TypeSymbol) Convertion {
 			}
 		}
 	}
+
 	return convertion.conv_none
 }

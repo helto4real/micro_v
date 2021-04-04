@@ -38,8 +38,9 @@ pub struct Module {
 	mod_ref     &C.LLVMModuleRef
 	exec_engine &C.LLVMExecutionEngineRef = 0
 mut:
-	builder        Builder
-	funcs          map[string]Function
+	builder Builder
+	funcs   []&Function
+	// funcs_map      map[string]&Function
 	built_in_funcs map[string]&C.LLVMValueRef
 	main_func_ref  &C.LLVMValueRef = 0
 	types          map[string]&C.LLVMTypeRef
@@ -149,11 +150,12 @@ pub fn (mut m Module) run_tests() bool {
 		panic('unexpected, execution engine have to be initialized before calling run_main')
 	}
 	mut test_funcs := []Function{}
-	for _, f in m.funcs {
-		if f.func.name.starts_with('test_') {
-			test_funcs << f
+	for func in m.funcs {
+		if func.func.name.starts_with('test_') {
+			test_funcs << func
 		}
 	}
+
 	test_funcs.sort_with_compare(compare_function_by_file_and_name)
 
 	// run main to be sure it is jit
@@ -313,17 +315,37 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 
 	// generate bodies of all functions
 	// First generate main body
-	for _, mut func in m.funcs {
-		if func.func.name == 'main' {
-			func.generate_function_bodies()
+	for f in m.funcs {
+		mut ff := f
+		if ff.func.name == 'main' {
+			ff.generate_function_bodies()
 		}
 	}
+	// if 'main' in m.funcs_map {
+	// 	m.funcs_map['main'].generate_function_bodies()
+	// }
+
+	// for _, mut f in m.funcs_map {
+	// 	// mut ff := f
+	// 	if f.func.name == 'main' {
+	// 		f.generate_function_bodies()
+	// 	}
+	// }
+
 	// generate bodies of all rest of the functions
-	for _, mut func in m.funcs {
-		if func.func.name != 'main' && !func.func.is_c_decl {
-			func.generate_function_bodies()
+
+	for f in m.funcs {
+		mut ff := f
+		if ff.func.name != 'main' && !ff.func.is_c_decl {
+			ff.generate_function_bodies()
 		}
 	}
+	// for id,_ in m.funcs_map {
+	// 	mut ff := m.funcs_map[id]
+	// 	if ff.func.name != 'main' && !ff.func.is_c_decl {
+	// 		ff.generate_function_bodies()
+	// 	}
+	// }
 }
 
 pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding.BoundBlockStmt) {
@@ -332,7 +354,8 @@ pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding
 		// if it is a C decl, add it to built_in_funcs
 		m.built_in_funcs[f.name] = f.func_ref
 	} else {
-		m.funcs[func.id] = f
+		// m.funcs_map[func.id] = f
+		m.funcs << f
 	}
 
 	if func.name == 'main' {

@@ -4,11 +4,12 @@ import rand
 
 pub struct ParamSymbol {
 pub:
-	name   string
-	typ    TypeSymbol
-	is_mut bool
+	name        string
+	typ         TypeSymbol
+	is_mut      bool
 	is_variadic bool
-	id     string
+	id          string
+	is_ref      bool
 }
 
 pub fn (ts ParamSymbol) == (rts ParamSymbol) bool {
@@ -25,12 +26,13 @@ pub fn (ts ParamSymbol) str_ident(level int) string {
 	return '${ident}var: $mut_str <$ts.name> ($ts.typ.name)'
 }
 
-pub fn new_param_symbol(name string, typ TypeSymbol, is_mut bool, is_variadic bool) ParamSymbol {
+pub fn new_param_symbol(name string, typ TypeSymbol, is_mut bool, is_variadic bool, is_ref bool) ParamSymbol {
 	return ParamSymbol{
 		name: name
 		typ: typ
 		is_mut: is_mut
 		is_variadic: is_variadic
+		is_ref: is_mut || is_ref
 		id: rand.uuid_v4()
 	}
 }

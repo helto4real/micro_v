@@ -4,9 +4,10 @@ import rand
 
 pub struct StructTypeSymbol {
 pub:
-	kind TypeSymbolKind
-	name string
-	id   string
+	kind   TypeSymbolKind
+	name   string
+	id     string
+	is_ref bool
 pub mut:
 	members []StructTypeMember
 }
@@ -19,11 +20,19 @@ pub fn (ss StructTypeSymbol) str() string {
 	return ss.name
 }
 
-pub fn new_struct_symbol(name string) StructTypeSymbol {
+pub fn (ss StructTypeSymbol) to_ref_type() StructTypeSymbol {
+	return StructTypeSymbol{
+		...ss
+		is_ref: true
+	}
+}
+
+pub fn new_struct_symbol(name string, is_ref bool) StructTypeSymbol {
 	return StructTypeSymbol{
 		kind: .struct_symbol
 		name: name
 		id: rand.uuid_v4()
+		is_ref: is_ref
 	}
 }
 

@@ -3,20 +3,19 @@ module core
 import lib.comp.symbols
 import lib.comp.binding
 
+[heap]
 pub struct Function {
-	mod          Module
+	mod          &Module
 	name         string
-	func_typ_ref &C.LLVMTypeRef
-	func_ref     &C.LLVMValueRef
+	func_typ_ref &C.LLVMTypeRef  = 0
+	func_ref     &C.LLVMValueRef = 0
 	func         symbols.FunctionSymbol
 	body         binding.BoundBlockStmt
 mut:
 	llvm_entry_block &C.LLVMBasicBlockRef = 0
-pub:
-	ctx Emitter
 }
 
-fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBlockStmt) Function {
+fn new_llvm_func(mod &Module, func symbols.FunctionSymbol, body binding.BoundBlockStmt) &Function {
 	func_name := if !func.is_c_decl { func.name } else { func.name[2..] }
 
 	llvm_params, is_variadic := get_params(func.params, mod)
@@ -33,7 +32,7 @@ fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBloc
 
 	func_ref := C.LLVMAddFunction(mod.mod_ref, func_name.str, func_typ_ref)
 
-	return Function{
+	return &Function{
 		mod: mod
 		func_typ_ref: func_typ_ref
 		func_ref: func_ref
@@ -42,6 +41,10 @@ fn new_llvm_func(mod Module, func symbols.FunctionSymbol, body binding.BoundBloc
 		func: func
 		body: body
 	}
+}
+
+fn (f Function) str() string {
+	return 'func: $f.name, $f.func.id'
 }
 
 fn (mut f Function) generate_function_bodies() {
@@ -54,11 +57,18 @@ fn (mut f Function) generate_function_bodies() {
 	// declare the inparameters 
 	for i, param in f.func.params {
 		param_ref := C.LLVMGetParam(f.func_ref, i)
-		ref_var := C.LLVMBuildAlloca(f.mod.builder.builder_ref, get_llvm_type_ref(param.typ,
-			f.mod), no_name.str)
-
-		C.LLVMBuildStore(f.mod.builder.builder_ref, param_ref, ref_var)
-		ctx.var_decl[param.id] = ref_var
+		typ := if param.is_ref {
+			C.LLVMPointerType(get_llvm_type_ref(param.typ, f.mod), 0)
+		} else {
+			get_llvm_type_ref(param.typ, f.mod)
+		}
+		if param.is_ref || param.is_mut {
+			ctx.var_decl[param.id] = param_ref
+		} else {
+			ref_var := C.LLVMBuildAlloca(f.mod.builder.builder_ref, typ, no_name.str)
+			C.LLVMBuildStore(f.mod.builder.builder_ref, param_ref, ref_var)
+			ctx.var_decl[param.id] = ref_var
+		}
 	}
 
 	mut main_block := entry
@@ -138,7 +148,11 @@ fn get_params(params []symbols.ParamSymbol, mod Module) ([]&C.LLVMTypeRef, bool)
 	mut is_variadic := false
 	for param in params {
 		if !param.is_variadic {
-			res << get_llvm_type_ref(param.typ, mod)
+			if !param.is_ref {
+				res << get_llvm_type_ref(param.typ, mod)
+			} else {
+				res << C.LLVMPointerType(get_llvm_type_ref(param.typ, mod), 0)
+			}
 		} else {
 			is_variadic = true
 		}

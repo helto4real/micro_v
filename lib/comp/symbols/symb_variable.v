@@ -8,6 +8,7 @@ pub:
 	name   string
 	typ    TypeSymbol
 	is_mut bool
+	is_ref bool
 	id     string
 }
 
@@ -27,6 +28,7 @@ pub fn new_local_variable_symbol(name string, typ TypeSymbol, is_mut bool) Local
 		name: name
 		typ: typ
 		is_mut: is_mut
+		is_ref: is_mut || typ.is_ref
 		id: rand.uuid_v4()
 	}
 }
@@ -36,6 +38,7 @@ pub:
 	name   string
 	typ    TypeSymbol
 	is_mut bool
+	is_ref bool
 	id     string
 }
 
@@ -55,6 +58,7 @@ pub fn new_global_variable_symbol(name string, typ TypeSymbol, is_mut bool) Glob
 		name: name
 		typ: typ
 		is_mut: is_mut
+		is_ref: is_mut || typ.is_ref
 		id: rand.uuid_v4()
 	}
 }
