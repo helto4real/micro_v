@@ -732,6 +732,12 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 		return new_bound_error_expr()
 	}
 
+	if !base_var.is_mut() {
+		// trying to assign a nom a mutable var
+		b.log.error_assign_non_mutable_variable(base_name, syntax.eq_tok.text_location())
+		return new_bound_error_expr()
+	}
+
 	if syntax.name_expr.names.len == 1 {
 		// non struct, just return the bound variable
 		conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), expr, base_var.typ)
@@ -749,12 +755,6 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 		}
 		// Todo: check mutability of fields
 		current_typ = member_typ
-	}
-
-	if !base_var.is_mut() {
-		// trying to assign a nom a mutable var
-		b.log.error_assign_non_mutable_variable(base_name, syntax.eq_tok.text_location())
-		return new_bound_error_expr()
 	}
 
 	conv_expr := b.bind_convertion_diag(syntax.expr.text_location(), expr, current_typ)
