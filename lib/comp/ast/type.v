@@ -8,8 +8,9 @@ pub type Stmt = AssertStmt | BlockStmt | BreakStmt | CommentStmt | ContinueStmt 
 	ForRangeStmt | ForStmt | IfStmt | ModuleStmt | ReturnStmt | VarDeclStmt
 
 // Sumtype expressions
-pub type Expr = AssignExpr | BinaryExpr | CallExpr | CompNode | IfExpr | LiteralExpr |
-	NameExpr | NoneExpr | ParaExpr | RangeExpr | StructInitExpr | UnaryExpr | ArrayInitExpr
+pub type Expr = ArrayInitExpr | AssignExpr | BinaryExpr | CallExpr | CompNode | IfExpr |
+	IndexExpr | LiteralExpr | NameExpr | NoneExpr | ParaExpr | RangeExpr | StructInitExpr |
+	UnaryExpr
 
 // Nodes in syntax tree
 pub type AstNode = EmptyNode | Expr | MemberNode | ParamNode | Stmt | StructInitMemberNode |
@@ -98,6 +99,7 @@ pub fn (ex Expr) text_location() source.TextLocation {
 		NoneExpr { return ex.text_location() }
 		StructInitExpr { return ex.text_location() }
 		ArrayInitExpr { return ex.text_location() }
+		IndexExpr { return ex.text_location() }
 	}
 }
 
@@ -116,6 +118,7 @@ pub fn (ex Expr) node_str() string {
 		NoneExpr { return ex.node_str() }
 		StructInitExpr { return ex.node_str() }
 		ArrayInitExpr { return ex.node_str() }
+		IndexExpr { return ex.node_str() }
 	}
 }
 
@@ -134,6 +137,7 @@ pub fn (ex Expr) str() string {
 		NoneExpr { return ex.str() }
 		StructInitExpr { return ex.str() }
 		ArrayInitExpr { return ex.str() }
+		IndexExpr { return ex.str() }
 	}
 }
 

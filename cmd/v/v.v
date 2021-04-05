@@ -167,7 +167,7 @@ fn main() {
 			}
 		}
 	}
-	mut comp := comp.create_compilation(syntax_trees)
+	mut comp := comp.create_script(&comp.Compilation(0), syntax_trees)
 	mut iw := repl.IdentWriter{}
 	if display_bound_stmts {
 		comp.emit_tree(iw, false)

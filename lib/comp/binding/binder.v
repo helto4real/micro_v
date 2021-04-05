@@ -20,6 +20,7 @@ pub mut:
 	mod_ok_to_define  bool = true // if true it is ok to define a module
 	current_is_global bool // if current statement is global statement
 	allow_expr        bool // always allow expressions in blocks
+	current_is_index  bool // to know if currectly bound expression is index expr
 }
 
 pub fn new_binder(is_script bool, parent &BoundScope, func symbols.FunctionSymbol) &Binder {
@@ -95,7 +96,7 @@ pub fn bind_program(is_test bool, is_script bool, previous &BoundProgram, global
 	}
 
 	// check if program is not test and missing main or script function
-	if is_test == false {
+	if is_test == false && is_script == false {
 		if global_scope.main_func.id !in func_bodies {
 			log.error_missing_main_func()
 		}
@@ -470,7 +471,6 @@ pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 
 pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, is_mut bool) symbols.VariableSymbol {
 	name := ident.lit
-
 	variable := if b.func == symbols.undefined_fn {
 		// We are in global scope
 		symbols.VariableSymbol(symbols.new_global_variable_symbol(name, typ, is_mut))
@@ -541,6 +541,7 @@ pub fn (mut b Binder) bind_expr(expr ast.Expr) BoundExpr {
 		ast.BinaryExpr { return b.bind_binary_expr(expr) }
 		ast.ParaExpr { return b.bind_para_expr(expr) }
 		ast.NameExpr { return b.bind_name_expr(expr) }
+		ast.IndexExpr { return b.bind_index_expr(expr) }
 		ast.ArrayInitExpr { return b.bind_array_init_expr(expr) }
 		ast.StructInitExpr { return b.bind_struct_init_expr(expr) }
 		ast.AssignExpr { return b.bind_assign_expr(expr) }
@@ -561,7 +562,6 @@ pub fn (mut b Binder) bind_convertion_diag(diag_loc source.TextLocation, expr Bo
 pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation, expr BoundExpr, typ symbols.TypeSymbol, allow_explicit bool) BoundExpr {
 	conv := convertion.classify(expr.typ, typ)
 	if !conv.exists {
-		println('$expr.typ.name != $typ.name')
 		// convertion does not exist
 		if expr.typ.kind != .error_symbol && typ.kind != .error_symbol {
 			b.log.error_cannot_convert_type(expr.typ.str(), typ.str(), diag_loc)
@@ -773,6 +773,32 @@ fn (mut b Binder) bind_assign_expr(syntax ast.AssignExpr) BoundExpr {
 
 fn (mut b Binder) bind_para_expr(syntax ast.ParaExpr) BoundExpr {
 	return b.bind_expr(syntax.expr)
+}
+
+fn (mut b Binder) bind_index_expr(syntax ast.IndexExpr) BoundExpr {
+	left_expr := b.bind_expr(syntax.left_expr)
+	index_expr := b.bind_expr(syntax.index_expr)
+
+	if index_expr.kind == .error_expr {
+		return index_expr
+	}
+	if left_expr.kind != .variable_expr {
+		b.log.error_expression_does_not_support_indexing(syntax.left_expr.text_location())
+		return new_bound_error_expr()
+	}
+	// Todo: when handling maps this can be one too
+	if left_expr.typ.kind != .array_symbol {
+		b.log.error_variable_type_is_not_an_array(syntax.left_expr.text_location())
+		return new_bound_error_expr()
+	}
+	index_typ := index_expr.typ
+	if index_typ is symbols.BuiltInTypeSymbol {
+		if index_typ == symbols.int_symbol {
+			return new_bound_index_expr(left_expr, index_expr)
+		}
+	}
+	b.log.error_expression_does_not_support_indexing(syntax.left_expr.text_location())
+	return new_bound_error_expr()
 }
 
 fn (mut b Binder) bind_array_init_expr(syntax ast.ArrayInitExpr) BoundExpr {

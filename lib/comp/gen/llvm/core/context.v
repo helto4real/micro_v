@@ -74,12 +74,6 @@ fn (mut c Emitter) emit_call(call_expr binding.BoundCallExpr) &C.LLVMValueRef {
 	return call_builder.emit()
 }
 
-// fn (mut c Emitter) next_ref_name() string {
-// 	name := '$c.ref_nr'
-// 	c.ref_nr++
-// 	return name
-// }
-
 fn (mut c Emitter) emit_expr(node binding.BoundExpr) &C.LLVMValueRef {
 	match node {
 		binding.BoundConvExpr { return c.emit_convert_expr(node) }
@@ -90,6 +84,7 @@ fn (mut c Emitter) emit_expr(node binding.BoundExpr) &C.LLVMValueRef {
 		binding.BoundCallExpr { return c.emit_call_expr(node) }
 		binding.BoundStructInitExpr { return c.emit_struct_init_expr(node) }
 		binding.BoundArrayInitExpr { return c.emit_array_init_expr(node) }
+		binding.BoundIndexExpr { return c.emit_array_index_expr(node) }
 		binding.BoundIfExpr { return c.emit_if_expr(node) }
 		binding.BoundAssignExpr { return c.emit_assignment_expr(node) }
 		else { panic('unexpected expr: $node.kind') }
@@ -97,6 +92,8 @@ fn (mut c Emitter) emit_expr(node binding.BoundExpr) &C.LLVMValueRef {
 }
 
 fn (mut c Emitter) emit_stmt(node binding.BoundStmt) {
+	// kind_str:='$node.kind'
+	// met := C.LLVMGetOrInsertNamedMetadata(c.mod.mod_ref, kind_str.str, kind_str.len)
 	match node {
 		binding.BoundReturnStmt {
 			if node.has_expr {
@@ -116,8 +113,7 @@ fn (mut c Emitter) emit_stmt(node binding.BoundStmt) {
 			c.last_expr_ref = c.emit_expr(node.expr)
 		}
 		binding.BoundLabelStmt {
-			c.current_block = c.blocks[node.name]
-			C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, c.current_block)
+			c.emit_label_stmt(node)
 		}
 		binding.BoundCondGotoStmt {
 			c.emit_cond_goto_stmt(node)
@@ -147,8 +143,8 @@ fn (mut c Emitter) emit_cond_goto_stmt(node binding.BoundCondGotoStmt) {
 	C.LLVMBuildCondBr(c.mod.builder.builder_ref, cond_expr_ref, eq_block, not_eq_block)
 }
 
-fn (mut c Emitter) emit_goto_stmt(node binding.BoundGotoStmt) {
-	goto_block := c.blocks[node.label]
+fn (mut c Emitter) emit_label_stmt(node binding.BoundLabelStmt) {
+	label_block := c.blocks[node.name]
 
 	// Check if last instruction is terminator, only
 	// if it is not terminated last instruction
@@ -159,12 +155,19 @@ fn (mut c Emitter) emit_goto_stmt(node binding.BoundGotoStmt) {
 		if isnil(is_term_instr) {
 			// No terminator instruction
 			// we need to add a branch to next block
-			C.LLVMBuildBr(c.mod.builder.builder_ref, goto_block)
+			C.LLVMBuildBr(c.mod.builder.builder_ref, label_block)
 		}
 	} else {
 		// there are no instructions we can add the br
-		C.LLVMBuildBr(c.mod.builder.builder_ref, goto_block)
+		C.LLVMBuildBr(c.mod.builder.builder_ref, label_block)
 	}
+	c.current_block = label_block
+	C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, c.current_block)
+}
+
+fn (mut c Emitter) emit_goto_stmt(node binding.BoundGotoStmt) {
+	goto_block := c.blocks[node.label]
+	C.LLVMBuildBr(c.mod.builder.builder_ref, goto_block)
 }
 
 fn (mut c Emitter) emit_assert_stmt(node binding.BoundAssertStmt) {
@@ -177,8 +180,10 @@ fn (mut c Emitter) emit_assert_stmt(node binding.BoundAssertStmt) {
 	cond_expr := node.expr
 	cond_expr_ref := c.emit_expr(cond_expr)
 
-	continue_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, no_name.str)
-	assert_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, no_name.str)
+	assert_cont_name := 'assert_cont'
+	assert_name := 'assert'
+	continue_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, assert_cont_name.str)
+	assert_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, assert_name.str)
 	C.LLVMMoveBasicBlockAfter(assert_block, c.current_block)
 	C.LLVMMoveBasicBlockAfter(continue_block, assert_block)
 
@@ -345,6 +350,21 @@ fn (mut c Emitter) emit_if_expr(node binding.BoundIfExpr) &C.LLVMValueRef {
 		merge_var, no_name.str)
 }
 
+fn (mut c Emitter) emit_array_index_expr(node binding.BoundIndexExpr) &C.LLVMValueRef {
+	var_ref := c.emit_expr(node.left_expr)
+	index_ref := c.emit_expr(node.index_expr)
+	arr_typ := node.left_expr.typ as symbols.ArrayTypeSymbol
+	typ_ref := get_llvm_type_ref(arr_typ, c.mod)
+	elem_typ_ref := get_llvm_type_ref(arr_typ.elem_typ, c.mod)
+	mut indicies := [C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), 0, false),
+		index_ref,
+	]
+
+	gep_val_ref := C.LLVMBuildInBoundsGEP2(c.mod.builder.builder_ref, typ_ref, var_ref,
+		indicies.data, indicies.len, no_name.str)
+	return C.LLVMBuildLoad2(c.mod.builder.builder_ref, elem_typ_ref, gep_val_ref, no_name.str)
+}
+
 fn (mut c Emitter) emit_assignment_expr(node binding.BoundAssignExpr) &C.LLVMValueRef {
 	expr_ref := c.emit_expr(node.expr)
 	var := node.var
@@ -457,7 +477,8 @@ fn (mut c Emitter) emit_variable_expr(node binding.BoundVariableExpr) &C.LLVMVal
 			return loaded_var
 		}
 	}
-	if node.is_ref {
+	// println('VAR: $node.var.name is ref==$node.typ.kind')
+	if node.is_ref || node.typ.kind == .array_symbol {
 		return var
 	}
 
@@ -590,6 +611,7 @@ fn (mut c Emitter) emit_array_init_expr(ai binding.BoundArrayInitExpr) &C.LLVMVa
 	}
 	return C.LLVMConstArray(typ_ref, value_refs.data, value_refs.len)
 }
+
 fn (mut c Emitter) emit_struct_init_expr(si binding.BoundStructInitExpr) &C.LLVMValueRef {
 	// id := lit.const_val.id
 	// typ := si.typ as symbols.StructTypeSymbol

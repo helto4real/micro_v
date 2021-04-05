@@ -491,7 +491,14 @@ fn (mut p Parser) parse_struct_init() ast.Expr {
 	return ast.new_struct_init_expr(p.syntax_tree, typ_tok, lcbr_tok, members, rcbr_tok)
 }
 
+// fn (mut p Parser) parse_index_expr() ast.Expr {
+// 	lsbr := p.match_token(.lsbr)
+// 	expr := p.parse_expr()
+// 	rsbr := p.match_token(.rsbr)
+// 	return ast.new_index_expr(p.syntax_tree, lsbr, expr, rsbr)
+// }
 fn (mut p Parser) parse_array_expr() ast.Expr {
+	
 	lsbr_tok := p.match_token(.lsbr) //[
 	if p.peek_token(0).kind == .rsbr { //] {
 		panic('not supported')
@@ -499,6 +506,7 @@ fn (mut p Parser) parse_array_expr() ast.Expr {
 		mut exprs := []ast.Expr{}
 		// parse a value array [1, 2, 3] fixed or non fixed
 		for p.peek_token(0).kind != .eof && p.peek_token(0).kind != .rsbr {
+			
 			start_tok := p.current_token()
 
 			if p.current_token().kind == .comma {
@@ -587,7 +595,12 @@ fn (mut p Parser) parse_binary_expr_prec(parent_precedence int) ast.Expr {
 		}
 		op_token := p.next_token()
 		right := p.parse_binary_expr_prec(precedence)
-		left = ast.new_binary_expr(p.syntax_tree, left, op_token, right)
+		if op_token.kind == .lsbr {
+			rsbr_tok := p.match_token(.rsbr)
+			left = ast.new_index_expr(p.syntax_tree, left, op_token, right, rsbr_tok)
+		} else {
+			left = ast.new_binary_expr(p.syntax_tree, left, op_token, right)
+		}
 	}
 	return left
 }

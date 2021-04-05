@@ -364,6 +364,7 @@ pub fn (mut l Lowerer) rewrite_expr(expr BoundExpr) BoundExpr {
 		BoundAssignExpr { return l.rewrite_assign_expr(expr) }
 		BoundIfExpr { return l.rewrite_if_expr(expr) }
 		BoundRangeExpr { return l.rewrite_range_expr(expr) }
+		BoundIndexExpr { return l.rewrite_index_expr(expr) }
 		BoundVariableExpr { return l.rewrite_variable_expr(expr) }
 		BoundErrorExpr { return l.rewrite_error_expr(expr) }
 		BoundCallExpr { return l.rewrite_call_expr(expr) }
@@ -420,4 +421,10 @@ pub fn (mut l Lowerer) rewrite_assign_expr(expr BoundAssignExpr) BoundExpr {
 
 pub fn (mut l Lowerer) rewrite_range_expr(expr BoundRangeExpr) BoundExpr {
 	return expr
+}
+
+pub fn (mut l Lowerer) rewrite_index_expr(expr BoundIndexExpr) BoundExpr {
+	rewritten_left_expr := l.rewrite_expr(expr.left_expr)
+	rewritten_index_expr := l.rewrite_expr(expr.index_expr)
+	return new_bound_index_expr(rewritten_left_expr, rewritten_index_expr)
 }
