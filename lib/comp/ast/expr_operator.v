@@ -5,7 +5,7 @@ import lib.comp.util.source
 
 pub const (
 	binary_expr_tokens = [token.Kind(token.Kind.plus), .minus, .mul, .div, .amp_amp, .pipe_pipe,
-		.eq_eq, .exl_mark_eq, .lt, .gt, .lt_eq, .gt_eq, .amp, .pipe, .hat]
+		.eq_eq, .exl_mark_eq, .lt, .gt, .lt_eq, .gt_eq, .amp, .pipe, .hat, .lsbr]
 	unary_expr_tokens  = [token.Kind(token.Kind.plus), .minus, .exl_mark, .tilde]
 )
 

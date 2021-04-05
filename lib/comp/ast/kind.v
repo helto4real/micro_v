@@ -14,6 +14,8 @@ enum SyntaxKind {
 	if_expr
 	call_expr
 	struct_init_expr
+	array_init_expr
+	index_expr
 	empty_expr
 	// nodes
 	operator_node

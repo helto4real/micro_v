@@ -34,6 +34,9 @@ fn write_type_symbol(writer io.TermTextWriter, type_symbol TypeSymbol) {
 		AnyTypeSymbol {
 			write_any_symbol(writer, type_symbol)
 		}
+		ArrayTypeSymbol {
+			write_array_symbol(writer, type_symbol)
+		}
 		VoidTypeSymbol {
 			//ignore
 		}
@@ -47,6 +50,11 @@ fn write_param_symbol(writer io.TermTextWriter, param_symbol ParamSymbol) {
 	writer.write_identifier(param_symbol.name)
 	writer.write_space()
 	write_type_symbol(writer, param_symbol.typ)
+}
+
+fn write_array_symbol(writer io.TermTextWriter, array_symbol ArrayTypeSymbol) {
+	writer.write_identifier('[]')
+	write_type_symbol(writer, array_symbol.elem_typ)
 }
 
 fn write_any_symbol(writer io.TermTextWriter, error_symbol AnyTypeSymbol) {
@@ -93,6 +101,11 @@ fn write_function_symbol(writer io.TermTextWriter, fn_symbol FunctionSymbol) {
 		}
 		symbols.StructTypeSymbol {
 			writer.write_space()
+			write_type_symbol(writer, fn_symbol.typ)
+		}
+		symbols.ArrayTypeSymbol {
+			writer.write_space()
+			writer.write_identifier('[]')
 			write_type_symbol(writer, fn_symbol.typ)
 		}
 		symbols.ErrorTypeSymbol {

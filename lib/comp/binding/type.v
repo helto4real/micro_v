@@ -2,7 +2,7 @@ module binding
 
 pub type BoundExpr = BoundAssignExpr | BoundBinaryExpr | BoundCallExpr | BoundConvExpr |
 	BoundErrorExpr | BoundIfExpr | BoundLiteralExpr | BoundNoneExpr | BoundRangeExpr |
-	BoundStructInitExpr | BoundUnaryExpr | BoundVariableExpr | NoneExpr
+	BoundStructInitExpr | BoundUnaryExpr | BoundVariableExpr | BoundArrayInitExpr | NoneExpr | BoundIndexExpr
 
 pub type BoundStmt = BoundAssertStmt | BoundBlockStmt | BoundBreakStmt | BoundCommentStmt |
 	BoundCondGotoStmt | BoundContinueStmt | BoundExprStmt | BoundForRangeStmt | BoundForStmt |
@@ -24,6 +24,7 @@ pub enum BoundNodeKind {
 	conv_expr
 	error_expr
 	sruct_init_expr
+	index_expr
 	none_expr
 	// Stmts
 	block_stmt
@@ -71,10 +72,12 @@ pub fn (be BoundExpr) node_str() string {
 		BoundAssignExpr { return be.node_str() }
 		BoundIfExpr { return be.node_str() }
 		BoundRangeExpr { return be.node_str() }
+		BoundIndexExpr { return be.node_str() }
 		BoundErrorExpr { return be.node_str() }
 		BoundCallExpr { return be.node_str() }
 		BoundConvExpr { return be.node_str() }
 		BoundNoneExpr { return be.node_str() }
+		BoundArrayInitExpr { return be.node_str() }
 		BoundStructInitExpr { return be.node_str() }
 		NoneExpr { return be.node_str() }
 	}
@@ -89,11 +92,13 @@ pub fn (be BoundExpr) str() string {
 		BoundAssignExpr { return be.str() }
 		BoundIfExpr { return be.str() }
 		BoundRangeExpr { return be.str() }
+		BoundIndexExpr { return be.str() }
 		BoundErrorExpr { return be.str() }
 		BoundCallExpr { return be.str() }
 		BoundConvExpr { return be.str() }
 		BoundNoneExpr { return be.str() }
 		BoundStructInitExpr { return be.str() }
+		BoundArrayInitExpr { return be.str() }
 		NoneExpr { return be.str() }
 	}
 }
@@ -107,11 +112,13 @@ pub fn (be BoundExpr) to_ref_type() BoundExpr {
 		BoundAssignExpr { return be.to_ref_type() }
 		BoundIfExpr { return be.to_ref_type() }
 		BoundRangeExpr { return be.to_ref_type() }
+		BoundIndexExpr { return be.to_ref_type() }
 		BoundErrorExpr { return be.to_ref_type() }
 		BoundCallExpr { return be.to_ref_type() }
 		BoundConvExpr { return be.to_ref_type() }
 		BoundNoneExpr { return be.to_ref_type() }
 		BoundStructInitExpr { return be.to_ref_type() }
+		BoundArrayInitExpr { return be.to_ref_type() }
 		NoneExpr { return be.to_ref_type() }
 	}
 }

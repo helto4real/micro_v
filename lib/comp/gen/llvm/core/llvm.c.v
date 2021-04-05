@@ -68,8 +68,13 @@ fn C.LLVMInt128TypeInContext(ctx_ref &C.LLVMContextRef) &C.LLVMTypeRef
 fn C.LLVMIntTypeInContext(ctx_ref &C.LLVMContextRef, nr_bits int) &C.LLVMTypeRef
 fn C.LLVMVoidTypeInContext(ctx_ref &C.LLVMContextRef) &C.LLVMTypeRef
 
+// metadata 
+fn C.LLVMGetOrInsertNamedMetadata(mod &C.LLVMModuleRef, name charptr, name_len u32) &C.LLVMNamedMDNodeRef
+fn C.LLVMSetMetadata(val &C.LLVMValueRef, kind_id u32, node &C.LLVMValueRef)
+fn C.LLVMSetModuleInlineAsm2(mod &C.LLVMModuleRef, name charptr, name_len u32)
+// array 
 fn C.LLVMArrayType(elem_typ &C.LLVMTypeRef, len u32) &C.LLVMTypeRef
-
+fn C.LLVMConstArray(elem_typ &C.LLVMTypeRef, values voidptr, len u32) &C.LLVMValueRef
 // structs
 fn C.LLVMStructTypeInContext(ctx &LLVMContextRef, type_refs voidptr, elem_count u32, int Packed) &C.LLVMTypeRef
 fn C.LLVMStructCreateNamed(ctx &C.LLVMContextRef, name charptr) &C.LLVMTypeRef

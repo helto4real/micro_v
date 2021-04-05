@@ -50,6 +50,15 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 		BoundErrorExpr {
 			writer.write_keyword('?')
 		}
+		BoundArrayInitExpr {
+			writer.write_identifier('[]$node.typ.name')
+		}
+		BoundIndexExpr {
+			write_expr(writer, node.left_expr)
+			writer.write_punctuation('[')
+			write_expr(writer, node.index_expr)
+			writer.write_punctuation(']')
+		}
 		BoundIfExpr {
 			writer.write_keyword('if')
 			writer.write_space()

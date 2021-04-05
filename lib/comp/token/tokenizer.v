@@ -86,6 +86,14 @@ pub fn (mut t Tokenizer) next_token() Token {
 			t.kind = .rcbr
 			t.incr_pos()
 		}
+		`[` {
+			t.kind = .lsbr
+			t.incr_pos()
+		}
+		`]` {
+			t.kind = .rsbr
+			t.incr_pos()
+		}
 		`+` {
 			t.kind = .plus
 			t.incr_pos()

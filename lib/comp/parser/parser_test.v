@@ -138,14 +138,14 @@ fn test_call_parser() {
 
 fn test_type_node_parser() {
 	mut p := new_parser_from_text('test')
-	non_ref_typ := p.parse_type_node()
+	non_ref_typ := p.parse_type_node(false)
 	assert p.log.all.len == 0
 
 	assert non_ref_typ.is_ref == false
 	assert non_ref_typ.name_tok.lit == 'test'
 
 	p = new_parser_from_text('&test')
-	ref_typ := p.parse_type_node()
+	ref_typ := p.parse_type_node(false)
 	assert p.log.all.len == 0
 
 	assert ref_typ.is_ref == true
@@ -188,7 +188,7 @@ fn test_param_node_parser() {
 	assert mut_param.name_tok.lit == 'name_tok'
 	assert mut_param.is_mut == true
 	assert mut_param.typ.name_tok.lit == 'type'
-	assert mut_param.typ.is_ref == false
+	assert mut_param.typ.is_ref == true
 
 	// parse parameter with reference type
 	p = new_parser_from_text('name_tok &type')
@@ -201,50 +201,63 @@ fn test_param_node_parser() {
 	assert ref_param.typ.is_ref == true
 }
 
+fn test_array_parser() {
+	mut p := new_parser_from_text('x[1]')
+	mut expr := p.parse_expr()
+	assert p.log.all.len == 0
+	assert expr.kind == .index_expr
+
+	p = new_parser_from_text('[1, 2, 3 ,4]!')
+	expr = p.parse_array_expr()
+	assert p.log.all.len == 0
+	// parse the C function
+	p = new_parser_from_text('[1, 2, 3 ,4]')
+	expr = p.parse_array_expr()
+	assert p.log.all.len == 0
+}
 fn test_fn_node_parser() {
 	mut p := new_parser_from_text('fn test() string {10}')
-	mut fn_p := p.parse_function()
+	mut expr := p.parse_function()
 	assert p.log.all.len == 0
-	assert fn_p.fn_key.kind == .key_fn
-	assert fn_p.name_expr.name_tok.lit == 'test'
-	assert fn_p.params.len() == 0
-	assert fn_p.typ_node.name_tok.lit == 'string'
-	assert fn_p.typ_node.is_void == false
+	assert expr.fn_key.kind == .key_fn
+	assert expr.name_expr.name_tok.lit == 'test'
+	assert expr.params.len() == 0
+	assert expr.typ_node.name_tok.lit == 'string'
+	assert expr.typ_node.is_void == false
 
 	p = new_parser_from_text('fn test() {}')
-	fn_p = p.parse_function()
+	expr = p.parse_function()
 	assert p.log.all.len == 0
-	assert fn_p.typ_node.is_void == true
+	assert expr.typ_node.is_void == true
 
 	p = new_parser_from_text('fn test(param string) int {}')
-	fn_p = p.parse_function()
+	expr = p.parse_function()
 	assert p.log.all.len == 0
-	assert fn_p.typ_node.is_void == false
-	assert fn_p.typ_node.name_tok.lit == 'int'
-	assert fn_p.params.len() == 1
-	mut param := fn_p.params.at(0) as ast.ParamNode
+	assert expr.typ_node.is_void == false
+	assert expr.typ_node.name_tok.lit == 'int'
+	assert expr.params.len() == 1
+	mut param := expr.params.at(0) as ast.ParamNode
 	assert param.name_tok.lit == 'param'
 	assert param.typ.name_tok.lit == 'string'
 	assert param.typ.is_ref == false
 
 	p = new_parser_from_text('fn test(param &RefStruct) int {}')
-	fn_p = p.parse_function()
+	expr = p.parse_function()
 	assert p.log.all.len == 0
-	assert fn_p.typ_node.is_void == false
-	assert fn_p.typ_node.name_tok.lit == 'int'
-	assert fn_p.params.len() == 1
-	param = fn_p.params.at(0) as ast.ParamNode
+	assert expr.typ_node.is_void == false
+	assert expr.typ_node.name_tok.lit == 'int'
+	assert expr.params.len() == 1
+	param = expr.params.at(0) as ast.ParamNode
 	assert param.name_tok.lit == 'param'
 	assert param.typ.name_tok.lit == 'RefStruct'
 	assert param.typ.is_ref == true
 
 	p = new_parser_from_text('fn variadic(vari ...string) {}')
-	fn_p = p.parse_function()
+	expr = p.parse_function()
 	assert p.log.all.len == 0
 
-	// parse the C function
 	p = new_parser_from_text('fn C.printf(vari charptr)')
-	fn_p = p.parse_function()
+	expr = p.parse_function()
 	assert p.log.all.len == 0
 }
 
