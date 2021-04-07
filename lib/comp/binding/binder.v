@@ -44,10 +44,15 @@ pub fn bind_program(is_test bool, is_script bool, previous &BoundProgram, global
 	mut log := source.new_diagonistics()
 	for func in global_scope.funcs {
 		mut binder := new_binder(is_script, parent_scope, func)
-		fn_decl := binder.scope.lookup_fn_decl(func.name) or {
-			panic('unexpected missing fn_decl in scope')
+		fn_decl := binder.scope.lookup_fn_decl(func.unique_name()) or {
+			panic('unexpected missing fn_decl in scope ($func.unique_name())')
 		}
 		if !fn_decl.is_c_decl {
+			if func.receiver.is_empty == false {
+				if !binder.scope.try_declare_var(func.receiver) {
+					panic('unexpected, receiver should always be first variable declared')
+				}
+			}
 			body := binder.bind_stmt(fn_decl.block)
 			if func.typ.kind != .void_symbol && !all_path_return_in_body(body as BoundBlockStmt) {
 				binder.log.error_all_paths_must_return(fn_decl.name_expr.name_tok.text_location())
@@ -394,9 +399,21 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 		symbols.TypeSymbol(symbols.void_symbol)
 	}
 
-	func := symbols.new_function_symbol_from_decl(fn_decl.text_location(), fn_decl.name_expr.name_tok.lit,
-		params, typ, fn_decl.is_pub, fn_decl.is_c_decl)
-
+	if fn_decl.receiver_node.is_empty {
+		func := symbols.new_function_symbol_from_decl(fn_decl.text_location(), symbols.empty_var_symbol,
+			fn_decl.name_expr.name_tok.lit, params, typ, fn_decl.is_pub, fn_decl.is_c_decl)
+		// TODO: refactor this. Due to V bug the func could not
+		//		 include the decl
+		if !b.scope.try_declare_fn(func, fn_decl) {
+			b.log.error_function_allready_declared(fn_decl.name_expr.name_tok.lit, fn_decl.name_expr.name_tok.text_location())
+		}
+		return
+	}
+	receiver_typ := b.bind_type(fn_decl.receiver_node.typ_node)
+	receiver_var := symbols.new_local_variable_symbol(fn_decl.receiver_node.name_tok.lit,
+		receiver_typ, fn_decl.receiver_node.is_mut)
+	func := symbols.new_function_symbol_from_decl(fn_decl.text_location(), receiver_var,
+		fn_decl.name_expr.name_tok.lit, params, typ, fn_decl.is_pub, fn_decl.is_c_decl)
 	// TODO: refactor this. Due to V bug the func could not
 	//		 include the decl
 	if !b.scope.try_declare_fn(func, fn_decl) {
@@ -412,7 +429,7 @@ pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
 	}
 	if b.func == symbols.undefined_fn {
 		if b.is_script {
-			// ignore cause we allow both return with and without 
+			// ignore cause we allow both return with and without
 			// values in script mode
 			if !return_stmt.has_expr {
 				expr = new_bound_literal_expr('')
@@ -423,7 +440,7 @@ pub fn (mut b Binder) bind_return_stmt(return_stmt ast.ReturnStmt) BoundStmt {
 		}
 		return new_bound_return_with_expr_stmt(expr)
 	} else {
-		// is_void_return_typ := b.func.typ is symbols.BuiltInTypeSymbol && b.func.typ as symbols.BuiltInTypeSymbol 
+		// is_void_return_typ := b.func.typ is symbols.BuiltInTypeSymbol && b.func.typ as symbols.BuiltInTypeSymbol
 		if return_stmt.has_expr {
 			if b.func.typ.kind == .void_symbol {
 				// it is a subroutine
@@ -591,9 +608,9 @@ pub fn (mut b Binder) bind_convertion_explicit(typ symbols.TypeSymbol, expr ast.
 }
 
 pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
-	func_name := expr.name_tok.lit
+	func_name := expr.name_expr.names[expr.name_expr.names.len - 1].lit // expr.name_expr.name_tok.lit
 	// handle convertions as special functions
-	if expr.params.len() == 1 {
+	if expr.name_expr.names.len == 1 && expr.params.len() == 1 {
 		typ := b.lookup_type(func_name)
 		// if typ.kind != .built_in_symbol && typ.name == 'none' {
 		if typ.kind == .built_in_symbol && typ.name != 'none' {
@@ -601,7 +618,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 		}
 	}
 
-	mut args := []BoundExpr{}
+	mut args := []BoundExpr{cap: expr.params.len()}
 
 	for i := 0; i < expr.params.len(); i++ {
 		param_expr := expr.params.at(i) as ast.Expr
@@ -612,10 +629,45 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 		}
 		args << arg_expr
 	}
+	mut receiver_var := symbols.empty_var_symbol
+	// mut receiver_typ := symbols.TypeSymbol(symbols.undefined_symbol)
 
-	func := b.scope.lookup_fn(func_name) or {
-		b.log.error_undefined_function(func_name, expr.name_tok.text_location())
-		return new_bound_error_expr()
+	if expr.name_expr.names.len > 1 {
+		// the function is on a variable
+		// todo: when modules is supported, lookup here
+		base_ident := expr.name_expr.names[0]
+		base_name := base_ident.lit
+		// check is variable exist in scope
+		var := b.scope.lookup_var(base_name) or {
+			b.log.error_var_not_exists(base_name, base_ident.text_location())
+			return new_bound_error_expr()
+		}
+		receiver_var = var as symbols.LocalVariableSymbol
+
+		// receiver_typ = receiver_var.typ
+		// for i := 1; i < expr.name_expr.names.len - 1; i++ {
+		// 	name_tok := expr.name_expr.names[i]
+		// 	member_name := name_tok.lit
+		// 	member_typ := receiver_typ.lookup_member_type(member_name)
+		// 	if member_typ.kind == .error_symbol {
+		// 		b.log.error_member_not_exists(member_name, name_tok.text_location())
+		// 		return new_bound_error_expr()
+		// 	}
+		// 	// Todo: check mutability of fields
+		// 	receiver_typ = member_typ
+		// }
+	}
+	mut func := symbols.new_emtpy_function_symbol()
+	if receiver_var.is_empty {
+		func = b.scope.lookup_fn(func_name) or {
+			b.log.error_undefined_function(func_name, expr.name_expr.name_tok.text_location())
+			return new_bound_error_expr()
+		}
+	} else {
+		func = b.scope.lookup_type_fn(func_name, receiver_var.typ) or {
+			b.log.error_undefined_function(func_name, expr.name_expr.name_tok.text_location())
+			return new_bound_error_expr()
+		}
 	}
 
 	if expr.params.len() != func.params.len {
@@ -630,8 +682,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 		conv_expr := b.bind_convertion_diag(arg_location, bound_arg, param.typ)
 		args[i] = conv_expr
 	}
-
-	return new_bound_call_expr(func, args)
+	return new_bound_call_expr(func, receiver_var, args)
 }
 
 pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
@@ -836,7 +887,7 @@ fn (mut b Binder) bind_array_init_expr(syntax ast.ArrayInitExpr) BoundExpr {
 }
 
 fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
-	typ := b.lookup_type(syntax.typ_tok.lit)
+	typ := b.lookup_type(syntax.name_expr.name_tok.lit)
 	struct_typ := typ as symbols.StructTypeSymbol
 
 	mut members := []BoundStructInitMember{}
@@ -900,7 +951,7 @@ fn (mut b Binder) bind_default_value_expr(typ symbols.TypeSymbol) BoundExpr {
 
 fn (mut b Binder) bind_name_expr(syntax ast.NameExpr) BoundExpr {
 	if syntax.names.len == 0 {
-		// the parser inserted the token so we already reported 
+		// the parser inserted the token so we already reported
 		// correct error so just return an error expression
 		return new_bound_error_expr()
 	}

@@ -6,22 +6,21 @@ import lib.comp.token
 import lib.comp.util.source
 
 pub struct Emitter {
-	current_func &C.LLVMValueRef
 mut:
+	func          &Function
 	current_block &C.LLVMBasicBlockRef
-	mod           Module
+	mod           &Module
 	ref_nr        int
 	blocks        map[string]&C.LLVMBasicBlockRef
 pub mut:
-	var_decl      map[string]&C.LLVMValueRef
 	last_expr_ref &C.LLVMValueRef
 }
 
-pub fn new_emitter(mod Module, current_block &C.LLVMBasicBlockRef, current_func &C.LLVMValueRef) Emitter {
-	return Emitter{
+pub fn new_emitter(mod &Module, current_block &C.LLVMBasicBlockRef, func &Function) &Emitter {
+	return &Emitter{
 		mod: mod
 		current_block: current_block
-		current_func: current_func
+		func: func
 		last_expr_ref: 0
 	}
 }
@@ -47,9 +46,26 @@ fn (mut c Emitter) emit_call(call_expr binding.BoundCallExpr) &C.LLVMValueRef {
 	if func_res.len != 1 {
 		panic('unexpected, $call_expr.func.name ($call_expr.func.id) func not declared. ')
 	}
-	func := func_res[0]
 
-	mut params := []&C.LLVMValueRef{cap: call_expr.params.len}
+	func := func_res[0]
+	params_len := if func.func.receiver.is_empty {
+		call_expr.params.len
+	} else {
+		call_expr.params.len + 1
+	}
+	mut params := []&C.LLVMValueRef{cap: params_len}
+	if !func.func.receiver.is_empty {
+		receiver_decl_ref := c.func.var_decl[call_expr.receiver.id] or {
+			panic('receiver: $call_expr.receiver ($call_expr.receiver.id) is not declared')
+		}
+		if !func.func.receiver.is_ref {
+			unboxed_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, get_llvm_type_ref(func.func.receiver.typ,
+				c.mod), receiver_decl_ref, no_name.str)
+			params << unboxed_var
+		} else {
+			params << receiver_decl_ref // c.handle_box_unbox(func.func.receiver, receiver_decl_ref)
+		}
+	}
 	for i, param in call_expr.params {
 		expr := c.emit_expr(param)
 		decl_param := func.func.params[i]
@@ -174,16 +190,17 @@ fn (mut c Emitter) emit_assert_stmt(node binding.BoundAssertStmt) {
 	//   branch <cond> continue: else assert:
 	// assert:
 	//   printf <assert inormation>
-	//   setjmp() 
+	//   setjmp()
 	// continue:
-	// 	 <rest_of_body> 
+	// 	 <rest_of_body>
 	cond_expr := node.expr
 	cond_expr_ref := c.emit_expr(cond_expr)
 
 	assert_cont_name := 'assert_cont'
 	assert_name := 'assert'
-	continue_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, assert_cont_name.str)
-	assert_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, assert_name.str)
+	continue_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.func.func_ref,
+		assert_cont_name.str)
+	assert_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.func.func_ref, assert_name.str)
 	C.LLVMMoveBasicBlockAfter(assert_block, c.current_block)
 	C.LLVMMoveBasicBlockAfter(continue_block, assert_block)
 
@@ -266,11 +283,11 @@ fn (mut c Emitter) emit_convert_expr(node binding.BoundConvExpr) &C.LLVMValueRef
 								c.mod), no_name.str)
 
 							true_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref,
-								c.current_func, no_name.str)
+								c.func.func_ref, no_name.str)
 							false_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref,
-								c.current_func, no_name.str)
+								c.func.func_ref, no_name.str)
 							result_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref,
-								c.current_func, no_name.str)
+								c.func.func_ref, no_name.str)
 							C.LLVMMoveBasicBlockAfter(true_block, c.current_block)
 							C.LLVMMoveBasicBlockAfter(false_block, true_block)
 
@@ -319,11 +336,11 @@ fn (mut c Emitter) emit_if_expr(node binding.BoundIfExpr) &C.LLVMValueRef {
 	// in the then_block and else_block				
 	merge_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, get_llvm_type_ref(node.typ,
 		c.mod), no_name.str)
-	// C.LLVMBuildStore(c.mod.builder.builder_ref, expr_val_ref, ref_var) 
+	// C.LLVMBuildStore(c.mod.builder.builder_ref, expr_val_ref, ref_var)
 
-	then_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, no_name.str)
-	else_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, no_name.str)
-	result_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.current_func, no_name.str)
+	then_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.func.func_ref, no_name.str)
+	else_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.func.func_ref, no_name.str)
+	result_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.func.func_ref, no_name.str)
 	C.LLVMMoveBasicBlockAfter(then_block, c.current_block)
 	C.LLVMMoveBasicBlockAfter(else_block, then_block)
 
@@ -368,7 +385,7 @@ fn (mut c Emitter) emit_array_index_expr(node binding.BoundIndexExpr) &C.LLVMVal
 fn (mut c Emitter) emit_assignment_expr(node binding.BoundAssignExpr) &C.LLVMValueRef {
 	expr_ref := c.emit_expr(node.expr)
 	var := node.var
-	mut ref_var := c.var_decl[var.id]
+	mut ref_var := c.func.var_decl[var.id]
 
 	typ := var.typ
 	if typ is symbols.StructTypeSymbol && node.names.len > 0 {
@@ -441,7 +458,9 @@ fn (mut c Emitter) emit_call_expr(node binding.BoundCallExpr) &C.LLVMValueRef {
 fn (mut c Emitter) emit_variable_expr(node binding.BoundVariableExpr) &C.LLVMValueRef {
 	typ := node.var.typ
 	typ_ref := get_llvm_type_ref(typ, c.mod)
-	var := c.var_decl[node.var.id] or { panic('unexpected, variable not declared: $node.var.name') }
+	var := c.func.var_decl[node.var.id] or {
+		panic('unexpected, variable not declared: $node.var.name')
+	}
 	mut current_typ_ref := typ_ref
 	mut current_typ := typ
 
@@ -477,7 +496,6 @@ fn (mut c Emitter) emit_variable_expr(node binding.BoundVariableExpr) &C.LLVMVal
 			return loaded_var
 		}
 	}
-	// println('VAR: $node.var.name is ref==$node.typ.kind')
 	if node.is_ref || node.typ.kind == .array_symbol {
 		return var
 	}
@@ -495,7 +513,7 @@ fn (mut c Emitter) emit_var_decl(node binding.BoundVarDeclStmt) {
 	// Todo: only do this is not a reference
 	ref_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, typ_ref, var_name.str)
 	C.LLVMBuildStore(c.mod.builder.builder_ref, expr_val_ref, ref_var)
-	c.var_decl[node.var.id] = ref_var
+	c.func.var_decl[node.var.id] = ref_var
 }
 
 fn (mut c Emitter) emit_binary_expr(binary_expr binding.BoundBinaryExpr) &C.LLVMValueRef {

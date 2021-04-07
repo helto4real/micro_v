@@ -2,8 +2,8 @@ module symbols
 
 pub type VariableSymbol = GlobalVariableSymbol | LocalVariableSymbol | ParamSymbol
 
-pub type TypeSymbol = AnyTypeSymbol | BuiltInTypeSymbol | ErrorTypeSymbol | StructTypeSymbol |
-	VoidTypeSymbol | ArrayTypeSymbol
+pub type TypeSymbol = AnyTypeSymbol | ArrayTypeSymbol | BuiltInTypeSymbol | ErrorTypeSymbol |
+	StructTypeSymbol | VoidTypeSymbol
 
 pub type Symbol = ConstSymbol | FunctionSymbol | TypeSymbol | VariableSymbol
 
@@ -54,6 +54,10 @@ pub fn (t TypeSymbol) to_ref_type() TypeSymbol {
 		BuiltInTypeSymbol { return t.to_ref_type() }
 		else { panic('the type $t.name should never be a ref type') }
 	}
+}
+
+pub fn (t TypeSymbol) unique_reciver_func_name(func_name string) string {
+	return '_${t.name}_$func_name'
 }
 
 pub fn (typ TypeSymbol) lookup_member_type(name string) TypeSymbol {

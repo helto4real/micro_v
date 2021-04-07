@@ -49,3 +49,8 @@ pub fn (ex TypeNode) text_location() source.TextLocation {
 pub fn (ex TypeNode) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex &TypeNode) str() string {
+	name := ex.name_tok.lit
+	return name
+}

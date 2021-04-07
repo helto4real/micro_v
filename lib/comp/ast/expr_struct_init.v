@@ -11,36 +11,39 @@ pub:
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
-	typ_tok  token.Token
+	name_expr  NameExpr
 	lcbr_tok token.Token
 	members  []StructInitMemberNode
 	rcbr_tok token.Token
 }
 
-pub fn new_struct_init_expr(tree &SyntaxTree, typ_tok token.Token, lcbr_tok token.Token, members []StructInitMemberNode, rcbr_tok token.Token) StructInitExpr {
-	mut child_nodes := [AstNode(typ_tok), lcbr_tok]
+pub fn new_struct_init_expr(tree &SyntaxTree, name_expr NameExpr, lcbr_tok token.Token, members []StructInitMemberNode, rcbr_tok token.Token) StructInitExpr {
+	mut child_nodes := [AstNode(Expr(name_expr)), lcbr_tok]
 	for member in members {
 		child_nodes << member
 	}
 	child_nodes << rcbr_tok
 	return StructInitExpr{
 		tree: tree
-		typ_tok: typ_tok
+		name_expr: name_expr
 		members: members
 		lcbr_tok: lcbr_tok
-		pos: source.new_pos_from_pos_bounds(typ_tok.pos, lcbr_tok.pos)
+		pos: source.new_pos_from_pos_bounds(name_expr.name_tok.pos, lcbr_tok.pos)
 		child_nodes: child_nodes
 	}
 }
 
 pub fn new_struct_init_no_members_expr(type_name string) StructInitExpr {
-	return StructInitExpr{
-		tree: &SyntaxTree(0)
-		typ_tok: token.Token{
+	name_toks := [token.Token {
 			kind: .name
 			lit: type_name
 			source: &source.SourceText(0)
-		}
+		}]
+	
+	name_expr := new_name_expr(&SyntaxTree(0), name_toks, false)
+	return StructInitExpr{
+		tree: &SyntaxTree(0)
+		name_expr: name_expr
 		// members: members
 		// lcbr_tok: lcbr_tok
 		// pos: source.new_pos_from_pos_bounds(typ_tok.pos, lcbr_tok.pos)

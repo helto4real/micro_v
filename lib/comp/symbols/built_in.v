@@ -15,6 +15,7 @@ pub const (
 	any_symbol         = new_any_type_symbol(false)
 	error_symbol       = new_error_type_symbol()
 	void_symbol        = new_void_type_symbol()
+	empty_var_symbol   = new_empty_local_variable_symbol()
 
 	// built-in function symbols
 	println_symbol     = new_function_symbol('println', [

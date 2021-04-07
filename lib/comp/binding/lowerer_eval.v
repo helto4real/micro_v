@@ -388,7 +388,7 @@ pub fn (mut l Lowerer) rewrite_call_expr(expr BoundCallExpr) BoundExpr {
 		rewritten_args << l.rewrite_expr(arg)
 	}
 
-	return new_bound_call_expr(expr.func, rewritten_args)
+	return new_bound_call_expr(expr.func, expr.receiver, rewritten_args)
 }
 
 pub fn (mut l Lowerer) rewrite_error_expr(expr BoundErrorExpr) BoundExpr {
