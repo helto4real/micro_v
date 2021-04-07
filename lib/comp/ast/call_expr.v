@@ -13,13 +13,13 @@ pub:
 	child_nodes []AstNode
 	// child nodes
 	lpar_tok token.Token
-	name_tok token.Token
+	name_expr NameExpr
 	params   SeparatedSyntaxList
 	rpar_tok token.Token
 }
 
-pub fn new_call_expr(tree &SyntaxTree, name_tok token.Token, lpar_tok token.Token, params SeparatedSyntaxList, rpar_tok token.Token) CallExpr {
-	mut child_nodes := [AstNode(name_tok), lpar_tok]
+pub fn new_call_expr(tree &SyntaxTree, name_expr NameExpr, lpar_tok token.Token, params SeparatedSyntaxList, rpar_tok token.Token) CallExpr {
+	mut child_nodes := [AstNode(Expr(name_expr)), lpar_tok]
 	for i := 0; i < params.len(); i++ {
 		child_nodes << params.at(i)
 	}
@@ -27,9 +27,9 @@ pub fn new_call_expr(tree &SyntaxTree, name_tok token.Token, lpar_tok token.Toke
 
 	return CallExpr{
 		tree: tree
-		pos: source.new_pos_from_pos_bounds(name_tok.pos, rpar_tok.pos)
+		pos: source.new_pos_from_pos_bounds(name_expr.name_tok.pos, rpar_tok.pos)
 		child_nodes: child_nodes
-		name_tok: name_tok
+		name_expr: name_expr
 		lpar_tok: lpar_tok
 		params: params
 		rpar_tok: rpar_tok
@@ -49,7 +49,7 @@ pub fn (ex CallExpr) node_str() string {
 }
 
 pub fn (ex CallExpr) str() string {
-	mut ret := '${ex.name_tok.lit}('
+	mut ret := '${ex.name_expr.name_tok.lit}('
 	for i := 0; i < ex.params.len(); i++ {
 		param := ex.params.at(i)
 		if i != 0 {

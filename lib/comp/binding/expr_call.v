@@ -11,13 +11,17 @@ pub:
 	is_ref      bool
 	// child nodes
 	func   symbols.FunctionSymbol
+	receiver symbols.LocalVariableSymbol
+
+
 	params []BoundExpr
 }
 
-pub fn new_bound_call_expr(func symbols.FunctionSymbol, params []BoundExpr) BoundExpr {
+pub fn new_bound_call_expr(func symbols.FunctionSymbol, receiver symbols.LocalVariableSymbol, params []BoundExpr) BoundExpr {
 	return BoundCallExpr{
 		typ: func.typ
 		func: func
+		receiver: receiver
 		params: params
 	}
 }

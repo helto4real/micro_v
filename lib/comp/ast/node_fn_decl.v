@@ -15,6 +15,7 @@ pub:
 	// child nodes
 	pub_key   token.Token
 	fn_key    token.Token
+	receiver_node ReceiverNode
 	name_expr NameExpr
 	lpar_tok  token.Token
 	params    SeparatedSyntaxList
@@ -30,7 +31,7 @@ pub fn new_empty_fn_decl_node(tree &SyntaxTree) FnDeclNode {
 	}
 }
 
-pub fn new_fn_decl_node(tree &SyntaxTree, pub_key token.Token, fn_key token.Token, name_expr NameExpr, lpar_tok token.Token, params SeparatedSyntaxList, rpar_tok token.Token, typ_node TypeNode, block BlockStmt) FnDeclNode {
+pub fn new_fn_decl_node(tree &SyntaxTree, pub_key token.Token, fn_key token.Token, receiver_node ReceiverNode, name_expr NameExpr, lpar_tok token.Token, params SeparatedSyntaxList, rpar_tok token.Token, typ_node TypeNode, block BlockStmt) FnDeclNode {
 	is_pub := pub_key.kind != .void
 	is_c_decl := name_expr.is_c_name
 
@@ -53,6 +54,7 @@ pub fn new_fn_decl_node(tree &SyntaxTree, pub_key token.Token, fn_key token.Toke
 		child_nodes: child_nodes
 		pub_key: pub_key
 		fn_key: fn_key
+		receiver_node: receiver_node
 		name_expr: name_expr
 		lpar_tok: lpar_tok
 		params: params
@@ -74,4 +76,8 @@ pub fn (ex FnDeclNode) text_location() source.TextLocation {
 
 pub fn (ex FnDeclNode) node_str() string {
 	return typeof(ex).name
+}
+
+pub fn (ex &FnDeclNode) str() string {
+	return 'fn ${ex.name_expr.name_tok.lit}()'
 }

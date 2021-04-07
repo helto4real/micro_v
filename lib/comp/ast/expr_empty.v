@@ -2,7 +2,7 @@ module ast
 
 import lib.comp.util.source
 
-pub struct NoneExpr {
+pub struct EmptyExpr {
 pub:
 	// general ast node
 	tree        &SyntaxTree = &SyntaxTree(0)
@@ -11,18 +11,18 @@ pub:
 	child_nodes []AstNode
 }
 
-pub fn new_empty_expr() NoneExpr {
-	return NoneExpr{}
+pub fn new_empty_expr() EmptyExpr {
+	return EmptyExpr{}
 }
 
-pub fn (ex &NoneExpr) child_nodes() []AstNode {
+pub fn (ex &EmptyExpr) child_nodes() []AstNode {
 	return ex.child_nodes
 }
 
-pub fn (ex NoneExpr) text_location() source.TextLocation {
+pub fn (ex EmptyExpr) text_location() source.TextLocation {
 	return source.new_text_location(ex.tree.source, ex.pos)
 }
 
-pub fn (ex NoneExpr) node_str() string {
+pub fn (ex EmptyExpr) node_str() string {
 	return typeof(ex).name
 }

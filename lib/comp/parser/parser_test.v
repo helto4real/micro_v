@@ -224,11 +224,37 @@ fn test_fn_node_parser() {
 	assert expr.params.len() == 0
 	assert expr.typ_node.name_tok.lit == 'string'
 	assert expr.typ_node.is_void == false
+	assert expr.receiver_node.is_empty == true
 
 	p = new_parser_from_text('fn test() {}')
 	expr = p.parse_function()
 	assert p.log.all.len == 0
 	assert expr.typ_node.is_void == true
+
+	p = new_parser_from_text('fn (x string) test() {}')
+	expr = p.parse_function()
+	assert p.log.all.len == 0
+	assert expr.typ_node.is_void == true
+	assert expr.receiver_node.is_empty == false
+	assert expr.receiver_node.name_tok.lit == 'x'
+	assert expr.receiver_node.is_ref == false
+	
+	p = new_parser_from_text('fn (x &string) test() {}')
+	expr = p.parse_function()
+	assert p.log.all.len == 0
+	assert expr.typ_node.is_void == true
+	assert expr.receiver_node.is_empty == false
+	assert expr.receiver_node.name_tok.lit == 'x'
+	assert expr.receiver_node.is_ref == true
+
+	p = new_parser_from_text('fn (mut x string) test() {}')
+	expr = p.parse_function()
+	assert p.log.all.len == 0
+	assert expr.typ_node.is_void == true
+	assert expr.receiver_node.is_empty == false
+	assert expr.receiver_node.name_tok.lit == 'x'
+	assert expr.receiver_node.is_ref == true
+	assert expr.receiver_node.is_mut == true
 
 	p = new_parser_from_text('fn test(param string) int {}')
 	expr = p.parse_function()

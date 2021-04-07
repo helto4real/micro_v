@@ -17,6 +17,7 @@ pub:
 	location  source.TextLocation
 	name      string
 	typ       TypeSymbol
+	receiver  LocalVariableSymbol
 	params    []ParamSymbol
 	id        string
 }
@@ -29,6 +30,10 @@ pub fn (ts FunctionSymbol) str() string {
 	return ts.name
 }
 
+pub fn new_emtpy_function_symbol() FunctionSymbol {
+	return FunctionSymbol{}
+}
+
 pub fn new_function_symbol(name string, params []ParamSymbol, typ TypeSymbol) FunctionSymbol {
 	return FunctionSymbol{
 		name: name
@@ -38,15 +43,24 @@ pub fn new_function_symbol(name string, params []ParamSymbol, typ TypeSymbol) Fu
 	}
 }
 
-pub fn new_function_symbol_from_decl(location source.TextLocation, name string, params []ParamSymbol, typ TypeSymbol, is_pub bool, is_c_decl bool) FunctionSymbol {
+pub fn new_function_symbol_from_decl(location source.TextLocation, receiver LocalVariableSymbol, name string, params []ParamSymbol, typ TypeSymbol, is_pub bool, is_c_decl bool) FunctionSymbol {
 	return FunctionSymbol{
 		location: location
 		is_pub: is_pub
 		is_c_decl: is_c_decl
 		name: name
+		receiver: receiver
 		params: params
 		typ: typ
 		id: rand.uuid_v4()
+	}
+}
+
+pub fn (ts FunctionSymbol) unique_name() string {
+	if ts.receiver.is_empty {
+		return ts.name
+	} else {
+		return ts.receiver.typ.unique_reciver_func_name(ts.name)
 	}
 }
 

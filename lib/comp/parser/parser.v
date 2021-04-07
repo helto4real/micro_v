@@ -68,7 +68,7 @@ pub fn (mut p Parser) parse_members() {
 		start_tok := p.current_token()
 		member := p.parse_member()
 		p.syntax_tree.root.members << member
-		// if parse member did not consume any tokens 
+		// if parse member did not consume any tokens
 		// let's skip it and continue
 		if p.current_token() == start_tok {
 			// makes sure we not in infinite loop
@@ -120,6 +120,23 @@ fn (mut p Parser) parse_struct_members() []ast.StructMemberNode {
 	return members
 }
 
+pub fn (mut p Parser) parse_receiver() ast.ReceiverNode {
+	if p.current_token().kind != .lpar {
+		return ast.new_empty_receiver_node()
+	}
+
+	mut mut_tok := token.tok_void
+	lpar_tok := p.match_token(.lpar)
+	if p.current_token().kind == .key_mut {
+		mut_tok = p.match_token(.key_mut)
+	}
+	name := p.match_token(.name)
+	typ := p.parse_type_node(false)
+	rpar_tok := p.match_token(.rpar)
+
+	return ast.new_receiver_node(p.syntax_tree, lpar_tok, mut_tok, name, typ, rpar_tok)
+}
+
 pub fn (mut p Parser) parse_function() ast.FnDeclNode {
 	mut pub_key := token.tok_void
 
@@ -127,6 +144,8 @@ pub fn (mut p Parser) parse_function() ast.FnDeclNode {
 		pub_key = p.match_token(.key_pub)
 	}
 	fn_key := p.match_token(.key_fn)
+	mut receiver := p.parse_receiver()
+
 	expr := p.parse_name_expr()
 	name_expr := expr as ast.NameExpr
 
@@ -137,13 +156,13 @@ pub fn (mut p Parser) parse_function() ast.FnDeclNode {
 
 	if p.current_token().kind == .lcbr {
 		block := p.parse_block_stmt()
-		return ast.new_fn_decl_node(p.syntax_tree, pub_key, fn_key, name_expr, lpar_tok,
-			params, rpar_tok, ret_type, block as ast.BlockStmt)
+		return ast.new_fn_decl_node(p.syntax_tree, pub_key, fn_key, receiver, name_expr,
+			lpar_tok, params, rpar_tok, ret_type, block as ast.BlockStmt)
 	}
 	// empty block, some declarations is ok with this, like C
 	void_block := ast.new_void_block_stmt(p.syntax_tree)
-	return ast.new_fn_decl_node(p.syntax_tree, pub_key, fn_key, name_expr, lpar_tok, params,
-		rpar_tok, ret_type, void_block)
+	return ast.new_fn_decl_node(p.syntax_tree, pub_key, fn_key, receiver, name_expr, lpar_tok,
+		params, rpar_tok, ret_type, void_block)
 }
 
 fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
@@ -418,7 +437,7 @@ fn (mut p Parser) parse_multi_stmt() []ast.Stmt {
 		start_tok := p.current_token()
 		stmt := p.parse_stmt()
 		stmts << stmt
-		// if parse stmt did not consume any tokens 
+		// if parse stmt did not consume any tokens
 		// let's skip it and continue
 		if p.current_token() == start_tok {
 			// makes sure we not in infinite loop
@@ -446,7 +465,7 @@ fn (mut p Parser) parse_expr() ast.Expr {
 			}
 		}
 		.number {
-			// .. range_expr 
+			// .. range_expr
 			if p.peek_token(1).kind == .dot_dot {
 				return p.parse_range_expr()
 			}
@@ -465,8 +484,7 @@ fn (mut p Parser) parse_range_expr() ast.Expr {
 	return ast.new_range_expr(p.syntax_tree, from_num, range_tok, to_num)
 }
 
-fn (mut p Parser) parse_struct_init() ast.Expr {
-	typ_tok := p.match_token(.name)
+fn (mut p Parser) parse_struct_init(name_expr ast.NameExpr) ast.Expr {
 	lcbr_tok := p.match_token(.lcbr)
 	mut members := []ast.StructInitMemberNode{}
 	for p.peek_token(0).kind != .eof && p.peek_token(0).kind != .rcbr {
@@ -479,7 +497,7 @@ fn (mut p Parser) parse_struct_init() ast.Expr {
 		member := ast.new_init_struct_member_node(p.syntax_tree, member_name_tok, colon_tok,
 			expr)
 		members << member
-		// if parse stmt did not consume any tokens 
+		// if parse stmt did not consume any tokens
 		// let's skip it and continue
 		if p.current_token() == start_tok {
 			// makes sure we not in infinite loop
@@ -488,7 +506,7 @@ fn (mut p Parser) parse_struct_init() ast.Expr {
 	}
 	rcbr_tok := p.match_token(.rcbr)
 
-	return ast.new_struct_init_expr(p.syntax_tree, typ_tok, lcbr_tok, members, rcbr_tok)
+	return ast.new_struct_init_expr(p.syntax_tree, name_expr, lcbr_tok, members, rcbr_tok)
 }
 
 // fn (mut p Parser) parse_index_expr() ast.Expr {
@@ -498,7 +516,6 @@ fn (mut p Parser) parse_struct_init() ast.Expr {
 // 	return ast.new_index_expr(p.syntax_tree, lsbr, expr, rsbr)
 // }
 fn (mut p Parser) parse_array_expr() ast.Expr {
-	
 	lsbr_tok := p.match_token(.lsbr) //[
 	if p.peek_token(0).kind == .rsbr { //] {
 		panic('not supported')
@@ -506,7 +523,6 @@ fn (mut p Parser) parse_array_expr() ast.Expr {
 		mut exprs := []ast.Expr{}
 		// parse a value array [1, 2, 3] fixed or non fixed
 		for p.peek_token(0).kind != .eof && p.peek_token(0).kind != .rsbr {
-			
 			start_tok := p.current_token()
 
 			if p.current_token().kind == .comma {
@@ -515,7 +531,7 @@ fn (mut p Parser) parse_array_expr() ast.Expr {
 			expr := p.parse_expr()
 
 			exprs << expr
-			// if parse stmt did not consume any tokens 
+			// if parse stmt did not consume any tokens
 			// let's skip it and continue
 			if p.current_token() == start_tok {
 				// makes sure we not in infinite loop
@@ -561,8 +577,8 @@ fn (mut p Parser) parse_assign_right_expr() ast.Expr {
 	if p.peek_token(0).kind == .key_if {
 		// it is an if expression
 		return p.parse_if_expr()
-	} else if p.peek_struct_init(0) {
-		return p.parse_struct_init()
+		// } else if p.peek_struct_init(0) {
+		// return p.parse_struct_init()
 	} else if p.peek_token(0).kind == .lsbr { //[
 		return p.parse_array_expr()
 	}
@@ -655,12 +671,11 @@ fn (mut p Parser) parse_bool_literal() ast.Expr {
 	return ast.new_literal_expr(p.syntax_tree, key_tok, val)
 }
 
-fn (mut p Parser) parse_call_expr() ast.Expr {
-	ident := p.match_token(.name)
+fn (mut p Parser) parse_call_expr(name_expr ast.NameExpr) ast.Expr {
 	lpar_tok := p.match_token(.lpar)
 	args := p.parse_args()
 	rpar_tok := p.match_token(.rpar)
-	return ast.new_call_expr(p.syntax_tree, ident, lpar_tok, args, rpar_tok)
+	return ast.new_call_expr(p.syntax_tree, name_expr, lpar_tok, args, rpar_tok)
 }
 
 fn (mut p Parser) parse_args() ast.SeparatedSyntaxList {
@@ -681,12 +696,13 @@ fn (mut p Parser) parse_args() ast.SeparatedSyntaxList {
 }
 
 fn (mut p Parser) parse_name() ast.Expr {
-	if p.current_token().kind == .name && p.peek_token(1).kind == .lpar {
-		return p.parse_call_expr()
-	} else if p.peek_struct_init(0) {
-		return p.parse_struct_init()
+	name_expr := p.parse_name_expr()
+	if p.current_token().kind == .lpar {
+		return p.parse_call_expr(name_expr as ast.NameExpr)
+	} else if p.current_token().kind == .lcbr {
+		return p.parse_struct_init(name_expr as ast.NameExpr)
 	} else {
-		return p.parse_name_expr()
+		return name_expr
 	}
 }
 
@@ -710,7 +726,7 @@ fn (mut p Parser) parse_name_expr() ast.Expr {
 			n := p.match_token(.name)
 			names << n
 
-			// if parse stmt did not consume any tokens 
+			// if parse stmt did not consume any tokens
 			// let's skip it and continue
 			if p.current_token() == start_tok {
 				// makes sure we not in infinite loop

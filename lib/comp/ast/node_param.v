@@ -61,3 +61,7 @@ pub fn (ex ParamNode) text_location() source.TextLocation {
 pub fn (ex ParamNode) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex ParamNode) str() string {
+	return '$ex.name_tok.lit $ex.typ.name_tok.lit'
+}

@@ -51,6 +51,17 @@ pub fn (bs &BoundScope) lookup_fn(name string) ?symbols.FunctionSymbol {
 	return var
 }
 
+pub fn (bs &BoundScope) lookup_type_fn(name string, typ symbols.TypeSymbol) ?symbols.FunctionSymbol {
+	unique_func_name := typ.unique_reciver_func_name(name)
+	var := bs.funcs[unique_func_name] or {
+		if bs.parent > 0 {
+			return bs.parent.lookup_type_fn(name, typ)
+		}
+		return none
+	}
+	return var
+}
+
 pub fn (bs &BoundScope) lookup_fn_decl(name string) ?ast.FnDeclNode {
 	var := bs.fn_decls[name] or {
 		if bs.parent > 0 {
@@ -62,19 +73,21 @@ pub fn (bs &BoundScope) lookup_fn_decl(name string) ?ast.FnDeclNode {
 }
 
 pub fn (mut bs BoundScope) try_declare_fn(func symbols.FunctionSymbol, fn_decl ast.FnDeclNode) bool {
-	if func.name in bs.funcs {
+	name := func.unique_name()
+	if name in bs.funcs {
 		return false
 	}
-	bs.funcs[func.name] = func
-	bs.fn_decls[func.name] = fn_decl
+	bs.funcs[name] = func
+	bs.fn_decls[name] = fn_decl
 	return true
 }
 
 pub fn (mut bs BoundScope) try_declare_glob_fn(func symbols.FunctionSymbol) bool {
-	if func.name in bs.funcs {
+	name := func.unique_name()
+	if name in bs.funcs {
 		return false
 	}
-	bs.funcs[func.name] = func
+	bs.funcs[name] = func
 	return true
 }
 
