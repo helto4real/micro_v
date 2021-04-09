@@ -29,14 +29,18 @@ fn (mut c Emitter) new_builtin_call(name string) CallBuilder {
 	return new_builtin_call(name, c)
 }
 
-fn (mut c Emitter) handle_box_unbox(var symbols.VariableSymbol, val &C.LLVMValueRef) &C.LLVMValueRef {
+fn (mut c Emitter) handle_box_unbox_variable(var &symbols.VariableSymbol, expr &binding.BoundExpr, val &C.LLVMValueRef) &C.LLVMValueRef {
 	is_const := C.LLVMIsConstant(val) == 1
 
-	if var.is_ref && is_const {
+	if var.is_ref && (is_const || !expr.typ.is_ref) {
 		var_typ_ref := get_llvm_type_ref(var.typ, c.mod)
 		res_val := C.LLVMBuildAlloca(c.mod.builder.builder_ref, var_typ_ref, no_name.str)
 		C.LLVMBuildStore(c.mod.builder.builder_ref, val, res_val)
 		return res_val
+	}
+	if !var.is_ref && expr.typ.is_ref {
+		return C.LLVMBuildLoad2(c.mod.builder.builder_ref, get_llvm_type_ref(var.typ,
+			c.mod), val, no_name.str)
 	}
 	return val
 }
@@ -63,13 +67,18 @@ fn (mut c Emitter) emit_call(call_expr binding.BoundCallExpr) &C.LLVMValueRef {
 				c.mod), receiver_decl_ref, no_name.str)
 			params << unboxed_var
 		} else {
-			params << receiver_decl_ref // c.handle_box_unbox(func.func.receiver, receiver_decl_ref)
+			params << receiver_decl_ref // c.handle_box_unbox_variable(func.func.receiver, receiver_decl_ref)
 		}
 	}
-	for i, param in call_expr.params {
-		expr := c.emit_expr(param)
+	for i, param_expr in call_expr.params {
+		expr := c.emit_expr(param_expr)
 		decl_param := func.func.params[i]
-		params << c.handle_box_unbox(decl_param, expr)
+
+		// if param.typ.is_ref {
+		// 	params << expr
+		// } else {
+		params << c.handle_box_unbox_variable(&decl_param, &param_expr, expr)
+		// }
 	}
 
 	mut call_builder := CallBuilder{
@@ -186,6 +195,15 @@ fn (mut c Emitter) emit_goto_stmt(node binding.BoundGotoStmt) {
 	C.LLVMBuildBr(c.mod.builder.builder_ref, goto_block)
 }
 
+[inline]
+fn (mut c Emitter) unbox_if_ref(typ &symbols.TypeSymbol, val_ref &C.LLVMValueRef) &C.LLVMValueRef {
+	if typ.is_ref {
+		return C.LLVMBuildLoad2(c.mod.builder.builder_ref, get_llvm_type_ref(typ, c.mod),
+			val_ref, no_name.str)
+	}
+	return val_ref
+}
+
 fn (mut c Emitter) emit_assert_stmt(node binding.BoundAssertStmt) {
 	//   branch <cond> continue: else assert:
 	// assert:
@@ -194,7 +212,14 @@ fn (mut c Emitter) emit_assert_stmt(node binding.BoundAssertStmt) {
 	// continue:
 	// 	 <rest_of_body>
 	cond_expr := node.expr
-	cond_expr_ref := c.emit_expr(cond_expr)
+	// mut cont_expr_ref := c.emit_expr(cond_expr)
+
+	// // typ_ref := C.LLVMTypeOf(cont_expr_ref)
+	// println('cond_expr: $cond_expr : $node.expr.typ.is_ref')
+	// C.LLVMDumpType(typ_ref)
+	// println('')
+	cont_expr_ref := c.unbox_if_ref(&node.expr.typ, c.emit_expr(cond_expr))
+	// typ_ref2 :=  C.LLVMTypeOf(cont_expr_ref)
 
 	assert_cont_name := 'assert_cont'
 	assert_name := 'assert'
@@ -204,7 +229,7 @@ fn (mut c Emitter) emit_assert_stmt(node binding.BoundAssertStmt) {
 	C.LLVMMoveBasicBlockAfter(assert_block, c.current_block)
 	C.LLVMMoveBasicBlockAfter(continue_block, assert_block)
 
-	C.LLVMBuildCondBr(c.mod.builder.builder_ref, cond_expr_ref, continue_block, assert_block)
+	C.LLVMBuildCondBr(c.mod.builder.builder_ref, cont_expr_ref, continue_block, assert_block)
 	C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, assert_block)
 	// insert to print assert information
 
@@ -230,10 +255,30 @@ fn (mut c Emitter) emit_convert_expr(node binding.BoundConvExpr) &C.LLVMValueRef
 	to_typ := node.typ
 	match from_typ {
 		symbols.BuiltInTypeSymbol {
-			match from_typ.name {
-				'int' {
-					match to_typ.name {
-						'string' {
+			match from_typ.kind {
+				.byte_symbol {
+					match to_typ.kind {
+						.char_symbol {
+							return expr_val_ref
+						}
+						else {
+							panic('convertion from byte to $to_typ.name is not supported yet')
+						}
+					}
+				}
+				.char_symbol {
+					match to_typ.kind {
+						.byte_symbol {
+							return expr_val_ref
+						}
+						else {
+							panic('convertion from char to $to_typ.name is not supported yet')
+						}
+					}
+				}
+				.int_symbol {
+					match to_typ.kind {
+						.string_symbol {
 							glob_num_println := c.mod.global_const[GlobalVarRefType.printf_num] or {
 								number_str := c.mod.add_global_string_literal_ptr('%d')
 								c.mod.global_const[GlobalVarRefType.printf_num] = number_str
@@ -254,9 +299,9 @@ fn (mut c Emitter) emit_convert_expr(node binding.BoundConvExpr) &C.LLVMValueRef
 						}
 					}
 				}
-				'bool' {
-					match to_typ.name {
-						'string' {
+				.bool_symbol {
+					match to_typ.kind {
+						.string_symbol {
 							// CondBr <expr> true_block, false_block
 							// true_block:
 							//	 %res_var = 'true'
@@ -496,7 +541,7 @@ fn (mut c Emitter) emit_variable_expr(node binding.BoundVariableExpr) &C.LLVMVal
 			return loaded_var
 		}
 	}
-	if node.is_ref || node.typ.kind == .array_symbol {
+	if node.typ.is_ref || node.typ.kind == .array_symbol {
 		return var
 	}
 
@@ -517,8 +562,8 @@ fn (mut c Emitter) emit_var_decl(node binding.BoundVarDeclStmt) {
 }
 
 fn (mut c Emitter) emit_binary_expr(binary_expr binding.BoundBinaryExpr) &C.LLVMValueRef {
-	ref_left := c.emit_expr(binary_expr.left_expr)
-	ref_right := c.emit_expr(binary_expr.right_expr)
+	ref_left := c.unbox_if_ref(&binary_expr.left_expr.typ, c.emit_expr(binary_expr.left_expr))
+	ref_right := c.unbox_if_ref(&binary_expr.right_expr.typ, c.emit_expr(binary_expr.right_expr))
 	match binary_expr.op.op_kind {
 		.addition {
 			return C.LLVMBuildBinOp(c.mod.builder.builder_ref, .llvm_add, ref_left, ref_right,
@@ -586,35 +631,28 @@ fn (mut c Emitter) emit_unary_expr(unary_expr binding.BoundUnaryExpr) &C.LLVMVal
 fn (mut c Emitter) emit_literal_expr(lit binding.BoundLiteralExpr) &C.LLVMValueRef {
 	// id := lit.const_val.id
 	typ := lit.const_val.typ
-	match typ {
-		symbols.BuiltInTypeSymbol {
-			match typ.name {
-				'int' {
-					return C.LLVMConstInt(get_llvm_type_ref(symbols.int_symbol, c.mod),
-						lit.const_val.val as int, false)
-				}
-				'i64' {
-					return C.LLVMConstInt(get_llvm_type_ref(symbols.i64_symbol, c.mod),
-						lit.const_val.val as i64, false)
-				}
-				'bool' {
-					lit_val := lit.const_val.val as bool
-					bool_int := if lit_val { 1 } else { 0 }
-					return C.LLVMConstInt(get_llvm_type_ref(symbols.bool_symbol, c.mod),
-						bool_int, false)
-				}
-				'string' {
-					str_val := lit.const_val.val as string
-					return c.mod.add_global_string_literal_ptr(str_val)
-				}
-				else {
-					// not supported yet
-					panic('cannot emit literal of type $typ')
-				}
-			}
+	match typ.kind {
+		.int_symbol {
+			return C.LLVMConstInt(get_llvm_type_ref(symbols.int_symbol, c.mod), lit.const_val.val as int,
+				false)
+		}
+		.i64_symbol {
+			return C.LLVMConstInt(get_llvm_type_ref(symbols.i64_symbol, c.mod), lit.const_val.val as i64,
+				false)
+		}
+		.bool_symbol {
+			lit_val := lit.const_val.val as bool
+			bool_int := if lit_val { 1 } else { 0 }
+			return C.LLVMConstInt(get_llvm_type_ref(symbols.bool_symbol, c.mod), bool_int,
+				false)
+		}
+		.string_symbol {
+			str_val := lit.const_val.val as string
+			return c.mod.add_global_string_literal_ptr(str_val)
 		}
 		else {
-			panic('unexpected type $typ')
+			// not supported yet
+			panic('cannot emit literal of type $typ')
 		}
 	}
 	panic('unexpected type $typ')
@@ -711,21 +749,24 @@ fn (mut c Emitter) get_global_string(ref_typ GlobalVarRefType) &C.LLVMValueRef {
 fn get_llvm_type_ref(typ symbols.TypeSymbol, mod Module) &C.LLVMTypeRef {
 	match typ {
 		symbols.BuiltInTypeSymbol {
-			match typ.name {
-				'int' {
+			match typ.kind {
+				.int_symbol {
 					return C.LLVMInt32TypeInContext(mod.ctx_ref)
 				}
-				'i64' {
+				.i64_symbol {
 					return C.LLVMInt64TypeInContext(mod.ctx_ref)
 				}
-				'bool' {
+				.bool_symbol {
 					return C.LLVMInt1TypeInContext(mod.ctx_ref)
 				}
-				'string' {
+				.string_symbol {
 					return C.LLVMPointerType(C.LLVMInt8TypeInContext(mod.ctx_ref), 0)
 				}
-				'byteptr', 'charptr' {
-					return C.LLVMPointerType(C.LLVMInt8TypeInContext(mod.ctx_ref), 0)
+				.byte_symbol {
+					return C.LLVMInt8TypeInContext(mod.ctx_ref)
+				}
+				.char_symbol {
+					return C.LLVMInt8TypeInContext(mod.ctx_ref)
 				}
 				else {
 					panic('unexpected, unsupported built-in type: $typ')

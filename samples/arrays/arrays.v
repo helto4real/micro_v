@@ -1,6 +1,7 @@
 fn main () {
 	arr := [1,2,3,4]!
 
-	a := 1
-	b := arr[a+1]
+	for x in 0..4 {
+		println(string(arr[x]))
+	}
 }

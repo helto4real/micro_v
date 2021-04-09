@@ -17,6 +17,35 @@ enum LLVMVerifierFailureAction {
 	llvm_return_status_action = 2 // verifier will just return 1
 }
 
+[typedef]
+enum LLVMValueKind {
+	argument = 0
+	basic_block
+	memory_use
+	memory_def
+	memory_phi
+	function
+	global_alias
+	global_ifunc
+	global_variable
+	block_address
+	constant_expr
+	constant_array
+	constant_struct
+	constant_vector
+	undef_value
+	constant_aggregate_zero
+	constant_data_array
+	constant_data_vector
+	constant_int
+	constant_fp
+	constant_pointer_null
+	constant_token_none
+	metadata_as_value
+	inline_asm
+	instruction
+}
+
 fn C.LLVMDumpValue(val &C.LLVMValueRef)
 fn C.LLVMDumpType(val &C.LLVMTypeRef)
 fn C.LLVMDumpModule(mod &C.LLVMModuleRef)
@@ -68,52 +97,56 @@ fn C.LLVMInt128TypeInContext(ctx_ref &C.LLVMContextRef) &C.LLVMTypeRef
 fn C.LLVMIntTypeInContext(ctx_ref &C.LLVMContextRef, nr_bits int) &C.LLVMTypeRef
 fn C.LLVMVoidTypeInContext(ctx_ref &C.LLVMContextRef) &C.LLVMTypeRef
 
-// metadata 
-fn C.LLVMGetOrInsertNamedMetadata(mod &C.LLVMModuleRef, name charptr, name_len u32) &C.LLVMNamedMDNodeRef
+fn C.LLVMGetValueKind(val &C.LLVMValueRef) LLVMValueKind
+fn C.LLVMTypeOf(val &C.LLVMValueRef) &C.LLVMTypeRef
+
+// metadata
+fn C.LLVMGetOrInsertNamedMetadata(mod &C.LLVMModuleRef, name &char, name_len u32) &C.LLVMNamedMDNodeRef
 fn C.LLVMSetMetadata(val &C.LLVMValueRef, kind_id u32, node &C.LLVMValueRef)
-fn C.LLVMSetModuleInlineAsm2(mod &C.LLVMModuleRef, name charptr, name_len u32)
-// array 
+fn C.LLVMSetModuleInlineAsm2(mod &C.LLVMModuleRef, name &char, name_len u32)
+
+// array
 fn C.LLVMArrayType(elem_typ &C.LLVMTypeRef, len u32) &C.LLVMTypeRef
 fn C.LLVMConstArray(elem_typ &C.LLVMTypeRef, values voidptr, len u32) &C.LLVMValueRef
+
 // structs
 fn C.LLVMStructTypeInContext(ctx &LLVMContextRef, type_refs voidptr, elem_count u32, int Packed) &C.LLVMTypeRef
-fn C.LLVMStructCreateNamed(ctx &C.LLVMContextRef, name charptr) &C.LLVMTypeRef
+fn C.LLVMStructCreateNamed(ctx &C.LLVMContextRef, name &char) &C.LLVMTypeRef
 fn C.LLVMStructSetBody(struct_typ_ref &C.LLVMTypeRef, element_types voidptr, element_count u32, packed u32)
 fn C.LLVMConstStructInContext(ctx &C.LLVMContextRef, values voidptr, count u32, packed int) &C.LLVMValueRef
 
 fn C.LLVMConstNamedStruct(struct_typ &C.LLVMTypeRef, value_refs voidptr, count u32) &C.LLVMValueRef
 fn C.LLVMConstNull(typ_ref &C.LLVMTypeRef) &C.LLVMValueRef
-fn C.LLVMBuildStructGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, idx u32, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildStructGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, idx u32, name &char) &C.LLVMValueRef
 
-fn C.LLVMBuildInBoundsGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, indicies voidptr, nr_indicies u32, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildInBoundsGEP2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, indicies voidptr, nr_indicies u32, name &char) &C.LLVMValueRef
 
 // fn C.LLVMBuildPointerCast(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, dest_typ &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
 
-fn C.LLVMModuleCreateWithName(charptr) &C.LLVMModuleRef
+fn C.LLVMModuleCreateWithName(&char) &C.LLVMModuleRef
 fn C.LLVMFunctionType(ReturnType &C.LLVMTypeRef, param_types voidptr, param_count int, is_var_arg int) &C.LLVMTypeRef
 
-fn C.LLVMAddFunction(mod &C.LLVMModuleRef, name charptr, fn_type &C.LLVMTypeRef) &C.LLVMValueRef
+fn C.LLVMAddFunction(mod &C.LLVMModuleRef, name &char, fn_type &C.LLVMTypeRef) &C.LLVMValueRef
 
-fn C.LLVMBuildCall2(builder &C.LLVMBuilderRef, typ &C.LLVMTypeRef, func &C.LLVMValueRef, args_ptr voidptr, nr_of_args int, name charptr) &C.LLVMValueRef
-fn C.LLVMBuildCall(builder &C.LLVMBuilderRef, func &C.LLVMValueRef, args_ptr voidptr, nr_of_args int, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildCall2(builder &C.LLVMBuilderRef, typ &C.LLVMTypeRef, func &C.LLVMValueRef, args_ptr voidptr, nr_of_args int, name &char) &C.LLVMValueRef
+fn C.LLVMBuildCall(builder &C.LLVMBuilderRef, func &C.LLVMValueRef, args_ptr voidptr, nr_of_args int, name &char) &C.LLVMValueRef
 
 fn C.LLVMBuildUnreachable(builder &C.LLVMBuilderRef) &C.LLVMValueRef
 
 //  LLVMBuildCall2(LLVMBuilderRef, LLVMTypeRef, LLVMValueRef Fn,
 //                             LLVMValueRef *Args, unsigned NumArgs,
 //                             const char *Name); LLVMValueRef
-fn C.LLVMAppendBasicBlock(func &C.LLVMValueRef, name charptr) &C.LLVMBasicBlockRef
+fn C.LLVMAppendBasicBlock(func &C.LLVMValueRef, name &char) &C.LLVMBasicBlockRef
 
 fn C.LLVMCreateBuilder() &C.LLVMBuilderRef
 
 fn C.LLVMPositionBuilderAtEnd(builder &C.LLVMBuilderRef, block &C.LLVMBasicBlockRef)
 
 // binary operators
-fn C.LLVMBuildBinOp(builder &C.LLVMBuilderRef, op_code Opcode, left &C.LLVMValueRef, right &C.LLVMValueRef, name charptr) &C.LLVMValueRef
-fn C.LLVMBuildAdd(builder &C.LLVMBuilderRef, lhs &C.LLVMValueRef, rhs &C.LLVMValueRef, name charptr) &C.LLVMValueRef
-fn C.LLVMBuildSub(builder &C.LLVMBuilderRef, lhs &C.LLVMValueRef, rhs &C.LLVMValueRef, name charptr) &C.LLVMValueRef
-fn C.LLVMBuildMul(builder &C.LLVMBuilderRef, lhs &C.LLVMValueRef, rhs &C.LLVMValueRef, name charptr) &C.LLVMValueRef
-
+fn C.LLVMBuildBinOp(builder &C.LLVMBuilderRef, op_code Opcode, left &C.LLVMValueRef, right &C.LLVMValueRef, name &char) &C.LLVMValueRef
+fn C.LLVMBuildAdd(builder &C.LLVMBuilderRef, lhs &C.LLVMValueRef, rhs &C.LLVMValueRef, name &char) &C.LLVMValueRef
+fn C.LLVMBuildSub(builder &C.LLVMBuilderRef, lhs &C.LLVMValueRef, rhs &C.LLVMValueRef, name &char) &C.LLVMValueRef
+fn C.LLVMBuildMul(builder &C.LLVMBuilderRef, lhs &C.LLVMValueRef, rhs &C.LLVMValueRef, name &char) &C.LLVMValueRef
 
 fn C.LLVMGetParams(func &C.LLVMValueRef, params &LLVMValueRef)
 fn C.LLVMGetParam(func &C.LLVMValueRef, index int) &C.LLVMValueRef
@@ -123,35 +156,35 @@ fn C.LLVMBuildRet(ref &C.LLVMBuilderRef, val &C.LLVMValueRef) &C.LLVMValueRef
 fn C.LLVMBuildRetVoid(builder &C.LLVMBuilderRef) &C.LLVMValueRef
 
 fn C.LLVMDisposeBuilder(builder &C.LLVMBuilderRef)
-fn C.LLVMVerifyModule(mod &C.LLVMModuleRef, action LLVMVerifierFailureAction, err_msg charptr) int
+fn C.LLVMVerifyModule(mod &C.LLVMModuleRef, action LLVMVerifierFailureAction, err_msg &char) int
 
 // C.LLVMBool
 
-fn C.LLVMWriteBitcodeToFile(mod &C.LLVMModuleRef, path charptr) int
-fn C.LLVMPrintModuleToFile(mod &C.LLVMModuleRef, path charptr, err_msg charptr) int
+fn C.LLVMWriteBitcodeToFile(mod &C.LLVMModuleRef, path &char) int
+fn C.LLVMPrintModuleToFile(mod &C.LLVMModuleRef, path &char, err_msg &char) int
 
-fn C.LLVMBuildAlloca(builder &C.LLVMBuilderRef, typ &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildAlloca(builder &C.LLVMBuilderRef, typ &C.LLVMTypeRef, name &char) &C.LLVMValueRef
 fn C.LLVMBuildStore(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, val_ref &C.LLVMValueRef) &C.LLVMValueRef
 
 fn C.LLVMConstInt(type_ref &C.LLVMTypeRef, val u64, sign_extend bool) &C.LLVMValueRef
 
-fn C.LLVMAddGlobal(mod &C.LLVMModuleRef, typ_ref &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
-fn C.LLVMGetNamedGlobal(mod &C.LLVMModuleRef, name charptr) &C.LLVMValueRef
+fn C.LLVMAddGlobal(mod &C.LLVMModuleRef, typ_ref &C.LLVMTypeRef, name &char) &C.LLVMValueRef
+fn C.LLVMGetNamedGlobal(mod &C.LLVMModuleRef, name &char) &C.LLVMValueRef
 fn C.LLVMSetInitializer(var &C.LLVMValueRef, const_val &C.LLVMValueRef)
 
-fn C.LLVMBuildGlobalString(builder &C.LLVMBuilderRef, str charptr, name charptr) &C.LLVMValueRef
-fn C.LLVMBuildGlobalStringPtr(builder &C.LLVMBuilderRef, str charptr, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildGlobalString(builder &C.LLVMBuilderRef, str &char, name &char) &C.LLVMValueRef
+fn C.LLVMBuildGlobalStringPtr(builder &C.LLVMBuilderRef, str &char, name &char) &C.LLVMValueRef
 fn C.LLVMGetLastInstruction(blocl &C.LLVMBasicBlockRef) &C.LLVMValueRef
 
-fn C.LLVMBuildNeg(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name charptr) &C.LLVMValueRef
-fn C.LLVMBuildNSWNeg(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name charptr) &C.LLVMValueRef
-fn C.LLVMBuildNot(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildNeg(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name &char) &C.LLVMValueRef
+fn C.LLVMBuildNSWNeg(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name &char) &C.LLVMValueRef
+fn C.LLVMBuildNot(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name &char) &C.LLVMValueRef
 
-fn C.LLVMBuildLoad2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildLoad2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, name &char) &C.LLVMValueRef
 
 fn C.LLVMPointerType(element_type &C.LLVMTypeRef, address_space u32) &C.LLVMTypeRef
 
-fn C.LLVMBuildPointerCast(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, dest_type &C.LLVMTypeRef, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildPointerCast(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, dest_type &C.LLVMTypeRef, name &char) &C.LLVMValueRef
 
 fn C.LLVMGenericValueToInt(gen_val &C.LLVMGenericValueRef, is_signed int) i64
 
@@ -162,16 +195,16 @@ fn C.LLVMBuildCondBr(builder &C.LLVMBuilderRef, cond &C.LLVMValueRef, then_block
 
 fn C.LLVMContextCreate() &C.LLVMContextRef
 fn C.LLVMContextDispose(ctx &C.LLVMContextRef)
-fn C.LLVMModuleCreateWithNameInContext(mod_id charptr, ctx_ref &C.LLVMContextRef) &C.LLVMModuleRef
+fn C.LLVMModuleCreateWithNameInContext(mod_id &char, ctx_ref &C.LLVMContextRef) &C.LLVMModuleRef
 fn C.LLVMDisposeModule(mod_ref &C.LLVMModuleRef)
 fn C.LLVMCreateBuilderInContext(ctx_ref &C.LLVMContextRef) &C.LLVMBuilderRef
-fn C.LLVMAppendBasicBlockInContext(ctx_ref &C.LLVMContextRef, func &C.LLVMValueRef, name charptr) &C.LLVMBasicBlockRef
+fn C.LLVMAppendBasicBlockInContext(ctx_ref &C.LLVMContextRef, func &C.LLVMValueRef, name &char) &C.LLVMBasicBlockRef
 fn C.LLVMMoveBasicBlockAfter(block &C.LLVMBasicBlockRef, move_after_block &C.LLVMBasicBlockRef)
 fn C.LLVMGetLastBasicBlock(func_ref &C.LLVMValueRef) &C.LLVMBasicBlockRef
 
 // comparations
 
-fn C.LLVMBuildICmp(builder &C.LLVMBuilderRef, op IntPredicate, left &C.LLVMValueRef, right &C.LLVMValueRef, name charptr) &C.LLVMValueRef
+fn C.LLVMBuildICmp(builder &C.LLVMBuilderRef, op IntPredicate, left &C.LLVMValueRef, right &C.LLVMValueRef, name &char) &C.LLVMValueRef
 
 fn C.LLVMGetLastInstruction(block &C.LLVMBasicBlockRef) &C.LLVMValueRef
 fn C.LLVMIsATerminatorInst(inst &C.LLVMValueRef) &C.LLVMValueRef
@@ -183,9 +216,9 @@ fn C.LLVMInitializeNativeTarget() int
 fn C.LLVMInitializeNativeAsmPrinter() int
 fn C.LLVMInitializeNativeAsmParser() int
 
-fn C.LLVMRemoveModule(exec_engine &C.LLVMExecutionEngineRef, mod &C.LLVMModuleRef, out_mod voidptr, err charptr) int
+fn C.LLVMRemoveModule(exec_engine &C.LLVMExecutionEngineRef, mod &C.LLVMModuleRef, out_mod voidptr, err &char) int
 
-fn C.LLVMCreateMCJITCompilerForModule(out_ref &&C.LLVMExecutionEngineRef, nid &C.LLVMModuleRef, opt &C.LLVMMCJITCompilerOptions, size_of_opt u32, err charptr) int
+fn C.LLVMCreateMCJITCompilerForModule(out_ref &&C.LLVMExecutionEngineRef, nid &C.LLVMModuleRef, opt &C.LLVMMCJITCompilerOptions, size_of_opt u32, err &char) int
 
 fn C.LLVMDisposeExecutionEngine(exec_engine &C.LLVMExecutionEngineRef)
 

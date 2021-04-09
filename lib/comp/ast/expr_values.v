@@ -55,14 +55,32 @@ pub:
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
+	ref_tok  token.Token
 	name_tok token.Token
 	names    []token.Token
+}
+
+pub fn new_ref_name_expr(tree &SyntaxTree, ref_tok token.Token, names []token.Token, is_c_name bool) NameExpr {
+	if ref_tok.kind == .void {
+		return new_name_expr(tree, names, is_c_name)
+	}
+	name_tok := merge_names(names)
+	return NameExpr{
+		tree: tree
+		ref_tok: ref_tok
+		name_tok: name_tok
+		names: names
+		pos: source.new_pos_from_pos_bounds(ref_tok.pos, names[names.len - 1].pos)
+		child_nodes: [AstNode(ref_tok), name_tok]
+		is_c_name: is_c_name
+	}
 }
 
 pub fn new_name_expr(tree &SyntaxTree, names []token.Token, is_c_name bool) NameExpr {
 	name_tok := merge_names(names)
 	return NameExpr{
 		tree: tree
+		ref_tok: token.tok_void
 		name_tok: name_tok
 		names: names
 		pos: name_tok.pos

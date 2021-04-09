@@ -8,7 +8,6 @@ pub:
 	kind        BoundNodeKind = .conv_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	is_ref      bool
 	// child nodes
 	expr BoundExpr
 }
@@ -32,7 +31,6 @@ pub fn (ex BoundConvExpr) str() string {
 pub fn (ex BoundConvExpr) to_ref_type() BoundConvExpr {
 	return BoundConvExpr{
 		...ex
-		is_ref: true
 		typ: ex.typ.to_ref_type()
 	}
 }

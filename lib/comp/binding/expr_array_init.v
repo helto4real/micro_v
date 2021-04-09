@@ -8,7 +8,6 @@ pub:
 	kind        BoundNodeKind = .sruct_init_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	is_ref      bool
 	// child nodes
 	exprs []BoundExpr
 }
@@ -31,7 +30,6 @@ pub fn (ex BoundArrayInitExpr) str() string {
 pub fn (ex BoundArrayInitExpr) to_ref_type() BoundArrayInitExpr {
 	return BoundArrayInitExpr{
 		...ex
-		is_ref: true
 		typ: ex.typ.to_ref_type()
 	}
 }

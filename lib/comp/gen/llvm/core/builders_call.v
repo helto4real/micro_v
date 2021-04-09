@@ -23,10 +23,6 @@ fn new_builtin_call(name string, ctx &Emitter) CallBuilder {
 	}
 }
 
-// fn emit_call(call_expr binding.BoundCallExpr, mut ctx Emitter) &C.LLVMValueRef {
-
-// }
-
 pub fn (mut cb CallBuilder) add_param(val_ref &C.LLVMValueRef) {
 	cb.params << val_ref
 }

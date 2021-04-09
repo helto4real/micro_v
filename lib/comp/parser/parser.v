@@ -678,21 +678,24 @@ fn (mut p Parser) parse_call_expr(name_expr ast.NameExpr) ast.Expr {
 	return ast.new_call_expr(p.syntax_tree, name_expr, lpar_tok, args, rpar_tok)
 }
 
-fn (mut p Parser) parse_args() ast.SeparatedSyntaxList {
-	mut sep_and_nodes := []ast.AstNode{}
+fn (mut p Parser) parse_args() []ast.CallArgNode {
+	mut arguments := []ast.CallArgNode{}
 	mut parse_next_argument := true
 	for parse_next_argument && p.current_token().kind != .eof && p.current_token().kind != .rpar {
+		mut mut_tok := token.tok_void
+		if p.current_token().kind == .key_mut {
+			mut_tok = p.match_token(.key_mut)
+		}
 		expr := p.parse_expr()
-		sep_and_nodes << expr
+		arguments << ast.new_call_arg_node(p.syntax_tree, mut_tok, expr)
 
 		if p.current_token().kind == .comma {
-			comma := p.match_token(.comma)
-			sep_and_nodes << comma
+			p.next_token()
 		} else {
 			parse_next_argument = false
 		}
 	}
-	return ast.new_separated_syntax_list(sep_and_nodes)
+	return arguments
 }
 
 fn (mut p Parser) parse_name() ast.Expr {
@@ -708,6 +711,11 @@ fn (mut p Parser) parse_name() ast.Expr {
 
 fn (mut p Parser) parse_name_expr() ast.Expr {
 	mut is_c_name := false
+	mut ref_token := token.tok_void
+
+	if p.peek_token(0).kind == .amp {
+		ref_token = p.match_token(.amp)
+	}
 	name := p.match_token(.name)
 	mut names := [name]
 	if p.peek_token(0).kind == .dot {
@@ -734,5 +742,5 @@ fn (mut p Parser) parse_name_expr() ast.Expr {
 			}
 		}
 	}
-	return ast.new_name_expr(p.syntax_tree, names, is_c_name)
+	return ast.new_ref_name_expr(p.syntax_tree, ref_token, names, is_c_name)
 }

@@ -31,6 +31,7 @@ enum SyntaxKind {
 	struct_decl_node
 	struct_mbr_node
 	struct_init_mbr_node
+	call_arg_node
 	// statements
 	block_stmt
 	break_stmt

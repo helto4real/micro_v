@@ -8,7 +8,6 @@ pub:
 	kind        BoundNodeKind = .index_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	is_ref      bool
 	// child nodes
 	left_expr BoundExpr
 	index_expr BoundExpr
@@ -34,7 +33,6 @@ pub fn (ex BoundIndexExpr) str() string {
 pub fn (ex BoundIndexExpr) to_ref_type() BoundIndexExpr {
 	return BoundIndexExpr{
 		...ex
-		is_ref: true
 		typ: ex.typ.to_ref_type()
 	}
 }

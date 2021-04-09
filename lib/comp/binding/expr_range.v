@@ -8,7 +8,6 @@ pub:
 	kind        BoundNodeKind = .range_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	is_ref      bool
 	// child nodes
 	from_expr BoundExpr
 	to_expr   BoundExpr
@@ -34,7 +33,6 @@ pub fn (ex BoundRangeExpr) str() string {
 pub fn (ex BoundRangeExpr) to_ref_type() BoundRangeExpr {
 	return BoundRangeExpr{
 		...ex
-		is_ref: true
 		typ: ex.typ.to_ref_type()
 	}
 }

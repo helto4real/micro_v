@@ -13,7 +13,7 @@ pub type Expr = ArrayInitExpr | AssignExpr | BinaryExpr | CallExpr | CompNode | 
 	UnaryExpr
 
 // Nodes in syntax tree
-pub type AstNode = EmptyNode | Expr | MemberNode | ParamNode | Stmt | StructInitMemberNode |
+pub type AstNode = CallArgNode | EmptyNode | Expr | MemberNode | ParamNode | Stmt | StructInitMemberNode |
 	StructMemberNode | TypeNode | token.Token
 
 // top level members like top level statements or function declarations
@@ -34,6 +34,7 @@ pub fn (ex &AstNode) child_nodes() []AstNode {
 		StructInitMemberNode { return ex.child_nodes }
 		ParamNode { return ex.child_nodes }
 		MemberNode { return ex.child_nodes }
+		CallArgNode { return ex.child_nodes }
 		EmptyNode { return ex.child_nodes }
 	}
 }
@@ -48,6 +49,7 @@ pub fn (ex AstNode) text_location() source.TextLocation {
 		StructInitMemberNode { return ex.text_location() }
 		ParamNode { return ex.text_location() }
 		MemberNode { return ex.text_location() }
+		CallArgNode { return ex.text_location() }
 		EmptyNode { return ex.text_location() }
 	}
 }
@@ -62,6 +64,7 @@ pub fn (ex AstNode) node_str() string {
 		StructInitMemberNode { return ex.node_str() }
 		ParamNode { return ex.node_str() }
 		MemberNode { return ex.node_str() }
+		CallArgNode { return ex.node_str() }
 		EmptyNode { return ex.node_str() }
 	}
 }
@@ -76,6 +79,7 @@ pub fn (ex AstNode) str() string {
 		StructInitMemberNode { return ex.str() }
 		ParamNode { return ex.str() }
 		MemberNode { return ex.str() }
+		CallArgNode { return ex.str() }
 		EmptyNode { return ex.str() }
 	}
 }

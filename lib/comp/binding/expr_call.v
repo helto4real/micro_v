@@ -8,18 +8,18 @@ pub:
 	kind        BoundNodeKind = .call_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	is_ref      bool
+	is_c_call   bool
 	// child nodes
-	func   symbols.FunctionSymbol
+	func     symbols.FunctionSymbol
 	receiver symbols.LocalVariableSymbol
-
 
 	params []BoundExpr
 }
 
-pub fn new_bound_call_expr(func symbols.FunctionSymbol, receiver symbols.LocalVariableSymbol, params []BoundExpr) BoundExpr {
+pub fn new_bound_call_expr(func symbols.FunctionSymbol, receiver symbols.LocalVariableSymbol, params []BoundExpr, is_c_call bool) BoundExpr {
 	return BoundCallExpr{
 		typ: func.typ
+		is_c_call: is_c_call
 		func: func
 		receiver: receiver
 		params: params
@@ -38,7 +38,6 @@ pub fn (ex BoundCallExpr) str() string {
 pub fn (ex BoundCallExpr) to_ref_type() BoundCallExpr {
 	return BoundCallExpr{
 		...ex
-		is_ref: true
 		typ: ex.typ.to_ref_type()
 	}
 }
