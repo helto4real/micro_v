@@ -353,7 +353,10 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 	mut struct_symbol := symbol as symbols.StructTypeSymbol
 	for member in struct_decl.members {
 		member_name := member.name_tok.lit
-		member_type := b.lookup_type(member.type_name.lit)
+		mut member_type := b.lookup_type(member.type_name.lit)
+		if member.is_ref {
+			member_type = member_type.to_ref_type()
+		}
 		member_symbol := symbols.new_struct_type_member(member_name, member_type)
 		struct_symbol.members << member_symbol
 		// Todo:, check the casing of names and types

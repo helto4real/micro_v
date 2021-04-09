@@ -109,13 +109,17 @@ fn (mut p Parser) parse_struct_members() []ast.StructMemberNode {
 
 	for p.current_token().kind != .eof && p.current_token().kind != .rcbr {
 		start_tok := p.current_token()
+		mut ref_tok := token.tok_void
 		ident := p.match_token(.name)
+		if p.current_token().kind == .amp {
+			ref_tok = p.match_token(.amp)
+		}
 		typ := p.match_token(.name)
 		if p.current_token() == start_tok {
 			// makes sure we not in infinite loop
 			p.next_token()
 		}
-		members << ast.new_struct_member_node(p.syntax_tree, ident, typ)
+		members << ast.new_struct_member_node(p.syntax_tree, ident, ref_tok, typ)
 	}
 	return members
 }

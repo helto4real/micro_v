@@ -1,5 +1,5 @@
 struct String {
-	str char
+	str &char
 	len int   
 
 	is_lit int

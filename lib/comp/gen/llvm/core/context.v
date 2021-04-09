@@ -640,6 +640,14 @@ fn (mut c Emitter) emit_literal_expr(lit binding.BoundLiteralExpr) &C.LLVMValueR
 			return C.LLVMConstInt(get_llvm_type_ref(symbols.i64_symbol, c.mod), lit.const_val.val as i64,
 				false)
 		}
+		.char_symbol {
+			return C.LLVMConstInt(get_llvm_type_ref(symbols.char_symbol, c.mod), u64(lit.const_val.val as char),
+				false)
+		}
+		.byte_symbol {
+			return C.LLVMConstInt(get_llvm_type_ref(symbols.byte_symbol, c.mod), u64(lit.const_val.val as byte),
+				false)
+		}
 		.bool_symbol {
 			lit_val := lit.const_val.val as bool
 			bool_int := if lit_val { 1 } else { 0 }

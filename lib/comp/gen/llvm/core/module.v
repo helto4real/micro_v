@@ -73,7 +73,12 @@ fn (mut m Module) init_globals() {
 		m.types[standard_struct.name] = typ_ref
 		mut type_refs := []&C.LLVMTypeRef{}
 		for member in standard_struct.members {
-			type_refs << get_llvm_type_ref(member.typ, m)
+			type_ref := get_llvm_type_ref(member.typ, m)
+			if member.typ.is_ref {
+				type_refs << C.LLVMPointerType(type_ref, 0)
+			} else {
+				type_refs << type_ref
+			}
 		}
 		C.LLVMStructSetBody(typ_ref, type_refs.data, type_refs.len, 0)
 	}
@@ -86,7 +91,7 @@ pub fn (mut m Module) free() {
 		// if exec engine exists we need to remove the module
 		// before you can dispose the engine and the module		mut err := charptr(0)
 		mut out_mod := voidptr(0)
-		if C.LLVMRemoveModule(m.exec_engine, m.mod_ref, &out_mod, &err) != 0 {
+		if C.LLVMRemoveModule(m.exec_engine, m.mod_ref, &out_mod, err) != 0 {
 			panic('failed to remove module: $err')
 		}
 	}
@@ -112,7 +117,7 @@ pub fn (mut m Module) init_jit_execution_engine() ? {
 		return error('Failed to init the native parser')
 	}
 	err_msg := &char(0)
-	if C.LLVMCreateMCJITCompilerForModule(&m.exec_engine, m.mod_ref, voidptr(0), 0, &err_msg) != 0 {
+	if C.LLVMCreateMCJITCompilerForModule(&m.exec_engine, m.mod_ref, voidptr(0), 0, err_msg) != 0 {
 		// TODO: LLVMDisposeMessage
 		return error('failed to create jit compiler for module: $err_msg')
 	}
@@ -228,7 +233,7 @@ fn nr_of_digits(n int) int {
 
 pub fn (mut m Module) verify() ? {
 	mut err := &char(0)
-	res := C.LLVMVerifyModule(m.mod_ref, .llvm_abort_process_action, &err)
+	res := C.LLVMVerifyModule(m.mod_ref, .llvm_abort_process_action, err)
 
 	if res != 0 || err != 0 {
 		unsafe {
@@ -249,7 +254,7 @@ pub fn (mut m Module) add_global_struct_const_ptr(typ_ref &C.LLVMTypeRef, val_re
 
 pub fn (m Module) print_to_file(path string) ? {
 	mut err := &char(0)
-	res := C.LLVMPrintModuleToFile(m.mod_ref, path.str, &err)
+	res := C.LLVMPrintModuleToFile(m.mod_ref, path.str, err)
 	unsafe {
 		if res != 0 {
 			return error('Failed to print ll file $path, $err.vstring()')
@@ -282,7 +287,12 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 			struct_type_ref := get_llvm_type_ref(typ, m)
 			mut type_refs := []&C.LLVMTypeRef{}
 			for member in typ.members {
-				type_refs << get_llvm_type_ref(member.typ, m)
+				type_ref := get_llvm_type_ref(member.typ, m)
+				if member.typ.is_ref {
+					type_refs << C.LLVMPointerType(type_ref, 0)
+				} else {
+					type_refs << type_ref
+				}
 			}
 			C.LLVMStructSetBody(struct_type_ref, type_refs.data, type_refs.len, 0)
 		}
