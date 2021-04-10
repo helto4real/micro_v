@@ -2,49 +2,7 @@ module ast
 
 import strings
 import lib.comp.token
-import lib.comp.symbols
 import lib.comp.util.source
-
-pub struct LiteralExpr {
-	tok token.Token
-pub:
-	// general ast node
-	tree        &SyntaxTree
-	kind        SyntaxKind = .literal_expr
-	pos         source.Pos
-	child_nodes []AstNode
-	// child nodes
-	val symbols.LitVal
-}
-
-pub fn new_literal_expr(tree &SyntaxTree, tok token.Token, val symbols.LitVal) LiteralExpr {
-	if tok.kind !in [.number, .string, .key_true, .key_false] {
-		panic('Expected a number token')
-	}
-	return LiteralExpr{
-		tree: tree
-		tok: tok
-		val: val
-		pos: tok.pos
-		child_nodes: [AstNode(tok)]
-	}
-}
-
-pub fn (le &LiteralExpr) child_nodes() []AstNode {
-	return le.child_nodes
-}
-
-pub fn (ex LiteralExpr) text_location() source.TextLocation {
-	return source.new_text_location(ex.tree.source, ex.pos)
-}
-
-pub fn (ex LiteralExpr) node_str() string {
-	return typeof(ex).name
-}
-
-pub fn (ex LiteralExpr) str() string {
-	return '$ex.val'
-}
 
 pub struct NameExpr {
 pub:
@@ -55,14 +13,32 @@ pub:
 	pos         source.Pos
 	child_nodes []AstNode
 	// child nodes
+	ref_tok  token.Token
 	name_tok token.Token
 	names    []token.Token
+}
+
+pub fn new_ref_name_expr(tree &SyntaxTree, ref_tok token.Token, names []token.Token, is_c_name bool) NameExpr {
+	if ref_tok.kind == .void {
+		return new_name_expr(tree, names, is_c_name)
+	}
+	name_tok := merge_names(names)
+	return NameExpr{
+		tree: tree
+		ref_tok: ref_tok
+		name_tok: name_tok
+		names: names
+		pos: source.new_pos_from_pos_bounds(ref_tok.pos, names[names.len - 1].pos)
+		child_nodes: [AstNode(ref_tok), name_tok]
+		is_c_name: is_c_name
+	}
 }
 
 pub fn new_name_expr(tree &SyntaxTree, names []token.Token, is_c_name bool) NameExpr {
 	name_tok := merge_names(names)
 	return NameExpr{
 		tree: tree
+		ref_tok: token.tok_void
 		name_tok: name_tok
 		names: names
 		pos: name_tok.pos

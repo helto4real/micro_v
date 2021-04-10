@@ -73,6 +73,19 @@ pub fn (mut d Diagnostics) error_expected_block_end_with_expression(loc TextLoca
 	d.error('expected block to end with expression', loc)
 }
 
+pub fn (mut d Diagnostics) error_convertion_differ_by_reference(is_ref bool, conv string, loc TextLocation) {
+	ref_name := if is_ref { '&$conv' } else { conv }
+	d.error('convertion differ by reference, did you mean $ref_name?', loc)
+}
+
+pub fn (mut d Diagnostics) error_only_variables_can_be_input_to_mutable_parameters(loc TextLocation) {
+	d.error('only variables can be input to mutable parameters', loc)
+}
+
+pub fn (mut d Diagnostics) error_provide_mut_keyword_for_mutable_parameters(loc TextLocation) {
+	d.error('the argument is mutable, provide the `mut` keyword before argument', loc)
+}
+
 pub fn (mut d Diagnostics) error_return_type_differ_expect_type(then_typ string, else_typ string, loc TextLocation) {
 	d.error('values returned in expression is different in `if`and `else` block. expected type: <$then_typ> got:<$else_typ>',
 		loc)
@@ -130,11 +143,11 @@ pub fn (mut d Diagnostics) error_invalid_return(loc TextLocation) {
 }
 
 pub fn (mut d Diagnostics) error_expression_does_not_support_indexing(loc TextLocation) {
-	d.error("the expression does not support indexing", loc)
+	d.error('the expression does not support indexing', loc)
 }
 
 pub fn (mut d Diagnostics) error_variable_type_is_not_an_array(loc TextLocation) {
-	d.error("variable type is not an array", loc)
+	d.error('variable type is not an array', loc)
 }
 
 pub fn (mut d Diagnostics) error_all_paths_must_return(loc TextLocation) {

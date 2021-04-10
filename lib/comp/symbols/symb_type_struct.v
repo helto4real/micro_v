@@ -32,7 +32,6 @@ pub fn new_struct_symbol(name string, is_ref bool) StructTypeSymbol {
 		kind: .struct_symbol
 		name: name
 		id: rand.uuid_v4()
-		is_ref: is_ref
 	}
 }
 
@@ -40,6 +39,7 @@ pub struct StructTypeMember {
 pub:
 	ident string
 	typ   TypeSymbol
+	is_ref bool
 }
 
 pub fn new_struct_type_member(ident string, typ TypeSymbol) StructTypeMember {

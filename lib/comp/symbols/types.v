@@ -11,16 +11,25 @@ pub struct NoneStruct {}
 
 pub type None = NoneStruct
 
-pub type LitVal = None | bool | i64 | int | string
+pub type LitVal = None | bool | byte | char | i64 | int | string
 
 pub enum TypeSymbolKind {
-	built_in_symbol
+	// builtin types
+	int_symbol
+	i64_symbol
+	byte_symbol
+	char_symbol
+	bool_symbol
+	string_symbol
+	voidptr_symbol
+	undefined_symbol
+	none_symbol
+	// other types
 	array_symbol
 	struct_symbol
 	void_symbol
 	error_symbol
 	any_symbol
-	none_symbol
 }
 
 pub fn (vs &VariableSymbol) is_mut() bool {
@@ -129,6 +138,12 @@ pub fn (l LitVal) eq(r LitVal) bool {
 		i64 {
 			l == (r as i64)
 		}
+		byte {
+			l == (r as byte)
+		}
+		char {
+			l == (r as char)
+		}
 		bool {
 			l == (r as bool)
 		}
@@ -209,6 +224,12 @@ pub fn (l LitVal) typ() BuiltInTypeSymbol {
 		i64 {
 			i64_symbol
 		}
+		byte {
+			byte_symbol
+		}
+		char {
+			char_symbol
+		}
 		bool {
 			bool_symbol
 		}
@@ -223,7 +244,7 @@ pub fn (l LitVal) str() string {
 		string {
 			l.str()
 		}
-		int, i64 {
+		int, i64, byte, char {
 			l.str()
 		}
 		bool {

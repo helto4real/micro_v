@@ -8,7 +8,6 @@ pub:
 	kind        BoundNodeKind = .none_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	is_ref      bool
 }
 
 pub fn new_empty_expr() BoundExpr {
@@ -28,7 +27,6 @@ pub fn (ex NoneExpr) str() string {
 pub fn (ex NoneExpr) to_ref_type() NoneExpr {
 	return NoneExpr{
 		...ex
-		is_ref: true
 		typ: ex.typ.to_ref_type()
 	}
 }

@@ -8,7 +8,6 @@ pub:
 	kind        BoundNodeKind = .if_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	is_ref      bool
 	// child nodes
 	cond_expr BoundExpr
 	then_stmt BoundStmt
@@ -40,7 +39,6 @@ pub fn (ex BoundIfExpr) str() string {
 pub fn (ex BoundIfExpr) to_ref_type() BoundIfExpr {
 	return BoundIfExpr{
 		...ex
-		is_ref: true
 		typ: ex.typ.to_ref_type()
 	}
 }

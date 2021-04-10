@@ -69,32 +69,40 @@ pub:
 	child_nodes []AstNode
 	// child nodes
 	name_tok  token.Token
+	ref_tok   token.Token
 	type_name token.Token
+	is_ref   bool
 	has_init  bool
 	init_expr Expr
 }
 
-pub fn new_struct_member_with_init_node(tree &SyntaxTree, name_tok token.Token, type_name token.Token, init_expr Expr) StructMemberNode {
+pub fn new_struct_member_with_init_node(tree &SyntaxTree, name_tok token.Token, ref_tok token.Token, type_name token.Token, init_expr Expr) StructMemberNode {
+	is_ref := ref_tok.kind == .amp
 	mut child_nodes := [AstNode(name_tok), type_name, init_expr]
 	return StructMemberNode{
 		tree: tree
 		pos: source.new_pos_from_pos_bounds(name_tok.pos, init_expr.pos)
 		child_nodes: child_nodes
 		name_tok: name_tok
+		ref_tok: ref_tok
 		type_name: type_name
 		init_expr: init_expr
+		is_ref: is_ref
 		has_init: true
 	}
 }
 
-pub fn new_struct_member_node(tree &SyntaxTree, name_tok token.Token, type_name token.Token) StructMemberNode {
+pub fn new_struct_member_node(tree &SyntaxTree, name_tok token.Token, ref_tok token.Token, type_name token.Token) StructMemberNode {
+	is_ref := ref_tok.kind == .amp
 	mut child_nodes := [AstNode(name_tok), type_name]
 	return StructMemberNode{
 		tree: tree
 		pos: source.new_pos_from_pos_bounds(name_tok.pos, type_name.pos)
 		child_nodes: child_nodes
 		name_tok: name_tok
+		ref_tok: ref_tok
 		type_name: type_name
+		is_ref: is_ref
 		has_init: false
 	}
 }

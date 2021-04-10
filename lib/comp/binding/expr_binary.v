@@ -9,7 +9,6 @@ pub:
 	kind        BoundNodeKind = .binary_expr
 	typ         symbols.TypeSymbol
 	child_nodes []BoundNode
-	is_ref      bool
 	// child nodes
 	left_expr  BoundExpr
 	op         BoundBinaryOperator
@@ -37,7 +36,6 @@ pub fn (ex BoundBinaryExpr) str() string {
 pub fn (ex BoundBinaryExpr) to_ref_type() BoundBinaryExpr {
 	return BoundBinaryExpr{
 		...ex
-		is_ref: true
 		typ: ex.typ.to_ref_type()
 	}
 }

@@ -12,7 +12,6 @@ pub:
 	// child nodes
 	names  []token.Token
 	var    symbols.VariableSymbol
-	is_ref bool
 }
 
 pub fn new_bound_variable_expr(var symbols.VariableSymbol, typ symbols.TypeSymbol) BoundExpr {
@@ -41,7 +40,6 @@ pub fn (ex BoundVariableExpr) str() string {
 pub fn (ex BoundVariableExpr) to_ref_type() BoundVariableExpr {
 	return BoundVariableExpr{
 		...ex
-		is_ref: true
 		typ: ex.typ.to_ref_type()
 	}
 }

@@ -75,7 +75,7 @@ fn write_expr(writer io.TermTextWriter, node BoundExpr) {
 				string {
 					writer.write_string("'$val'")
 				}
-				int, i64 {
+				int, i64, byte, char {
 					writer.write_number(val.str())
 				}
 				bool {

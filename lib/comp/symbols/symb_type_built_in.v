@@ -4,14 +4,14 @@ import rand
 
 pub struct BuiltInTypeSymbol {
 pub:
-	kind   TypeSymbolKind
-	name   string = 'undefined'
+	kind   TypeSymbolKind = .undefined_symbol
+	name   string
 	id     string
 	is_ref bool
 }
 
 pub fn (ts BuiltInTypeSymbol) == (rts BuiltInTypeSymbol) bool {
-	return ts.name == rts.name
+	return ts.kind == rts.kind
 }
 
 pub fn (ts BuiltInTypeSymbol) str() string {
@@ -25,9 +25,9 @@ pub fn (ss BuiltInTypeSymbol) to_ref_type() BuiltInTypeSymbol {
 	}
 }
 
-pub fn new_builtin_type_symbol(name string) BuiltInTypeSymbol {
+pub fn new_builtin_type_symbol(kind TypeSymbolKind, name string) BuiltInTypeSymbol {
 	return BuiltInTypeSymbol{
-		kind: .built_in_symbol
+		kind: kind
 		name: name
 		id: rand.uuid_v4()
 	}

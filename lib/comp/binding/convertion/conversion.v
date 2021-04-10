@@ -34,26 +34,41 @@ pub fn classify(from symbols.TypeSymbol, to symbols.TypeSymbol) Convertion {
 		return convertion.conv_explicit
 	}
 
-	if from is symbols.BuiltInTypeSymbol {
-		if to is symbols.BuiltInTypeSymbol {
-			if from == to {
-				return convertion.conv_ident
-			}
-			if from == symbols.bool_symbol || from == symbols.int_symbol {
-				if to == symbols.string_symbol {
-					return convertion.conv_explicit
-				}
-			}
-			if from == symbols.string_symbol {
-				if to == symbols.bool_symbol || to == symbols.int_symbol {
-					return convertion.conv_explicit
-				}
-			}
-		}
-	} else if from is symbols.StructTypeSymbol {
+	if from is symbols.StructTypeSymbol {
 		if to is symbols.StructTypeSymbol {
 			if from == to {
 				return convertion.conv_ident
+			}
+		} else {
+			if to.kind == .string_symbol && to.name == 'string' {
+				return convertion.conv_implicit
+			}
+		}
+	} else {
+		if from.kind == to.kind {
+			return convertion.conv_ident
+		}
+		if from.kind == .bool_symbol || from.kind == .int_symbol {
+			if to.kind == .string_symbol {
+				return convertion.conv_explicit
+			}
+		}
+		if from.kind == .string_symbol {
+			if to.kind == .bool_symbol || to.kind == .int_symbol {
+				return convertion.conv_explicit
+			}
+			if to.name == 'String' {
+				return convertion.conv_implicit
+			}
+		}
+		if from.kind == .byte_symbol {
+			if to.kind == .char_symbol {
+				return convertion.conv_explicit
+			}
+		}
+		if from.kind == .char_symbol {
+			if to.kind == .byte_symbol {
+				return convertion.conv_explicit
 			}
 		}
 	}

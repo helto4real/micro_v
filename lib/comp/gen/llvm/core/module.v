@@ -45,7 +45,7 @@ mut:
 	main_func_ref  &C.LLVMValueRef = 0
 	types          map[string]&C.LLVMTypeRef
 	jmp_buff       &C.LLVMValueRef = 0
-
+	pass_ref       &C.LLVMPassManagerRef = 0
 	global_const map[GlobalVarRefType]&C.LLVMValueRef
 pub mut:
 	is_test bool
@@ -73,7 +73,12 @@ fn (mut m Module) init_globals() {
 		m.types[standard_struct.name] = typ_ref
 		mut type_refs := []&C.LLVMTypeRef{}
 		for member in standard_struct.members {
-			type_refs << get_llvm_type_ref(member.typ, m)
+			type_ref := m.get_llvm_type(member.typ)
+			if member.typ.is_ref {
+				type_refs << C.LLVMPointerType(type_ref, 0)
+			} else {
+				type_refs << type_ref
+			}
 		}
 		C.LLVMStructSetBody(typ_ref, type_refs.data, type_refs.len, 0)
 	}
@@ -82,15 +87,15 @@ fn (mut m Module) init_globals() {
 
 pub fn (mut m Module) free() {
 	if m.exec_engine != 0 {
-		err := charptr(0)
+		err := &char(0)
 		// if exec engine exists we need to remove the module
 		// before you can dispose the engine and the module		mut err := charptr(0)
 		mut out_mod := voidptr(0)
-		if C.LLVMRemoveModule(m.exec_engine, m.mod_ref, &out_mod, &err) != 0 {
+		if C.LLVMRemoveModule(m.exec_engine, m.mod_ref, &out_mod, err) != 0 {
 			panic('failed to remove module: $err')
 		}
 	}
-	// Todo: Dispose engine 
+	// Todo: Dispose engine
 	m.builder.free()
 
 	C.LLVMDisposeModule(m.mod_ref)
@@ -111,8 +116,8 @@ pub fn (mut m Module) init_jit_execution_engine() ? {
 	if C.LLVMInitializeNativeAsmParser() != 0 {
 		return error('Failed to init the native parser')
 	}
-	err_msg := charptr(0)
-	if C.LLVMCreateMCJITCompilerForModule(&m.exec_engine, m.mod_ref, voidptr(0), 0, &err_msg) != 0 {
+	err_msg := &char(0)
+	if C.LLVMCreateMCJITCompilerForModule(&m.exec_engine, m.mod_ref, voidptr(0), 0, err_msg) != 0 {
 		// TODO: LLVMDisposeMessage
 		return error('failed to create jit compiler for module: $err_msg')
 	}
@@ -227,8 +232,8 @@ fn nr_of_digits(n int) int {
 }
 
 pub fn (mut m Module) verify() ? {
-	mut err := charptr(0)
-	res := C.LLVMVerifyModule(m.mod_ref, .llvm_abort_process_action, &err)
+	mut err := &char(0)
+	res := C.LLVMVerifyModule(m.mod_ref, .llvm_abort_process_action, err)
 
 	if res != 0 || err != 0 {
 		unsafe {
@@ -238,8 +243,16 @@ pub fn (mut m Module) verify() ? {
 	return none
 }
 
+pub fn (mut m Module) optimize() {
+	m.pass_ref = C.LLVMCreatePassManager()
+	C.LLVMAddInstructionCombiningPass(m.pass_ref)
+	C.LLVMAddReassociatePass(m.pass_ref)
+	C.LLVMAddGVNPass(m.pass_ref)
+	C.LLVMRunPassManager(m.pass_ref, m.mod_ref)
+}
+
 pub fn (mut m Module) add_global_string_literal_ptr(str_val string) &C.LLVMValueRef {
-	return C.LLVMBuildGlobalStringPtr(m.builder.builder_ref, charptr(str_val.str), charptr(core.no_name.str))
+	return C.LLVMBuildGlobalStringPtr(m.builder.builder_ref, &char(str_val.str), &char(core.no_name.str))
 }
 
 pub fn (mut m Module) add_global_struct_const_ptr(typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef) &C.LLVMValueRef {
@@ -248,8 +261,8 @@ pub fn (mut m Module) add_global_struct_const_ptr(typ_ref &C.LLVMTypeRef, val_re
 }
 
 pub fn (m Module) print_to_file(path string) ? {
-	mut err := charptr(0)
-	res := C.LLVMPrintModuleToFile(m.mod_ref, path.str, &err)
+	mut err := &char(0)
+	res := C.LLVMPrintModuleToFile(m.mod_ref, path.str, err)
 	unsafe {
 		if res != 0 {
 			return error('Failed to print ll file $path, $err.vstring()')
@@ -272,17 +285,22 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 	for _, typ in program.types {
 		if typ is symbols.StructTypeSymbol {
 			typ_ref := C.LLVMStructCreateNamed(m.ctx_ref, typ.name.str)
-			m.types[typ.id] = typ_ref
+			m.types[typ.name] = typ_ref
 		}
 	}
 
 	// then declare struct body
 	for _, typ in program.types {
 		if typ is symbols.StructTypeSymbol {
-			struct_type_ref := get_llvm_type_ref(typ, m)
+			struct_type_ref := m.get_llvm_type(typ)
 			mut type_refs := []&C.LLVMTypeRef{}
 			for member in typ.members {
-				type_refs << get_llvm_type_ref(member.typ, m)
+				type_ref := m.get_llvm_type(member.typ)
+				if member.typ.is_ref {
+					type_refs << C.LLVMPointerType(type_ref, 0)
+				} else {
+					type_refs << type_ref
+				}
 			}
 			C.LLVMStructSetBody(struct_type_ref, type_refs.data, type_refs.len, 0)
 		}
@@ -321,16 +339,6 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 			ff.generate_function_bodies()
 		}
 	}
-	// if 'main' in m.funcs_map {
-	// 	m.funcs_map['main'].generate_function_bodies()
-	// }
-
-	// for _, mut f in m.funcs_map {
-	// 	// mut ff := f
-	// 	if f.func.name == 'main' {
-	// 		f.generate_function_bodies()
-	// 	}
-	// }
 
 	// generate bodies of all rest of the functions
 
@@ -340,12 +348,6 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 			ff.generate_function_bodies()
 		}
 	}
-	// for id,_ in m.funcs_map {
-	// 	mut ff := m.funcs_map[id]
-	// 	if ff.func.name != 'main' && !ff.func.is_c_decl {
-	// 		ff.generate_function_bodies()
-	// 	}
-	// }
 }
 
 pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding.BoundBlockStmt) {
@@ -353,6 +355,7 @@ pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding
 	if func.is_c_decl {
 		// if it is a C decl, add it to built_in_funcs
 		m.built_in_funcs[f.name] = f.func_ref
+		m.funcs << f
 	} else {
 		// m.funcs_map[func.id] = f
 		m.funcs << f
@@ -361,4 +364,50 @@ pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding
 	if func.name == 'main' {
 		m.main_func_ref = f.func_ref
 	}
+}
+
+
+fn (m &Module) get_llvm_type(typ symbols.TypeSymbol) &C.LLVMTypeRef {
+	match typ {
+		symbols.BuiltInTypeSymbol {
+			match typ.kind {
+				.int_symbol {
+					return C.LLVMInt32TypeInContext(m.ctx_ref)
+				}
+				.i64_symbol {
+					return C.LLVMInt64TypeInContext(m.ctx_ref)
+				}
+				.bool_symbol {
+					return C.LLVMInt1TypeInContext(m.ctx_ref)
+				}
+				.string_symbol {
+					return C.LLVMPointerType(C.LLVMInt8TypeInContext(m.ctx_ref), 0)
+				}
+				.byte_symbol {
+					return C.LLVMInt8TypeInContext(m.ctx_ref)
+				}
+				.char_symbol {
+					return C.LLVMInt8TypeInContext(m.ctx_ref)
+				}
+				else {
+					panic('unexpected, unsupported built-in type: $typ')
+				}
+			}
+		}
+		symbols.ArrayTypeSymbol {
+			elem_typ_ref := m.get_llvm_type(typ.elem_typ)
+			return C.LLVMArrayType(elem_typ_ref, typ.len)
+		}
+		symbols.VoidTypeSymbol {
+			return C.LLVMVoidTypeInContext(m.ctx_ref)
+		}
+		symbols.StructTypeSymbol {
+			return m.types[typ.name] or { panic('unexpected, type $typ not found in symols table') }
+		}
+		else {
+			panic('unexpected, unsupported type ref $typ, $typ.kind')
+		}
+	}
+
+	panic('unexpected, unsupported type: $typ')
 }

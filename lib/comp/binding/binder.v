@@ -117,13 +117,9 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 	mut binder := new_binder(is_script, parent_scope, symbols.undefined_fn)
 
 	// bind the built-in types
-	binder.scope.try_declare_type(symbols.int_symbol)
-	binder.scope.try_declare_type(symbols.i64_symbol)
-	binder.scope.try_declare_type(symbols.bool_symbol)
-	binder.scope.try_declare_type(symbols.string_symbol)
-	binder.scope.try_declare_type(symbols.charptr_symbol)
-	binder.scope.try_declare_type(symbols.byteptr_symbol)
-	binder.scope.try_declare_type(symbols.voidptr_symbol)
+	for typ in symbols.builtin_types {
+		binder.scope.try_declare_type(typ)
+	}
 
 	// first bind the types
 	for syntax_tree in syntax_trees {
@@ -357,7 +353,10 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 	mut struct_symbol := symbol as symbols.StructTypeSymbol
 	for member in struct_decl.members {
 		member_name := member.name_tok.lit
-		member_type := b.lookup_type(member.type_name.lit)
+		mut member_type := b.lookup_type(member.type_name.lit)
+		if member.is_ref {
+			member_type = member_type.to_ref_type()
+		}
 		member_symbol := symbols.new_struct_type_member(member_name, member_type)
 		struct_symbol.members << member_symbol
 		// Todo:, check the casing of names and types
@@ -487,12 +486,17 @@ pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 }
 
 pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, is_mut bool) symbols.VariableSymbol {
+	mut var_typ := typ
+	if typ.kind == .string_symbol {
+		// convert built-int string to String struct
+		var_typ = b.scope.lookup_type('String') or {panic('String type not declared')}
+	}
 	name := ident.lit
 	variable := if b.func == symbols.undefined_fn {
 		// We are in global scope
-		symbols.VariableSymbol(symbols.new_global_variable_symbol(name, typ, is_mut))
+		symbols.VariableSymbol(symbols.new_global_variable_symbol(name, var_typ, is_mut))
 	} else {
-		symbols.VariableSymbol(symbols.new_local_variable_symbol(name, typ, is_mut))
+		symbols.VariableSymbol(symbols.new_local_variable_symbol(name, var_typ, is_mut))
 	}
 	if !b.scope.try_declare_var(variable) {
 		b.log.error_name_already_defined(name, ident.text_location())
@@ -589,7 +593,8 @@ pub fn (mut b Binder) bind_convertion_diag_explicit(diag_loc source.TextLocation
 		b.log.error_cannot_convert_implicitly(expr.typ.str(), typ.str(), diag_loc)
 	}
 	if conv.is_identity {
-		if typ.is_ref {
+		if typ.is_ref && !expr.typ.is_ref {
+			// b.log.error_convertion_differ_by_reference(typ.is_ref, expr.str(), diag_loc)
 			return expr.to_ref_type()
 		}
 		return expr
@@ -608,21 +613,22 @@ pub fn (mut b Binder) bind_convertion_explicit(typ symbols.TypeSymbol, expr ast.
 }
 
 pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
+	is_c_call := expr.name_expr.names[0].lit == 'C'
 	func_name := expr.name_expr.names[expr.name_expr.names.len - 1].lit // expr.name_expr.name_tok.lit
 	// handle convertions as special functions
-	if expr.name_expr.names.len == 1 && expr.params.len() == 1 {
+	if expr.name_expr.names.len == 1 && expr.params.len == 1 {
 		typ := b.lookup_type(func_name)
-		// if typ.kind != .built_in_symbol && typ.name == 'none' {
-		if typ.kind == .built_in_symbol && typ.name != 'none' {
-			return b.bind_convertion_explicit(typ, (expr.params.at(0) as ast.Expr), true)
+		if typ.kind != .none_symbol {
+			is_ref := expr.name_expr.ref_tok.kind != .void
+			real_typ := if is_ref { typ.to_ref_type() } else { typ }
+			return b.bind_convertion_explicit(real_typ, expr.params[0].expr, true)
 		}
 	}
 
-	mut args := []BoundExpr{cap: expr.params.len()}
+	mut args := []BoundExpr{cap: expr.params.len}
 
-	for i := 0; i < expr.params.len(); i++ {
-		param_expr := expr.params.at(i) as ast.Expr
-		arg_expr := b.bind_expr(param_expr)
+	for param in expr.params {
+		arg_expr := b.bind_expr(param.expr)
 
 		if arg_expr.typ.kind == .error_symbol {
 			return new_bound_error_expr()
@@ -632,7 +638,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	mut receiver_var := symbols.empty_var_symbol
 	// mut receiver_typ := symbols.TypeSymbol(symbols.undefined_symbol)
 
-	if expr.name_expr.names.len > 1 {
+	if expr.name_expr.names.len > 1 && expr.name_expr.names[0].lit != 'C' {
 		// the function is on a variable
 		// todo: when modules is supported, lookup here
 		base_ident := expr.name_expr.names[0]
@@ -643,24 +649,12 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 			return new_bound_error_expr()
 		}
 		receiver_var = var as symbols.LocalVariableSymbol
-
-		// receiver_typ = receiver_var.typ
-		// for i := 1; i < expr.name_expr.names.len - 1; i++ {
-		// 	name_tok := expr.name_expr.names[i]
-		// 	member_name := name_tok.lit
-		// 	member_typ := receiver_typ.lookup_member_type(member_name)
-		// 	if member_typ.kind == .error_symbol {
-		// 		b.log.error_member_not_exists(member_name, name_tok.text_location())
-		// 		return new_bound_error_expr()
-		// 	}
-		// 	// Todo: check mutability of fields
-		// 	receiver_typ = member_typ
-		// }
 	}
 	mut func := symbols.new_emtpy_function_symbol()
 	if receiver_var.is_empty {
-		func = b.scope.lookup_fn(func_name) or {
-			b.log.error_undefined_function(func_name, expr.name_expr.name_tok.text_location())
+		lookup_name := if !is_c_call { func_name } else { expr.name_expr.name_tok.lit }
+		func = b.scope.lookup_fn(lookup_name) or {
+			b.log.error_undefined_function(lookup_name, expr.name_expr.name_tok.text_location())
 			return new_bound_error_expr()
 		}
 	} else {
@@ -670,19 +664,29 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 		}
 	}
 
-	if expr.params.len() != func.params.len {
+	if expr.params.len != func.params.len {
 		b.log.error_wrong_argument_count(func_name, func.params.len, expr.text_location())
 		return new_bound_error_expr()
 	}
 
-	for i := 0; i < expr.params.len(); i++ {
-		arg_location := expr.params.at(i).text_location()
+	for i := 0; i < expr.params.len; i++ {
+		arg_location := expr.params[i].expr.text_location()
 		bound_arg := args[i]
 		param := func.params[i]
+		if param.is_mut {
+			if bound_arg.kind != .variable_expr {
+				b.log.error_only_variables_can_be_input_to_mutable_parameters(arg_location)
+				return new_bound_error_expr()
+			}
+			if expr.params[i].is_mut == false {
+				b.log.error_provide_mut_keyword_for_mutable_parameters(arg_location)
+				return new_bound_error_expr()
+			}
+		}
 		conv_expr := b.bind_convertion_diag(arg_location, bound_arg, param.typ)
 		args[i] = conv_expr
 	}
-	return new_bound_call_expr(func, receiver_var, args)
+	return new_bound_call_expr(func, receiver_var, args, is_c_call)
 }
 
 pub fn (mut b Binder) bind_range_expr(range_expr ast.RangeExpr) BoundExpr {
@@ -772,6 +776,11 @@ pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 	}
 
 	var := b.bind_variable(syntax.ident.name_tok, expr.typ, syntax.is_mut)
+	if expr_typ.kind == .string_symbol && var.typ.name == 'String' {
+		// make convertion 
+		conv_expr := new_bound_conv_expr(var.typ, expr)
+		return new_var_decl_stmt(var, conv_expr, syntax.is_mut)
+	}
 	return new_var_decl_stmt(var, expr, syntax.is_mut)
 }
 
@@ -868,14 +877,14 @@ fn (mut b Binder) bind_array_init_expr(syntax ast.ArrayInitExpr) BoundExpr {
 				if conv_expr.kind == .error_expr {
 					return conv_expr
 				}
-				if first_elem_is_ref != bound_expr.is_ref {
+				if first_elem_is_ref != bound_expr.typ.is_ref {
 					b.log.error_elements_in_array_needs_to_be_of_same_type(first_elem_typ.name,
 						first_elem_is_ref, expr.text_location())
 				}
 				array_elements << conv_expr
 			} else {
 				first_elem_typ = bound_expr.typ
-				first_elem_is_ref = bound_expr.is_ref
+				first_elem_is_ref = bound_expr.typ.is_ref
 				array_elements << bound_expr
 			}
 		}
@@ -927,17 +936,23 @@ fn (mut b Binder) bind_default_value_expr(typ symbols.TypeSymbol) BoundExpr {
 			panic('unexpected void type')
 		}
 		symbols.BuiltInTypeSymbol {
-			match typ.name {
-				'string' {
+			match typ.kind {
+				.string_symbol {
 					return new_bound_literal_expr('') // Default to empty string
 				}
-				'int' {
+				.int_symbol {
 					return new_bound_literal_expr(0) // Default to 0
 				}
-				'i64' {
+				.char_symbol {
+					return new_bound_literal_expr(char(0)) // Default to 0
+				}
+				.byte_symbol {
+					return new_bound_literal_expr(byte(0)) // Default to 0
+				}
+				.i64_symbol {
 					return new_bound_literal_expr(i64(0)) // Default to 0
 				}
-				'bool' {
+				.bool_symbol {
 					return new_bound_literal_expr(false) // Default to false
 				}
 				else {
