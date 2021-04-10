@@ -486,12 +486,17 @@ pub fn (mut b Binder) bind_for_stmt(for_stmt ast.ForStmt) BoundStmt {
 }
 
 pub fn (mut b Binder) bind_variable(ident token.Token, typ symbols.TypeSymbol, is_mut bool) symbols.VariableSymbol {
+	mut var_typ := typ
+	if typ.kind == .string_symbol {
+		// convert built-int string to String struct
+		var_typ = b.scope.lookup_type('String') or {panic('String type not declared')}
+	}
 	name := ident.lit
 	variable := if b.func == symbols.undefined_fn {
 		// We are in global scope
-		symbols.VariableSymbol(symbols.new_global_variable_symbol(name, typ, is_mut))
+		symbols.VariableSymbol(symbols.new_global_variable_symbol(name, var_typ, is_mut))
 	} else {
-		symbols.VariableSymbol(symbols.new_local_variable_symbol(name, typ, is_mut))
+		symbols.VariableSymbol(symbols.new_local_variable_symbol(name, var_typ, is_mut))
 	}
 	if !b.scope.try_declare_var(variable) {
 		b.log.error_name_already_defined(name, ident.text_location())
@@ -771,6 +776,11 @@ pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 	}
 
 	var := b.bind_variable(syntax.ident.name_tok, expr.typ, syntax.is_mut)
+	if expr_typ.kind == .string_symbol && var.typ.name == 'String' {
+		// make convertion 
+		conv_expr := new_bound_conv_expr(var.typ, expr)
+		return new_var_decl_stmt(var, conv_expr, syntax.is_mut)
+	}
 	return new_var_decl_stmt(var, expr, syntax.is_mut)
 }
 

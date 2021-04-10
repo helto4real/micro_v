@@ -1,5 +1,5 @@
 
 fn main() {
-	x := String{}
-	
+	x := 'hello world'
+	println(x)
 }

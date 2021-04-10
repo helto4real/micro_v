@@ -45,7 +45,7 @@ mut:
 	main_func_ref  &C.LLVMValueRef = 0
 	types          map[string]&C.LLVMTypeRef
 	jmp_buff       &C.LLVMValueRef = 0
-
+	pass_ref       &C.LLVMPassManagerRef = 0
 	global_const map[GlobalVarRefType]&C.LLVMValueRef
 pub mut:
 	is_test bool
@@ -73,7 +73,7 @@ fn (mut m Module) init_globals() {
 		m.types[standard_struct.name] = typ_ref
 		mut type_refs := []&C.LLVMTypeRef{}
 		for member in standard_struct.members {
-			type_ref := get_llvm_type_ref(member.typ, m)
+			type_ref := m.get_llvm_type(member.typ)
 			if member.typ.is_ref {
 				type_refs << C.LLVMPointerType(type_ref, 0)
 			} else {
@@ -243,6 +243,14 @@ pub fn (mut m Module) verify() ? {
 	return none
 }
 
+pub fn (mut m Module) optimize() {
+	m.pass_ref = C.LLVMCreatePassManager()
+	C.LLVMAddInstructionCombiningPass(m.pass_ref)
+	C.LLVMAddReassociatePass(m.pass_ref)
+	C.LLVMAddGVNPass(m.pass_ref)
+	C.LLVMRunPassManager(m.pass_ref, m.mod_ref)
+}
+
 pub fn (mut m Module) add_global_string_literal_ptr(str_val string) &C.LLVMValueRef {
 	return C.LLVMBuildGlobalStringPtr(m.builder.builder_ref, &char(str_val.str), &char(core.no_name.str))
 }
@@ -277,17 +285,17 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 	for _, typ in program.types {
 		if typ is symbols.StructTypeSymbol {
 			typ_ref := C.LLVMStructCreateNamed(m.ctx_ref, typ.name.str)
-			m.types[typ.id] = typ_ref
+			m.types[typ.name] = typ_ref
 		}
 	}
 
 	// then declare struct body
 	for _, typ in program.types {
 		if typ is symbols.StructTypeSymbol {
-			struct_type_ref := get_llvm_type_ref(typ, m)
+			struct_type_ref := m.get_llvm_type(typ)
 			mut type_refs := []&C.LLVMTypeRef{}
 			for member in typ.members {
-				type_ref := get_llvm_type_ref(member.typ, m)
+				type_ref := m.get_llvm_type(member.typ)
 				if member.typ.is_ref {
 					type_refs << C.LLVMPointerType(type_ref, 0)
 				} else {
@@ -356,4 +364,50 @@ pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding
 	if func.name == 'main' {
 		m.main_func_ref = f.func_ref
 	}
+}
+
+
+fn (m &Module) get_llvm_type(typ symbols.TypeSymbol) &C.LLVMTypeRef {
+	match typ {
+		symbols.BuiltInTypeSymbol {
+			match typ.kind {
+				.int_symbol {
+					return C.LLVMInt32TypeInContext(m.ctx_ref)
+				}
+				.i64_symbol {
+					return C.LLVMInt64TypeInContext(m.ctx_ref)
+				}
+				.bool_symbol {
+					return C.LLVMInt1TypeInContext(m.ctx_ref)
+				}
+				.string_symbol {
+					return C.LLVMPointerType(C.LLVMInt8TypeInContext(m.ctx_ref), 0)
+				}
+				.byte_symbol {
+					return C.LLVMInt8TypeInContext(m.ctx_ref)
+				}
+				.char_symbol {
+					return C.LLVMInt8TypeInContext(m.ctx_ref)
+				}
+				else {
+					panic('unexpected, unsupported built-in type: $typ')
+				}
+			}
+		}
+		symbols.ArrayTypeSymbol {
+			elem_typ_ref := m.get_llvm_type(typ.elem_typ)
+			return C.LLVMArrayType(elem_typ_ref, typ.len)
+		}
+		symbols.VoidTypeSymbol {
+			return C.LLVMVoidTypeInContext(m.ctx_ref)
+		}
+		symbols.StructTypeSymbol {
+			return m.types[typ.name] or { panic('unexpected, type $typ not found in symols table') }
+		}
+		else {
+			panic('unexpected, unsupported type ref $typ, $typ.kind')
+		}
+	}
+
+	panic('unexpected, unsupported type: $typ')
 }

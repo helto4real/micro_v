@@ -22,7 +22,7 @@ fn new_llvm_func(mod &Module, func symbols.FunctionSymbol, body binding.BoundBlo
 	mut llvm_params, is_variadic := get_params(func.params, mod)
 
 	if !func.receiver.is_empty {
-		typ_ref := get_llvm_type_ref(func.receiver.typ, mod)
+		typ_ref := mod.get_llvm_type(func.receiver.typ)
 		// it is a recieiver function `fn (x Type) foo(){}`
 		if !func.receiver.is_ref {
 			llvm_params.prepend(typ_ref)
@@ -34,7 +34,7 @@ fn new_llvm_func(mod &Module, func symbols.FunctionSymbol, body binding.BoundBlo
 	return_typ := if func_name == 'main' || (mod.is_test && func_name.starts_with('test_')) {
 		C.LLVMInt32TypeInContext(mod.ctx_ref)
 	} else {
-		get_llvm_type_ref(func.typ, mod)
+		mod.get_llvm_type(func.typ)
 	}
 	variadic_val := if is_variadic { 1 } else { 0 }
 
@@ -72,9 +72,9 @@ fn new_llvm_func(mod &Module, func symbols.FunctionSymbol, body binding.BoundBlo
 
 		param_ref := C.LLVMGetParam(f.func_ref, 0)
 		typ := if f.func.receiver.is_ref {
-			C.LLVMPointerType(get_llvm_type_ref(f.func.receiver.typ, f.mod), 0)
+			C.LLVMPointerType(f.mod.get_llvm_type(f.func.receiver.typ), 0)
 		} else {
-			get_llvm_type_ref(f.func.receiver.typ, f.mod)
+			f.mod.get_llvm_type(f.func.receiver.typ)
 		}
 
 		if f.func.receiver.is_ref || f.func.receiver.is_mut {
@@ -90,9 +90,9 @@ fn new_llvm_func(mod &Module, func symbols.FunctionSymbol, body binding.BoundBlo
 	for i, param in f.func.params {
 		param_ref := C.LLVMGetParam(f.func_ref, i + pi)
 		typ := if param.is_ref {
-			C.LLVMPointerType(get_llvm_type_ref(param.typ, f.mod), 0)
+			C.LLVMPointerType(f.mod.get_llvm_type(param.typ), 0)
 		} else {
-			get_llvm_type_ref(param.typ, f.mod)
+			f.mod.get_llvm_type(param.typ)
 		}
 		if param.is_ref || param.is_mut {
 			f.var_decl[param.id] = param_ref
@@ -137,14 +137,13 @@ fn (mut f Function) generate_function_bodies() {
 		mut cb := emitter.new_builtin_call('setjmp')
 		cb.add_param(f.mod.jmp_buff)
 		res := cb.emit()
-		cmp_ref := C.LLVMBuildICmp(f.mod.builder.builder_ref, .int_eq, res, C.LLVMConstInt(get_llvm_type_ref(symbols.i64_symbol,
-			f.mod), i64(0), false), no_name.str)
+		cmp_ref := C.LLVMBuildICmp(f.mod.builder.builder_ref, .int_eq, res, C.LLVMConstInt(f.mod.get_llvm_type(symbols.i64_symbol), i64(0), false), no_name.str)
 		C.LLVMBuildCondBr(emitter.mod.builder.builder_ref, cmp_ref, continue_block, error_exit_block)
 
 		C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, error_exit_block)
 		// fn_ref := f.mod.built_in_funcs['exit'] or { panic('built in function exit not found') }
 
-		error_code := C.LLVMConstInt(get_llvm_type_ref(symbols.int_symbol, f.mod), 1,
+		error_code := C.LLVMConstInt(f.mod.get_llvm_type(symbols.int_symbol), 1,
 			false)
 		// mut params := []&C.LLVMValueRef{cap: 1}
 		// params << error_code
@@ -174,7 +173,7 @@ fn (mut f Function) generate_function_bodies() {
 	if f.func.name == 'main' || (f.mod.is_test && f.func.name.starts_with('test_')) {
 		// C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, continue_block)
 		// Normal return code exit
-		return_code := C.LLVMConstInt(get_llvm_type_ref(symbols.int_symbol, f.mod), 0,
+		return_code := C.LLVMConstInt(f.mod.get_llvm_type(symbols.int_symbol), 0,
 			0)
 		C.LLVMBuildRet(f.mod.builder.builder_ref, return_code)
 	} else {
@@ -190,9 +189,9 @@ fn get_params(params []symbols.ParamSymbol, mod Module) ([]&C.LLVMTypeRef, bool)
 	for param in params {
 		if !param.is_variadic {
 			if !param.is_ref {
-				res << get_llvm_type_ref(param.typ, mod)
+				res << mod.get_llvm_type(param.typ)
 			} else {
-				res << C.LLVMPointerType(get_llvm_type_ref(param.typ, mod), 0)
+				res << C.LLVMPointerType(mod.get_llvm_type(param.typ), 0)
 			}
 		} else {
 			is_variadic = true

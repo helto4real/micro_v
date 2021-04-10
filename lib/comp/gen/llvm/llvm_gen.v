@@ -67,6 +67,7 @@ pub fn (mut l LlvmGen) run_tests(program &binding.BoundProgram) &source.Diagnost
 
 fn (mut l LlvmGen) generate_code(is_test bool) {
 	l.mod.generate_module(l.program, is_test)
+	l.mod.optimize()
 	l.mod.print_to_file(l.result_file_full_path) or { panic('unexpected error cannot print to file') }
 	l.mod.verify() or { panic('unexpected error generating llvm code') }
 }

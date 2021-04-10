@@ -3,6 +3,7 @@ module core
 #include <llvm-c/Core.h>
 #include <llvm-c/ExecutionEngine.h>
 #include <llvm-c/Target.h>
+#include <llvm-c/Transforms/Scalar.h>
 #include <llvm-c/Analysis.h>
 #include <llvm-c/BitWriter.h>
 
@@ -77,6 +78,9 @@ pub struct C.LLVMMCJITCompilerOptions {}
 
 [typedef]
 pub struct C.LLVMGenericValueRef {}
+
+[typedef]
+pub struct C.LLVMPassManagerRef {}
 
 pub struct C.LLVMOpaqueValue {}
 
@@ -226,6 +230,14 @@ fn C.LLVMRunFunction(engine &C.LLVMExecutionEngineRef, func_ref &C.LLVMValueRef,
 
 fn C.LLVMGetParam(func &C.LLVMValueRef, index u32) &C.LLVMValueRef
 
+// optimization passes
+fn C.LLVMCreatePassManager() &C.LLVMPassManagerRef
+fn C.LLVMRunPassManager(pass_ref &C.LLVMPassManagerRef, mod &C.LLVMModuleRef) int
+fn C.LLVMAddInstructionCombiningPass(pass_ref &C.LLVMPassManagerRef)
+fn C.LLVMAddReassociatePass(pass_ref &C.LLVMPassManagerRef)
+fn C.LLVMAddGVNPass(pass_ref &C.LLVMPassManagerRef)
+fn C.LLVMAddNewGVNPass(pass_ref &C.LLVMPassManagerRef)
+// enums
 pub enum IntPredicate {
 	int_eq = 32 //*< equal
 	int_ne //*< not equal
