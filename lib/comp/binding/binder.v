@@ -12,10 +12,10 @@ pub struct Binder {
 pub:
 	is_script bool
 pub mut:
-	scope             &BoundScope = 0
-	func              symbols.FunctionSymbol
-	log               &source.Diagnostics // errors when parsing
-	
+	scope &BoundScope = 0
+	func  symbols.FunctionSymbol
+	log   &source.Diagnostics // errors when parsing
+
 	is_loop           bool
 	current_is_global bool // if current statement is global statement
 	allow_expr        bool // always allow expressions in blocks
@@ -61,7 +61,9 @@ pub fn bind_program(is_test bool, is_script bool, previous &BoundProgram, global
 		}
 	}
 
-	valid_statements := global_scope.stmts.filter(it.kind !in [.comment_stmt, .import_stmt, .module_stmt])
+	valid_statements := global_scope.stmts.filter(it.kind !in [.comment_stmt, .import_stmt,
+		.module_stmt,
+	])
 	if global_scope.main_func != symbols.undefined_fn && valid_statements.len > 0 {
 		body := new_bound_block_stmt(valid_statements)
 		func_bodies[global_scope.main_func.id] = body
@@ -167,12 +169,12 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 	} else {
 		// global statements can only occur at most in one syntax tree
 		// if main function exists, global statements cannot
-		
+
 		main_func_filter_result := binder.scope.funcs().filter(it.name == 'main')
 		// get the declared main function or return empty declaration
 		if main_func_filter_result.len == 1 {
 			main_func = main_func_filter_result[0]
-		} 
+		}
 
 		// if we have a main function declared, check the signature
 		if main_func.unique_fn_name() != symbols.undefined_fn.unique_fn_name() {
@@ -189,7 +191,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 		for syntax_tree in syntax_trees {
 			if syntax_tree.root.members.len > 0 {
 				global_stmts := syntax_tree.root.members.filter(it is ast.GlobStmt
-					&& (it as ast.GlobStmt).stmt.kind !in [.comment_stmt, .import_stmt, .module_stmt] )
+					&& (it as ast.GlobStmt).stmt.kind !in [.comment_stmt, .import_stmt, .module_stmt])
 				if global_stmts.len > 0 {
 					first_global_stmt := global_stmts[0]
 					first_global_statements << first_global_stmt as ast.GlobStmt
@@ -197,7 +199,6 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 			}
 		}
 		if first_global_statements.len > 0 {
-			
 			// we have global statements
 			if first_global_statements.len > 1 {
 				// has mulitple global statements in several syntax trees
@@ -210,8 +211,7 @@ pub fn bind_global_scope(is_script bool, previous &BoundGlobalScope, syntax_tree
 				mut has_glob_stmts := false
 				// has mixed main and glob stmts
 				for global_stmt in first_global_statements {
-					if global_stmt.stmt.kind !in [.import_stmt, .module_stmt]
-					{
+					if global_stmt.stmt.kind !in [.import_stmt, .module_stmt] {
 						has_glob_stmts = true
 						binder.log.error_cannot_mix_global_statements_and_main_function(global_stmt.text_location())
 					}
@@ -368,7 +368,8 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 }
 
 pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
-	struct_symbol := symbols.new_struct_symbol(struct_decl.tree.mod, struct_decl.name_tok.lit, false)
+	struct_symbol := symbols.new_struct_symbol(struct_decl.tree.mod, struct_decl.name_tok.lit,
+		false)
 	if !b.scope.try_declare_type(struct_symbol) {
 		b.log.error_struct_allready_declared(struct_decl.name_tok.lit, struct_decl.name_tok.text_location())
 	}
@@ -400,8 +401,9 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 	}
 
 	if fn_decl.receiver_node.is_empty {
-		func := symbols.new_function_symbol_from_decl(fn_decl.text_location(), fn_decl.tree.mod, symbols.empty_var_symbol,
-			fn_decl.name_expr.name_tok.lit, params, typ, fn_decl.is_pub, fn_decl.is_c_decl)
+		func := symbols.new_function_symbol_from_decl(fn_decl.text_location(), fn_decl.tree.mod,
+			symbols.empty_var_symbol, fn_decl.name_expr.name_tok.lit, params, typ, fn_decl.is_pub,
+			fn_decl.is_c_decl)
 		// TODO: refactor this. Due to V bug the func could not
 		//		 include the decl
 		if !b.scope.try_declare_fn(func, fn_decl) {
@@ -412,8 +414,8 @@ pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
 	receiver_typ := b.bind_type(fn_decl.receiver_node.typ_node)
 	receiver_var := symbols.new_local_variable_symbol(fn_decl.tree.mod, fn_decl.receiver_node.name_tok.lit,
 		receiver_typ, fn_decl.receiver_node.is_mut)
-	func := symbols.new_function_symbol_from_decl(fn_decl.text_location(), fn_decl.tree.mod, receiver_var,
-		fn_decl.name_expr.name_tok.lit, params, typ, fn_decl.is_pub, fn_decl.is_c_decl)
+	func := symbols.new_function_symbol_from_decl(fn_decl.text_location(), fn_decl.tree.mod,
+		receiver_var, fn_decl.name_expr.name_tok.lit, params, typ, fn_decl.is_pub, fn_decl.is_c_decl)
 	// TODO: refactor this. Due to V bug the func could not
 	//		 include the decl
 	if !b.scope.try_declare_fn(func, fn_decl) {
@@ -490,12 +492,15 @@ pub fn (mut b Binder) bind_variable(mod string, ident token.Token, typ symbols.T
 	mut var_typ := typ
 	if typ.kind == .string_symbol {
 		// convert built-int string to String struct
-		var_typ = b.scope.lookup_type('lib.runtime', 'String') or {panic('String type not declared')}
+		var_typ = b.scope.lookup_type('lib.runtime', 'String') or {
+			panic('String type not declared')
+		}
 	}
 	name := ident.lit
 	variable := if b.func == symbols.undefined_fn {
 		// We are in global scope
-		symbols.VariableSymbol(symbols.new_global_variable_symbol(mod, name, var_typ, is_mut))
+		symbols.VariableSymbol(symbols.new_global_variable_symbol(mod, name, var_typ,
+			is_mut))
 	} else {
 		symbols.VariableSymbol(symbols.new_local_variable_symbol(mod, name, var_typ, is_mut))
 	}
@@ -509,7 +514,8 @@ pub fn (mut b Binder) bind_for_range_stmt(for_range_stmt ast.ForRangeStmt) Bound
 	range_expr := b.bind_expr(for_range_stmt.range_expr)
 	b.scope = new_bound_scope(b.scope)
 
-	ident := b.bind_variable(for_range_stmt.tree.mod, for_range_stmt.name_tok, range_expr.typ, false)
+	ident := b.bind_variable(for_range_stmt.tree.mod, for_range_stmt.name_tok, range_expr.typ,
+		false)
 	body_stmt := b.bind_loop_block_stmt(for_range_stmt.body_stmt as ast.BlockStmt)
 	b.scope = b.scope.parent
 	return new_for_range_stmt(ident, range_expr, body_stmt)
@@ -616,7 +622,7 @@ pub fn (mut b Binder) bind_convertion_explicit(typ symbols.TypeSymbol, expr ast.
 pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	is_c_call := expr.name_expr.names[0].lit == 'C'
 	func_name := expr.name_expr.names[expr.name_expr.names.len - 1].lit // expr.name_expr.name_tok.lit
-	
+
 	// handle convertions as special functions
 	if expr.name_expr.names.len == 1 && expr.params.len == 1 {
 		typ := b.lookup_type(expr.tree.mod, func_name)
@@ -624,7 +630,7 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 			is_ref := expr.name_expr.ref_tok.kind != .void
 			real_typ := if is_ref { typ.to_ref_type() } else { typ }
 			return b.bind_convertion_explicit(real_typ, expr.params[0].expr, true)
-		} 
+		}
 	}
 
 	mut args := []BoundExpr{cap: expr.params.len}
@@ -641,20 +647,20 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	mut mod := expr.tree.mod
 
 	if expr.name_expr.names.len > 1 && expr.name_expr.names[0].lit != 'C' {
-		mut should_check_var := true	
+		mut should_check_var := true
 
 		base_ident := expr.name_expr.names[0]
 		base_name := base_ident.lit
-		
+
 		// check if first name is in imported list
-		result := expr.tree.imports.filter(it.name_expr.names[it.name_expr.names.len-1].lit==base_name)
+		result := expr.tree.imports.filter(it.name_expr.names[it.name_expr.names.len - 1].lit == base_name)
 		if result.len > 0 {
 			mod = result[0].name_expr.name_tok.lit
 			if expr.name_expr.names.len == 2 {
 				// it is only a module call no receiver
 				should_check_var = false
 			}
-		} 
+		}
 		if should_check_var {
 			// the function is on a variable
 			// check is variable exist in scope
@@ -792,7 +798,7 @@ pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 
 	var := b.bind_variable(syntax.tree.mod, syntax.ident.name_tok, expr.typ, syntax.is_mut)
 	if expr_typ.kind == .string_symbol && var.typ.name == 'String' {
-		// make convertion 
+		// make convertion
 		conv_expr := new_bound_conv_expr(var.typ, expr)
 		return new_var_decl_stmt(var, conv_expr, syntax.is_mut)
 	}
@@ -913,7 +919,7 @@ fn (mut b Binder) bind_array_init_expr(syntax ast.ArrayInitExpr) BoundExpr {
 fn (mut b Binder) get_full_mod_name(name_expr &ast.NameExpr) string {
 	if name_expr.names.len > 1 {
 		mod_ref := name_expr.names[0].lit
-		imported_name_expr :=name_expr.tree.imports.filter(it.name_expr.names[it.name_expr.names.len-1].lit==mod_ref)
+		imported_name_expr := name_expr.tree.imports.filter(it.name_expr.names[it.name_expr.names.len - 1].lit == mod_ref)
 		if imported_name_expr.len == 0 {
 			// error, missing import
 		}
@@ -921,10 +927,11 @@ fn (mut b Binder) get_full_mod_name(name_expr &ast.NameExpr) string {
 	}
 	return name_expr.tree.mod
 }
+
 fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
 	mod := b.get_full_mod_name(&syntax.name_expr)
-
-	typ := b.lookup_type(mod, syntax.name_expr.name_tok.lit)
+	name := syntax.name_expr.names[syntax.name_expr.names.len - 1].lit
+	typ := b.lookup_type(mod, name)
 	struct_typ := typ as symbols.StructTypeSymbol
 
 	mut members := []BoundStructInitMember{}

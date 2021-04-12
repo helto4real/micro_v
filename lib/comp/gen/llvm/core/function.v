@@ -39,8 +39,14 @@ fn new_llvm_func(mod &Module, func symbols.FunctionSymbol, body binding.BoundBlo
 
 	func_typ_ref := C.LLVMFunctionType(return_typ, llvm_params.data, llvm_params.len,
 		variadic_val)
-
-	func_ref := C.LLVMAddFunction(mod.mod_ref, func_name.str, func_typ_ref)
+	//
+	unique_fn_name := if !func.is_c_decl && func_name != 'main' {
+		func.unique_fn_name()
+	} else {
+		func_name
+	}
+	// unique_name := unique_fn_name.replace('.', '_')
+	func_ref := C.LLVMAddFunction(mod.mod_ref, unique_fn_name.str, func_typ_ref)
 
 	entry_name := 'entry'
 	mut entry := &C.LLVMBasicBlockRef(0)
@@ -136,21 +142,16 @@ fn (mut f Function) generate_function_bodies() {
 		mut cb := emitter.new_builtin_call('setjmp')
 		cb.add_param(f.mod.jmp_buff)
 		res := cb.emit()
-		cmp_ref := C.LLVMBuildICmp(f.mod.builder.builder_ref, .int_eq, res, C.LLVMConstInt(f.mod.get_llvm_type(symbols.i64_symbol), i64(0), false), no_name.str)
+		cmp_ref := C.LLVMBuildICmp(f.mod.builder.builder_ref, .int_eq, res, C.LLVMConstInt(f.mod.get_llvm_type(symbols.i64_symbol),
+			i64(0), false), no_name.str)
 		C.LLVMBuildCondBr(emitter.mod.builder.builder_ref, cmp_ref, continue_block, error_exit_block)
 
 		C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, error_exit_block)
-		// fn_ref := f.mod.built_in_funcs['exit'] or { panic('built in function exit not found') }
 
-		error_code := C.LLVMConstInt(f.mod.get_llvm_type(symbols.int_symbol), 1,
-			false)
-		// mut params := []&C.LLVMValueRef{cap: 1}
-		// params << error_code
-		// C.LLVMBuildCall(f.mod.builder.builder_ref, fn_ref, params.data, 1, no_name.str)
+		error_code := C.LLVMConstInt(f.mod.get_llvm_type(symbols.int_symbol), 1, false)
 		C.LLVMBuildRet(f.mod.builder.builder_ref, error_code)
 
 		main_block = continue_block
-		// C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, continue_block)
 	}
 	mut current_block := main_block
 	// generate all blocks
@@ -172,8 +173,7 @@ fn (mut f Function) generate_function_bodies() {
 	if f.func.name == 'main' || (f.mod.is_test && f.func.name.starts_with('test_')) {
 		// C.LLVMPositionBuilderAtEnd(f.mod.builder.builder_ref, continue_block)
 		// Normal return code exit
-		return_code := C.LLVMConstInt(f.mod.get_llvm_type(symbols.int_symbol), 0,
-			0)
+		return_code := C.LLVMConstInt(f.mod.get_llvm_type(symbols.int_symbol), 0, 0)
 		C.LLVMBuildRet(f.mod.builder.builder_ref, return_code)
 	} else {
 		if f.func.typ.kind == .void_symbol {
