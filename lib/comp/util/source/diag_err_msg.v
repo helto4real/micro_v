@@ -162,6 +162,10 @@ pub fn (mut d Diagnostics) error_a_fixed_value_array_cannot_be_muted(loc TextLoc
 	d.error('fixed value array cannot be mut', loc)
 }
 
+pub fn (mut d Diagnostics) error_import_not_found(loc TextLocation) {
+	d.error('import does not exist', loc)
+}
+
 pub fn (mut d Diagnostics) error_module_can_only_be_defined_as_first_statement(loc TextLocation) {
 	d.error('a module can only be definded as first statement', loc)
 }

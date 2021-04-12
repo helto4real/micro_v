@@ -1,4 +1,4 @@
-// comp module implements the compiler and evaluator 
+// comp module implements the compiler and evaluator
 module comp
 
 import term
@@ -25,7 +25,7 @@ mut:
 	previous &Compilation
 pub:
 	is_script bool
-	is_test	  bool
+	is_test   bool
 pub mut:
 	global_scope &binding.BoundGlobalScope
 	syntax_trees []&ast.SyntaxTree
@@ -97,8 +97,8 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	return new_evaluation_result(result, val)
 }
 
-pub fn (mut c Compilation) gen(back_end gen.Generator, output_file string) CompilationResult{
-		mut global_scope := c.get_bound_global_scope()
+pub fn (mut c Compilation) gen(back_end gen.Generator, output_file string) CompilationResult {
+	mut global_scope := c.get_bound_global_scope()
 	mut result := []&source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
@@ -116,8 +116,8 @@ pub fn (mut c Compilation) gen(back_end gen.Generator, output_file string) Compi
 	return new_compilation_result(diagnostics.all)
 }
 
-pub fn (mut c Compilation) run(back_end gen.Generator) CompilationResult{
-		mut global_scope := c.get_bound_global_scope()
+pub fn (mut c Compilation) run(back_end gen.Generator) CompilationResult {
+	mut global_scope := c.get_bound_global_scope()
 	mut result := []&source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
@@ -135,8 +135,8 @@ pub fn (mut c Compilation) run(back_end gen.Generator) CompilationResult{
 	return new_compilation_result(diagnostics.all)
 }
 
-pub fn (mut c Compilation) run_tests(back_end gen.Generator) CompilationResult{
-		mut global_scope := c.get_bound_global_scope()
+pub fn (mut c Compilation) run_tests(back_end gen.Generator) CompilationResult {
+	mut global_scope := c.get_bound_global_scope()
 	mut result := []&source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
@@ -157,7 +157,8 @@ pub fn (mut c Compilation) run_tests(back_end gen.Generator) CompilationResult{
 fn (mut c Compilation) get_program() &binding.BoundProgram {
 	global_scope := c.get_bound_global_scope()
 	if c.previous == 0 {
-		return binding.bind_program(c.is_test, c.is_script, &binding.BoundProgram(0), global_scope)
+		return binding.bind_program(c.is_test, c.is_script, &binding.BoundProgram(0),
+			global_scope)
 	} else {
 		p := c.previous.get_program()
 		return binding.bind_program(c.is_test, c.is_script, p, global_scope)
@@ -170,7 +171,7 @@ pub fn (mut c Compilation) emit_tree(writer io.TermTextWriter, lower bool) {
 		c.emit_tree_for_function(writer, c.global_scope.main_func, lower)
 	} else if global_scope.script_func != symbols.undefined_fn {
 		c.emit_tree_for_function(writer, c.global_scope.script_func, lower)
-	} 
+	}
 }
 
 pub fn (mut c Compilation) emit_tree_for_function(writer io.TermTextWriter, function symbols.FunctionSymbol, lower bool) {

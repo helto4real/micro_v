@@ -70,7 +70,7 @@ pub fn (t TypeSymbol) unique_reciver_func_name(func_name string) string {
 }
 
 pub fn (t TypeSymbol) unique_name() string {
-	return '${t.mod}.${t.name}'
+	return '${t.mod}.$t.name'
 }
 
 pub fn (typ TypeSymbol) lookup_member_type(name string) TypeSymbol {

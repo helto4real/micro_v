@@ -5,7 +5,7 @@ import rand
 pub struct StructTypeSymbol {
 pub:
 	kind   TypeSymbolKind
-	mod    string 
+	mod    string
 	name   string
 	id     string
 	is_ref bool
@@ -39,8 +39,8 @@ pub fn new_struct_symbol(mod string, name string, is_ref bool) StructTypeSymbol 
 
 pub struct StructTypeMember {
 pub:
-	ident string
-	typ   TypeSymbol
+	ident  string
+	typ    TypeSymbol
 	is_ref bool
 }
 

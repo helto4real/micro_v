@@ -7,7 +7,7 @@ pub struct LocalVariableSymbol {
 pub:
 	name     string
 	typ      TypeSymbol
-	mod    	 string
+	mod      string
 	is_mut   bool
 	is_ref   bool
 	id       string

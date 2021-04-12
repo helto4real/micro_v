@@ -921,7 +921,9 @@ fn (mut b Binder) get_full_mod_name(name_expr &ast.NameExpr) string {
 		mod_ref := name_expr.names[0].lit
 		imported_name_expr := name_expr.tree.imports.filter(it.name_expr.names[it.name_expr.names.len - 1].lit == mod_ref)
 		if imported_name_expr.len == 0 {
-			// error, missing import
+			// todo: error, missing import
+			b.log.error_import_not_found(name_expr.text_location())
+			return ''
 		}
 		return imported_name_expr[0].name_expr.name_tok.lit
 	}

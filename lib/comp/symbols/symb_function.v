@@ -16,7 +16,7 @@ pub:
 	is_c_decl bool
 	is_pub    bool
 	location  source.TextLocation
-	mod		  string
+	mod       string
 	name      string
 	typ       TypeSymbol
 	receiver  LocalVariableSymbol
@@ -58,7 +58,7 @@ pub fn new_function_symbol_from_decl(location source.TextLocation, mod string, r
 
 pub fn (ts FunctionSymbol) unique_fn_name() string {
 	if ts.receiver.is_empty {
-		return '${ts.mod}.${ts.name}' 
+		return '${ts.mod}.$ts.name'
 	} else {
 		return ts.receiver.typ.unique_reciver_func_name(ts.name)
 	}
