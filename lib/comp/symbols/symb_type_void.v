@@ -5,6 +5,7 @@ import rand
 pub struct VoidTypeSymbol {
 pub:
 	kind   TypeSymbolKind
+	mod    string = 'lib.runtime'
 	name   string = 'void'
 	id     string
 	is_ref bool

@@ -1,3 +1,5 @@
+
+module runtime
 struct String {
 	str &char
 	len int   

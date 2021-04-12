@@ -38,3 +38,7 @@ pub fn (ex AssignExpr) text_location() source.TextLocation {
 pub fn (ex AssignExpr) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex AssignExpr) str() string {
+	return '${ex.name_expr.name_tok.lit} = $ex.expr'
+}

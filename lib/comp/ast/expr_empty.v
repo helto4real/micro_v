@@ -26,3 +26,7 @@ pub fn (ex EmptyExpr) text_location() source.TextLocation {
 pub fn (ex EmptyExpr) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex EmptyExpr) str() string {
+	return '<emtpy>'
+}

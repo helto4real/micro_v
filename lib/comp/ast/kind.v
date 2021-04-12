@@ -27,7 +27,6 @@ enum SyntaxKind {
 	type_node
 	fn_decl_node
 	comment_stmt
-	module_stmt
 	struct_decl_node
 	struct_mbr_node
 	struct_init_mbr_node
@@ -44,6 +43,8 @@ enum SyntaxKind {
 	return_stmt
 	for_range_stmt
 	assert_stmt
+	module_stmt
+	import_stmt
 	empty
 	// syntax_helpers
 }

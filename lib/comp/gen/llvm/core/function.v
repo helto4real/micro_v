@@ -18,7 +18,6 @@ mut:
 
 fn new_llvm_func(mod &Module, func symbols.FunctionSymbol, body binding.BoundBlockStmt) &Function {
 	func_name := if !func.is_c_decl { func.name } else { func.name[2..] }
-
 	mut llvm_params, is_variadic := get_params(func.params, mod)
 
 	if !func.receiver.is_empty {

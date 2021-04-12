@@ -8,8 +8,10 @@ pub struct SyntaxTree {
 pub:
 	source &src.SourceText // represents source code
 pub mut:
-	log  &src.Diagnostics // errors when parsing
-	root CompNode
+	log     &src.Diagnostics // errors when parsing
+	root    CompNode
+	mod     string
+	imports []ImportStmt // imports of the file
 }
 
 pub fn new_syntax_tree(text string) &SyntaxTree {
@@ -31,19 +33,6 @@ pub fn new_syntax_tree_from_file(filename string) ?&SyntaxTree {
 	}
 }
 
-// pub fn new_syntax_tree(root CompNode, source &source.SourceText, log &source.Diagnostics) &SyntaxTree {
-// 	return &SyntaxTree{
-// 		root: root
-// 		log: log
-// 		source: source
-// 	}
-// }
-
-// pub fn new_syntax_tree_from_file(root CompNode, source &source.SourceText, log &source.Diagnostics, filename string) &SyntaxTree {
-// 	return &SyntaxTree{
-// 		root: root
-// 		log: log
-// 		source: source
-// 		filename: filename
-// 	}
-// }
+pub fn (t SyntaxTree) str() string {
+	return '<syntax tree>'
+}

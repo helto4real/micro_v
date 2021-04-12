@@ -44,3 +44,7 @@ pub fn (ex IfExpr) text_location() source.TextLocation {
 pub fn (ex IfExpr) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex IfExpr) str() string {
+	return 'if $ex.cond_expr {}'
+}

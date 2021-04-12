@@ -8,7 +8,7 @@ pub type BoundExpr = BoundArrayInitExpr | BoundAssignExpr | BoundBinaryExpr | Bo
 pub type BoundStmt = BoundAssertStmt | BoundBlockStmt | BoundBreakStmt | BoundCommentStmt |
 	BoundCondGotoStmt | BoundContinueStmt | BoundExprStmt | BoundForRangeStmt | BoundForStmt |
 	BoundGotoStmt | BoundIfStmt | BoundLabelStmt | BoundModuleStmt | BoundReturnStmt |
-	BoundVarDeclStmt
+	BoundVarDeclStmt | BoundImportStmt
 
 pub type BoundNode = BoundExpr | BoundStmt
 
@@ -42,6 +42,7 @@ pub enum BoundNodeKind {
 	goto_stmt
 	comment_stmt
 	module_stmt
+	import_stmt
 	assert_stmt
 }
 
@@ -144,6 +145,7 @@ pub fn (bs BoundStmt) node_str() string {
 		BoundReturnStmt { return bs.node_str() }
 		BoundCommentStmt { return bs.node_str() }
 		BoundModuleStmt { return bs.node_str() }
+		BoundImportStmt { return bs.node_str() }
 		BoundAssertStmt { return bs.node_str() }
 	}
 }
@@ -164,6 +166,7 @@ pub fn (bs BoundStmt) str() string {
 		BoundReturnStmt { return bs.str() }
 		BoundCommentStmt { return bs.str() }
 		BoundModuleStmt { return bs.str() }
+		BoundImportStmt { return bs.str() }
 		BoundAssertStmt { return bs.str() }
 	}
 }

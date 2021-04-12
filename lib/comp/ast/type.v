@@ -5,7 +5,7 @@ import lib.comp.util.source
 
 // Sumtype statements
 pub type Stmt = AssertStmt | BlockStmt | BreakStmt | CommentStmt | ContinueStmt | ExprStmt |
-	ForRangeStmt | ForStmt | IfStmt | ModuleStmt | ReturnStmt | VarDeclStmt
+	ForRangeStmt | ForStmt | IfStmt | ImportStmt | ModuleStmt | ReturnStmt | VarDeclStmt
 
 // Sumtype expressions
 pub type Expr = ArrayInitExpr | AssignExpr | BinaryExpr | CallExpr | CompNode | EmptyExpr |
@@ -163,6 +163,7 @@ pub fn (ex Stmt) text_location() source.TextLocation {
 		CommentStmt { return ex.text_location() }
 		ModuleStmt { return ex.text_location() }
 		AssertStmt { return ex.text_location() }
+		ImportStmt { return ex.text_location() }
 	}
 }
 
@@ -180,6 +181,7 @@ pub fn (ex Stmt) node_str() string {
 		CommentStmt { return ex.node_str() }
 		ModuleStmt { return ex.node_str() }
 		AssertStmt { return ex.node_str() }
+		ImportStmt { return ex.node_str() }
 	}
 }
 
@@ -197,6 +199,7 @@ pub fn (ex Stmt) str() string {
 		CommentStmt { return ex.str() }
 		ModuleStmt { return ex.str() }
 		AssertStmt { return ex.str() }
+		ImportStmt { return ex.str() }
 	}
 }
 

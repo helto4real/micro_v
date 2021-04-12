@@ -175,6 +175,12 @@ fn write_stmt(writer io.TermTextWriter, node BoundStmt) {
 			writer.write_identifier(node.name)
 			writer.writeln('')
 		}
+		BoundImportStmt {
+			writer.write_keyword('import')
+			writer.write_space()
+			writer.write_identifier(node.name)
+			writer.writeln('')
+		}
 		BoundAssertStmt {
 			writer.write_keyword('assert')
 			writer.write_space()

@@ -135,6 +135,8 @@ fn (mut c Emitter) emit_stmt(node binding.BoundStmt) {
 			c.emit_cond_goto_stmt(node)
 		}
 		binding.BoundCommentStmt {} // Ignore comments
+		binding.BoundImportStmt {} // Ignore imports
+		binding.BoundModuleStmt {} // Ignore modules
 		binding.BoundGotoStmt {
 			c.emit_goto_stmt(node)
 		}

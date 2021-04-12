@@ -62,7 +62,7 @@ pub fn (mut m Module) get_standard_struct_types() []symbols.StructTypeSymbol {
 	// declare the jumb_buf
 	// Todo: size depending on target arch
 	mut res := []symbols.StructTypeSymbol{}
-	mut jmp_buf_symbol := symbols.new_struct_symbol('JumpBuffer', false)
+	mut jmp_buf_symbol := symbols.new_struct_symbol('lib.runtime', 'JumpBuffer', false)
 	jmp_buf_symbol.members << symbols.new_struct_type_member('', symbols.i64_symbol)
 	res << jmp_buf_symbol
 
