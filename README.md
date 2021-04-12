@@ -1,5 +1,6 @@
 # The micro V - minimal v language compiler
-This is a learning project to build a compiler for the awesome V langues
+This is a learning project to build a compiler for the awesome V langue. Check out the [V website](https://vlang.io) and try it for your self
+
 
 # Overall design
 The compiler works like this:
@@ -34,3 +35,6 @@ this module contains all logic that relates to the compiler/intepreter.
 
 ## lib.com.ast
 All the nodes in the abstract syntax tree. 
+
+# Attribution
+Alexander Medvednikov, the creator of V and all V-developer for inpiring to this prototype
