@@ -1,3 +1,4 @@
+module runtime
 
 fn C.printf(fmt &byte, params ...&byte) int
 

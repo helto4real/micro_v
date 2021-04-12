@@ -21,16 +21,16 @@ pub const (
 	builtin_types      = builtin_types()
 
 	// built-in function symbols
-	println_symbol     = new_function_symbol('println', [
+	println_symbol     = new_function_symbol('lib.runtime', 'println', [
 		new_param_symbol('text', string_symbol, false, false, false),
 	], void_symbol)
-	print_symbol       = new_function_symbol('print', [
+	print_symbol       = new_function_symbol('lib.runtime', 'print', [
 		new_param_symbol('text', string_symbol, false, false, false),
 	], void_symbol)
-	exit_symbol        = new_function_symbol('exit', [
+	exit_symbol        = new_function_symbol('lib.runtime', 'exit', [
 		new_param_symbol('exit_code', int_symbol, false, false, false),
 	], void_symbol)
-	input_symbol       = new_function_symbol('input', [], string_symbol)
+	input_symbol       = new_function_symbol('lib.runtime', 'input', [], string_symbol)
 	built_in_functions = [println_symbol, print_symbol, input_symbol, exit_symbol]
 )
 

@@ -39,7 +39,8 @@ fn (mut c Emitter) handle_box_unbox_variable(var &symbols.VariableSymbol, expr &
 		return res_val
 	}
 	if !var.is_ref && expr.typ.is_ref {
-		return C.LLVMBuildLoad2(c.mod.builder.builder_ref, c.mod.get_llvm_type(var.typ), val, no_name.str)
+		return C.LLVMBuildLoad2(c.mod.builder.builder_ref, c.mod.get_llvm_type(var.typ),
+			val, no_name.str)
 	}
 	return val
 }
@@ -62,7 +63,8 @@ fn (mut c Emitter) emit_call(call_expr binding.BoundCallExpr) &C.LLVMValueRef {
 			panic('receiver: $call_expr.receiver ($call_expr.receiver.id) is not declared')
 		}
 		if !func.func.receiver.is_ref {
-			unboxed_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, c.mod.get_llvm_type(func.func.receiver.typ), receiver_decl_ref, no_name.str)
+			unboxed_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, c.mod.get_llvm_type(func.func.receiver.typ),
+				receiver_decl_ref, no_name.str)
 			params << unboxed_var
 		} else {
 			params << receiver_decl_ref // c.handle_box_unbox_variable(func.func.receiver, receiver_decl_ref)
@@ -135,6 +137,8 @@ fn (mut c Emitter) emit_stmt(node binding.BoundStmt) {
 			c.emit_cond_goto_stmt(node)
 		}
 		binding.BoundCommentStmt {} // Ignore comments
+		binding.BoundImportStmt {} // Ignore imports
+		binding.BoundModuleStmt {} // Ignore modules
 		binding.BoundGotoStmt {
 			c.emit_goto_stmt(node)
 		}
@@ -189,8 +193,8 @@ fn (mut c Emitter) emit_goto_stmt(node binding.BoundGotoStmt) {
 [inline]
 fn (mut c Emitter) unbox_if_ref(typ &symbols.TypeSymbol, val_ref &C.LLVMValueRef) &C.LLVMValueRef {
 	if typ.is_ref {
-		return C.LLVMBuildLoad2(c.mod.builder.builder_ref, c.mod.get_llvm_type(typ),
-			val_ref, no_name.str)
+		return C.LLVMBuildLoad2(c.mod.builder.builder_ref, c.mod.get_llvm_type(typ), val_ref,
+			no_name.str)
 	}
 	return val_ref
 }
@@ -331,7 +335,8 @@ fn (mut c Emitter) emit_convert_expr(node binding.BoundConvExpr) &C.LLVMValueRef
 								print_str
 							}
 
-							res_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, c.mod.get_llvm_type(to_typ), no_name.str)
+							res_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, c.mod.get_llvm_type(to_typ),
+								no_name.str)
 
 							true_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref,
 								c.func.func_ref, no_name.str)
@@ -360,7 +365,8 @@ fn (mut c Emitter) emit_convert_expr(node binding.BoundConvExpr) &C.LLVMValueRef
 							C.LLVMBuildBr(c.mod.builder.builder_ref, result_block)
 
 							C.LLVMPositionBuilderAtEnd(c.mod.builder.builder_ref, result_block)
-							return C.LLVMBuildLoad2(c.mod.builder.builder_ref, c.mod.get_llvm_type(to_typ), res_var, no_name.str)
+							return C.LLVMBuildLoad2(c.mod.builder.builder_ref, c.mod.get_llvm_type(to_typ),
+								res_var, no_name.str)
 						}
 						else {
 							panic('convertion from bool to $to_typ.name is not supported yet')
@@ -387,27 +393,24 @@ fn (mut c Emitter) emit_convert_expr(node binding.BoundConvExpr) &C.LLVMValueRef
 }
 
 fn (mut c Emitter) emit_string_from_lit(str_struct &C.LLVMValueRef) &C.LLVMValueRef {
-	
 	// emit a string struct from a string literal
 	string_typ_ref := c.mod.types['String']
-	
+
 	merge_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, string_typ_ref, no_name.str)
 	C.LLVMBuildStore(c.mod.builder.builder_ref, str_struct, merge_var)
 	// str is the first index
 	mut indicies := [
 		C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), 0, false),
-		C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), 0, false)
-		]
-	ref_ptr := C.LLVMBuildInBoundsGEP2(c.mod.builder.builder_ref, string_typ_ref,
-		merge_var, indicies.data,
-		indicies.len, no_name.str)
-	
-	typ_ref_i8_ptr := 	C.LLVMPointerType(C.LLVMInt8TypeInContext(c.mod.ctx_ref),0)
+		C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), 0, false),
+	]
+	ref_ptr := C.LLVMBuildInBoundsGEP2(c.mod.builder.builder_ref, string_typ_ref, merge_var,
+		indicies.data, indicies.len, no_name.str)
+
+	typ_ref_i8_ptr := C.LLVMPointerType(C.LLVMInt8TypeInContext(c.mod.ctx_ref), 0)
 	return C.LLVMBuildLoad2(c.mod.builder.builder_ref, typ_ref_i8_ptr, ref_ptr, no_name.str)
 }
 
 fn (mut c Emitter) emit_lit_to_string(str_lit &C.LLVMValueRef, len int) &C.LLVMValueRef {
-	
 	// emit a string struct from a string literal
 	string_typ_ref := c.mod.types['String']
 	mut value_refs := []&C.LLVMValueRef{}
@@ -415,10 +418,10 @@ fn (mut c Emitter) emit_lit_to_string(str_lit &C.LLVMValueRef, len int) &C.LLVMV
 	// ptr_to_lit := C.LLVMBuildPointerCast(c.mod.builder.builder_ref,
 	// 							str_lit, C.LLVMPointerType(C.LLVMInt8TypeInContext(c.mod.ctx_ref),
 	// 							0), no_name.str)
-	value_refs << str_lit	// &char  str
-	value_refs << C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), len,false)	// len    int
-	// is_lit int 
-	value_refs << C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), 0,false)
+	value_refs << str_lit // &char  str
+	value_refs << C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), len, false) // len    int
+	// is_lit int
+	value_refs << C.LLVMConstInt(C.LLVMInt32TypeInContext(c.mod.ctx_ref), 0, false)
 	return C.LLVMConstNamedStruct(string_typ_ref, value_refs.data, value_refs.len)
 }
 
@@ -427,7 +430,8 @@ fn (mut c Emitter) emit_if_expr(node binding.BoundIfExpr) &C.LLVMValueRef {
 
 	// Create the temporary variable that will store the result
 	// in the then_block and else_block				
-	merge_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, c.mod.get_llvm_type(node.typ), no_name.str)
+	merge_var := C.LLVMBuildAlloca(c.mod.builder.builder_ref, c.mod.get_llvm_type(node.typ),
+		no_name.str)
 	// C.LLVMBuildStore(c.mod.builder.builder_ref, expr_val_ref, ref_var)
 
 	then_block := C.LLVMAppendBasicBlockInContext(c.mod.ctx_ref, c.func.func_ref, no_name.str)
@@ -797,7 +801,5 @@ fn (mut c Emitter) get_global_string(ref_typ GlobalVarRefType) &C.LLVMValueRef {
 }
 
 // fn get_ref_type(typ symbols.TypeSymbol, mod &Module) &C.LLVMTypeRef {
-// 	mut ref_typ := 
+// 	mut ref_typ :=
 // }
-
-

@@ -162,12 +162,24 @@ pub fn (mut d Diagnostics) error_a_fixed_value_array_cannot_be_muted(loc TextLoc
 	d.error('fixed value array cannot be mut', loc)
 }
 
+pub fn (mut d Diagnostics) error_import_not_found(loc TextLocation) {
+	d.error('import does not exist', loc)
+}
+
 pub fn (mut d Diagnostics) error_module_can_only_be_defined_as_first_statement(loc TextLocation) {
 	d.error('a module can only be definded as first statement', loc)
 }
 
+pub fn (mut d Diagnostics) error_import_can_only_be_defined_at_top_of_file(loc TextLocation) {
+	d.error('import statement can only be defined at top of file', loc)
+}
+
 pub fn (mut d Diagnostics) error_invalid_expression_statement(loc TextLocation) {
 	d.error('only assignment and call expressions can be used as a statement', loc)
+}
+
+pub fn (mut d Diagnostics) error_cannot_find_module(loc TextLocation) {
+	d.error('cannot find module', loc)
 }
 
 pub fn (mut d Diagnostics) error_cannot_mix_global_statements_and_main_function(loc TextLocation) {

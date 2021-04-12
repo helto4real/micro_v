@@ -41,10 +41,28 @@ pub fn (mut bs BoundScope) try_declare_var(var symbols.VariableSymbol) bool {
 	return true
 }
 
-pub fn (bs &BoundScope) lookup_fn(name string) ?symbols.FunctionSymbol {
-	var := bs.funcs[name] or {
+pub fn (bs &BoundScope) lookup_fn(mod string, name string) ?symbols.FunctionSymbol {
+	res := symbols.built_in_functions.filter(it.name == name)
+	use_mod := if res.len == 1 {
+		'lib.runtime'
+	} else {
+		mod
+	}
+	unique_name := '${use_mod}.$name'
+	var := bs.funcs[unique_name] or {
 		if bs.parent > 0 {
-			return bs.parent.lookup_fn(name)
+			return bs.parent.lookup_fn_parent(unique_name)
+		}
+		println('FUNCTION $unique_name not found in ${bs.funcs.keys()}')
+		return none
+	}
+	return var
+}
+
+pub fn (bs &BoundScope) lookup_fn_parent(unique_name string) ?symbols.FunctionSymbol {
+	var := bs.funcs[unique_name] or {
+		if bs.parent > 0 {
+			return bs.parent.lookup_fn_parent(unique_name)
 		}
 		return none
 	}
@@ -62,10 +80,11 @@ pub fn (bs &BoundScope) lookup_type_fn(name string, typ symbols.TypeSymbol) ?sym
 	return var
 }
 
-pub fn (bs &BoundScope) lookup_fn_decl(name string) ?ast.FnDeclNode {
+pub fn (bs &BoundScope) lookup_fn_decl(func symbols.FunctionSymbol) ?ast.FnDeclNode {
+	name := func.unique_fn_name()
 	var := bs.fn_decls[name] or {
 		if bs.parent > 0 {
-			return bs.parent.lookup_fn_decl(name)
+			return bs.parent.lookup_fn_decl(func)
 		}
 		return none
 	}
@@ -73,7 +92,7 @@ pub fn (bs &BoundScope) lookup_fn_decl(name string) ?ast.FnDeclNode {
 }
 
 pub fn (mut bs BoundScope) try_declare_fn(func symbols.FunctionSymbol, fn_decl ast.FnDeclNode) bool {
-	name := func.unique_name()
+	name := func.unique_fn_name()
 	if name in bs.funcs {
 		return false
 	}
@@ -83,7 +102,7 @@ pub fn (mut bs BoundScope) try_declare_fn(func symbols.FunctionSymbol, fn_decl a
 }
 
 pub fn (mut bs BoundScope) try_declare_glob_fn(func symbols.FunctionSymbol) bool {
-	name := func.unique_name()
+	name := func.unique_fn_name()
 	if name in bs.funcs {
 		return false
 	}
@@ -91,10 +110,31 @@ pub fn (mut bs BoundScope) try_declare_glob_fn(func symbols.FunctionSymbol) bool
 	return true
 }
 
-pub fn (bs &BoundScope) lookup_type(name string) ?symbols.TypeSymbol {
-	var := bs.types[name] or {
+pub fn (bs &BoundScope) lookup_type(mod string, name string) ?symbols.TypeSymbol {
+	// first check if typ name is built-in?
+	res := symbols.builtin_types.filter(it.name == name)
+	use_mod := if res.len == 1 {
+		'lib.runtime'
+	} else {
+		mod
+	}
+	unique_name := '${use_mod}.${name}'
+	var := bs.types[unique_name] or {
 		if bs.parent != 0 {
-			return bs.parent.lookup_type(name)
+			return bs.parent.lookup_type_parent(unique_name)
+		}
+		return none
+	}
+	return var
+}
+
+// we duplicate this function so we do not want to lookup the 
+// built in types more than once
+pub fn (bs &BoundScope) lookup_type_parent(unique_name string) ?symbols.TypeSymbol {
+
+	var := bs.types[unique_name] or {
+		if bs.parent != 0 {
+			return bs.parent.lookup_type_parent(unique_name)
 		}
 		return none
 	}
@@ -102,18 +142,21 @@ pub fn (bs &BoundScope) lookup_type(name string) ?symbols.TypeSymbol {
 }
 
 pub fn (mut bs BoundScope) try_declare_type(type_symbol symbols.TypeSymbol) bool {
-	if type_symbol.name in bs.types {
+	unique_name := type_symbol.unique_name()
+	if unique_name in bs.types {
+		println('TYPE: $type_symbol already declared')
 		return false
 	}
-	bs.types[type_symbol.name] = type_symbol
+	bs.types[unique_name] = type_symbol
 	return true
 }
 
 pub fn (mut bs BoundScope) try_replace_type(type_symbol symbols.TypeSymbol) bool {
-	if type_symbol.name !in bs.types {
+	unique_name := type_symbol.unique_name()
+	if unique_name !in bs.types {
 		return false
 	}
-	bs.types[type_symbol.name] = type_symbol
+	bs.types[unique_name] = type_symbol
 	return true
 }
 
@@ -183,6 +226,7 @@ pub mut:
 	funcs       []symbols.FunctionSymbol
 	fn_decls    []ast.FnDeclNode
 	stmts       []BoundStmt
+	modules		[]string
 	types       map[string]symbols.TypeSymbol
 pub:
 	previous &BoundGlobalScope

@@ -5,6 +5,7 @@ import rand
 pub struct ErrorTypeSymbol {
 pub:
 	kind   TypeSymbolKind
+	mod    string = 'lib.runtime'
 	name   string = 'error'
 	id     string
 	is_ref bool

@@ -5,6 +5,7 @@ import rand
 pub struct ArrayTypeSymbol {
 pub:
 	kind   TypeSymbolKind
+	mod    string = 'lib.runtime'
 	name   string
 	id     string
 	is_ref bool
@@ -15,17 +16,18 @@ pub:
 	is_val_array bool
 }
 
-pub fn (ss ArrayTypeSymbol) == (rss ArrayTypeSymbol) bool {
-	return ss.elem_typ.name == rss.elem_typ.name
-}
+// pub fn (ss ArrayTypeSymbol) == (rss ArrayTypeSymbol) bool {
+// 	return ss.elem_typ.name == rss.elem_typ.name
+// }
 
 pub fn (ss ArrayTypeSymbol) str() string {
 	return ss.name
 }
 
-pub fn (ss ArrayTypeSymbol) to_ref_type() ArrayTypeSymbol {
+pub fn (ss &ArrayTypeSymbol) to_ref_type() ArrayTypeSymbol {
+	unbox := *ss
 	return ArrayTypeSymbol{
-		...ss
+		...unbox
 		is_ref: true
 	}
 }

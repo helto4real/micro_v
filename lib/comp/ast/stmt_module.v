@@ -19,7 +19,7 @@ pub fn new_module_stmt(tree &SyntaxTree, module_key token.Token, name_tok token.
 	return ModuleStmt{
 		tree: tree
 		pos: source.new_pos_from_pos_bounds(module_key.pos, name_tok.pos)
-		child_nodes: [AstNode(module_key)]
+		child_nodes: [AstNode(module_key), name_tok]
 		module_key: module_key
 		name_tok: name_tok
 	}

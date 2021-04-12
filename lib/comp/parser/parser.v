@@ -11,8 +11,13 @@ mut:
 	syntax_tree &ast.SyntaxTree
 	pos         int
 	tokens      []token.Token
+	mod         string
 pub mut:
 	log &src.Diagnostics // errors when parsing
+	// doing import and module check in the parser
+	// cause it is per-file dependent
+	mod_ok_to_define    bool = true
+	import_ok_to_define bool = true
 }
 
 fn new_parser(mut syntax_tree ast.SyntaxTree) &Parser {
@@ -67,6 +72,30 @@ pub fn (mut p Parser) parse_members() {
 	for p.peek_token(0).kind != .eof {
 		start_tok := p.current_token()
 		member := p.parse_member()
+		if member is ast.GlobStmt {
+			if member.stmt.kind == .import_stmt {
+				if !p.import_ok_to_define {
+					p.log.error_import_can_only_be_defined_at_top_of_file(member.stmt.text_location())
+				}
+			} else if member.stmt.kind == .module_stmt {
+				if p.mod.len > 0 {
+					p.log.error_module_can_only_be_defined_once(member.stmt.text_location())
+				}
+				if !p.mod_ok_to_define {
+					p.log.error_module_can_only_be_defined_as_first_statement(member.stmt.text_location())
+				}
+				p.mod_ok_to_define = false
+			}
+			if p.mod_ok_to_define && member.stmt.kind != .comment_stmt
+				&& member.stmt.kind != .module_stmt {
+				p.mod_ok_to_define = false
+			}
+			if p.import_ok_to_define && member.stmt.kind != .comment_stmt
+				&& member.stmt.kind != .import_stmt && member.stmt.kind != .module_stmt {
+				p.import_ok_to_define = false
+			}
+		}
+
 		p.syntax_tree.root.members << member
 		// if parse member did not consume any tokens
 		// let's skip it and continue
@@ -114,12 +143,13 @@ fn (mut p Parser) parse_struct_members() []ast.StructMemberNode {
 		if p.current_token().kind == .amp {
 			ref_tok = p.match_token(.amp)
 		}
-		typ := p.match_token(.name)
+		expr := p.parse_name_expr()
+		typ_expr := expr as ast.NameExpr
 		if p.current_token() == start_tok {
 			// makes sure we not in infinite loop
 			p.next_token()
 		}
-		members << ast.new_struct_member_node(p.syntax_tree, ident, ref_tok, typ)
+		members << ast.new_struct_member_node(p.syntax_tree, ident, ref_tok, typ_expr)
 	}
 	return members
 }
@@ -316,6 +346,9 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.key_module {
 			return p.parse_module_stmt()
 		}
+		.key_import {
+			return p.parse_import_stmt()
+		}
 		.key_assert {
 			return p.parse_assert_stmt()
 		}
@@ -343,8 +376,17 @@ fn (mut p Parser) parse_assert_stmt() ast.Stmt {
 fn (mut p Parser) parse_module_stmt() ast.Stmt {
 	module_tok := p.match_token(.key_module)
 	module_name := p.match_token(.name)
-
+	p.syntax_tree.mod = module_name.lit
 	return ast.new_module_stmt(p.syntax_tree, module_tok, module_name)
+}
+
+fn (mut p Parser) parse_import_stmt() ast.Stmt {
+	import_tok := p.match_token(.key_import)
+	expr := p.parse_name_expr()
+	name_expr := expr as ast.NameExpr
+	import_stmt := ast.new_import_stmt(p.syntax_tree, import_tok, name_expr)
+	p.syntax_tree.imports << import_stmt
+	return import_stmt
 }
 
 fn (mut p Parser) parse_return_stmt() ast.Stmt {

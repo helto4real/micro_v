@@ -7,6 +7,7 @@ pub struct LocalVariableSymbol {
 pub:
 	name     string
 	typ      TypeSymbol
+	mod      string
 	is_mut   bool
 	is_ref   bool
 	id       string
@@ -31,8 +32,9 @@ pub fn new_empty_local_variable_symbol() LocalVariableSymbol {
 	}
 }
 
-pub fn new_local_variable_symbol(name string, typ TypeSymbol, is_mut bool) LocalVariableSymbol {
+pub fn new_local_variable_symbol(mod string, name string, typ TypeSymbol, is_mut bool) LocalVariableSymbol {
 	return symbols.LocalVariableSymbol{
+		mod: mod
 		name: name
 		typ: typ
 		is_mut: is_mut
@@ -45,6 +47,7 @@ pub fn new_local_variable_symbol(name string, typ TypeSymbol, is_mut bool) Local
 pub struct GlobalVariableSymbol {
 pub:
 	name   string
+	mod    string
 	typ    TypeSymbol
 	is_mut bool
 	is_ref bool
@@ -62,8 +65,9 @@ pub fn (vs GlobalVariableSymbol) str_ident(level int) string {
 	return '${ident}var: $mut_str <$vs.name> ($vs.typ.name)'
 }
 
-pub fn new_global_variable_symbol(name string, typ TypeSymbol, is_mut bool) GlobalVariableSymbol {
+pub fn new_global_variable_symbol(mod string, name string, typ TypeSymbol, is_mut bool) GlobalVariableSymbol {
 	return symbols.GlobalVariableSymbol{
+		mod: mod
 		name: name
 		typ: typ
 		is_mut: is_mut

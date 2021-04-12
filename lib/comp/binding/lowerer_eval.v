@@ -88,6 +88,7 @@ pub fn (mut l Lowerer) rewrite_stmt(stmt BoundStmt) BoundStmt {
 		BoundReturnStmt { return l.rewrite_return_stmt(stmt) }
 		BoundCommentStmt { return stmt }
 		BoundModuleStmt { return stmt }
+		BoundImportStmt { return stmt }
 		BoundAssertStmt { return l.rewrite_assert_stmt(stmt) }
 	}
 }

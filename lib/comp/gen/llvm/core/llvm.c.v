@@ -237,6 +237,11 @@ fn C.LLVMAddInstructionCombiningPass(pass_ref &C.LLVMPassManagerRef)
 fn C.LLVMAddReassociatePass(pass_ref &C.LLVMPassManagerRef)
 fn C.LLVMAddGVNPass(pass_ref &C.LLVMPassManagerRef)
 fn C.LLVMAddNewGVNPass(pass_ref &C.LLVMPassManagerRef)
+fn C.LLVMAddDCEPass(pass_ref &C.LLVMPassManagerRef)
+fn C.LLVMAddAggressiveDCEPass(pass_ref &C.LLVMPassManagerRef)
+
+fn C.LLVMAddInternalizePass(pass_ref &C.LLVMPassManagerRef, all_but_main int)
+fn C.LLVMAddGlobalDCEPass(pass_ref &C.LLVMPassManagerRef)
 // enums
 pub enum IntPredicate {
 	int_eq = 32 //*< equal

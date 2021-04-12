@@ -245,9 +245,13 @@ pub fn (mut m Module) verify() ? {
 
 pub fn (mut m Module) optimize() {
 	m.pass_ref = C.LLVMCreatePassManager()
+	C.LLVMAddInternalizePass(m.pass_ref, 1)
+	// C.LLVMAddAggressiveDCEPass(m.pass_ref)
+	C.LLVMAddDCEPass(m.pass_ref)
 	C.LLVMAddInstructionCombiningPass(m.pass_ref)
 	C.LLVMAddReassociatePass(m.pass_ref)
 	C.LLVMAddGVNPass(m.pass_ref)
+	C.LLVMAddGlobalDCEPass(m.pass_ref)
 	C.LLVMRunPassManager(m.pass_ref, m.mod_ref)
 }
 
@@ -314,7 +318,7 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 		lowered_body := binding.lower(body)
 		m.declare_function(program.main_func, lowered_body)
 	} else {
-		test_main := symbols.new_function_symbol('main', []symbols.ParamSymbol{}, symbols.int_symbol)
+		test_main := symbols.new_function_symbol('main', 'main', []symbols.ParamSymbol{}, symbols.int_symbol)
 		body := binding.new_bound_block_stmt([]binding.BoundStmt{})
 		m.declare_function(test_main, body)
 	}

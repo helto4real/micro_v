@@ -13,6 +13,8 @@ mut:
 	program               &binding.BoundProgram = 0
 	binary_full_path      string
 	result_file_full_path string
+	optimize_jit		  bool // true run optimize passes for JIT
+	optimize_aheadot	  bool // true run optimize passes on ahead of time compile
 }
 
 pub fn new_llvm_generator() LlvmGen {
@@ -29,7 +31,7 @@ pub fn (mut l LlvmGen) generate(binary_full_path string, program &binding.BoundP
 	binary_directory := os.dir(binary_full_path)
 	binary_name := os.file_name(binary_full_path)
 	l.result_file_full_path = os.join_path(binary_directory, '${binary_name}.ll')
-
+	l.optimize_aheadot = true // only optimize ahead of time
 	// Generate code
 	l.generate_code(false)
 
@@ -67,7 +69,9 @@ pub fn (mut l LlvmGen) run_tests(program &binding.BoundProgram) &source.Diagnost
 
 fn (mut l LlvmGen) generate_code(is_test bool) {
 	l.mod.generate_module(l.program, is_test)
-	l.mod.optimize()
+	if l.optimize_aheadot {
+		l.mod.optimize()
+	}
 	l.mod.print_to_file(l.result_file_full_path) or { panic('unexpected error cannot print to file') }
 	l.mod.verify() or { panic('unexpected error generating llvm code') }
 }

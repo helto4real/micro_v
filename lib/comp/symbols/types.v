@@ -66,7 +66,11 @@ pub fn (t TypeSymbol) to_ref_type() TypeSymbol {
 }
 
 pub fn (t TypeSymbol) unique_reciver_func_name(func_name string) string {
-	return '_${t.name}_$func_name'
+	return '${t.mod}.${t.name}.$func_name'
+}
+
+pub fn (t TypeSymbol) unique_name() string {
+	return '${t.mod}.$t.name'
 }
 
 pub fn (typ TypeSymbol) lookup_member_type(name string) TypeSymbol {

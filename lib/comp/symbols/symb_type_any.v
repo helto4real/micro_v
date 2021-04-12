@@ -5,6 +5,7 @@ import rand
 pub struct AnyTypeSymbol {
 pub:
 	kind   TypeSymbolKind
+	mod    string = 'lib.runtime'
 	name   string = 'any'
 	id     string
 	is_ref bool

@@ -26,7 +26,7 @@ pub fn var_decl(var symbols.VariableSymbol, expr BoundExpr, is_mut bool) BoundVa
 }
 
 pub fn var_decl_local(name string, typ symbols.TypeSymbol, expr BoundExpr, is_mut bool) BoundVarDeclStmt {
-	var := symbols.new_local_variable_symbol(name, typ, is_mut)
+	var := symbols.new_local_variable_symbol('local', name, typ, is_mut)
 	return new_var_decl_stmt(var, expr, is_mut) as BoundVarDeclStmt
 }
 

@@ -5,6 +5,7 @@ import rand
 pub struct BuiltInTypeSymbol {
 pub:
 	kind   TypeSymbolKind = .undefined_symbol
+	mod    string = 'lib.runtime'
 	name   string
 	id     string
 	is_ref bool
