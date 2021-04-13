@@ -245,3 +245,7 @@ pub fn new_bound_global_scope(previous &BoundGlobalScope, diagostics &source.Dia
 		types: types
 	}
 }
+
+pub fn (bg BoundGlobalScope) str() string {
+	return 'BoundGlobalScope'
+}

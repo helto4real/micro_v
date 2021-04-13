@@ -75,7 +75,7 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 
 pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&util.source.Diagnostic{}
+	mut result := []&source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
 	}
@@ -98,9 +98,9 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	return new_evaluation_result(result, val)
 }
 
-pub fn (mut c Compilation) gen(back_end gen.Generator, pref util.pref.CompPref) CompilationResult {
+pub fn (mut c Compilation) gen(back_end gen.Generator, pref pref.CompPref) CompilationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&util.source.Diagnostic{}
+	mut result := []&source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
 	}
@@ -117,9 +117,9 @@ pub fn (mut c Compilation) gen(back_end gen.Generator, pref util.pref.CompPref) 
 	return new_compilation_result(diagnostics.all)
 }
 
-pub fn (mut c Compilation) run(back_end gen.Generator, pref util.pref.CompPref) CompilationResult {
+pub fn (mut c Compilation) run(back_end gen.Generator, pref pref.CompPref) CompilationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&util.source.Diagnostic{}
+	mut result := []&source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
 	}
@@ -138,7 +138,7 @@ pub fn (mut c Compilation) run(back_end gen.Generator, pref util.pref.CompPref) 
 
 pub fn (mut c Compilation) run_tests(back_end gen.Generator) CompilationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&util.source.Diagnostic{}
+	mut result := []&source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
 	}
@@ -189,11 +189,11 @@ pub fn (mut c Compilation) emit_tree_for_function(writer io.TermTextWriter, func
 
 pub struct EvaluationResult {
 pub:
-	result []&util.source.Diagnostic
+	result []&source.Diagnostic
 	val    symbols.LitVal
 }
 
-pub fn new_evaluation_result(result []&util.source.Diagnostic, val symbols.LitVal) EvaluationResult {
+pub fn new_evaluation_result(result []&source.Diagnostic, val symbols.LitVal) EvaluationResult {
 	return EvaluationResult{
 		result: result
 		val: val
@@ -202,11 +202,11 @@ pub fn new_evaluation_result(result []&util.source.Diagnostic, val symbols.LitVa
 
 pub struct CompilationResult {
 pub:
-	result []&util.source.Diagnostic
+	result []&source.Diagnostic
 	val    symbols.LitVal
 }
 
-pub fn new_compilation_result(result []&util.source.Diagnostic) CompilationResult {
+pub fn new_compilation_result(result []&source.Diagnostic) CompilationResult {
 	return CompilationResult{
 		result: result
 	}
