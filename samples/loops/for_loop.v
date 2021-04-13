@@ -1,7 +1,9 @@
 fn multi_print(name string) {
-	for i in 0 .. 5 {
-		println(name)
+	for i in 0 .. 1000000 {
+		// println(name)
 	}
 }
 
-multi_print('hello world')
+fn main() {
+	multi_print('hello world')
+}
