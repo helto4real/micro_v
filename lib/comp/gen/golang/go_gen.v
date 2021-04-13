@@ -1,15 +1,15 @@
 module golang
 
 import os
-
 import lib.comp.util.source
+import lib.comp.util.pref
 import lib.comp.binding
 import lib.comp.io
 
 struct GolangGen {
 mut:
-	log  &source.Diagnostics
-	program &binding.BoundProgram = 0
+	log              &source.Diagnostics
+	program          &binding.BoundProgram = 0
 	binary_full_path string
 	gofile_full_path string
 }
@@ -19,19 +19,21 @@ pub fn new_golang_generator() GolangGen {
 		log: source.new_diagonistics()
 	}
 }
-pub fn (mut g GolangGen) run(program &binding.BoundProgram) &source.Diagnostics {
+
+pub fn (mut g GolangGen) run(program &binding.BoundProgram, pref pref.CompPref) &source.Diagnostics {
 	return log
 }
 
 pub fn (mut g GolangGen) run_tests(program &binding.BoundProgram) &source.Diagnostics {
 	return log
 }
-pub fn (mut g GolangGen) generate(binary_full_path string, program &binding.BoundProgram) &source.Diagnostics {
-	g.program = program
-	g.binary_full_path = binary_full_path
 
-	binary_directory := os.dir(binary_full_path)
-	binary_name := os.file_name(binary_full_path)
+pub fn (mut g GolangGen) generate(pref pref.CompPref, program &binding.BoundProgram) &source.Diagnostics {
+	g.program = program
+	g.binary_full_path = pref.output
+
+	binary_directory := os.dir(pref.output)
+	binary_name := os.file_name(pref.output)
 	g.gofile_full_path = os.join_path(binary_directory, '${binary_name}.go')
 
 	// Generate code
@@ -49,11 +51,11 @@ fn (mut g GolangGen) generate_code() {
 	mut cw := io.new_general_code_writer()
 
 	main_template := os.read_file('lib/comp/gen/golang/templates/main.go') or {
-		g.log.error_msg(err.msg) 
+		g.log.error_msg(err.msg)
 		return
 	}
 	cw.writeln(main_template)
-	
+
 	for func in g.program.func_symbols {
 		if func.name != 'main' {
 			body := g.program.func_bodies[func.id]
@@ -72,10 +74,7 @@ fn (mut g GolangGen) generate_code() {
 
 	// write code to file
 
-	os.write_file(g.gofile_full_path, cw.str()) or {
-		g.log.error_msg(err.msg)
-	}
-
+	os.write_file(g.gofile_full_path, cw.str()) or { g.log.error_msg(err.msg) }
 }
 
 fn (mut g GolangGen) compile_code() {

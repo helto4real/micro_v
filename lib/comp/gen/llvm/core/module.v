@@ -44,9 +44,9 @@ mut:
 	built_in_funcs map[string]&C.LLVMValueRef
 	main_func_ref  &C.LLVMValueRef = 0
 	types          map[string]&C.LLVMTypeRef
-	jmp_buff       &C.LLVMValueRef = 0
+	jmp_buff       &C.LLVMValueRef       = 0
 	pass_ref       &C.LLVMPassManagerRef = 0
-	global_const map[GlobalVarRefType]&C.LLVMValueRef
+	global_const   map[GlobalVarRefType]&C.LLVMValueRef
 pub mut:
 	is_test bool
 }
@@ -275,6 +275,16 @@ pub fn (m Module) print_to_file(path string) ? {
 	return none
 }
 
+pub fn (m Module) write_to_file(path string) ? {
+	res := C.LLVMWriteBitcodeToFile(m.mod_ref, path.str)
+	unsafe {
+		if res != 0 {
+			return error('Failed to print ll file $path')
+		}
+	}
+	return none
+}
+
 pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test bool) {
 	m.is_test = is_test
 
@@ -318,7 +328,8 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 		lowered_body := binding.lower(body)
 		m.declare_function(program.main_func, lowered_body)
 	} else {
-		test_main := symbols.new_function_symbol('main', 'main', []symbols.ParamSymbol{}, symbols.int_symbol)
+		test_main := symbols.new_function_symbol('main', 'main', []symbols.ParamSymbol{},
+			symbols.int_symbol)
 		body := binding.new_bound_block_stmt([]binding.BoundStmt{})
 		m.declare_function(test_main, body)
 	}
@@ -369,7 +380,6 @@ pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding
 		m.main_func_ref = f.func_ref
 	}
 }
-
 
 fn (m &Module) get_llvm_type(typ symbols.TypeSymbol) &C.LLVMTypeRef {
 	match typ {

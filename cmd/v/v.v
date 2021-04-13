@@ -8,7 +8,7 @@ import lib.comp.parser
 import lib.comp.symbols
 import lib.comp.util.mod
 import lib.comp.util.source
-// import lib.comp.gen.golang
+import lib.comp.util.pref
 import lib.comp.gen.llvm
 
 enum Command {
@@ -21,11 +21,12 @@ enum Command {
 struct VCommand {
 mut:
 	imported_syntax_trees []&ast.SyntaxTree
-	imported_paths []string
-	has_errors bool
-	mod_cache &mod.ModuleCache
-	start_folder string
+	imported_paths        []string
+	has_errors            bool
+	mod_cache             &mod.ModuleCache
+	start_folder          string
 }
+
 fn new_v_command() VCommand {
 	return VCommand{
 		mod_cache: mod.get_mod_cache()
@@ -53,6 +54,8 @@ fn (mut vc VCommand) run() ? {
 	mut display_lowered_stmts := false
 	mut use_evaluator := false
 	mut command := Command.build
+	mut is_prod := false
+	mut print_ll := false
 	for i, arg in args {
 		if i == 0 {
 			match arg {
@@ -86,6 +89,12 @@ fn (mut vc VCommand) run() ? {
 			'-eval' {
 				use_evaluator = true
 			}
+			'-prod' {
+				is_prod = true
+			}
+			'-ll' {
+				print_ll = true
+			}
 			else {
 				v_files := vc.get_files(arg) ?
 				for v_file in v_files {
@@ -118,8 +127,8 @@ fn (mut vc VCommand) run() ? {
 	if vc.has_errors {
 		exit(-1)
 	}
-	// parse the imported files 
-	
+	// parse the imported files
+
 	vc.parse_imports(mut syntax_trees) ?
 
 	syntax_trees << vc.imported_syntax_trees
@@ -132,15 +141,16 @@ fn (mut vc VCommand) run() ? {
 			// main module
 			mut_syntax_tree.mod = 'main'
 		} else {
-			real_mod := vc.mod_cache.lookup_full_module_name(vc.start_folder, file_path, module_name)
+			real_mod := vc.mod_cache.lookup_full_module_name(vc.start_folder, file_path,
+				module_name)
 			mut_syntax_tree.mod = real_mod
 		}
-
 	}
 
 	if vc.has_errors {
 		exit(-1)
 	}
+
 	if !(display_bound_stmts || display_lowered_stmts) {
 		if use_evaluator {
 			mut comp := comp.create_compilation(syntax_trees)
@@ -170,8 +180,9 @@ fn (mut vc VCommand) run() ? {
 
 				out_path := os.join_path(folder, out_filename)
 
+				pref := pref.new_comp_pref(is_prod, print_ll, out_path)
 				llvm_backend := llvm.new_llvm_generator()
-				res := comp.gen(llvm_backend, out_path)
+				res := comp.gen(llvm_backend, pref)
 
 				if res.result.len > 0 {
 					write_diagnostics(res.result)
@@ -183,7 +194,8 @@ fn (mut vc VCommand) run() ? {
 			} else if command == .run {
 				mut comp := comp.create_compilation(syntax_trees)
 				llvm_backend := llvm.new_llvm_generator()
-				res := comp.run(llvm_backend)
+				pref := pref.new_comp_pref(is_prod, print_ll, '')
+				res := comp.run(llvm_backend, pref)
 
 				if res.result.len > 0 {
 					write_diagnostics(res.result)
@@ -234,7 +246,8 @@ fn (mut vc VCommand) parse_imports(mut syntax_trees []&ast.SyntaxTree) ? {
 				// path already imported
 				continue
 			}
-			files := vc.get_files(path) ? {
+			files := vc.get_files(path) ?
+			{
 				for f in files {
 					syntax_tree := parser.parse_syntax_tree_from_file(f) ?
 					vc.imported_syntax_trees << syntax_tree
@@ -243,7 +256,6 @@ fn (mut vc VCommand) parse_imports(mut syntax_trees []&ast.SyntaxTree) ? {
 						write_diagnostics(syntax_tree.log.all)
 					}
 					vc.has_errors = vc.has_errors || syntax_tree.log.all.len > 0
-
 				}
 			}
 		}
@@ -256,9 +268,19 @@ Mini V (mv) is a minimal implmentation of V lang
 Usage:
 	mv help                     Displays this message
 	mv hello.v                  Compiles the hello.v file
-	mv -display_stmts hello.v   Diplay ast statements
-	mv -display_lower hello.v   Diplay ast statements (lowered)
+	mv run hello.v              Runs the hello.v file without compiling
 	mv                          Starts the repl	
+
+	commands:
+		run file.v			    Runs the v file using JIT
+		test file/folder		Runs any tests in the given file/folder
+		test-self               Run all tests in the compiler
+
+	options:
+		- prod					Optimizes compile and linking
+		- ll					Writes .ll file for debugging
+		- display_stmts			Display AST statements
+		- display_lower			Display lowered AST statements
 	')
 }
 
@@ -293,6 +315,7 @@ fn (mut vc VCommand) get_files(file_or_directory string) ?[]string {
 	}
 	return result
 }
+
 fn get_runtime_files() ?[]string {
 	exe_directory_path := os.dir(os.executable())
 	base_dir := exe_directory_path[..exe_directory_path.len - 6]
@@ -315,4 +338,3 @@ fn (mut vc VCommand) get_self_test_files() ?[]string {
 	}
 	return error('no self test files found in path $path_to_tests')
 }
-

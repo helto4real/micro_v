@@ -164,9 +164,11 @@ fn C.LLVMVerifyModule(mod &C.LLVMModuleRef, action LLVMVerifierFailureAction, er
 
 // C.LLVMBool
 
+// output
 fn C.LLVMWriteBitcodeToFile(mod &C.LLVMModuleRef, path &char) int
 fn C.LLVMPrintModuleToFile(mod &C.LLVMModuleRef, path &char, err_msg &char) int
 
+// allocation ans store
 fn C.LLVMBuildAlloca(builder &C.LLVMBuilderRef, typ &C.LLVMTypeRef, name &char) &C.LLVMValueRef
 fn C.LLVMBuildStore(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, val_ref &C.LLVMValueRef) &C.LLVMValueRef
 
@@ -242,6 +244,7 @@ fn C.LLVMAddAggressiveDCEPass(pass_ref &C.LLVMPassManagerRef)
 
 fn C.LLVMAddInternalizePass(pass_ref &C.LLVMPassManagerRef, all_but_main int)
 fn C.LLVMAddGlobalDCEPass(pass_ref &C.LLVMPassManagerRef)
+
 // enums
 pub enum IntPredicate {
 	int_eq = 32 //*< equal

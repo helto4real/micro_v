@@ -5,6 +5,7 @@ import term
 import lib.comp.ast
 import lib.comp.binding
 import lib.comp.util.source
+import lib.comp.util.pref
 import lib.comp.io
 import lib.comp.symbols
 import lib.comp.gen
@@ -74,7 +75,7 @@ pub fn (mut c Compilation) get_bound_global_scope() &binding.BoundGlobalScope {
 
 pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&source.Diagnostic{}
+	mut result := []&util.source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
 	}
@@ -97,9 +98,9 @@ pub fn (mut c Compilation) evaluate(vars &binding.EvalVariables) EvaluationResul
 	return new_evaluation_result(result, val)
 }
 
-pub fn (mut c Compilation) gen(back_end gen.Generator, output_file string) CompilationResult {
+pub fn (mut c Compilation) gen(back_end gen.Generator, pref util.pref.CompPref) CompilationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&source.Diagnostic{}
+	mut result := []&util.source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
 	}
@@ -112,13 +113,13 @@ pub fn (mut c Compilation) gen(back_end gen.Generator, output_file string) Compi
 	if program.log.all.len > 0 {
 		return new_compilation_result(program.log.all)
 	}
-	diagnostics := back_end.generate(output_file, program)
+	diagnostics := back_end.generate(pref, program)
 	return new_compilation_result(diagnostics.all)
 }
 
-pub fn (mut c Compilation) run(back_end gen.Generator) CompilationResult {
+pub fn (mut c Compilation) run(back_end gen.Generator, pref util.pref.CompPref) CompilationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&source.Diagnostic{}
+	mut result := []&util.source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
 	}
@@ -131,13 +132,13 @@ pub fn (mut c Compilation) run(back_end gen.Generator) CompilationResult {
 	if program.log.all.len > 0 {
 		return new_compilation_result(program.log.all)
 	}
-	diagnostics := back_end.run(program)
+	diagnostics := back_end.run(program, pref)
 	return new_compilation_result(diagnostics.all)
 }
 
 pub fn (mut c Compilation) run_tests(back_end gen.Generator) CompilationResult {
 	mut global_scope := c.get_bound_global_scope()
-	mut result := []&source.Diagnostic{}
+	mut result := []&util.source.Diagnostic{}
 	for syntax in c.syntax_trees {
 		result << syntax.log.all
 	}
@@ -188,11 +189,11 @@ pub fn (mut c Compilation) emit_tree_for_function(writer io.TermTextWriter, func
 
 pub struct EvaluationResult {
 pub:
-	result []&source.Diagnostic
+	result []&util.source.Diagnostic
 	val    symbols.LitVal
 }
 
-pub fn new_evaluation_result(result []&source.Diagnostic, val symbols.LitVal) EvaluationResult {
+pub fn new_evaluation_result(result []&util.source.Diagnostic, val symbols.LitVal) EvaluationResult {
 	return EvaluationResult{
 		result: result
 		val: val
@@ -201,11 +202,11 @@ pub fn new_evaluation_result(result []&source.Diagnostic, val symbols.LitVal) Ev
 
 pub struct CompilationResult {
 pub:
-	result []&source.Diagnostic
+	result []&util.source.Diagnostic
 	val    symbols.LitVal
 }
 
-pub fn new_compilation_result(result []&source.Diagnostic) CompilationResult {
+pub fn new_compilation_result(result []&util.source.Diagnostic) CompilationResult {
 	return CompilationResult{
 		result: result
 	}
