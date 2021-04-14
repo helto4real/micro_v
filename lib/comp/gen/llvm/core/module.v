@@ -298,7 +298,13 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 	// first declare struct names
 	for _, typ in program.types {
 		if typ is symbols.StructTypeSymbol {
-			typ_ref := C.LLVMStructCreateNamed(m.ctx_ref, typ.name.str)
+			mut struct_name := typ.name
+			if typ.is_c_decl {
+				// remove the C. in the name
+				name_parts := struct_name.split('.')
+				struct_name = name_parts[name_parts.len-1]
+			}
+			typ_ref := C.LLVMStructCreateNamed(m.ctx_ref, struct_name.str)
 			m.types[typ.name] = typ_ref
 		}
 	}

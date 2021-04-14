@@ -9,6 +9,7 @@ pub:
 	name   string
 	id     string
 	is_ref bool
+	is_c_decl bool
 pub mut:
 	members []StructTypeMember
 }
@@ -28,11 +29,12 @@ pub fn (ss StructTypeSymbol) to_ref_type() StructTypeSymbol {
 	}
 }
 
-pub fn new_struct_symbol(mod string, name string, is_ref bool) StructTypeSymbol {
+pub fn new_struct_symbol(mod string, name string, is_ref bool, is_c_decl bool) StructTypeSymbol {
 	return StructTypeSymbol{
 		kind: .struct_symbol
 		mod: mod
 		name: name
+		is_c_decl: is_c_decl
 		id: rand.uuid_v4()
 	}
 }

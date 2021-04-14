@@ -18,7 +18,7 @@ pub:
 	members    []StructMemberNode
 	rcbr_tok   token.Token
 
-	is_c_init bool
+	is_c_decl bool
 }
 
 pub fn new_struct_decl_node(tree &SyntaxTree, struct_tok token.Token, name_expr NameExpr, lcbr_tok token.Token, members []StructMemberNode, rcbr_tok token.Token) StructDeclNode {
@@ -36,7 +36,7 @@ pub fn new_struct_decl_node(tree &SyntaxTree, struct_tok token.Token, name_expr 
 		lcbr_tok: lcbr_tok
 		members: members
 		rcbr_tok: rcbr_tok
-		is_c_init: name_expr.names.len > 1 && name_expr.names[0].lit == 'C'
+		is_c_decl: name_expr.names.len > 1 && name_expr.names[0].lit == 'C'
 	}
 }
 

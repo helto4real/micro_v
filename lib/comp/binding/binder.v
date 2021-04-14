@@ -377,7 +377,7 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 
 pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
 	struct_symbol := symbols.new_struct_symbol(struct_decl.tree.mod, struct_decl.name_expr.name_tok.lit,
-		false)
+		false,struct_decl.is_c_decl)
 	if !b.scope.try_declare_type(struct_symbol) {
 		b.log.error_struct_allready_declared(struct_decl.name_expr.name_tok.lit, struct_decl.name_expr.text_location())
 	}
