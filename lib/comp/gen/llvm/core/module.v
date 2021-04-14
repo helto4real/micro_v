@@ -316,7 +316,9 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 					type_refs << type_ref
 				}
 			}
-			C.LLVMStructSetBody(struct_type_ref, type_refs.data, type_refs.len, 0)
+			if type_refs.len > 0 {
+				C.LLVMStructSetBody(struct_type_ref, type_refs.data, type_refs.len, 0)
+			}
 		}
 	}
 
