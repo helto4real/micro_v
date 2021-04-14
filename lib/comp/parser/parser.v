@@ -124,11 +124,12 @@ pub fn (mut p Parser) parse_global_stmt() ast.MemberNode {
 
 pub fn (mut p Parser) parse_struct() ast.StructDeclNode {
 	struct_key := p.match_token(.key_struct)
-	ident := p.match_token(.name)
+	expr := p.parse_name_expr()
+	name_expr := expr as ast.NameExpr
 	lcbr_tok := p.match_token(.lcbr)
 	params := p.parse_struct_members()
 	rcbr_tok := p.match_token(.rcbr)
-	struct_ast := ast.new_struct_decl_node(p.syntax_tree, struct_key, ident, lcbr_tok,
+	struct_ast := ast.new_struct_decl_node(p.syntax_tree, struct_key, name_expr, lcbr_tok,
 		params, rcbr_tok)
 	return struct_ast
 }

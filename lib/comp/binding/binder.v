@@ -345,7 +345,7 @@ pub fn (mut b Binder) bind_import_stmt(import_stmt ast.ImportStmt) BoundStmt {
 pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 	mod := struct_decl.tree.mod
 	// binds the members after all structs has been declared
-	struct_name := struct_decl.name_tok.lit
+	struct_name := struct_decl.name_expr.name_tok.lit
 
 	symbol := b.scope.lookup_type(mod, struct_name) or {
 		panic('unexpected: struct symbol table missing member $struct_name')
@@ -353,8 +353,16 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 	mut struct_symbol := symbol as symbols.StructTypeSymbol
 	for member in struct_decl.members {
 		member_name := member.name_tok.lit
-		member_mod := b.get_full_mod_name(&member.type_expr)
-		mut member_type := b.lookup_type(member_mod, member.type_expr.name_tok.lit)
+		member_typ := member.type_expr.name_tok.lit
+		member_mod := if member.type_expr.names[0].lit != 'C' {
+			b.get_full_mod_name(&member.type_expr)
+		} else {
+			mod
+		}
+		mut member_type := b.scope.lookup_type(member_mod, member.type_expr.name_tok.lit) or {
+			b.log.error_undefined_type(member_typ, member.type_expr.name_tok.text_location())
+			continue
+		}
 		if member.is_ref {
 			member_type = member_type.to_ref_type()
 		}
@@ -368,10 +376,13 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 }
 
 pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
-	struct_symbol := symbols.new_struct_symbol(struct_decl.tree.mod, struct_decl.name_tok.lit,
+	struct_symbol := symbols.new_struct_symbol(struct_decl.tree.mod, struct_decl.name_expr.name_tok.lit,
 		false)
 	if !b.scope.try_declare_type(struct_symbol) {
-		b.log.error_struct_allready_declared(struct_decl.name_tok.lit, struct_decl.name_tok.text_location())
+		b.log.error_struct_allready_declared(struct_decl.name_expr.name_tok.lit, struct_decl.name_expr.text_location())
+	}
+	if struct_decl.name_expr.names.len > 1 && struct_decl.name_expr.names[0].lit != 'C' {
+		b.log.error_struct_only_c_is_allowed_as_name_prefix(struct_decl.name_expr.names[0].text_location())
 	}
 }
 
@@ -917,6 +928,7 @@ fn (mut b Binder) bind_array_init_expr(syntax ast.ArrayInitExpr) BoundExpr {
 }
 
 fn (mut b Binder) get_full_mod_name(name_expr &ast.NameExpr) string {
+	println('GOTHERE')
 	if name_expr.names.len > 1 {
 		mod_ref := name_expr.names[0].lit
 		imported_name_expr := name_expr.tree.imports.filter(it.name_expr.names[it.name_expr.names.len - 1].lit == mod_ref)
@@ -927,38 +939,51 @@ fn (mut b Binder) get_full_mod_name(name_expr &ast.NameExpr) string {
 		}
 		return imported_name_expr[0].name_expr.name_tok.lit
 	}
+	println('GOTHERE2 ${voidptr(name_expr)}')
 	return name_expr.tree.mod
 }
 
 fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
-	mod := b.get_full_mod_name(&syntax.name_expr)
+	println('syntax.name_expr')
+	mod := if !syntax.is_c_init {
+		b.get_full_mod_name(&syntax.name_expr)
+	} else {
+		'${syntax.tree.mod}.C'
+	}
 	name := syntax.name_expr.names[syntax.name_expr.names.len - 1].lit
-	typ := b.lookup_type(mod, name)
+	println('BIND INIT: $name')
+	typ := b.scope.lookup_type(mod, name) or {
+		b.log.error_undefined_type(name, syntax.name_expr.text_location())
+		return new_bound_error_expr()
+	}
 	struct_typ := typ as symbols.StructTypeSymbol
 
 	mut members := []BoundStructInitMember{}
 	for struct_member in struct_typ.members {
+		struct_member_name := struct_member.ident
 		struct_member_typ := struct_member.typ
-		members_result := syntax.members.filter(it.ident.lit == struct_member.ident)
+		println('init member: $struct_member_name')
+		members_result := syntax.members.filter(it.ident.lit == struct_member_name)
 		mut bound_expr := new_empty_expr()
 		if members_result.len == 0 {
-			bound_expr = b.bind_default_value_expr(struct_member_typ)
+			bound_expr = b.bind_default_value_expr(struct_member_typ, syntax.tree)
 		} else {
 			bound_expr = b.bind_expr(members_result[0].expr)
 			bound_expr = b.bind_convertion_diag(members_result[0].expr.text_location(),
 				bound_expr, struct_member_typ)
 		}
-		bound_member := new_bound_struct_init_member(struct_member.ident, bound_expr)
+		bound_member := new_bound_struct_init_member(struct_member_name, bound_expr)
 		members << bound_member
 	}
 
 	return new_bound_struct_init_expr(typ, members)
 }
 
-fn (mut b Binder) bind_default_value_expr(typ symbols.TypeSymbol) BoundExpr {
+fn (mut b Binder) bind_default_value_expr(typ symbols.TypeSymbol, tree &ast.SyntaxTree) BoundExpr {
 	match typ {
 		symbols.StructTypeSymbol {
-			return b.bind_struct_init_expr(ast.new_struct_init_no_members_expr(typ.name))
+			println('BIND EMPTY $typ, $typ.mod')
+			return b.bind_struct_init_expr(ast.new_struct_init_no_members_expr(typ, tree))
 		}
 		symbols.ErrorTypeSymbol {
 			return new_bound_error_expr()

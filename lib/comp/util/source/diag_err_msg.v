@@ -166,6 +166,10 @@ pub fn (mut d Diagnostics) error_import_not_found(loc TextLocation) {
 	d.error('import does not exist', loc)
 }
 
+pub fn (mut d Diagnostics) error_struct_only_c_is_allowed_as_name_prefix(loc TextLocation) {
+	d.error('only C structs can have prefix', loc)
+}
+
 pub fn (mut d Diagnostics) error_module_can_only_be_defined_as_first_statement(loc TextLocation) {
 	d.error('a module can only be definded as first statement', loc)
 }

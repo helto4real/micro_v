@@ -144,7 +144,6 @@ pub fn (bs &BoundScope) lookup_type_parent(unique_name string) ?symbols.TypeSymb
 pub fn (mut bs BoundScope) try_declare_type(type_symbol symbols.TypeSymbol) bool {
 	unique_name := type_symbol.unique_name()
 	if unique_name in bs.types {
-		println('TYPE: $type_symbol already declared')
 		return false
 	}
 	bs.types[unique_name] = type_symbol
