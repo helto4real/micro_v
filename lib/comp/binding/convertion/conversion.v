@@ -71,6 +71,13 @@ pub fn classify(from symbols.TypeSymbol, to symbols.TypeSymbol) Convertion {
 				return convertion.conv_explicit
 			}
 		}
+		if from.kind == .int_symbol {
+			if to is symbols.StructTypeSymbol {
+				if to.is_ref {
+					return convertion.conv_explicit
+				}
+			}
+		}
 	}
 
 	return convertion.conv_none

@@ -18,5 +18,5 @@ struct C.some_ptr {}
 fn main() {
 	// x := C.timespec{}
 	y := C.sockaddr_in {}
-	x := &C.some_ptr(0)
+	x := &C.in_addr(0)
 }

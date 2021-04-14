@@ -305,6 +305,15 @@ fn (mut c Emitter) emit_convert_expr(node binding.BoundConvExpr) &C.LLVMValueRef
 							cb.emit()
 							return cast
 						}
+						.struct_symbol {
+
+							mut to_typ_ref := c.mod.get_llvm_type(to_typ)
+							if to_typ.is_ref {
+								to_typ_ref = C.LLVMPointerType(to_typ_ref, 0)
+							}
+							return C.LLVMBuildIntToPtr(c.mod.builder.builder_ref, expr_val_ref,
+                            		to_typ_ref, no_name.str)
+						}
 						else {
 							panic('convertion from int to $to_typ.name is not supported yet')
 						}
@@ -599,6 +608,10 @@ fn (mut c Emitter) emit_variable_expr(node binding.BoundVariableExpr) &C.LLVMVal
 fn (mut c Emitter) emit_var_decl(node binding.BoundVarDeclStmt) {
 	typ := node.var.typ
 	mut typ_ref := c.mod.get_llvm_type(typ)
+
+	if node.var.typ.is_ref {
+		typ_ref = C.LLVMPointerType(typ_ref, 0)
+	}
 	var_name := node.var.name
 
 	expr_val_ref := c.emit_expr(node.expr)

@@ -639,8 +639,9 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	func_name := expr.name_expr.names[expr.name_expr.names.len - 1].lit // expr.name_expr.name_tok.lit
 
 	// handle convertions as special functions
-	if expr.name_expr.names.len == 1 && expr.params.len == 1 {
-		typ := b.lookup_type(expr.tree.mod, func_name)
+	if (expr.name_expr.names.len == 1 || (is_c_call && expr.name_expr.names.len == 2  )) && expr.params.len == 1 {
+		type_cast_name := if is_c_call {'C.$func_name'} else {func_name}
+		typ := b.lookup_type(expr.tree.mod, type_cast_name) 
 		if typ.kind != .none_symbol {
 			is_ref := expr.name_expr.ref_tok.kind != .void
 			real_typ := if is_ref { typ.to_ref_type() } else { typ }

@@ -188,9 +188,12 @@ fn C.LLVMBuildNot(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, name &char) &C
 
 fn C.LLVMBuildLoad2(builder &C.LLVMBuilderRef, typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef, name &char) &C.LLVMValueRef
 
+// pointers
 fn C.LLVMPointerType(element_type &C.LLVMTypeRef, address_space u32) &C.LLVMTypeRef
-
 fn C.LLVMBuildPointerCast(builder &C.LLVMBuilderRef, val &C.LLVMValueRef, dest_type &C.LLVMTypeRef, name &char) &C.LLVMValueRef
+fn C.LLVMBuildIntToPtr(builder &C.LLVMBuilderRef, val &C.LLVMValueRef,
+                               to_type &C.LLVMTypeRef, name &char) &C.LLVMValueRef 
+fn C.LLVMConstIntToPtr(const_val &C.LLVMValueRef, to_type &C.LLVMTypeRef ) &C.LLVMValueRef
 
 fn C.LLVMGenericValueToInt(gen_val &C.LLVMGenericValueRef, is_signed int) i64
 
