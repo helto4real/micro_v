@@ -384,6 +384,10 @@ pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
 	if struct_decl.name_expr.names.len > 1 && struct_decl.name_expr.names[0].lit != 'C' {
 		b.log.error_struct_only_c_is_allowed_as_name_prefix(struct_decl.name_expr.names[0].text_location())
 	}
+
+	if struct_decl.members.len == 0 && !struct_decl.is_c_decl {
+		b.log.error_declaration_of_empty_stryct(struct_decl.name_expr.name_tok.text_location())
+	}
 }
 
 pub fn (mut b Binder) bind_fn_decl(fn_decl ast.FnDeclNode) {
@@ -954,6 +958,10 @@ fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
 	}
 	struct_typ := typ as symbols.StructTypeSymbol
 
+	if struct_typ.members.len == 0 {
+		b.log.error_init_empty_struct_not_allowed(syntax.name_expr.text_location())
+		return new_bound_error_expr()	
+	}
 	mut members := []BoundStructInitMember{}
 	for struct_member in struct_typ.members {
 		struct_member_name := struct_member.ident

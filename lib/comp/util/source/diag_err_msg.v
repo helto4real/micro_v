@@ -170,6 +170,14 @@ pub fn (mut d Diagnostics) error_struct_only_c_is_allowed_as_name_prefix(loc Tex
 	d.error('only C structs can have prefix', loc)
 }
 
+pub fn (mut d Diagnostics) error_init_empty_struct_not_allowed(loc TextLocation) {
+	d.error('initialize empty structs are not allowed', loc)
+}
+
+pub fn (mut d Diagnostics) error_declaration_of_empty_stryct(loc TextLocation) {
+	d.error('empty struct declarations are not allowed unless it is a C struct', loc)
+}
+
 pub fn (mut d Diagnostics) error_module_can_only_be_defined_as_first_statement(loc TextLocation) {
 	d.error('a module can only be definded as first statement', loc)
 }

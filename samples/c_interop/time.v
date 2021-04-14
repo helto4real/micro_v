@@ -1,3 +1,4 @@
+struct C.T {}
 struct C.in_addr {
 	s_addr int
 }
@@ -17,5 +18,5 @@ struct C.some_ptr {}
 fn main() {
 	// x := C.timespec{}
 	y := C.sockaddr_in {}
-	x := &C.some_ptr{}
+	x := &C.some_ptr(0)
 }
