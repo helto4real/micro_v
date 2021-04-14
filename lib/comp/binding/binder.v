@@ -928,7 +928,6 @@ fn (mut b Binder) bind_array_init_expr(syntax ast.ArrayInitExpr) BoundExpr {
 }
 
 fn (mut b Binder) get_full_mod_name(name_expr &ast.NameExpr) string {
-	println('GOTHERE')
 	if name_expr.names.len > 1 {
 		mod_ref := name_expr.names[0].lit
 		imported_name_expr := name_expr.tree.imports.filter(it.name_expr.names[it.name_expr.names.len - 1].lit == mod_ref)
@@ -939,19 +938,16 @@ fn (mut b Binder) get_full_mod_name(name_expr &ast.NameExpr) string {
 		}
 		return imported_name_expr[0].name_expr.name_tok.lit
 	}
-	println('GOTHERE2 ${voidptr(name_expr)}')
 	return name_expr.tree.mod
 }
 
 fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
-	println('syntax.name_expr')
 	mod := if !syntax.is_c_init {
 		b.get_full_mod_name(&syntax.name_expr)
 	} else {
 		'${syntax.tree.mod}.C'
 	}
 	name := syntax.name_expr.names[syntax.name_expr.names.len - 1].lit
-	println('BIND INIT: $name')
 	typ := b.scope.lookup_type(mod, name) or {
 		b.log.error_undefined_type(name, syntax.name_expr.text_location())
 		return new_bound_error_expr()
@@ -962,7 +958,6 @@ fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
 	for struct_member in struct_typ.members {
 		struct_member_name := struct_member.ident
 		struct_member_typ := struct_member.typ
-		println('init member: $struct_member_name')
 		members_result := syntax.members.filter(it.ident.lit == struct_member_name)
 		mut bound_expr := new_empty_expr()
 		if members_result.len == 0 {
@@ -982,7 +977,6 @@ fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
 fn (mut b Binder) bind_default_value_expr(typ symbols.TypeSymbol, tree &ast.SyntaxTree) BoundExpr {
 	match typ {
 		symbols.StructTypeSymbol {
-			println('BIND EMPTY $typ, $typ.mod')
 			return b.bind_struct_init_expr(ast.new_struct_init_no_members_expr(typ, tree))
 		}
 		symbols.ErrorTypeSymbol {

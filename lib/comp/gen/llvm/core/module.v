@@ -299,8 +299,9 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 	for _, typ in program.types {
 		if typ is symbols.StructTypeSymbol {
 			mut struct_name := typ.name
-			if typ.is_c_decl {
-				// remove the C. in the name
+			if typ.is_c_decl && typ.members.len == 0 {
+				// remove the C. in the name when whe have opaque type
+				// defined in a library
 				name_parts := struct_name.split('.')
 				struct_name = name_parts[name_parts.len-1]
 			}
