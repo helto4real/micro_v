@@ -36,3 +36,7 @@ pub fn (ex ImportStmt) text_location() source.TextLocation {
 pub fn (ex ImportStmt) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex ImportStmt) str() string {
+	return typeof(ex).name
+}

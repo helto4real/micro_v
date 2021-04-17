@@ -4,12 +4,13 @@ import os
 import lib.comp.util.source
 import lib.comp.util.pref
 import lib.comp.binding
-import lib.comp.gen.llvm.core
+// import lib.comp.gen.llvm.core
+import lib.comp.gen.llvm.emit
 
 struct LlvmGen {
 mut:
 	log                   &source.Diagnostics
-	mod                   core.Module
+	mod                   emit.EmitModule
 	pref                  pref.CompPref
 	program               &binding.BoundProgram = 0
 	result_file_full_path string
@@ -20,7 +21,7 @@ mut:
 pub fn new_llvm_generator() LlvmGen {
 	return LlvmGen{
 		log: source.new_diagonistics()
-		mod: core.new_llvm_module('program')
+		mod: emit.new_emit_module('program')
 	}
 }
 
@@ -40,7 +41,7 @@ pub fn (mut l LlvmGen) generate(pref pref.CompPref, program &binding.BoundProgra
 	// Compile generated code
 	l.compile_code()
 
-	l.mod.free()
+	l.mod.dispose()
 	return l.log
 }
 
@@ -50,20 +51,21 @@ pub fn (mut l LlvmGen) run(program &binding.BoundProgram, pref pref.CompPref) &s
 	l.result_file_full_path = 'generated.ll'
 	l.generate_code(false)
 	l.mod.run_main()
-	l.mod.free()
+	l.mod.dispose()
 	return l.log
 }
 
-pub fn (mut l LlvmGen) run_tests(program &binding.BoundProgram) &source.Diagnostics {
+pub fn (mut l LlvmGen) run_tests(program &binding.BoundProgram, pref pref.CompPref) &source.Diagnostics {
 	l.program = program
-	l.result_file_full_path = 'generated'
+	l.pref = pref
+	l.result_file_full_path = 'generated.ll'
 	l.generate_code(true)
 	res := l.mod.run_tests()
 	if !res {
 		l.log.error_msg('test failed')
 	}
 
-	l.mod.free()
+	l.mod.dispose()
 	return l.log
 }
 
@@ -85,7 +87,6 @@ fn (mut l LlvmGen) compile_code() {
 	l.mod.write_to_file(l.result_file_full_path) or {
 		panic('unexpected error cannot write to file')
 	}
-
 	binary_directory := os.dir(l.pref.output)
 	binary_name := os.file_name(l.pref.output)
 	optimize := if l.pref.is_prod { '-O2' } else { '-O0' }

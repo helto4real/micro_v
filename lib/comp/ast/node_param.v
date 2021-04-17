@@ -27,7 +27,7 @@ pub:
 pub fn new_param_node(tree &SyntaxTree, name_tok token.Token, typ TypeNode, is_mut bool) ParamNode {
 	return ParamNode{
 		tree: tree
-		pos: source.new_pos_from_pos_bounds(name_tok.pos, typ.name_tok.pos)
+		pos: source.new_pos_from_pos_bounds(name_tok.pos, typ.name_expr.pos)
 		child_nodes: [AstNode(name_tok), typ]
 		name_tok: name_tok
 		typ: typ
@@ -40,7 +40,7 @@ pub fn new_param_node(tree &SyntaxTree, name_tok token.Token, typ TypeNode, is_m
 pub fn new_ref_param_node(tree &SyntaxTree, name_tok token.Token, typ TypeNode, is_mut bool) ParamNode {
 	return ParamNode{
 		tree: tree
-		pos: source.new_pos_from_pos_bounds(name_tok.pos, typ.name_tok.pos)
+		pos: source.new_pos_from_pos_bounds(name_tok.pos, typ.name_expr.pos)
 		child_nodes: [AstNode(name_tok), typ]
 		name_tok: name_tok
 		typ: typ
@@ -63,5 +63,5 @@ pub fn (ex ParamNode) node_str() string {
 }
 
 pub fn (ex ParamNode) str() string {
-	return '$ex.name_tok.lit $ex.typ.name_tok.lit'
+	return '$ex.name_tok.lit $ex.typ.name_expr.name_tok.lit'
 }

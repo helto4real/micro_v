@@ -121,3 +121,7 @@ pub fn (ex StructMemberNode) text_location() source.TextLocation {
 pub fn (ex StructMemberNode) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex StructMemberNode) str() string {
+	return 'StructMemberNode'
+}

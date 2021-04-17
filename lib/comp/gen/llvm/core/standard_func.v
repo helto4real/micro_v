@@ -2,19 +2,19 @@ module core
 
 import lib.comp.symbols
 
-pub fn (mut m Module) add_standard_funcs() {
+pub fn (mut m AModule) add_standard_funcs() {
 	m.add_longjmp_setjmp()
 	m.declare_common_global_vars()
 }
 
-fn (mut m Module) add_longjmp_setjmp() {
+fn (mut m AModule) add_longjmp_setjmp() {
 	// declare the jmp buffer
 	// TODO: size depending on target
 	jumb_buff_global_name := 'jmp_buf'
 	jmp_buf_typ_ref := m.types['JumpBuffer']
 
 	mut value_refs := [C.LLVMConstInt(m.get_llvm_type(symbols.i64_symbol), i64(0),
-		false)]
+		bool_to_llvm_bool(false))]
 
 	res := C.LLVMConstNamedStruct(jmp_buf_typ_ref, value_refs.data, value_refs.len)
 
@@ -30,7 +30,7 @@ fn (mut m Module) add_longjmp_setjmp() {
 	longjmp_function_args_type << C.LLVMInt64TypeInContext(m.ctx_ref)
 	// puts function
 	longjmp_function_type := C.LLVMFunctionType(C.LLVMVoidTypeInContext(m.ctx_ref), longjmp_function_args_type.data,
-		2, false)
+		2, bool_to_llvm_bool(false))
 	// Add puts
 	func_typ_longjmp := C.LLVMAddFunction(m.mod_ref, 'longjmp', longjmp_function_type)
 	m.built_in_funcs['longjmp'] = func_typ_longjmp
@@ -42,13 +42,13 @@ fn (mut m Module) add_longjmp_setjmp() {
 	setjmp_function_args_type << C.LLVMPointerType(jmp_buf_typ_ref, 0)
 	// puts function
 	setjmp_function_type := C.LLVMFunctionType(C.LLVMInt64TypeInContext(m.ctx_ref), setjmp_function_args_type.data,
-		1, false)
+		1, bool_to_llvm_bool(false))
 	// Add puts
 	func_typ_setjmp := C.LLVMAddFunction(m.mod_ref, 'setjmp', setjmp_function_type)
 	m.built_in_funcs['setjmp'] = func_typ_setjmp
 }
 
-pub fn (mut m Module) declare_common_global_vars() {
+pub fn (mut m AModule) declare_common_global_vars() {
 	// add the global sprintf buffer
 	buff_typ := C.LLVMArrayType(C.LLVMInt8TypeInContext(m.ctx_ref), 21)
 	name := 'sprintf_buff'
@@ -58,7 +58,7 @@ pub fn (mut m Module) declare_common_global_vars() {
 	m.global_const[GlobalVarRefType.sprintf_buff] = buff_ref
 }
 
-pub fn (mut m Module) get_standard_struct_types() []symbols.StructTypeSymbol {
+pub fn (mut m AModule) get_standard_struct_types() []symbols.StructTypeSymbol {
 	// declare the jumb_buf
 	// Todo: size depending on target arch
 	mut res := []symbols.StructTypeSymbol{}

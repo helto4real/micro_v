@@ -42,7 +42,7 @@ fn (mut p NodePrinter) visit_tree(node ast.Node, last_child bool, indent string)
 			} else if node is ast.BinaryExpr {
 				b.writeln(term.bright_cyan(' $node.op_tok.kind'))
 			} else if node is ast.NameExpr {
-				b.writeln(term.bright_cyan(' ${node.name_tok}'))
+				b.writeln(term.bright_cyan(' ${node.name}'))
 			} else if node is ast.UnaryExpr {
 				b.writeln(term.bright_cyan(' $node.op_tok.kind'))
 			} else {

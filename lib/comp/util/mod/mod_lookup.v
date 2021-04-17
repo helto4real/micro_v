@@ -99,9 +99,6 @@ pub fn (mut mc ModuleCache) lookup_full_module_name(start_folder string, file_pa
 			return module_name
 		}
 		mod_path := real_path[real_start_folder_name.len+1..]
-		if mod_path.starts_with('home') {
-			println('$start_folder, $real_start_folder_name : $real_path')
-		}
 		return get_module_name_from_path(mod_path)
 	}
 
@@ -114,9 +111,6 @@ pub fn (mut mc ModuleCache) lookup_full_module_name(start_folder string, file_pa
 			return module_name
 		}
 		mod_path := real_path[vmod_path.len+1..]
-		if mod_path.starts_with('home') {
-			println('HOOOME2')
-		}
 		return get_module_name_from_path(mod_path)
 	}
 

@@ -49,3 +49,7 @@ pub fn (ex VarDeclStmt) text_location() source.TextLocation {
 pub fn (ex VarDeclStmt) node_str() string {
 	return typeof(ex).name
 }
+
+pub fn (ex VarDeclStmt) str() string {
+	return typeof(ex).name
+}

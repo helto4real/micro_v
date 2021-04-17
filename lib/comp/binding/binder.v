@@ -345,7 +345,7 @@ pub fn (mut b Binder) bind_import_stmt(import_stmt ast.ImportStmt) BoundStmt {
 pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 	mod := struct_decl.tree.mod
 	// binds the members after all structs has been declared
-	struct_name := struct_decl.name_expr.name_tok.lit
+	struct_name := struct_decl.name_expr.name
 
 	symbol := b.scope.lookup_type(mod, struct_name) or {
 		panic('unexpected: struct symbol table missing member $struct_name')
@@ -353,13 +353,13 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 	mut struct_symbol := symbol as symbols.StructTypeSymbol
 	for member in struct_decl.members {
 		member_name := member.name_tok.lit
-		member_typ := member.type_expr.name_tok.lit
+		member_typ := member.type_expr.name
 		member_mod := if member.type_expr.names[0].lit != 'C' {
 			b.get_full_mod_name(&member.type_expr)
 		} else {
 			mod
 		}
-		mut member_type := b.scope.lookup_type(member_mod, member.type_expr.name_tok.lit) or {
+		mut member_type := b.scope.lookup_type(member_mod, member.type_expr.name) or {
 			b.log.error_undefined_type(member_typ, member.type_expr.name_tok.text_location())
 			continue
 		}
@@ -376,10 +376,10 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 }
 
 pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
-	struct_symbol := symbols.new_struct_symbol(struct_decl.tree.mod, struct_decl.name_expr.name_tok.lit,
+	struct_symbol := symbols.new_struct_symbol(struct_decl.tree.mod, struct_decl.name_expr.name,
 		false,struct_decl.is_c_decl)
 	if !b.scope.try_declare_type(struct_symbol) {
-		b.log.error_struct_allready_declared(struct_decl.name_expr.name_tok.lit, struct_decl.name_expr.text_location())
+		b.log.error_struct_allready_declared(struct_decl.name_expr.name, struct_decl.name_expr.text_location())
 	}
 	if struct_decl.name_expr.names.len > 1 && struct_decl.name_expr.names[0].lit != 'C' {
 		b.log.error_struct_only_c_is_allowed_as_name_prefix(struct_decl.name_expr.names[0].text_location())
@@ -786,9 +786,9 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 }
 
 pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
-	bound_typ := b.lookup_type(typ.tree.mod, typ.name_tok.lit)
+	bound_typ := b.lookup_type(typ.tree.mod, typ.name_expr.name_tok.lit)
 	if bound_typ.kind == .none_symbol {
-		b.log.error_undefined_type(typ.name_tok.lit, typ.text_location())
+		b.log.error_undefined_type(typ.name_expr.name_tok.lit, typ.text_location())
 	}
 	if typ.is_ref {
 		return bound_typ.to_ref_type()
@@ -798,7 +798,6 @@ pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
 
 pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 	if syntax.ident.names.len > 1 {
-		// Todo: handle modules later
 		// We are not allowed to declare variables like var.x := 1
 		b.log.error_structs_fields_declared_on_init(syntax.ident.names[1].text_location())
 		return new_bound_expr_stmt(new_bound_error_expr())
@@ -941,7 +940,7 @@ fn (mut b Binder) get_full_mod_name(name_expr &ast.NameExpr) string {
 			b.log.error_import_not_found(name_expr.text_location())
 			return ''
 		}
-		return imported_name_expr[0].name_expr.name_tok.lit
+		return imported_name_expr[0].name_expr.name
 	}
 	return name_expr.tree.mod
 }

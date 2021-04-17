@@ -48,7 +48,7 @@ pub fn classify(from symbols.TypeSymbol, to symbols.TypeSymbol) Convertion {
 		if from.kind == to.kind {
 			return convertion.conv_ident
 		}
-		if from.kind == .bool_symbol || from.kind == .int_symbol {
+		if from.kind == .bool_symbol || from.kind == .int_symbol || from.kind == .i64_symbol{
 			if to.kind == .string_symbol {
 				return convertion.conv_explicit
 			}
@@ -72,6 +72,9 @@ pub fn classify(from symbols.TypeSymbol, to symbols.TypeSymbol) Convertion {
 			}
 		}
 		if from.kind == .int_symbol {
+			if to.kind == .i64_symbol {
+				return convertion.conv_implicit
+			}
 			if to is symbols.StructTypeSymbol {
 				if to.is_ref {
 					return convertion.conv_explicit

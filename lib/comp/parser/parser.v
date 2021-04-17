@@ -183,12 +183,10 @@ pub fn (mut p Parser) parse_function() ast.FnDeclNode {
 
 	expr := p.parse_name_expr()
 	name_expr := expr as ast.NameExpr
-
 	lpar_tok := p.match_token(.lpar)
 	params := p.parse_fn_params()
 	rpar_tok := p.match_token(.rpar)
 	ret_type := p.parse_return_type_node()
-
 	if p.current_token().kind == .lcbr {
 		block := p.parse_block_stmt()
 		return ast.new_fn_decl_node(p.syntax_tree, pub_key, fn_key, receiver, name_expr,
@@ -219,22 +217,18 @@ fn (mut p Parser) parse_fn_params() ast.SeparatedSyntaxList {
 }
 
 fn (mut p Parser) parse_return_type_node() ast.TypeNode {
-	if p.current_token().kind != .name {
+	if p.current_token().kind != .name && p.current_token().kind != .amp {
 		// this is a procedure without return type
-		return ast.new_type_node(p.syntax_tree, token.tok_void, token.tok_void, token.tok_void,
-			false)
+		void_expr := ast.new_name_expr(p.syntax_tree, [token.tok_void], false) 
+		return ast.new_type_node(p.syntax_tree, void_expr, token.tok_void)
 	}
-	mut ref_tok := token.tok_void
-	if p.current_token().kind == .amp {
-		ref_tok = p.match_token(.amp)
-	}
-	name := p.match_token(.name)
-
-	if ref_tok == token.tok_void {
-		return ast.new_type_node(p.syntax_tree, name, ref_tok, token.tok_void, false)
-	} else {
-		return ast.new_type_node(p.syntax_tree, name, ref_tok, token.tok_void, true)
-	}
+	// mut ref_tok := token.tok_void
+	// if p.current_token().kind == .amp {
+	// 	ref_tok = p.match_token(.amp)
+	// }
+	expr := p.parse_name_expr()
+	name_expr := expr as ast.NameExpr
+	return ast.new_type_node(p.syntax_tree, name_expr, token.tok_void)
 }
 
 fn (mut p Parser) parse_param_node() ast.ParamNode {
@@ -255,19 +249,15 @@ fn (mut p Parser) parse_param_node() ast.ParamNode {
 }
 
 fn (mut p Parser) parse_type_node(parse_ref bool) ast.TypeNode {
-	mut ref_tok := token.tok_void
 	mut variadic_tok := token.tok_void
-	mut is_ref := parse_ref
 	if p.current_token().kind == .dot_dot_dot {
 		variadic_tok = p.match_token(.dot_dot_dot)
 	}
-	if p.current_token().kind == .amp {
-		ref_tok = p.match_token(.amp)
-		is_ref = true
-	}
-	name := p.match_token(.name)
 
-	return ast.new_type_node(p.syntax_tree, name, ref_tok, variadic_tok, is_ref)
+	expr := p.parse_name_expr()
+	name_expr := expr as ast.NameExpr
+
+	return ast.new_type_node(p.syntax_tree, name_expr, variadic_tok)
 }
 
 // peek, returns a token at offset from current postion

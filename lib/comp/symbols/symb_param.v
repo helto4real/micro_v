@@ -32,7 +32,7 @@ pub fn new_param_symbol(name string, typ TypeSymbol, is_mut bool, is_variadic bo
 		typ: typ
 		is_mut: is_mut
 		is_variadic: is_variadic
-		is_ref: is_mut || is_ref
+		is_ref: is_mut || typ.is_ref
 		id: rand.uuid_v4()
 	}
 }

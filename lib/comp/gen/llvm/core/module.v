@@ -18,27 +18,27 @@ pub enum GlobalVarRefType {
 	nl
 }
 
-pub struct Builder {
+pub struct ABuilder {
 mut:
 	builder_ref &C.LLVMBuilderRef
 }
 
-pub fn new_llvm_builder(ctx_ref &C.LLVMContextRef) Builder {
-	return Builder{
+pub fn new_llvm_builder(ctx_ref &C.LLVMContextRef) ABuilder {
+	return ABuilder{
 		builder_ref: C.LLVMCreateBuilderInContext(ctx_ref)
 	}
 }
 
-pub fn (mut b Builder) free() {
+pub fn (mut b ABuilder) free() {
 	C.LLVMDisposeBuilder(b.builder_ref)
 }
 
-pub struct Module {
+pub struct AModule {
 	ctx_ref     &C.LLVMContextRef
 	mod_ref     &C.LLVMModuleRef
 	exec_engine &C.LLVMExecutionEngineRef = 0
 mut:
-	builder Builder
+	builder ABuilder
 	funcs   []&Function
 	// funcs_map      map[string]&Function
 	built_in_funcs map[string]&C.LLVMValueRef
@@ -51,11 +51,11 @@ pub mut:
 	is_test bool
 }
 
-pub fn new_llvm_module(name string) Module {
+pub fn new_llvm_module(name string) AModule {
 	ctx_ref := C.LLVMContextCreate()
 	builder := new_llvm_builder(ctx_ref)
 	mod_ref := C.LLVMModuleCreateWithNameInContext(name.str, ctx_ref)
-	mut mod := Module{
+	mut mod := AModule{
 		ctx_ref: ctx_ref
 		mod_ref: mod_ref
 		builder: builder
@@ -64,7 +64,7 @@ pub fn new_llvm_module(name string) Module {
 	return mod
 }
 
-fn (mut m Module) init_globals() {
+fn (mut m AModule) init_globals() {
 	// add standard structs
 
 	standard_structs := m.get_standard_struct_types()
@@ -80,12 +80,12 @@ fn (mut m Module) init_globals() {
 				type_refs << type_ref
 			}
 		}
-		C.LLVMStructSetBody(typ_ref, type_refs.data, type_refs.len, 0)
+		C.LLVMStructSetBody(typ_ref, type_refs.data, type_refs.len, bool_to_llvm_bool(false))
 	}
 	m.add_standard_funcs()
 }
 
-pub fn (mut m Module) free() {
+pub fn (mut m AModule) free() {
 	if m.exec_engine != 0 {
 		err := &char(0)
 		// if exec engine exists we need to remove the module
@@ -94,16 +94,16 @@ pub fn (mut m Module) free() {
 		if C.LLVMRemoveModule(m.exec_engine, m.mod_ref, &out_mod, err) != 0 {
 			panic('failed to remove module: $err')
 		}
+		C.LLVMDisposeExecutionEngine(m.exec_engine)
 	}
 	// Todo: Dispose engine
 	m.builder.free()
 
 	C.LLVMDisposeModule(m.mod_ref)
-	C.LLVMDisposeExecutionEngine(m.exec_engine)
 	C.LLVMContextDispose(m.ctx_ref)
 }
 
-pub fn (mut m Module) init_jit_execution_engine() ? {
+pub fn (mut m AModule) init_jit_execution_engine() ? {
 	C.LLVMLinkInMCJIT()
 	if C.LLVMInitializeNativeTarget() != 0 {
 		return error('Failed to init the native target')
@@ -124,14 +124,14 @@ pub fn (mut m Module) init_jit_execution_engine() ? {
 	return none
 }
 
-pub fn (mut m Module) run_main() i64 {
+pub fn (mut m AModule) run_main() i64 {
 	m.init_jit_execution_engine() or { panic('error init execution enging : $err.msg') }
 	if m.exec_engine == 0 {
 		panic('unexpected, execution engine have to be initialized before calling run_main')
 	}
 	args := []&C.LLVMGenericValueRef{}
 	res := C.LLVMRunFunction(m.exec_engine, m.main_func_ref, 0, args.data)
-	return i64(C.LLVMGenericValueToInt(res, 1))
+	return i64(C.LLVMGenericValueToInt(res, core.bool_to_llvm_bool(true)))
 }
 
 fn compare_function_by_file_and_name(a &Function, b &Function) int {
@@ -149,7 +149,7 @@ fn compare_function_by_file_and_name(a &Function, b &Function) int {
 	return 1
 }
 
-pub fn (mut m Module) run_tests() bool {
+pub fn (mut m AModule) run_tests() bool {
 	m.init_jit_execution_engine() or { panic('error init execution enging : $err.msg') }
 	if m.exec_engine == 0 {
 		panic('unexpected, execution engine have to be initialized before calling run_main')
@@ -192,7 +192,7 @@ pub fn (mut m Module) run_tests() bool {
 		}
 		args := []&C.LLVMGenericValueRef{}
 		res := C.LLVMRunFunction(m.exec_engine, func.func_ref, 0, args.data)
-		int_res := C.LLVMGenericValueToInt(res, 1)
+		int_res := C.LLVMGenericValueToInt(res, core.bool_to_llvm_bool(true))
 		if int_res == 0 {
 		} else {
 			current_file_has_errors = true
@@ -231,11 +231,11 @@ fn nr_of_digits(n int) int {
 	return total
 }
 
-pub fn (mut m Module) verify() ? {
+pub fn (mut m AModule) verify() ? {
 	mut err := &char(0)
 	res := C.LLVMVerifyModule(m.mod_ref, .llvm_abort_process_action, err)
 
-	if res != 0 || err != 0 {
+	if llvm_bool_to_bool(res) {
 		unsafe {
 			return error(err.vstring())
 		}
@@ -243,7 +243,7 @@ pub fn (mut m Module) verify() ? {
 	return none
 }
 
-pub fn (mut m Module) optimize() {
+pub fn (mut m AModule) optimize() {
 	m.pass_ref = C.LLVMCreatePassManager()
 	C.LLVMAddInternalizePass(m.pass_ref, 1)
 	// C.LLVMAddAggressiveDCEPass(m.pass_ref)
@@ -255,16 +255,16 @@ pub fn (mut m Module) optimize() {
 	C.LLVMRunPassManager(m.pass_ref, m.mod_ref)
 }
 
-pub fn (mut m Module) add_global_string_literal_ptr(str_val string) &C.LLVMValueRef {
+pub fn (mut m AModule) add_global_string_literal_ptr(str_val string) &C.LLVMValueRef {
 	return C.LLVMBuildGlobalStringPtr(m.builder.builder_ref, &char(str_val.str), &char(core.no_name.str))
 }
 
-pub fn (mut m Module) add_global_struct_const_ptr(typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef) &C.LLVMValueRef {
+pub fn (mut m AModule) add_global_struct_const_ptr(typ_ref &C.LLVMTypeRef, val_ref &C.LLVMValueRef) &C.LLVMValueRef {
 	val := C.LLVMBuildStructGEP2(m.builder.builder_ref, typ_ref, val_ref, 0, core.no_name.str)
 	return val
 }
 
-pub fn (m Module) print_to_file(path string) ? {
+pub fn (m AModule) print_to_file(path string) ? {
 	mut err := &char(0)
 	res := C.LLVMPrintModuleToFile(m.mod_ref, path.str, err)
 	unsafe {
@@ -275,7 +275,7 @@ pub fn (m Module) print_to_file(path string) ? {
 	return none
 }
 
-pub fn (m Module) write_to_file(path string) ? {
+pub fn (m AModule) write_to_file(path string) ? {
 	res := C.LLVMWriteBitcodeToFile(m.mod_ref, path.str)
 	unsafe {
 		if res != 0 {
@@ -285,15 +285,8 @@ pub fn (m Module) write_to_file(path string) ? {
 	return none
 }
 
-pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test bool) {
+pub fn (mut m AModule) generate_module(program &binding.BoundProgram, is_test bool) {
 	m.is_test = is_test
-
-	// first declare all C function declares
-	for func in program.func_symbols {
-		if func.is_c_decl {
-			m.declare_function(func, binding.new_empty_block_stmt())
-		}
-	}
 
 	// first declare struct names
 	for _, typ in program.types {
@@ -309,6 +302,14 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 			m.types[typ.name] = typ_ref
 		}
 	}
+	
+	// first declare all C function declares
+	for func in program.func_symbols {
+		if func.is_c_decl {
+			m.declare_function(func, binding.new_empty_block_stmt())
+		}
+	}
+
 
 	// then declare struct body
 	for _, typ in program.types {
@@ -324,7 +325,7 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 				}
 			}
 			if type_refs.len > 0 {
-				C.LLVMStructSetBody(struct_type_ref, type_refs.data, type_refs.len, 0)
+				C.LLVMStructSetBody(struct_type_ref, type_refs.data, type_refs.len, bool_to_llvm_bool(false))
 			}
 		}
 	}
@@ -374,7 +375,7 @@ pub fn (mut m Module) generate_module(program &binding.BoundProgram, is_test boo
 	}
 }
 
-pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding.BoundBlockStmt) {
+pub fn (mut m AModule) declare_function(func symbols.FunctionSymbol, body binding.BoundBlockStmt) {
 	f := new_llvm_func(m, func, body)
 	if func.is_c_decl {
 		// if it is a C decl, add it to built_in_funcs
@@ -390,7 +391,7 @@ pub fn (mut m Module) declare_function(func symbols.FunctionSymbol, body binding
 	}
 }
 
-fn (m &Module) get_llvm_type(typ symbols.TypeSymbol) &C.LLVMTypeRef {
+fn (m &AModule) get_llvm_type(typ symbols.TypeSymbol) &C.LLVMTypeRef {
 	match typ {
 		symbols.BuiltInTypeSymbol {
 			match typ.kind {
@@ -425,7 +426,7 @@ fn (m &Module) get_llvm_type(typ symbols.TypeSymbol) &C.LLVMTypeRef {
 			return C.LLVMVoidTypeInContext(m.ctx_ref)
 		}
 		symbols.StructTypeSymbol {
-			return m.types[typ.name] or { panic('unexpected, type $typ not found in symols table') }
+			return m.types[typ.name] or { panic('unexpected, type $typ not found in symols table ${m.types.keys()}') }
 		}
 		else {
 			panic('unexpected, unsupported type ref $typ, $typ.kind')
