@@ -10,7 +10,7 @@ import lib.comp.gen.llvm.emit
 struct LlvmGen {
 mut:
 	log                   &source.Diagnostics
-	mod                   emit.EmitModule
+	mod                   &emit.EmitModule
 	pref                  pref.CompPref
 	program               &binding.BoundProgram = 0
 	result_file_full_path string

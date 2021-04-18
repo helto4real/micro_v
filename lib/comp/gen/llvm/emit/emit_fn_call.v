@@ -4,12 +4,14 @@ import lib.comp.symbols
 import lib.comp.binding
 
 fn (mut fd FunctionDecl) emit_call_builtin(name string, args ...core.Value) core.Value {
-	fn_val := fd.em.built_in_funcs[name] or {panic('builtin function $name not declared!')}
-	params_vals := core.value_refs(args)
-	return core.Value {
-		c: C.LLVMBuildCall(fd.bld.c, fn_val.c, params_vals.data,
-			params_vals.len, no_name.str)
-	} 
+	func_name :=  if !name.starts_with('C.') { name } else { name[2..] }
+	res := fd.em.funcs.filter(it.name == func_name)
+	if res.len == 0 {
+		panic('builtin function $name not declared in $fd.em.built_in_funcs')	
+	}
+	func := res[0]
+	// fn_val := res[0].val//fd.em.built_in_funcs[name] or {panic('builtin function $name not declared in $fd.em.built_in_funcs.keys()!')}
+	return fd.bld.create_call2(func.typ, func.val, args)
 }
 
 fn (mut fd FunctionDecl) emit_variable_value(var &symbols.VariableSymbol, expr &binding.BoundExpr, val core.Value) core.Value {
@@ -25,20 +27,27 @@ fn (mut fd FunctionDecl) emit_variable_value(var &symbols.VariableSymbol, expr &
 	return val
 }
 
-[inline]
-fn (mut em EmitModule) lookup_fn_decl(func_id string) FunctionDecl {
-	func_res := em.funcs.filter(it.func != 0 && it.func.id == func_id)
+// [inline]
+fn (mut em EmitModule) lookup_fn_decl(func_id string) &FunctionDecl {
+	for f in em.funcs {
+		if f.func != 0 {
+		println('$f.func.id')
+
+		}
+	}
+	func_res := em.funcs.filter(it.func.id == func_id)
 	if func_res.len != 1 {
-		panic('unexpected, function with id $func_id are not declared.')
+		panic('unexpected, function with id $func_id are not declared. ($em.funcs.len)')
 	}
 	return func_res[0]
 }
 fn (mut fd FunctionDecl) emit_call_fn(call_expr binding.BoundCallExpr) core.Value {
 
-
-	func_decl := fd.em.lookup_fn_decl(call_expr.func.id)
-	println('$func_decl')
-	
+	func_res := fd.em.funcs.filter(it.func >0 && it.func.id == call_expr.func.id)
+	if func_res.len != 1 {
+		panic('unexpected, function $call_expr.func.name not declared. ($fd.em.funcs.len)')
+	}
+	func_decl := func_res[0]
 	args_len := if func_decl.func.receiver.is_empty {
 		call_expr.params.len
 	} else {
@@ -46,8 +55,8 @@ fn (mut fd FunctionDecl) emit_call_fn(call_expr binding.BoundCallExpr) core.Valu
 	}
 	mut args := []core.Value{cap: args_len}
 	if !func_decl.func.receiver.is_empty {
-		rec_var := func_decl.var_decl[call_expr.receiver.id] or {
-			panic('receiver: $call_expr.receiver ($call_expr.receiver.id) is not declared')
+		rec_var := fd.em.var_decl[call_expr.receiver.id] or {
+			panic('receiver: $call_expr.receiver ($call_expr.receiver.id) is not declared $fd.em.var_decl, $fd.em.var_decl.len')
 		}
 		if !func_decl.func.receiver.is_ref {
 			args << fd.dereference(rec_var)

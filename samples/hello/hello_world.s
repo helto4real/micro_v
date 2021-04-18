@@ -63,6 +63,22 @@ main:                                   # @main
 	.size	main, .Lfunc_end0-main
 	.cfi_endproc
                                         # -- End function
+	.globl	vstrlen                 # -- Begin function vstrlen
+	.p2align	4, 0x90
+	.type	vstrlen,@function
+vstrlen:                                # @vstrlen
+	.cfi_startproc
+# %bb.0:                                # %entry
+	pushq	%rax
+	.cfi_def_cfa_offset 16
+	callq	strlen
+	popq	%rcx
+	.cfi_def_cfa_offset 8
+	retq
+.Lfunc_end1:
+	.size	vstrlen, .Lfunc_end1-vstrlen
+	.cfi_endproc
+                                        # -- End function
 	.type	sprintf_buff,@object    # @sprintf_buff
 	.bss
 	.globl	sprintf_buff

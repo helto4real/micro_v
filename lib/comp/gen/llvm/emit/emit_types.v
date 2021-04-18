@@ -47,7 +47,7 @@ fn (em &EmitModule) get_type_from_type_symb(typ symbols.TypeSymbol) core.Type {
 			return  em.ctx.void_type()
 		}
 		symbols.StructTypeSymbol {
-			return em.types[typ.name] or { panic('unexpected, type $typ not found in symols table ${em.types.keys()}') }
+			return em.types[typ.name] or { panic('unexpected, type $typ.name not found in symols table ${em.types.keys()}') }
 		}
 		else {
 			panic('unexpected, unsupported type ref $typ, $typ.kind')

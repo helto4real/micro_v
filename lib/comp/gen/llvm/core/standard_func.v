@@ -58,13 +58,13 @@ pub fn (mut m AModule) declare_common_global_vars() {
 	m.global_const[GlobalVarRefType.sprintf_buff] = buff_ref
 }
 
-pub fn (mut m AModule) get_standard_struct_types() []symbols.StructTypeSymbol {
-	// declare the jumb_buf
-	// Todo: size depending on target arch
-	mut res := []symbols.StructTypeSymbol{}
-	mut jmp_buf_symbol := symbols.new_struct_symbol('lib.runtime', 'JumpBuffer', false, false)
-	jmp_buf_symbol.members << symbols.new_struct_type_member('', symbols.i64_symbol)
-	res << jmp_buf_symbol
+// pub fn (mut m AModule) get_standard_struct_types() []symbols.StructTypeSymbol {
+// 	// declare the jumb_buf
+// 	// Todo: size depending on target arch
+// 	// mut res := []symbols.StructTypeSymbol{}
+// 	// mut jmp_buf_symbol := symbols.new_struct_symbol('lib.runtime', 'JumpBuffer', false, false)
+// 	// jmp_buf_symbol.members << symbols.new_struct_type_member('', symbols.i64_symbol)
+// 	// res << jmp_buf_symbol
 
-	return res
-}
+// 	return res
+// }

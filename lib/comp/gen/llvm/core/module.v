@@ -67,21 +67,21 @@ pub fn new_llvm_module(name string) AModule {
 fn (mut m AModule) init_globals() {
 	// add standard structs
 
-	standard_structs := m.get_standard_struct_types()
-	for standard_struct in standard_structs {
-		typ_ref := C.LLVMStructCreateNamed(m.ctx_ref, standard_struct.name.str)
-		m.types[standard_struct.name] = typ_ref
-		mut type_refs := []&C.LLVMTypeRef{}
-		for member in standard_struct.members {
-			type_ref := m.get_llvm_type(member.typ)
-			if member.typ.is_ref {
-				type_refs << C.LLVMPointerType(type_ref, 0)
-			} else {
-				type_refs << type_ref
-			}
-		}
-		C.LLVMStructSetBody(typ_ref, type_refs.data, type_refs.len, bool_to_llvm_bool(false))
-	}
+	// standard_structs := m.get_standard_struct_types()
+	// for standard_struct in standard_structs {
+	// 	typ_ref := C.LLVMStructCreateNamed(m.ctx_ref, standard_struct.name.str)
+	// 	m.types[standard_struct.name] = typ_ref
+	// 	mut type_refs := []&C.LLVMTypeRef{}
+	// 	for member in standard_struct.members {
+	// 		type_ref := m.get_llvm_type(member.typ)
+	// 		if member.typ.is_ref {
+	// 			type_refs << C.LLVMPointerType(type_ref, 0)
+	// 		} else {
+	// 			type_refs << type_ref
+	// 		}
+	// 	}
+	// 	C.LLVMStructSetBody(typ_ref, type_refs.data, type_refs.len, bool_to_llvm_bool(false))
+	// }
 	m.add_standard_funcs()
 }
 
@@ -377,14 +377,7 @@ pub fn (mut m AModule) generate_module(program &binding.BoundProgram, is_test bo
 
 pub fn (mut m AModule) declare_function(func symbols.FunctionSymbol, body binding.BoundBlockStmt) {
 	f := new_llvm_func(m, func, body)
-	if func.is_c_decl {
-		// if it is a C decl, add it to built_in_funcs
-		m.built_in_funcs[f.name] = f.func_ref
-		m.funcs << f
-	} else {
-		// m.funcs_map[func.id] = f
-		m.funcs << f
-	}
+	m.funcs << f
 
 	if func.name == 'main' {
 		m.main_func_ref = f.func_ref

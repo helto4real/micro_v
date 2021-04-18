@@ -108,6 +108,7 @@ pub struct C.LLVMGenericValueRef {}
 [typedef]
 pub struct C.LLVMPassManagerRef {}
 
+[typedef]
 pub struct C.LLVMOpaqueValue {}
 
 fn C.LLVMInt1Type() &C.LLVMTypeRef

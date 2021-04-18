@@ -261,7 +261,6 @@ fn (mut c Emitter) emit_convert_expr(node binding.BoundConvExpr) &C.LLVMValueRef
 	expr_val_ref := c.emit_expr(expr)
 	from_typ := expr.typ
 	to_typ := node.typ
-	println('CONVERT: $node.expr from $from_typ -> $to_typ')
 	match from_typ {
 		symbols.BuiltInTypeSymbol {
 			match from_typ.kind {

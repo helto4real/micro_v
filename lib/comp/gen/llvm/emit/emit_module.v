@@ -6,9 +6,10 @@ import lib.comp.symbols
 import lib.comp.binding
 import lib.comp.gen.llvm.core
 
+[heap]
 pub struct EmitModule {
 pub mut:
-	exec_engine &core.ExecutionEngine=0
+	exec_engine &core.ExecutionEngine =0
 	pass_manager &core.PassManager = 0
 	mod core.Module
 	ctx core.Context
@@ -16,17 +17,18 @@ pub mut:
 
 	is_test bool
 
-	types map[string]core.Type
 	global_const map[GlobalVarRefType]core.Value
-	built_in_funcs map[string]core.Value
-	funcs []FunctionDecl
+	built_in_funcs []core.Value
+	funcs []&FunctionDecl
+	var_decl map[string]core.Value
+	types map[string]core.Type
 	// global variables that are convenient to have access to
 }
 
-pub fn new_emit_module(name string) EmitModule {
+pub fn new_emit_module(name string) &EmitModule {
 	ctx := core.new_context()
 
-	return EmitModule {
+	return &EmitModule {
 		mod: ctx.new_module(name)
 		ctx: ctx
 		bld: ctx.new_builder()
@@ -55,11 +57,11 @@ pub fn (mut em EmitModule) init_execution_engine() ? {
 	em.exec_engine = em.mod.create_mc_jit_compiler() ?
 }
 
-pub fn (em EmitModule) write_to_file(path string) ? {
+pub fn (em &EmitModule) write_to_file(path string) ? {
 	return em.mod.write_to_file(path)
 }
 
-pub fn (em EmitModule) print_to_file(path string) ? {
+pub fn (em &EmitModule) print_to_file(path string) ? {
 	return em.mod.print_to_file(path)
 }
 
@@ -94,9 +96,9 @@ pub fn (mut em EmitModule) emit_struct_decl(program &binding.BoundProgram) {
 }
 
 pub fn (mut em EmitModule) emit_c_fn_decl(program &binding.BoundProgram) {
-	for func in program.func_symbols {
+	for i, func in program.func_symbols {
 		if func.is_c_decl {
-			em.declare_fn(func, binding.new_empty_block_stmt())
+			em.declare_fn(&program.func_symbols[i], binding.new_empty_block_stmt())
 		}
 	}
 }
@@ -128,32 +130,41 @@ pub fn (mut em EmitModule) emit_main_fn(program &binding.BoundProgram) {
 			panic('unexpected, function body for $program.main_func.name ($program.main_func.id) missing')
 		}
 		lowered_body := binding.lower(body)
-		em.declare_fn(program.main_func, lowered_body)
+		em.declare_fn(&program.main_func, lowered_body)
 	} else {
 		test_main := symbols.new_function_symbol('main', 'main', []symbols.ParamSymbol{},
 			symbols.int_symbol)
 		body := binding.new_empty_block_stmt()
-		em.declare_fn(test_main, body)
+		em.declare_fn(&test_main, body)
 	}
 }
 
 pub fn (mut em EmitModule) emit_fn_decl(program &binding.BoundProgram) {
 	// first declare all functions except the main and C declares
-	for func in program.func_symbols {
+	for i, func in program.func_symbols {
 		if func.name != 'main' && !func.is_c_decl {
 			// this is a normal function, expect a body
 			body := program.func_bodies[func.id] or {
 				panic('unexpected, function body for $func.name ($func.id) missing')
 			}
 			lowered_body := binding.lower(body)
-			em.declare_fn(func, lowered_body)
+			em.declare_fn(&program.func_symbols[i], lowered_body)
 		}
 	}
 }
 pub fn (mut em EmitModule) emit_main_fn_body() {
-	for f in em.funcs {
-		mut ff := f
+	for i, _ in em.funcs {
+		mut ff := em.funcs[i]
 		if ff.func.name == 'main' {
+			ff.emit_body()
+		}
+	}
+}
+
+pub fn (mut em EmitModule) emit_fn_bodies() {
+	for i,_ in em.funcs {
+		mut ff := em.funcs[i]
+		if ff.func.name != 'main' && !ff.func.is_c_decl{
 			ff.emit_body()
 		}
 	}
@@ -161,19 +172,20 @@ pub fn (mut em EmitModule) emit_main_fn_body() {
 pub fn (mut em EmitModule) generate_module(program &binding.BoundProgram, is_test bool) {
 	em.is_test = is_test
 	// emit globals and standard functions
-	em.emit_global_types()
-	em.emit_global_vars()
-	em.emit_standard_funcs()
+	// em.emit_global_types()
+	// em.emit_standard_funcs()
 	
 	// emit program structs and functions
 	em.emit_struct_decl(program)
 	em.emit_c_fn_decl(program)
+	em.emit_global_vars()
 	em.emit_struct_bodies(program)
 	em.emit_main_fn(program)
 	em.emit_fn_decl(program)
 
 	// finally emit function bodies
 	em.emit_main_fn_body()
+	em.emit_fn_bodies()
 
 
 }

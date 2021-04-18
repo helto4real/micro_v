@@ -34,11 +34,11 @@ pub struct Builder {
 pub:
 	c &C.LLVMBuilderRef
 }
+
 pub struct PassManager {
 pub:
 	c &C.LLVMPassManagerRef
 }
-pub fn (c PassManager) str() string { return 'PassManager ($c.c)'}
 
 pub struct Use  {
 pub:
@@ -474,6 +474,12 @@ pub fn (b Builder) create_global_string_ptr(str string, name string) Value {
 pub fn (b Builder) create_load2(typ Type, val Value) Value {
 	return Value {
 		c: C.LLVMBuildLoad2(b.c, typ.c, val.c, no_name.str)
+	}
+}
+
+pub fn (b Builder) create_named_load2(typ Type, val Value, name string) Value {
+	return Value {
+		c: C.LLVMBuildLoad2(b.c, typ.c, val.c, name.str)
 	}
 }
 

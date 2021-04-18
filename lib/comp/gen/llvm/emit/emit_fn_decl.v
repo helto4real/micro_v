@@ -3,12 +3,8 @@ import lib.comp.gen.llvm.core
 import lib.comp.binding
 import lib.comp.symbols
 
-fn (mut em EmitModule) new_fn_decl(name string, return_typ core.Type) FunctionDecl {
-	return new_fn_decl(name, return_typ, mut em)
-}
-
-fn (mut em EmitModule) declare_fn(func &symbols.FunctionSymbol, stmts binding.BoundBlockStmt) FunctionDecl {
-	func_name := if !func.is_c_decl { func.name } else { func.name[2..] }
+fn (mut em EmitModule) declare_fn(func &symbols.FunctionSymbol, stmts binding.BoundBlockStmt) &FunctionDecl {
+	func_name :=  if !func.is_c_decl { func.name } else { func.name[2..] }
 
 	mut return_typ := if func_name == 'main' || (em.is_test && func_name.starts_with('test_')) {
 		em.ctx.int32_type()
@@ -19,7 +15,7 @@ fn (mut em EmitModule) declare_fn(func &symbols.FunctionSymbol, stmts binding.Bo
 		return_typ = return_typ.to_pointer_type(0)
 	}
 	
-	mut fn_decl := new_fn_decl_with_symbol(func_name, return_typ, func, stmts, mut em)
+	mut fn_decl := new_fn_decl_with_symbol(func_name, return_typ, func, stmts, em)
 	mut params, is_variadic := fn_decl.get_params_types(func.params)
 
 	if !func.receiver.is_empty {
@@ -37,14 +33,14 @@ fn (mut em EmitModule) declare_fn(func &symbols.FunctionSymbol, stmts binding.Bo
 
 	fn_decl.emit()
 	em.funcs << fn_decl
-	em.built_in_funcs[func_name] = fn_decl.val
 
 	return fn_decl
 }
 
+[heap]
 pub struct FunctionDecl {
 mut:
-	em EmitModule
+	em &EmitModule
 	bld core.Builder
 	ctx core.Context
 	func &symbols.FunctionSymbol = 0
@@ -54,8 +50,7 @@ mut:
 	val core.Value
 	last_val core.Value
 	current_block core.BasicBlock
-	// 
-	var_decl map[string]core.Value
+	
 	blocks map[string]core.BasicBlock
 
 pub:
@@ -66,8 +61,8 @@ pub mut:
 	params []core.Type
 }
 
-pub fn new_fn_decl(name string, return_typ core.Type, mut em EmitModule) FunctionDecl {
-	return FunctionDecl {
+pub fn new_fn_decl(name string, return_typ core.Type, em &EmitModule) &FunctionDecl {
+	return &FunctionDecl {
 		name: name
 		return_typ: return_typ
 		em: em
@@ -76,8 +71,8 @@ pub fn new_fn_decl(name string, return_typ core.Type, mut em EmitModule) Functio
 	}
 }
 
-pub fn new_fn_decl_with_symbol(name string, return_typ core.Type, func &symbols.FunctionSymbol, body &binding.BoundBlockStmt, mut em EmitModule) FunctionDecl {
-	return FunctionDecl {
+pub fn new_fn_decl_with_symbol(name string, return_typ core.Type, func &symbols.FunctionSymbol, body &binding.BoundBlockStmt, em &EmitModule) &FunctionDecl {
+	return &FunctionDecl {
 		name: name
 		return_typ: return_typ
 		em: em
@@ -174,9 +169,9 @@ pub fn (mut fd FunctionDecl) emit_blocks_and_parameters() {
 		}
 
 		if fd.func.receiver.is_ref || fd.func.receiver.is_mut {
-			fd.var_decl[fd.func.receiver.id] = param_val
+			fd.em.var_decl[fd.func.receiver.id] = param_val
 		} else {
-			fd.var_decl[fd.func.receiver.id] = fd.bld.alloca_and_store(receiver_typ, param_val, '')
+			fd.em.var_decl[fd.func.receiver.id] = fd.bld.alloca_and_store(receiver_typ, param_val, '')
 		}
 	}
 
@@ -189,9 +184,9 @@ pub fn (mut fd FunctionDecl) emit_blocks_and_parameters() {
 			fd.em.get_type_from_type_symb(param.typ)
 		}
 		if param.is_ref || param.is_mut {
-			fd.var_decl[param.id] = param_val
+			fd.em.var_decl[param.id] = param_val
 		} else {
-			fd.var_decl[param.id] = fd.bld.alloca_and_store(param_typ, param_val, '')
+			fd.em.var_decl[param.id] = fd.bld.alloca_and_store(param_typ, param_val, '')
 		}
 	}
 }
@@ -213,7 +208,8 @@ fn (mut fd FunctionDecl) emit_main_fn_body_error_handling() {
 
 	error_exit_block.move_after(continue_block)
 
-	res := fd.emit_call_builtin('setjmp', fd.em.global_const[GlobalVarRefType.jmp_buff])
+	buff_arg := fd.em.global_const[GlobalVarRefType.jmp_buff]
+	res := fd.emit_call_builtin('C.setjmp', buff_arg)
 	
 	cmp_val := fd.bld.create_icmp(.int_eq, res, fd.em.ctx.c_i64(0, false)) 
 

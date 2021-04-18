@@ -108,7 +108,7 @@ fn (mut fd FunctionDecl) emit_var_decl(node binding.BoundVarDeclStmt) {
 
 	expr_val := fd.emit_expr(node.expr)
 	var_val := fd.bld.alloca_and_store(typ, expr_val, var_name)
-	fd.var_decl[node.var.id] = var_val
+	fd.em.var_decl[node.var.id] = var_val
 }
 
 fn (mut fd FunctionDecl) emit_assert_stmt(node binding.BoundAssertStmt) {
@@ -137,7 +137,7 @@ fn (mut fd FunctionDecl) emit_assert_stmt(node binding.BoundAssertStmt) {
 	fd.println(sw.str())
 
 	// then do longjmp to exit
-	fd.emit_call_builtin('longjmp', fd.em.global_const[GlobalVarRefType.jmp_buff], fd.ctx.c_i64(1, true))
+	fd.emit_call_builtin('C.longjmp', fd.em.global_const[GlobalVarRefType.jmp_buff], fd.ctx.c_i64(1, true))
 	
 	fd.bld.create_unreachable()
 
@@ -149,12 +149,12 @@ fn (mut fd FunctionDecl) println(text string) {
 	lit_expr_val := fd.emit_literal_expr(lit_expr)
 	
 	if text.len > 0 {
-		fd.emit_call_builtin('printf',
+		fd.emit_call_builtin('C.printf',
 			fd.em.get_global_string(.printf_str_nl), 
 			lit_expr_val)
 	} else {
 		// empty string
-		fd.emit_call_builtin('printf', fd.em.get_global_string(.nl))
+		fd.emit_call_builtin('C.printf', fd.em.get_global_string(.nl))
 	}
 }
 
@@ -162,7 +162,7 @@ fn (mut fd FunctionDecl) println(text string) {
 fn (mut fd FunctionDecl) emit_variable_expr(node binding.BoundVariableExpr) core.Value {
 	var_typ := node.var.typ
 	typ_ref := fd.em.get_type_from_type_symb(var_typ)
-	mut var := fd.var_decl[node.var.id] or {
+	mut var := fd.em.var_decl[node.var.id] or {
 		panic('unexpected, variable not declared: $node.var.name')
 	}
 	mut current_typ_ref := typ_ref
@@ -188,13 +188,13 @@ fn (mut fd FunctionDecl) emit_variable_expr(node binding.BoundVariableExpr) core
 			}
 			kind := var.value_kind()
 
-			if node.var.is_ref && kind != .argument{ 
-				var = fd.bld.create_load2(typ_ref.to_pointer_type(0), var)
-			}
+			// if node.var.is_ref && kind != .argument{ 
+			// 	var = fd.bld.create_load2(typ_ref.to_pointer_type(0), var)
+			// }
 			val := fd.bld.create_gep2(typ_ref, var, indicies) 
 
-			if kind != .argument {
-				loaded_val := fd.bld.create_load2(current_typ_ref, val)
+			if kind != .argument  {
+				loaded_val := fd.bld.create_named_load2(current_typ_ref, val, 'var_expr')
 				return loaded_val
 			}
 			return val
@@ -219,7 +219,7 @@ fn (mut fd FunctionDecl) emit_variable_expr(node binding.BoundVariableExpr) core
 fn (mut fd FunctionDecl) emit_assignment_expr(node binding.BoundAssignExpr) core.Value {
 	expr_ref := fd.emit_expr(node.expr)
 	var := node.var
-	mut ref_var := fd.var_decl[var.id]
+	mut ref_var := fd.em.var_decl[var.id]
 
 	typ := var.typ
 	if typ is symbols.StructTypeSymbol && node.names.len > 0 {
@@ -297,12 +297,12 @@ fn (mut fd FunctionDecl) emit_call_expr(node binding.BoundCallExpr) core.Value {
 			}
 			param := fd.emit_expr(node.params[0])
 
-			return fd.emit_call_builtin('printf', glob_print_str, param)
+			return fd.emit_call_builtin('C.printf', glob_print_str, param)
 			
 		}
 		'exit' {
 			param := fd.emit_expr(node.params[0])
-			return fd.emit_call_builtin('exit', param)
+			return fd.emit_call_builtin('C.exit', param)
 		}
 		else {}
 	}
@@ -323,7 +323,7 @@ fn (mut fd FunctionDecl) emit_convert_expr(node binding.BoundConvExpr) core.Valu
 	expr_val_ref := fd.emit_expr(expr)
 	from_typ := expr.typ
 	to_typ := node.typ
-	println('CONVERT: $node.expr from $from_typ -> $to_typ')
+	println('CONVERT FROM $from_typ to $to_typ')
 	match from_typ {
 		symbols.BuiltInTypeSymbol {
 			match from_typ.kind {
@@ -470,7 +470,7 @@ fn (mut fd FunctionDecl) cast_int_to_string(int_expr &binding.BoundExpr, int_val
 			fd.ctx.int8_type().to_pointer_type(0)
 	)
 	fd.emit_call_builtin(
-		'sprintf', cast, glob_num_println, 
+		'C.sprintf', cast, glob_num_println, 
 		fd.dereference_if_ref(int_expr, int_val))
 
 	return cast
@@ -653,6 +653,7 @@ fn (mut fd FunctionDecl) dereference_if_ref(expr &binding.BoundExpr, val core.Va
 		is_ref = expr.var.is_ref
 	}
 	if is_ref {
+		println('DEREFERENCE: $expr ')
 		return fd.dereference(val)
 	}
 	return val
@@ -661,5 +662,10 @@ fn (mut fd FunctionDecl) dereference_if_ref(expr &binding.BoundExpr, val core.Va
 [inline]
 pub fn (mut fd FunctionDecl) dereference(val core.Value) core.Value {
 	elem_typ := val.typ().element_type()
+	typ_kind := elem_typ.type_kind()
+	print('DEREF VAL:')
+	val.dump_value()
+	println(', $typ_kind')
+
 	return fd.bld.create_load2(elem_typ, val)
 }

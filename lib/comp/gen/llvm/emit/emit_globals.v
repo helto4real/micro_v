@@ -1,5 +1,4 @@
 module emit
-import lib.comp.symbols
 import lib.comp.gen.llvm.core
 
 const (
@@ -17,37 +16,6 @@ pub enum GlobalVarRefType {
 	nl
 }
 
-pub fn (mut em EmitModule) emit_global_types() {
-
-	standard_structs := em.get_standard_struct_types()
-	for standard_struct in standard_structs {
-		typ := em.ctx.new_named_struct_type(standard_struct.name)
-		em.types[standard_struct.name] = typ
-		mut member_types := []core.Type{}
-		for member in standard_struct.members {
-			member_type := em.get_type_from_type_symb(member.typ)
-			if member.typ.is_ref {
-				member_types << member_type.to_pointer_type(0)
-			} else {
-				member_types << member_type
-			}
-		}
-		typ.struct_set_body(member_types, false)
-	}
-}
-
-pub fn (mut em EmitModule) get_standard_struct_types() []symbols.StructTypeSymbol {
-	mut res := []symbols.StructTypeSymbol{}
-	
-	// declare the jumb_buf
-	// Todo: size depending on target arch
-	mut jmp_buf_symbol := symbols.new_struct_symbol('lib.runtime', 'JumpBuffer', false, false)
-	jmp_buf_symbol.members << symbols.new_struct_type_member('', symbols.i64_symbol)
-	res << jmp_buf_symbol
-
-	return res
-}
-
 pub fn (mut em EmitModule) emit_global_vars() {
 	// add the global sprintf buffer
 	buff_typ := em.ctx.int8_type().to_array_type(21)
@@ -56,6 +24,15 @@ pub fn (mut em EmitModule) emit_global_vars() {
 	null_val := buff_typ.const_null()
 	buff_val.set_initializer(null_val)
 	em.global_const[GlobalVarRefType.sprintf_buff] = buff_val
+
+
+	jmp_buf_typ_ref := em.types['C.JumpBuffer'] or {panic('type `C.JumpBuffer` is not in $em.types.keys()  $')}
+	mut values := [core.const_int(em.ctx.int64_type(), u64(0), false)]
+	init_struct := jmp_buf_typ_ref.create_const_named_struct(values)
+	global_jmp_buff_val := em.mod.add_global('jmp_buf', jmp_buf_typ_ref)
+	global_jmp_buff_val.set_initializer(init_struct)
+	em.global_const[GlobalVarRefType.jmp_buff] = global_jmp_buff_val
+
 }
 
 fn (mut em EmitModule) get_global_string(glob_typ GlobalVarRefType) core.Value {
