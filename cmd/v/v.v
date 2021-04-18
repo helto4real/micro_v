@@ -70,7 +70,7 @@ fn (mut vc VCommand) run() ? {
 				'test-self' {
 					command = .test_self
 					files << vc.get_self_test_files() ?
-					break
+					continue
 				}
 				'build' {
 					command = .build
@@ -207,7 +207,8 @@ fn (mut vc VCommand) run() ? {
 			} else if command == .test || command == .test_self {
 				mut comp := comp.create_test(syntax_trees)
 				llvm_backend := llvm.new_llvm_generator()
-				res := comp.run_tests(llvm_backend)
+				pref := pref.new_comp_pref(is_prod, print_ll, '')
+				res := comp.run_tests(llvm_backend, pref)
 
 				if res.result.len > 0 {
 					write_diagnostics(res.result)
@@ -234,7 +235,7 @@ fn (mut vc VCommand) parse_imports(mut syntax_trees []&ast.SyntaxTree) ? {
 	for syntax in syntax_trees {
 		mut mut_syntax := syntax // v bug requires this
 		for imported in syntax.imports {
-			name := imported.name_expr.name_tok.lit
+			name := imported.name_expr.name
 			filename := syntax.source.filename
 			path := vc.mod_cache.lookup_module_path_by_file(filename, name)
 			if path.len == 0 {

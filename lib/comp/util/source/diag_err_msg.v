@@ -79,7 +79,11 @@ pub fn (mut d Diagnostics) error_convertion_differ_by_reference(is_ref bool, con
 }
 
 pub fn (mut d Diagnostics) error_only_variables_can_be_input_to_mutable_parameters(loc TextLocation) {
-	d.error('only variables can be input to mutable parameters', loc)
+	d.error('only mutable variables can be input to mutable parameters', loc)
+}
+
+pub fn (mut d Diagnostics) error_literals_are_not_allowed_as_reference(loc TextLocation) {
+	d.error('literals are not allowed as reference', loc)
 }
 
 pub fn (mut d Diagnostics) error_provide_mut_keyword_for_mutable_parameters(loc TextLocation) {
@@ -164,6 +168,18 @@ pub fn (mut d Diagnostics) error_a_fixed_value_array_cannot_be_muted(loc TextLoc
 
 pub fn (mut d Diagnostics) error_import_not_found(loc TextLocation) {
 	d.error('import does not exist', loc)
+}
+
+pub fn (mut d Diagnostics) error_struct_only_c_is_allowed_as_name_prefix(loc TextLocation) {
+	d.error('only C structs can have prefix', loc)
+}
+
+pub fn (mut d Diagnostics) error_init_empty_struct_not_allowed(loc TextLocation) {
+	d.error('initialize empty structs are not allowed', loc)
+}
+
+pub fn (mut d Diagnostics) error_declaration_of_empty_stryct(loc TextLocation) {
+	d.error('empty struct declarations are not allowed unless it is a C struct', loc)
 }
 
 pub fn (mut d Diagnostics) error_module_can_only_be_defined_as_first_statement(loc TextLocation) {

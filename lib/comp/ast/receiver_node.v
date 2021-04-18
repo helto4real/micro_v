@@ -57,5 +57,5 @@ pub fn (ex ReceiverNode) node_str() string {
 }
 
 pub fn (ex &ReceiverNode) str() string {
-	return '$ex.name_tok.lit $ex.typ_node.name_tok.lit'
+	return '$ex.name_tok.lit $ex.typ_node.name_expr.name_tok.lit'
 }

@@ -345,7 +345,7 @@ pub fn (mut b Binder) bind_import_stmt(import_stmt ast.ImportStmt) BoundStmt {
 pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 	mod := struct_decl.tree.mod
 	// binds the members after all structs has been declared
-	struct_name := struct_decl.name_tok.lit
+	struct_name := struct_decl.name_expr.name
 
 	symbol := b.scope.lookup_type(mod, struct_name) or {
 		panic('unexpected: struct symbol table missing member $struct_name')
@@ -353,8 +353,16 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 	mut struct_symbol := symbol as symbols.StructTypeSymbol
 	for member in struct_decl.members {
 		member_name := member.name_tok.lit
-		member_mod := b.get_full_mod_name(&member.type_expr)
-		mut member_type := b.lookup_type(member_mod, member.type_expr.name_tok.lit)
+		member_typ := member.type_expr.name
+		member_mod := if member.type_expr.names[0].lit != 'C' {
+			b.get_full_mod_name(&member.type_expr)
+		} else {
+			mod
+		}
+		mut member_type := b.scope.lookup_type(member_mod, member.type_expr.name) or {
+			b.log.error_undefined_type(member_typ, member.type_expr.name_tok.text_location())
+			continue
+		}
 		if member.is_ref {
 			member_type = member_type.to_ref_type()
 		}
@@ -368,10 +376,17 @@ pub fn (mut b Binder) bind_struct_member(struct_decl ast.StructDeclNode) {
 }
 
 pub fn (mut b Binder) bind_struct_decl(struct_decl ast.StructDeclNode) {
-	struct_symbol := symbols.new_struct_symbol(struct_decl.tree.mod, struct_decl.name_tok.lit,
-		false)
+	struct_symbol := symbols.new_struct_symbol(struct_decl.tree.mod, struct_decl.name_expr.name,
+		false,struct_decl.is_c_decl)
 	if !b.scope.try_declare_type(struct_symbol) {
-		b.log.error_struct_allready_declared(struct_decl.name_tok.lit, struct_decl.name_tok.text_location())
+		b.log.error_struct_allready_declared(struct_decl.name_expr.name, struct_decl.name_expr.text_location())
+	}
+	if struct_decl.name_expr.names.len > 1 && struct_decl.name_expr.names[0].lit != 'C' {
+		b.log.error_struct_only_c_is_allowed_as_name_prefix(struct_decl.name_expr.names[0].text_location())
+	}
+
+	if struct_decl.members.len == 0 && !struct_decl.is_c_decl {
+		b.log.error_declaration_of_empty_stryct(struct_decl.name_expr.name_tok.text_location())
 	}
 }
 
@@ -624,8 +639,9 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 	func_name := expr.name_expr.names[expr.name_expr.names.len - 1].lit // expr.name_expr.name_tok.lit
 
 	// handle convertions as special functions
-	if expr.name_expr.names.len == 1 && expr.params.len == 1 {
-		typ := b.lookup_type(expr.tree.mod, func_name)
+	if (expr.name_expr.names.len == 1 || (is_c_call && expr.name_expr.names.len == 2  )) && expr.params.len == 1 {
+		type_cast_name := if is_c_call {'C.$func_name'} else {func_name}
+		typ := b.lookup_type(expr.tree.mod, type_cast_name) 
 		if typ.kind != .none_symbol {
 			is_ref := expr.name_expr.ref_tok.kind != .void
 			real_typ := if is_ref { typ.to_ref_type() } else { typ }
@@ -703,6 +719,24 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 				b.log.error_provide_mut_keyword_for_mutable_parameters(arg_location)
 				return new_bound_error_expr()
 			}
+			var_expr := bound_arg as BoundVariableExpr
+			if var_expr.var.is_mut == false {
+				b.log.error_only_variables_can_be_input_to_mutable_parameters(expr.params[i].expr.text_location())
+				return new_bound_error_expr()
+			}
+		} else {
+			if expr.params[i].is_mut == true {
+				// Todo: error if provide mut key to non mut arg
+			}
+		}
+		if param.is_ref {
+			if bound_arg.kind != .variable_expr {
+				if bound_arg.kind == .literal_expr {
+					println('REFERENCE TO : $bound_arg , $bound_arg.kind')
+					b.log.error_literals_are_not_allowed_as_reference(expr.params[i].expr.text_location())
+					return new_bound_error_expr()
+				}
+			}
 		}
 		conv_expr := b.bind_convertion_diag(arg_location, bound_arg, param.typ)
 		args[i] = conv_expr
@@ -770,9 +804,9 @@ pub fn (mut b Binder) bind_if_expr(if_expr ast.IfExpr) BoundExpr {
 }
 
 pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
-	bound_typ := b.lookup_type(typ.tree.mod, typ.name_tok.lit)
+	bound_typ := b.lookup_type(typ.tree.mod, typ.name_expr.name_tok.lit)
 	if bound_typ.kind == .none_symbol {
-		b.log.error_undefined_type(typ.name_tok.lit, typ.text_location())
+		b.log.error_undefined_type(typ.name_expr.name_tok.lit, typ.text_location())
 	}
 	if typ.is_ref {
 		return bound_typ.to_ref_type()
@@ -782,7 +816,6 @@ pub fn (mut b Binder) bind_type(typ ast.TypeNode) symbols.TypeSymbol {
 
 pub fn (mut b Binder) bind_var_decl_stmt(syntax ast.VarDeclStmt) BoundStmt {
 	if syntax.ident.names.len > 1 {
-		// Todo: handle modules later
 		// We are not allowed to declare variables like var.x := 1
 		b.log.error_structs_fields_declared_on_init(syntax.ident.names[1].text_location())
 		return new_bound_expr_stmt(new_bound_error_expr())
@@ -925,40 +958,52 @@ fn (mut b Binder) get_full_mod_name(name_expr &ast.NameExpr) string {
 			b.log.error_import_not_found(name_expr.text_location())
 			return ''
 		}
-		return imported_name_expr[0].name_expr.name_tok.lit
+		return imported_name_expr[0].name_expr.name
 	}
 	return name_expr.tree.mod
 }
 
 fn (mut b Binder) bind_struct_init_expr(syntax ast.StructInitExpr) BoundExpr {
-	mod := b.get_full_mod_name(&syntax.name_expr)
+	mod := if !syntax.is_c_init {
+		b.get_full_mod_name(&syntax.name_expr)
+	} else {
+		'${syntax.tree.mod}.C'
+	}
 	name := syntax.name_expr.names[syntax.name_expr.names.len - 1].lit
-	typ := b.lookup_type(mod, name)
+	typ := b.scope.lookup_type(mod, name) or {
+		b.log.error_undefined_type(name, syntax.name_expr.text_location())
+		return new_bound_error_expr()
+	}
 	struct_typ := typ as symbols.StructTypeSymbol
 
+	if struct_typ.members.len == 0 {
+		b.log.error_init_empty_struct_not_allowed(syntax.name_expr.text_location())
+		return new_bound_error_expr()	
+	}
 	mut members := []BoundStructInitMember{}
 	for struct_member in struct_typ.members {
+		struct_member_name := struct_member.ident
 		struct_member_typ := struct_member.typ
-		members_result := syntax.members.filter(it.ident.lit == struct_member.ident)
+		members_result := syntax.members.filter(it.ident.lit == struct_member_name)
 		mut bound_expr := new_empty_expr()
 		if members_result.len == 0 {
-			bound_expr = b.bind_default_value_expr(struct_member_typ)
+			bound_expr = b.bind_default_value_expr(struct_member_typ, syntax.tree)
 		} else {
 			bound_expr = b.bind_expr(members_result[0].expr)
 			bound_expr = b.bind_convertion_diag(members_result[0].expr.text_location(),
 				bound_expr, struct_member_typ)
 		}
-		bound_member := new_bound_struct_init_member(struct_member.ident, bound_expr)
+		bound_member := new_bound_struct_init_member(struct_member_name, bound_expr)
 		members << bound_member
 	}
 
 	return new_bound_struct_init_expr(typ, members)
 }
 
-fn (mut b Binder) bind_default_value_expr(typ symbols.TypeSymbol) BoundExpr {
+fn (mut b Binder) bind_default_value_expr(typ symbols.TypeSymbol, tree &ast.SyntaxTree) BoundExpr {
 	match typ {
 		symbols.StructTypeSymbol {
-			return b.bind_struct_init_expr(ast.new_struct_init_no_members_expr(typ.name))
+			return b.bind_struct_init_expr(ast.new_struct_init_no_members_expr(typ, tree))
 		}
 		symbols.ErrorTypeSymbol {
 			return new_bound_error_expr()

@@ -279,7 +279,7 @@ fn (mut l Lowerer) rewrite_for_range_stmt(stmt BoundForRangeStmt) BoundStmt {
 	continue_label := l.gen_continue_label()
 	body_label := l.gen_body_label()
 	break_label := l.gen_break_label()
-	cond_label := l.gen_label()
+	cond_label := l.gen_cond_label()
 
 	res := block(lower_decl, upper_decl, goto_label(cond_label), label(body_label), stmt.body_stmt,
 		goto_label(continue_label), label(continue_label), increment(variable(lower_decl)),

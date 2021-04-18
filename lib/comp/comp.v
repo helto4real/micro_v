@@ -136,7 +136,7 @@ pub fn (mut c Compilation) run(back_end gen.Generator, pref pref.CompPref) Compi
 	return new_compilation_result(diagnostics.all)
 }
 
-pub fn (mut c Compilation) run_tests(back_end gen.Generator) CompilationResult {
+pub fn (mut c Compilation) run_tests(back_end gen.Generator, pref pref.CompPref) CompilationResult {
 	mut global_scope := c.get_bound_global_scope()
 	mut result := []&source.Diagnostic{}
 	for syntax in c.syntax_trees {
@@ -151,7 +151,7 @@ pub fn (mut c Compilation) run_tests(back_end gen.Generator) CompilationResult {
 	if program.log.all.len > 0 {
 		return new_compilation_result(program.log.all)
 	}
-	diagnostics := back_end.run_tests(program)
+	diagnostics := back_end.run_tests(program, pref)
 	return new_compilation_result(diagnostics.all)
 }
 
