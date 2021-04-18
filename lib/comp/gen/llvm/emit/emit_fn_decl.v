@@ -5,7 +5,7 @@ import lib.comp.symbols
 
 fn (mut em EmitModule) declare_fn(func &symbols.FunctionSymbol, stmts binding.BoundBlockStmt) &FunctionDecl {
 	func_name :=  if !func.is_c_decl { func.name } else { func.name[2..] }
-
+	println('DECLARING $func.name with name: $func_name')
 	mut return_typ := if func_name == 'main' || (em.is_test && func_name.starts_with('test_')) {
 		em.ctx.int32_type()
 	} else {

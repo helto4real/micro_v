@@ -34,8 +34,6 @@ fn main() {
 	time_t := i64(0)
 	C.time(&time_t)
 	t := C.localtime(&time_t)
-	// year := t.tm_year
-	s := string(t.tm_year)
-	println(s)
+	println(string(t.tm_year))
 
 }

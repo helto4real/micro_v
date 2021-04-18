@@ -122,11 +122,12 @@ fn (mut fd FunctionDecl) emit_assert_stmt(node binding.BoundAssertStmt) {
 	expr_val := fd.emit_expr(cond_expr)
 	cont_expr_val := fd.dereference_if_ref(&cond_expr, expr_val)
 
-	assert_block := fd.ctx.insert_basic_block(fd.current_block, 'assert')
-	continue_block := fd.ctx.insert_basic_block(assert_block, 'assert_cont')
+	assert_block := fd.ctx.new_basic_block(fd.val, 'assert')
+	continue_block := fd.ctx.new_basic_block(fd.val, 'assert_cont')
+	// fd.ctx.insert_basic_block(assert_block, 'assert_cont')
 	
-	// assert_block.move_after(fd.current_block)
-	// continue_block.move_after(assert_block)
+	assert_block.move_after(fd.current_block)
+	continue_block.move_after(assert_block)
 	
 	fd.bld.create_cond_br(cont_expr_val, continue_block, assert_block)
 	fd.bld.position_at_end(assert_block)
@@ -187,10 +188,18 @@ fn (mut fd FunctionDecl) emit_variable_expr(node binding.BoundVariableExpr) core
 				indicies << fd.ctx.c_i32(idx, false)
 			}
 			kind := var.value_kind()
+			typ_kind := var.typ().type_kind()
 
-			// if node.var.is_ref && kind != .argument{ 
-			// 	var = fd.bld.create_load2(typ_ref.to_pointer_type(0), var)
-			// }
+			dump_value(var)
+			if node.var.is_ref && kind != .argument { 
+				if typ_kind == .pointer {
+					if var.typ().element_type().type_kind() == .pointer {
+						var = fd.bld.create_load2(typ_ref.to_pointer_type(0), var)
+					}
+				} else {
+					var = fd.bld.create_load2(typ_ref.to_pointer_type(0), var)
+				}
+			}
 			val := fd.bld.create_gep2(typ_ref, var, indicies) 
 
 			if kind != .argument  {
@@ -259,10 +268,15 @@ fn (mut fd FunctionDecl) emit_if_expr(node binding.BoundIfExpr) core.Value {
 	// in the then_block and else_block	
 	merge_var := fd.bld.create_alloca(fd.em.get_type_from_type_symb(node.typ), '')			
 	
-	then_block := fd.ctx.insert_basic_block(fd.current_block, 'then_block')
-	else_block := fd.ctx.insert_basic_block(then_block, 'else_block')
+	// then_block := fd.ctx.insert_basic_block(fd.current_block, 'then_block')
+	then_block := fd.ctx.new_basic_block(fd.val, 'then_block')
+	// else_block := fd.ctx.insert_basic_block(then_block, 'else_block')
+	else_block := fd.ctx.new_basic_block(fd.val, 'else_block')
 	result_block := fd.ctx.new_basic_block(fd.val, 'result_block')
 
+	then_block.move_after(fd.current_block)
+	then_block.move_after(then_block)
+	
 	fd.bld.create_cond_br(cond_expr_ref, then_block, else_block)
 
 	
@@ -414,11 +428,15 @@ fn (mut fd FunctionDecl) emit_convert_expr(node binding.BoundConvExpr) core.Valu
 
 							res_var := fd.bld.create_alloca(fd.em.get_type_from_type_symb(to_typ), '')
 
-							true_block := fd.ctx.insert_basic_block(fd.current_block, '')
-							false_block := fd.ctx.insert_basic_block(true_block, '')
+							// true_block := fd.ctx.insert_basic_block(fd.current_block, '')
+							true_block := fd.ctx.new_basic_block(fd.val, '')
+							// false_block := fd.ctx.insert_basic_block(true_block, '')
+							false_block := fd.ctx.new_basic_block(fd.val, '')
 						
 							result_block := fd.ctx.new_basic_block(fd.val, '')
 
+							true_block.move_after(fd.current_block)
+							false_block.move_after(true_block)
 							fd.bld.create_cond_br(expr_val_ref, true_block, false_block)
 
 							// handle the logic for then block
@@ -471,7 +489,7 @@ fn (mut fd FunctionDecl) cast_int_to_string(int_expr &binding.BoundExpr, int_val
 	)
 	fd.emit_call_builtin(
 		'C.sprintf', cast, glob_num_println, 
-		fd.dereference_if_ref(int_expr, int_val))
+		int_val) //fd.dereference_if_ref(int_expr, int_val)
 
 	return cast
 }

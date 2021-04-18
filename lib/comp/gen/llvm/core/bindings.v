@@ -249,6 +249,7 @@ pub fn (t Type) return_type() Type  { return Type { c: C.LLVMGetReturnType(t.c) 
 pub fn (t Type) params_typ_count() int   { return C.LLVMCountParamTypes(t.c) }
 pub fn (t Type) const_ptr_null() Value   { return Value { c: C.LLVMConstPointerNull(t.c) }}
 pub fn (t Type) const_null() Value   { return Value { c: C.LLVMConstNull(t.c) }}
+pub fn (t Type) dump_type() { C.LLVMDumpType(t.c) }
 // pub fn (t Type) param_types() []Type {
 // 	count := t.ParamTypesCount()
 // 	types := []Type{cap:count}
@@ -364,6 +365,7 @@ pub fn (bb BasicBlock) last_instruction() Value {
 pub fn (v Value) value_kind() LLVMValueKind {return C.LLVMGetValueKind(v.c)}
 pub fn (v Value) typ() Type {return Type{ c: C.LLVMTypeOf(v.c)}}
 pub fn (v Value) dump_value() { C.LLVMDumpValue(v.c) }
+
 
 pub fn (v Value) is_a_argument() Value { return Value { c: C.LLVMIsAArgument(v.c) }}
 pub fn (v Value) is_a_terminator_instruction() Value { return Value { c: C.LLVMIsATerminatorInst(v.c) }}

@@ -42,7 +42,7 @@ fn (mut em EmitModule) lookup_fn_decl(func_id string) &FunctionDecl {
 	return func_res[0]
 }
 fn (mut fd FunctionDecl) emit_call_fn(call_expr binding.BoundCallExpr) core.Value {
-
+	println('CALL FUNC: $call_expr.func.name ($call_expr.func.id), lookuo in $fd.em.funcs.len')
 	func_res := fd.em.funcs.filter(it.func >0 && it.func.id == call_expr.func.id)
 	if func_res.len != 1 {
 		panic('unexpected, function $call_expr.func.name not declared. ($fd.em.funcs.len)')

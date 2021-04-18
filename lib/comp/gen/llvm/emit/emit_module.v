@@ -22,6 +22,8 @@ pub mut:
 	funcs []&FunctionDecl
 	var_decl map[string]core.Value
 	types map[string]core.Type
+
+	main_func_val core.Value
 	// global variables that are convenient to have access to
 }
 
@@ -75,11 +77,6 @@ pub fn (mut em EmitModule) run_main() i64 {
 	return i64(res.int(true))
 }
 
-pub fn (mut em EmitModule) run_tests() bool {
-	return true
-}
-
-
 pub fn (mut em EmitModule) emit_struct_decl(program &binding.BoundProgram) {
 	for _, typ in program.types {
 		if typ is symbols.StructTypeSymbol {
@@ -130,12 +127,12 @@ pub fn (mut em EmitModule) emit_main_fn(program &binding.BoundProgram) {
 			panic('unexpected, function body for $program.main_func.name ($program.main_func.id) missing')
 		}
 		lowered_body := binding.lower(body)
-		em.declare_fn(&program.main_func, lowered_body)
+		em.main_func_val = em.declare_fn(&program.main_func, lowered_body).val
 	} else {
 		test_main := symbols.new_function_symbol('main', 'main', []symbols.ParamSymbol{},
 			symbols.int_symbol)
 		body := binding.new_empty_block_stmt()
-		em.declare_fn(&test_main, body)
+		em.main_func_val = em.declare_fn(&test_main, body).val
 	}
 }
 
@@ -204,4 +201,15 @@ pub fn (mut em EmitModule) optimize() {
 	em.pass_manager.add_gvn_pass()
 	em.pass_manager.add_global_dce_pass()
 	em.pass_manager.run_pass_manager(em.mod)
+}
+
+pub fn dump_value(val core.Value) {
+	print('dump value: ')
+	val.dump_value()
+	kind := val.value_kind()
+	typ := val.typ()
+	typ_kind := val.typ().type_kind()
+	print(' (')
+	typ.dump_type()
+	println('), kind: $kind, typ_kind: $typ_kind')
 }
