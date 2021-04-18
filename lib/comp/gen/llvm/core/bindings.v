@@ -1,5 +1,9 @@
 module core
 
+const (
+	no_name = '\00'
+)
+
 // All main enities has V corresponding structs
 pub struct Context {
 pub:

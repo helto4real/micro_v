@@ -79,7 +79,11 @@ pub fn (mut d Diagnostics) error_convertion_differ_by_reference(is_ref bool, con
 }
 
 pub fn (mut d Diagnostics) error_only_variables_can_be_input_to_mutable_parameters(loc TextLocation) {
-	d.error('only variables can be input to mutable parameters', loc)
+	d.error('only mutable variables can be input to mutable parameters', loc)
+}
+
+pub fn (mut d Diagnostics) error_literals_are_not_allowed_as_reference(loc TextLocation) {
+	d.error('literals are not allowed as reference', loc)
 }
 
 pub fn (mut d Diagnostics) error_provide_mut_keyword_for_mutable_parameters(loc TextLocation) {

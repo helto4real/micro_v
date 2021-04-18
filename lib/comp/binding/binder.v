@@ -719,6 +719,24 @@ pub fn (mut b Binder) bind_call_expr(expr ast.CallExpr) BoundExpr {
 				b.log.error_provide_mut_keyword_for_mutable_parameters(arg_location)
 				return new_bound_error_expr()
 			}
+			var_expr := bound_arg as BoundVariableExpr
+			if var_expr.var.is_mut == false {
+				b.log.error_only_variables_can_be_input_to_mutable_parameters(expr.params[i].expr.text_location())
+				return new_bound_error_expr()
+			}
+		} else {
+			if expr.params[i].is_mut == true {
+				// Todo: error if provide mut key to non mut arg
+			}
+		}
+		if param.is_ref {
+			if bound_arg.kind != .variable_expr {
+				if bound_arg.kind == .literal_expr {
+					println('REFERENCE TO : $bound_arg , $bound_arg.kind')
+					b.log.error_literals_are_not_allowed_as_reference(expr.params[i].expr.text_location())
+					return new_bound_error_expr()
+				}
+			}
 		}
 		conv_expr := b.bind_convertion_diag(arg_location, bound_arg, param.typ)
 		args[i] = conv_expr

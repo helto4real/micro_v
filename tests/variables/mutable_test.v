@@ -34,6 +34,7 @@ fn test_mutable_param() {
 	mutable_function_param(mut x)
 	assert x == 10
 }
+
 fn test_what_ever() {
 	assert true
 }
@@ -82,6 +83,6 @@ fn test_sum_with_ref() {
 	mut res := 0
 	sum(a, b, mut res)
 	assert res == 3
-	sum(10, 20, mut res)
-	assert res == 30
+	sum(b, 20, mut res)
+	assert res == 22
 }

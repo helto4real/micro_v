@@ -97,7 +97,6 @@ fn (mut fd FunctionDecl) emit_label_stmt(node binding.BoundLabelStmt) {
 
 fn (mut fd FunctionDecl) emit_goto_stmt(node binding.BoundGotoStmt) {
 	goto_block := fd.blocks[node.label]
-	println('GOTO $node.label')
 	fd.bld.create_br(goto_block)
 }
 
@@ -167,6 +166,10 @@ fn (mut fd FunctionDecl) emit_variable_expr(node binding.BoundVariableExpr) core
 	mut current_typ_ref := typ_ref
 	mut current_typ := var_typ
 	mut current_name := ''
+
+	kind := var.value_kind()
+	typ_kind := var.typ().type_kind()
+
 	if var_typ is symbols.StructTypeSymbol {
 		if node.names.len > 0 {
 			mut indicies := [fd.ctx.c_i32(0, false)]
@@ -184,8 +187,6 @@ fn (mut fd FunctionDecl) emit_variable_expr(node binding.BoundVariableExpr) core
 				}
 				indicies << fd.ctx.c_i32(idx, false)
 			}
-			kind := var.value_kind()
-			typ_kind := var.typ().type_kind()
 
 			if node.var.is_ref && kind != .argument {
 				if typ_kind == .pointer {
@@ -203,19 +204,12 @@ fn (mut fd FunctionDecl) emit_variable_expr(node binding.BoundVariableExpr) core
 				return loaded_val
 			}
 			return val
-			// 	if current_typ.is_ref { //
-			// 		return val
-			// 	}
-
-			// 	println('LOADING: $node.var->$current_name : $current_typ ($current_typ.is_ref)')
-			// 	loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, current_typ_ref,
-			// 		val, no_name.str)
-
-			// 	return loaded_var
 		}
 	}
 	if node.var.is_ref || node.typ.is_ref || node.typ.kind == .array_symbol {
-		return var
+		// if kind != .argument {
+			return var
+		// }
 	}
 	loaded_var := fd.bld.create_load2(typ_ref, var)
 	return loaded_var

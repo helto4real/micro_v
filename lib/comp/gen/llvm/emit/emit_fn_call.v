@@ -11,18 +11,23 @@ fn (mut fd FunctionDecl) emit_call_builtin(name string, args ...core.Value) core
 		panic('builtin function $name not declared in $fd.em.built_in_funcs')
 	}
 	func := res[0]
-	// fn_val := res[0].val//fd.em.built_in_funcs[name] or {panic('builtin function $name not declared in $fd.em.built_in_funcs.keys()!')}
 	return fd.bld.create_call2(func.typ, func.val, args)
 }
 
 fn (mut fd FunctionDecl) emit_variable_value(var &symbols.VariableSymbol, expr &binding.BoundExpr, val core.Value) core.Value {
-	if var.is_ref && val.is_constant() { //|| !expr.typ.is_ref
+	if var.is_ref && val.is_constant() { 
 		var_typ := fd.em.get_type_from_type_symb(var.typ)
 		return fd.bld.alloca_and_store(var_typ, val, '')
 	}
-	if !var.is_ref && expr.typ.is_ref {
-		var_typ := fd.em.get_type_from_type_symb(var.typ)
-		return fd.bld.create_load2(var_typ, val)
+	mut expr_is_ref := expr.typ.is_ref
+	if !var.is_ref {
+		if expr is binding.BoundVariableExpr {
+			expr_is_ref = expr_is_ref || expr.var.is_ref
+		} 
+		if expr_is_ref {
+			var_typ := fd.em.get_type_from_type_symb(var.typ)
+			return fd.bld.create_load2(var_typ, val)
+		}
 	}
 	return val
 }
