@@ -1,4 +1,5 @@
 module emit
+
 import lib.comp.gen.llvm.core
 import lib.comp.binding
 import lib.comp.symbols
@@ -63,6 +64,7 @@ fn (mut fd FunctionDecl) emit_stmt(node binding.BoundStmt) {
 		}
 	}
 }
+
 fn (mut fd FunctionDecl) emit_cond_goto_stmt(node binding.BoundCondGotoStmt) {
 	cond_expr := node.cond_expr
 	cond_expr_val := fd.emit_expr(cond_expr)
@@ -87,23 +89,22 @@ fn (mut fd FunctionDecl) emit_label_stmt(node binding.BoundLabelStmt) {
 			// we need to add a branch to next block
 			fd.bld.create_br(label_block)
 		}
-	} else {
-		// there are no instructions we can add the br
-		fd.bld.create_br(label_block)
 	}
+
 	fd.current_block = label_block
-	fd.bld.position_at_end(fd.current_block)
+	fd.bld.position_at_end(label_block)
 }
 
 fn (mut fd FunctionDecl) emit_goto_stmt(node binding.BoundGotoStmt) {
 	goto_block := fd.blocks[node.label]
+	println('GOTO $node.label')
 	fd.bld.create_br(goto_block)
 }
 
 fn (mut fd FunctionDecl) emit_var_decl(node binding.BoundVarDeclStmt) {
 	var_typ := node.var.typ
 	var_name := node.var.name
-	
+
 	mut typ := fd.em.get_ref_type_from_type_symb(var_typ)
 
 	expr_val := fd.emit_expr(node.expr)
@@ -124,22 +125,22 @@ fn (mut fd FunctionDecl) emit_assert_stmt(node binding.BoundAssertStmt) {
 
 	assert_block := fd.ctx.new_basic_block(fd.val, 'assert')
 	continue_block := fd.ctx.new_basic_block(fd.val, 'assert_cont')
-	// fd.ctx.insert_basic_block(assert_block, 'assert_cont')
-	
+
 	assert_block.move_after(fd.current_block)
 	continue_block.move_after(assert_block)
-	
+
 	fd.bld.create_cond_br(cont_expr_val, continue_block, assert_block)
 	fd.bld.position_at_end(assert_block)
-	
+
 	// insert to print assert information
 	mut sw := source.SourceWriter{}
 	source.write_diagnostic(mut sw, node.location, 'assert error', 1)
 	fd.println(sw.str())
 
 	// then do longjmp to exit
-	fd.emit_call_builtin('C.longjmp', fd.em.global_const[GlobalVarRefType.jmp_buff], fd.ctx.c_i64(1, true))
-	
+	fd.emit_call_builtin('C.longjmp', fd.em.global_const[GlobalVarRefType.jmp_buff], fd.ctx.c_i64(1,
+		true))
+
 	fd.bld.create_unreachable()
 
 	fd.bld.position_at_end(continue_block)
@@ -148,17 +149,14 @@ fn (mut fd FunctionDecl) emit_assert_stmt(node binding.BoundAssertStmt) {
 fn (mut fd FunctionDecl) println(text string) {
 	lit_expr := binding.new_bound_literal_expr(text) as binding.BoundLiteralExpr
 	lit_expr_val := fd.emit_literal_expr(lit_expr)
-	
+
 	if text.len > 0 {
-		fd.emit_call_builtin('C.printf',
-			fd.em.get_global_string(.printf_str_nl), 
-			lit_expr_val)
+		fd.emit_call_builtin('C.printf', fd.em.get_global_string(.printf_str_nl), lit_expr_val)
 	} else {
 		// empty string
 		fd.emit_call_builtin('C.printf', fd.em.get_global_string(.nl))
 	}
 }
-
 
 fn (mut fd FunctionDecl) emit_variable_expr(node binding.BoundVariableExpr) core.Value {
 	var_typ := node.var.typ
@@ -170,9 +168,8 @@ fn (mut fd FunctionDecl) emit_variable_expr(node binding.BoundVariableExpr) core
 	mut current_typ := var_typ
 	mut current_name := ''
 	if var_typ is symbols.StructTypeSymbol {
-		
 		if node.names.len > 0 {
-			mut indicies := [fd.ctx.c_i32(0, false) ]
+			mut indicies := [fd.ctx.c_i32(0, false)]
 
 			for i, name in node.names {
 				if i == 0 {
@@ -190,8 +187,7 @@ fn (mut fd FunctionDecl) emit_variable_expr(node binding.BoundVariableExpr) core
 			kind := var.value_kind()
 			typ_kind := var.typ().type_kind()
 
-			dump_value(var)
-			if node.var.is_ref && kind != .argument { 
+			if node.var.is_ref && kind != .argument {
 				if typ_kind == .pointer {
 					if var.typ().element_type().type_kind() == .pointer {
 						var = fd.bld.create_load2(typ_ref.to_pointer_type(0), var)
@@ -200,22 +196,22 @@ fn (mut fd FunctionDecl) emit_variable_expr(node binding.BoundVariableExpr) core
 					var = fd.bld.create_load2(typ_ref.to_pointer_type(0), var)
 				}
 			}
-			val := fd.bld.create_gep2(typ_ref, var, indicies) 
+			val := fd.bld.create_gep2(typ_ref, var, indicies)
 
-			if kind != .argument  {
+			if kind != .argument {
 				loaded_val := fd.bld.create_named_load2(current_typ_ref, val, 'var_expr')
 				return loaded_val
 			}
 			return val
-		// 	if current_typ.is_ref { //
-		// 		return val
-		// 	}
+			// 	if current_typ.is_ref { //
+			// 		return val
+			// 	}
 
-		// 	println('LOADING: $node.var->$current_name : $current_typ ($current_typ.is_ref)')
-		// 	loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, current_typ_ref,
-		// 		val, no_name.str)
+			// 	println('LOADING: $node.var->$current_name : $current_typ ($current_typ.is_ref)')
+			// 	loaded_var := C.LLVMBuildLoad2(c.mod.builder.builder_ref, current_typ_ref,
+			// 		val, no_name.str)
 
-		// 	return loaded_var
+			// 	return loaded_var
 		}
 	}
 	if node.var.is_ref || node.typ.is_ref || node.typ.kind == .array_symbol {
@@ -260,26 +256,22 @@ fn (mut fd FunctionDecl) get_reference_to_element(var_ref core.Value, struct_sym
 	return fd.bld.create_gep2(typ_ref, var_ref, indicies)
 }
 
-
 fn (mut fd FunctionDecl) emit_if_expr(node binding.BoundIfExpr) core.Value {
 	cond_expr_ref := fd.emit_expr(node.cond_expr)
 
 	// Create the temporary variable that will store the result
 	// in the then_block and else_block	
-	merge_var := fd.bld.create_alloca(fd.em.get_type_from_type_symb(node.typ), '')			
-	
-	// then_block := fd.ctx.insert_basic_block(fd.current_block, 'then_block')
+	merge_var := fd.bld.create_alloca(fd.em.get_type_from_type_symb(node.typ), '')
+
 	then_block := fd.ctx.new_basic_block(fd.val, 'then_block')
-	// else_block := fd.ctx.insert_basic_block(then_block, 'else_block')
 	else_block := fd.ctx.new_basic_block(fd.val, 'else_block')
 	result_block := fd.ctx.new_basic_block(fd.val, 'result_block')
 
 	then_block.move_after(fd.current_block)
-	then_block.move_after(then_block)
-	
+	else_block.move_after(then_block)
+
 	fd.bld.create_cond_br(cond_expr_ref, then_block, else_block)
 
-	
 	// handle the logic for then block
 	fd.bld.position_at_end(then_block)
 	fd.current_block = then_block
@@ -288,7 +280,6 @@ fn (mut fd FunctionDecl) emit_if_expr(node binding.BoundIfExpr) core.Value {
 	fd.bld.create_store(then_block_val_ref, merge_var)
 	fd.bld.create_br(result_block)
 
-	
 	// handle the logic for then block
 	fd.bld.position_at_end(else_block)
 	fd.current_block = else_block
@@ -304,15 +295,14 @@ fn (mut fd FunctionDecl) emit_if_expr(node binding.BoundIfExpr) core.Value {
 fn (mut fd FunctionDecl) emit_call_expr(node binding.BoundCallExpr) core.Value {
 	match node.func.name {
 		'println', 'print' {
-			glob_print_str := if node.func.name == 'print' { 
-				fd.em.get_global_string(GlobalVarRefType.printf_str) 
-			} else { 
-				fd.em.get_global_string(GlobalVarRefType.printf_str_nl) 
+			glob_print_str := if node.func.name == 'print' {
+				fd.em.get_global_string(GlobalVarRefType.printf_str)
+			} else {
+				fd.em.get_global_string(GlobalVarRefType.printf_str_nl)
 			}
 			param := fd.emit_expr(node.params[0])
 
 			return fd.emit_call_builtin('C.printf', glob_print_str, param)
-			
 		}
 		'exit' {
 			param := fd.emit_expr(node.params[0])
@@ -337,7 +327,6 @@ fn (mut fd FunctionDecl) emit_convert_expr(node binding.BoundConvExpr) core.Valu
 	expr_val_ref := fd.emit_expr(expr)
 	from_typ := expr.typ
 	to_typ := node.typ
-	println('CONVERT FROM $from_typ to $to_typ')
 	match from_typ {
 		symbols.BuiltInTypeSymbol {
 			match from_typ.kind {
@@ -426,13 +415,14 @@ fn (mut fd FunctionDecl) emit_convert_expr(node binding.BoundConvExpr) core.Valu
 							glob_str_true := fd.em.get_global_string(GlobalVarRefType.str_true)
 							glob_str_false := fd.em.get_global_string(GlobalVarRefType.str_false)
 
-							res_var := fd.bld.create_alloca(fd.em.get_type_from_type_symb(to_typ), '')
+							res_var := fd.bld.create_alloca(fd.em.get_type_from_type_symb(to_typ),
+								'')
 
 							// true_block := fd.ctx.insert_basic_block(fd.current_block, '')
 							true_block := fd.ctx.new_basic_block(fd.val, '')
 							// false_block := fd.ctx.insert_basic_block(true_block, '')
 							false_block := fd.ctx.new_basic_block(fd.val, '')
-						
+
 							result_block := fd.ctx.new_basic_block(fd.val, '')
 
 							true_block.move_after(fd.current_block)
@@ -453,8 +443,8 @@ fn (mut fd FunctionDecl) emit_convert_expr(node binding.BoundConvExpr) core.Valu
 
 							// hanlde the logic for result block
 							fd.bld.position_at_end(result_block)
-							return fd.bld.create_load2(
-								fd.em.get_type_from_type_symb(to_typ), res_var)
+							return fd.bld.create_load2(fd.em.get_type_from_type_symb(to_typ),
+								res_var)
 						}
 						else {
 							panic('convertion from bool to $to_typ.name is not supported yet')
@@ -482,14 +472,10 @@ fn (mut fd FunctionDecl) emit_convert_expr(node binding.BoundConvExpr) core.Valu
 
 fn (mut fd FunctionDecl) cast_int_to_string(int_expr &binding.BoundExpr, int_val core.Value) core.Value {
 	glob_num_println := fd.em.get_global_string(GlobalVarRefType.printf_num)
-	
-	cast := fd.bld.create_ptr_cast(
-			fd.em.global_const[GlobalVarRefType.sprintf_buff],
-			fd.ctx.int8_type().to_pointer_type(0)
-	)
-	fd.emit_call_builtin(
-		'C.sprintf', cast, glob_num_println, 
-		int_val) //fd.dereference_if_ref(int_expr, int_val)
+
+	cast := fd.bld.create_ptr_cast(fd.em.global_const[GlobalVarRefType.sprintf_buff],
+		fd.ctx.int8_type().to_pointer_type(0))
+	fd.emit_call_builtin('C.sprintf', cast, glob_num_println, int_val) // fd.dereference_if_ref(int_expr, int_val)
 
 	return cast
 }
@@ -498,11 +484,11 @@ fn (mut fd FunctionDecl) emit_string_from_lit(str_struct core.Value) core.Value 
 	// emit a string struct from a string literal
 	string_typ_ref := fd.em.types['String']
 
-	merge_var :=  fd.bld.alloca_and_store(string_typ_ref, str_struct, '')
+	merge_var := fd.bld.alloca_and_store(string_typ_ref, str_struct, '')
 	// str is the first index
 	mut indicies := [
 		fd.ctx.c_i32(0, false),
-		fd.ctx.c_i32(0, false)
+		fd.ctx.c_i32(0, false),
 	]
 	ref_ptr := fd.bld.create_gep2(string_typ_ref, merge_var, indicies)
 
@@ -534,12 +520,12 @@ fn (mut fd FunctionDecl) emit_lit_to_string(str_lit core.Value, len int) core.Va
 // 	mut cb := c.new_builtin_call('strlen')
 // 	cb.add_param(ptr_to_cstr)
 // 	len_ref := cb.emit()
-	
+
 // 	// new_str_array_typ := C.LLVMArrayType(C.LLVMInt8TypeInContext(c.mod.ctx_ref),
 // 	// 	0), unsigned ElementCount);	
 // 	arr_alloc := C.LLVMBuildArrayAlloca(c.mod.builder.builder_ref, C.LLVMInt8TypeInContext(c.mod.ctx_ref),
 //                                   len_ref, no_name.str)
-	
+
 // 	string_typ_ref := c.mod.types['String']
 // 	mut value_refs := []&C.LLVMValueRef{}
 
@@ -560,7 +546,7 @@ fn (mut fd FunctionDecl) emit_array_index_expr(node binding.BoundIndexExpr) core
 	elem_typ_ref := fd.em.get_type_from_type_symb(arr_typ.elem_typ)
 	mut indicies := [fd.ctx.c_i32(0, false), index_ref]
 
-	gep_val_ref := fd.bld.create_gep2(typ_ref,var_ref, indicies)
+	gep_val_ref := fd.bld.create_gep2(typ_ref, var_ref, indicies)
 	return fd.bld.create_load2(elem_typ_ref, gep_val_ref)
 }
 
@@ -590,7 +576,6 @@ fn (mut fd FunctionDecl) emit_unary_expr(unary_expr binding.BoundUnaryExpr) core
 }
 
 fn (mut fd FunctionDecl) emit_binary_expr(binary_expr binding.BoundBinaryExpr) core.Value {
-
 	left_val := fd.dereference_if_ref(&binary_expr.left_expr, fd.emit_expr(binary_expr.left_expr))
 	right_val := fd.dereference_if_ref(&binary_expr.right_expr, fd.emit_expr(binary_expr.right_expr))
 
@@ -671,7 +656,6 @@ fn (mut fd FunctionDecl) dereference_if_ref(expr &binding.BoundExpr, val core.Va
 		is_ref = expr.var.is_ref
 	}
 	if is_ref {
-		println('DEREFERENCE: $expr ')
 		return fd.dereference(val)
 	}
 	return val
@@ -679,11 +663,10 @@ fn (mut fd FunctionDecl) dereference_if_ref(expr &binding.BoundExpr, val core.Va
 
 [inline]
 pub fn (mut fd FunctionDecl) dereference(val core.Value) core.Value {
+	typ_kind := val.typ().type_kind()
+	if typ_kind != .pointer {
+		return val
+	}
 	elem_typ := val.typ().element_type()
-	typ_kind := elem_typ.type_kind()
-	print('DEREF VAL:')
-	val.dump_value()
-	println(', $typ_kind')
-
 	return fd.bld.create_load2(elem_typ, val)
 }

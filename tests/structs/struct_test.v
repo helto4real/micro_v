@@ -11,6 +11,10 @@ fn (t &AnotherTestStruct) ref_sum(n int) int {
 	return t.a_int + n
 }
 
+fn (t &AnotherTestStruct) ref_sum_ref_arg(n &int) int {
+	return t.a_int + n
+}
+
 fn (mut t AnotherTestStruct) add(n int) {
 	t.a_int = t.a_int + n
 }
@@ -25,6 +29,9 @@ fn test_struct_fn() {
 
 	res2 := ts.ref_sum(20)
 	assert res2 == 120
+
+	res3 := ts.ref_sum(30)
+	assert res3 == 130
 
 	ts.add(100)
 	assert ts.a_int == 200

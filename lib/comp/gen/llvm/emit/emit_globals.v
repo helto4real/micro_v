@@ -1,4 +1,5 @@
 module emit
+
 import lib.comp.gen.llvm.core
 
 const (
@@ -25,14 +26,14 @@ pub fn (mut em EmitModule) emit_global_vars() {
 	buff_val.set_initializer(null_val)
 	em.global_const[GlobalVarRefType.sprintf_buff] = buff_val
 
-
-	jmp_buf_typ_ref := em.types['C.JumpBuffer'] or {panic('type `C.JumpBuffer` is not in $em.types.keys()  $')}
+	jmp_buf_typ_ref := em.types['C.JumpBuffer'] or {
+		panic('type `C.JumpBuffer` is not in $em.types.keys()  $')
+	}
 	mut values := [core.const_int(em.ctx.int64_type(), u64(0), false)]
 	init_struct := jmp_buf_typ_ref.create_const_named_struct(values)
 	global_jmp_buff_val := em.mod.add_global('jmp_buf', jmp_buf_typ_ref)
 	global_jmp_buff_val.set_initializer(init_struct)
 	em.global_const[GlobalVarRefType.jmp_buff] = global_jmp_buff_val
-
 }
 
 fn (mut em EmitModule) get_global_string(glob_typ GlobalVarRefType) core.Value {

@@ -131,7 +131,7 @@ pub fn (mut m AModule) run_main() i64 {
 	}
 	args := []&C.LLVMGenericValueRef{}
 	res := C.LLVMRunFunction(m.exec_engine, m.main_func_ref, 0, args.data)
-	return i64(C.LLVMGenericValueToInt(res, core.bool_to_llvm_bool(true)))
+	return i64(C.LLVMGenericValueToInt(res, bool_to_llvm_bool(true)))
 }
 
 fn compare_function_by_file_and_name(a &Function, b &Function) int {
@@ -192,7 +192,7 @@ pub fn (mut m AModule) run_tests() bool {
 		}
 		args := []&C.LLVMGenericValueRef{}
 		res := C.LLVMRunFunction(m.exec_engine, func.func_ref, 0, args.data)
-		int_res := C.LLVMGenericValueToInt(res, core.bool_to_llvm_bool(true))
+		int_res := C.LLVMGenericValueToInt(res, bool_to_llvm_bool(true))
 		if int_res == 0 {
 		} else {
 			current_file_has_errors = true
@@ -296,20 +296,19 @@ pub fn (mut m AModule) generate_module(program &binding.BoundProgram, is_test bo
 				// remove the C. in the name when whe have opaque type
 				// defined in a library
 				name_parts := struct_name.split('.')
-				struct_name = name_parts[name_parts.len-1]
+				struct_name = name_parts[name_parts.len - 1]
 			}
 			typ_ref := C.LLVMStructCreateNamed(m.ctx_ref, struct_name.str)
 			m.types[typ.name] = typ_ref
 		}
 	}
-	
+
 	// first declare all C function declares
 	for func in program.func_symbols {
 		if func.is_c_decl {
 			m.declare_function(func, binding.new_empty_block_stmt())
 		}
 	}
-
 
 	// then declare struct body
 	for _, typ in program.types {
@@ -419,7 +418,9 @@ fn (m &AModule) get_llvm_type(typ symbols.TypeSymbol) &C.LLVMTypeRef {
 			return C.LLVMVoidTypeInContext(m.ctx_ref)
 		}
 		symbols.StructTypeSymbol {
-			return m.types[typ.name] or { panic('unexpected, type $typ not found in symols table ${m.types.keys()}') }
+			return m.types[typ.name] or {
+				panic('unexpected, type $typ not found in symols table $m.types.keys()')
+			}
 		}
 		else {
 			panic('unexpected, unsupported type ref $typ, $typ.kind')

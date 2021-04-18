@@ -38,6 +38,18 @@ pub fn new_function_symbol(mod string, name string, params []ParamSymbol, typ Ty
 		name: name
 		params: params
 		typ: typ
+		receiver: new_empty_local_variable_symbol()
+		id: rand.uuid_v4()
+	}
+}
+
+pub fn new_function_symbol_on_heap(mod string, name string, params []ParamSymbol, typ TypeSymbol) &FunctionSymbol {
+	return &FunctionSymbol{
+		mod: mod
+		name: name
+		params: params
+		typ: typ
+		receiver: new_empty_local_variable_symbol()
 		id: rand.uuid_v4()
 	}
 }

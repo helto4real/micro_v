@@ -71,8 +71,6 @@ fn new_llvm_func(mod &AModule, func symbols.FunctionSymbol, body binding.BoundBl
 		return f
 	}
 
-
-
 	return f
 }
 

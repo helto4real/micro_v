@@ -3,26 +3,21 @@ module emit
 import term
 
 pub fn (mut em EmitModule) run_tests() bool {
-	println('RUNNING TESTS')
 	em.init_execution_engine() or { panic('error init execution enging : $err.msg') }
 	if em.exec_engine == 0 {
 		panic('unexpected, execution engine have to be initialized before calling run_main')
 	}
-	mut test_funcs := []&FunctionDecl{}
-	for i, _ in em.funcs {
-		func := em.funcs[i]
+	mut test_funcs := []FunctionDecl{}
+	for func in em.funcs {
 		if func.name.starts_with('test_') {
-			test_funcs << em.funcs[i]
+			test_funcs << func
 		}
 	}
-	for t in test_funcs {
-		println(voidptr(t.func))
-	}
-	test_funcs.sort_with_compare(compare_function_by_file_and_name)
+
+	// test_funcs.sort_with_compare(compare_function_by_file_and_name)
 
 	// run main to be sure it is jit compiled
-	mainfunc_val := em.funcs.filter(it.name=='main')[0].val 
-	em.exec_engine.run_function(mainfunc_val)
+	em.exec_engine.run_function(em.main_func_val)
 
 	mut nr_of_tests := 0
 	mut nr_of_errors := 0
@@ -87,18 +82,18 @@ fn nr_of_digits(n int) int {
 	return total
 }
 
-fn compare_function_by_file_and_name(a FunctionDecl, b FunctionDecl) int {
-	println('COMPARE : ${voidptr(a.func)}, ${voidptr(b.func)}')
-	if a.func.location.source.filename == b.func.location.source.filename {
-		if a.func.name < b.func.name {
-			return -1
-		} else {
-			return 1
-		}
-	}
+// fn compare_function_by_file_and_name(a &FunctionDecl, b &FunctionDecl) int {
+// 	println('COMPARE : ${voidptr(a.func)}, ${voidptr(b.func)}')
+// 	if a.func.location.source.filename == b.func.location.source.filename {
+// 		if a.func.name < b.func.name {
+// 			return -1
+// 		} else {
+// 			return 1
+// 		}
+// 	}
 
-	if a.func.location.source.filename < b.func.location.source.filename {
-		return -1
-	}
-	return 1
-}
+// 	if a.func.location.source.filename < b.func.location.source.filename {
+// 		return -1
+// 	}
+// 	return 1
+// }

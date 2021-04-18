@@ -30,7 +30,7 @@ fn mutable_function_param_with_assert(mut x int) {
 }
 
 fn test_mutable_param() {
-	x:= 100
+	mut x:= 100
 	mutable_function_param(mut x)
 	assert x == 10
 }
@@ -41,7 +41,7 @@ fn test_anything() {
 	assert true
 }
 fn test_mutable_struct_param() {
-	ts := TestStruct{
+	mut ts := TestStruct{
 		i: 100
 		s: 'word'
 	}

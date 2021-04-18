@@ -6,61 +6,56 @@
 main:                                   # @main
 	.cfi_startproc
 # %bb.0:                                # %entry
-	pushq	%rbp
+	pushq	%rax
 	.cfi_def_cfa_offset 16
-	.cfi_offset %rbp, -16
-	movq	%rsp, %rbp
-	.cfi_def_cfa_register %rbp
-	subq	$16, %rsp
 	movabsq	$jmp_buf, %rdi
 	callq	setjmp
 	cmpq	$0, %rax
-	je	.LBB0_3
-	jmp	.LBB0_4
-.LBB0_1:                                # %assert_cont
-	movabsq	$sprintf_buff, %rdi
-	movabsq	$.L__unnamed_1, %rsi
-	movl	$1, %edx
-	movb	$0, %al
-	callq	sprintf
-	movabsq	$.L__unnamed_2, %rdi
-	movabsq	$sprintf_buff, %rsi
-	movl	%eax, -4(%rbp)          # 4-byte Spill
-	movb	$0, %al
-	callq	printf
-	xorl	%ecx, %ecx
-	movl	%eax, -8(%rbp)          # 4-byte Spill
-	movl	%ecx, %eax
-	movq	%rbp, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
+	jne	.LBB0_2
+# %bb.1:                                # %continue
+	callq	test_mutable_param
+	xorl	%eax, %eax
+	popq	%rcx
+	.cfi_def_cfa_offset 8
 	retq
-.LBB0_2:                                # %assert
-	.cfi_def_cfa %rbp, 16
-	movabsq	$.L__unnamed_2, %rdi
-	movabsq	$.L__unnamed_3, %rsi
-	movb	$0, %al
-	callq	printf
-	movabsq	$jmp_buf, %rdi
-	movl	$1, %esi
-	movl	%eax, -12(%rbp)         # 4-byte Spill
-	callq	longjmp
-.LBB0_3:                                # %continue
-	movq	%rsp, %rax
-	addq	$-16, %rax
-	movq	%rax, %rsp
-	movl	$1, (%rax)
-	cmpl	$1, (%rax)
-	je	.LBB0_1
-	jmp	.LBB0_2
-.LBB0_4:                                # %error_exit
+.LBB0_2:                                # %error_exit
+	.cfi_def_cfa_offset 16
 	movl	$1, %eax
-	movq	%rbp, %rsp
-	popq	%rbp
-	.cfi_def_cfa %rsp, 8
+	popq	%rcx
+	.cfi_def_cfa_offset 8
 	retq
 .Lfunc_end0:
 	.size	main, .Lfunc_end0-main
+	.cfi_endproc
+                                        # -- End function
+	.globl	mutable_function_param  # -- Begin function mutable_function_param
+	.p2align	4, 0x90
+	.type	mutable_function_param,@function
+mutable_function_param:                 # @mutable_function_param
+	.cfi_startproc
+# %bb.0:                                # %entry
+	movl	$10, (%rdi)
+	retq
+.Lfunc_end1:
+	.size	mutable_function_param, .Lfunc_end1-mutable_function_param
+	.cfi_endproc
+                                        # -- End function
+	.globl	test_mutable_param      # -- Begin function test_mutable_param
+	.p2align	4, 0x90
+	.type	test_mutable_param,@function
+test_mutable_param:                     # @test_mutable_param
+	.cfi_startproc
+# %bb.0:                                # %entry
+	pushq	%rax
+	.cfi_def_cfa_offset 16
+	movl	$100, 4(%rsp)
+	leaq	4(%rsp), %rdi
+	callq	mutable_function_param
+	popq	%rax
+	.cfi_def_cfa_offset 8
+	retq
+.Lfunc_end2:
+	.size	test_mutable_param, .Lfunc_end2-test_mutable_param
 	.cfi_endproc
                                         # -- End function
 	.globl	vstrlen                 # -- Begin function vstrlen
@@ -75,8 +70,8 @@ vstrlen:                                # @vstrlen
 	popq	%rcx
 	.cfi_def_cfa_offset 8
 	retq
-.Lfunc_end1:
-	.size	vstrlen, .Lfunc_end1-vstrlen
+.Lfunc_end3:
+	.size	vstrlen, .Lfunc_end3-vstrlen
 	.cfi_endproc
                                         # -- End function
 	.type	sprintf_buff,@object    # @sprintf_buff
@@ -93,21 +88,5 @@ sprintf_buff:
 jmp_buf:
 	.zero	8
 	.size	jmp_buf, 8
-
-	.type	.L__unnamed_3,@object   # @0
-	.section	.rodata.str1.1,"aMS",@progbits,1
-.L__unnamed_3:
-	.asciz	"samples/hello/hello_world.v:3:2: \033[31merror: \033[39massert error\n 2 |   a := 1\n 3 |   \033[31massert a == 1\033[39m\n   | \033[31m  ~~~~~~~~~~~~~\033[39m\n 4 |   println(string(1))\n\n\n"
-	.size	.L__unnamed_3, 168
-
-	.type	.L__unnamed_2,@object   # @1
-.L__unnamed_2:
-	.asciz	"%s\n"
-	.size	.L__unnamed_2, 4
-
-	.type	.L__unnamed_1,@object   # @2
-.L__unnamed_1:
-	.asciz	"%d"
-	.size	.L__unnamed_1, 3
 
 	.section	".note.GNU-stack","",@progbits

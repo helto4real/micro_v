@@ -13,8 +13,9 @@ fn (mut m AModule) add_longjmp_setjmp() {
 	jumb_buff_global_name := 'jmp_buf'
 	jmp_buf_typ_ref := m.types['JumpBuffer']
 
-	mut value_refs := [C.LLVMConstInt(m.get_llvm_type(symbols.i64_symbol), i64(0),
-		bool_to_llvm_bool(false))]
+	mut value_refs := [
+		C.LLVMConstInt(m.get_llvm_type(symbols.i64_symbol), i64(0), bool_to_llvm_bool(false)),
+	]
 
 	res := C.LLVMConstNamedStruct(jmp_buf_typ_ref, value_refs.data, value_refs.len)
 

@@ -1,13 +1,14 @@
 module emit
+
 import lib.comp.gen.llvm.core
 import lib.comp.symbols
 import lib.comp.binding
 
 fn (mut fd FunctionDecl) emit_call_builtin(name string, args ...core.Value) core.Value {
-	func_name :=  if !name.starts_with('C.') { name } else { name[2..] }
+	func_name := if !name.starts_with('C.') { name } else { name[2..] }
 	res := fd.em.funcs.filter(it.name == func_name)
 	if res.len == 0 {
-		panic('builtin function $name not declared in $fd.em.built_in_funcs')	
+		panic('builtin function $name not declared in $fd.em.built_in_funcs')
 	}
 	func := res[0]
 	// fn_val := res[0].val//fd.em.built_in_funcs[name] or {panic('builtin function $name not declared in $fd.em.built_in_funcs.keys()!')}
@@ -15,7 +16,6 @@ fn (mut fd FunctionDecl) emit_call_builtin(name string, args ...core.Value) core
 }
 
 fn (mut fd FunctionDecl) emit_variable_value(var &symbols.VariableSymbol, expr &binding.BoundExpr, val core.Value) core.Value {
-
 	if var.is_ref && val.is_constant() { //|| !expr.typ.is_ref
 		var_typ := fd.em.get_type_from_type_symb(var.typ)
 		return fd.bld.alloca_and_store(var_typ, val, '')
@@ -27,23 +27,8 @@ fn (mut fd FunctionDecl) emit_variable_value(var &symbols.VariableSymbol, expr &
 	return val
 }
 
-// [inline]
-fn (mut em EmitModule) lookup_fn_decl(func_id string) &FunctionDecl {
-	for f in em.funcs {
-		if f.func != 0 {
-		println('$f.func.id')
-
-		}
-	}
-	func_res := em.funcs.filter(it.func.id == func_id)
-	if func_res.len != 1 {
-		panic('unexpected, function with id $func_id are not declared. ($em.funcs.len)')
-	}
-	return func_res[0]
-}
 fn (mut fd FunctionDecl) emit_call_fn(call_expr binding.BoundCallExpr) core.Value {
-	println('CALL FUNC: $call_expr.func.name ($call_expr.func.id), lookuo in $fd.em.funcs.len')
-	func_res := fd.em.funcs.filter(it.func >0 && it.func.id == call_expr.func.id)
+	func_res := fd.em.funcs.filter(it.func > 0 && it.func.id == call_expr.func.id)
 	if func_res.len != 1 {
 		panic('unexpected, function $call_expr.func.name not declared. ($fd.em.funcs.len)')
 	}
@@ -73,7 +58,9 @@ fn (mut fd FunctionDecl) emit_call_fn(call_expr binding.BoundCallExpr) core.Valu
 	if call_expr.typ.kind == symbols.TypeSymbolKind.void_symbol {
 		// no return value
 		fd.bld.create_call2(func_decl.typ, func_decl.val, args)
-		return core.Value {c:0}
+		return core.Value{
+			c: 0
+		}
 	}
 	return fd.bld.create_call2(func_decl.typ, func_decl.val, args)
 }

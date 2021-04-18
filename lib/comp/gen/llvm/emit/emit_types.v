@@ -3,7 +3,6 @@ module emit
 import lib.comp.symbols
 import lib.comp.gen.llvm.core
 
-
 [inline]
 fn (em &EmitModule) get_ref_type_from_type_symb(symb_typ symbols.TypeSymbol) core.Type {
 	mut typ := em.get_type_from_type_symb(symb_typ)
@@ -12,6 +11,7 @@ fn (em &EmitModule) get_ref_type_from_type_symb(symb_typ symbols.TypeSymbol) cor
 	}
 	return typ
 }
+
 fn (em &EmitModule) get_type_from_type_symb(typ symbols.TypeSymbol) core.Type {
 	match typ {
 		symbols.BuiltInTypeSymbol {
@@ -41,13 +41,15 @@ fn (em &EmitModule) get_type_from_type_symb(typ symbols.TypeSymbol) core.Type {
 		}
 		symbols.ArrayTypeSymbol {
 			elem_typ := em.get_type_from_type_symb(typ.elem_typ)
-			return elem_typ.to_array_type(typ.len) 
+			return elem_typ.to_array_type(typ.len)
 		}
 		symbols.VoidTypeSymbol {
-			return  em.ctx.void_type()
+			return em.ctx.void_type()
 		}
 		symbols.StructTypeSymbol {
-			return em.types[typ.name] or { panic('unexpected, type $typ.name not found in symols table ${em.types.keys()}') }
+			return em.types[typ.name] or {
+				panic('unexpected, type $typ.name not found in symols table $em.types.keys()')
+			}
 		}
 		else {
 			panic('unexpected, unsupported type ref $typ, $typ.kind')

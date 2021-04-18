@@ -19,7 +19,7 @@ pub mut:
 
 	global_const map[GlobalVarRefType]core.Value
 	built_in_funcs []core.Value
-	funcs []&FunctionDecl
+	funcs []FunctionDecl
 	var_decl map[string]core.Value
 	types map[string]core.Type
 
@@ -72,8 +72,9 @@ pub fn (mut em EmitModule) run_main() i64 {
 	if em.exec_engine == 0 {
 		panic('unexpected, execution engine have to be initialized before calling run_main')
 	}
-	mainfunc_val := em.funcs.filter(it.name=='main')[0].val 
-	res := em.exec_engine.run_function(mainfunc_val)
+	// mainfunc_val := em.funcs.filter(it.name=='main')[0].val 
+	// res := em.exec_engine.run_function(mainfunc_val)
+	res := em.exec_engine.run_function(em.main_func_val)
 	return i64(res.int(true))
 }
 
@@ -129,10 +130,10 @@ pub fn (mut em EmitModule) emit_main_fn(program &binding.BoundProgram) {
 		lowered_body := binding.lower(body)
 		em.main_func_val = em.declare_fn(&program.main_func, lowered_body).val
 	} else {
-		test_main := symbols.new_function_symbol('main', 'main', []symbols.ParamSymbol{},
+		test_main := symbols.new_function_symbol_on_heap('main', 'main', []symbols.ParamSymbol{},
 			symbols.int_symbol)
 		body := binding.new_empty_block_stmt()
-		em.main_func_val = em.declare_fn(&test_main, body).val
+		em.main_func_val = em.declare_fn(test_main, body).val
 	}
 }
 
@@ -152,7 +153,7 @@ pub fn (mut em EmitModule) emit_fn_decl(program &binding.BoundProgram) {
 pub fn (mut em EmitModule) emit_main_fn_body() {
 	for i, _ in em.funcs {
 		mut ff := em.funcs[i]
-		if ff.func.name == 'main' {
+		if ff.name == 'main' {
 			ff.emit_body()
 		}
 	}
@@ -168,11 +169,7 @@ pub fn (mut em EmitModule) emit_fn_bodies() {
 }
 pub fn (mut em EmitModule) generate_module(program &binding.BoundProgram, is_test bool) {
 	em.is_test = is_test
-	// emit globals and standard functions
-	// em.emit_global_types()
-	// em.emit_standard_funcs()
-	
-	// emit program structs and functions
+	// emit program structs and functions, the order matters!
 	em.emit_struct_decl(program)
 	em.emit_c_fn_decl(program)
 	em.emit_global_vars()

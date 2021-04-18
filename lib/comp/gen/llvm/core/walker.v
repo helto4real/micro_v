@@ -1,7 +1,8 @@
 module core
+
 import lib.comp.binding
 
-pub type EmitNodeFn = fn (node binding.BoundNode, data voidptr) 
+pub type EmitNodeFn = fn (node binding.BoundNode, data voidptr)
 
 pub interface NodeEmitter {
 	emit_stmt(node binding.BoundNode)
