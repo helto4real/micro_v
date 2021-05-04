@@ -1,5 +1,5 @@
 # The micro V - minimal v language compiler
-This is a learning project to build a compiler for the awesome V langue. Check out the [V website](https://vlang.io) and try it for your self
+This is a learning project to build a compiler for the awesome V language. Check out the [V website](https://vlang.io) and try it for yourself.
 
 
 # Overall design
